@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KraftX Platform – Day 7 Development Report</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+            padding: 40px 20px;
+        }
+        .page {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+            overflow: hidden;
+        }
+        .header {
+            background: #0a0a0a;
+            color: white;
+            padding: 48px 56px 40px;
+        }
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 32px;
+        }
+        .badge {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: #e2e8f0;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+        }
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            margin-bottom: 12px;
+        }
+        .header .sub {
+            color: #94a3b8;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        .meta-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-top: 32px;
+            padding-top: 32px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        .meta-item label {
+            display: block;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #64748b;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+        .meta-item span {
+            font-size: 0.95rem;
+            color: #e2e8f0;
+            font-weight: 500;
+        }
+        .content {
+            padding: 48px 56px;
+        }
+        .section {
+            margin-bottom: 48px;
+        }
+        .section-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #94a3b8;
+            margin-bottom: 12px;
+        }
+        .section h2 {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+        p {
+            color: #475569;
+            line-height: 1.7;
+            font-size: 0.95rem;
+            margin-bottom: 12px;
+        }
+
+        /* Feature Cards */
+        .card-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 8px;
+        }
+        .card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 20px;
+        }
+        .card h4 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .card ul {
+            list-style: none;
+            padding: 0;
+        }
+        .card ul li {
+            font-size: 0.85rem;
+            color: #64748b;
+            padding: 4px 0;
+            border-bottom: 1px solid #f1f5f9;
+            line-height: 1.5;
+        }
+        .card ul li:last-child { border-bottom: none; }
+        .card ul li::before { content: "→ "; color: #94a3b8; }
+
+        /* Status Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88rem;
+            margin-top: 8px;
+        }
+        thead tr { background: #f1f5f9; }
+        th {
+            text-align: left;
+            padding: 10px 14px;
+            font-weight: 700;
+            color: #475569;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        td {
+            padding: 12px 14px;
+            border-bottom: 1px solid #f8fafc;
+            color: #475569;
+            vertical-align: top;
+        }
+        tr:last-child td { border: none; }
+        .pill {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .pill.done { background: #ecfdf5; color: #065f46; }
+        .pill.fixed { background: #eff6ff; color: #1d4ed8; }
+        .pill.improved { background: #fefce8; color: #854d0e; }
+        .pill.new { background: #fdf4ff; color: #7e22ce; }
+
+        /* Issues */
+        .issue-list li {
+            background: #fef9f0;
+            border: 1px solid #fed7aa;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 10px;
+            list-style: none;
+            font-size: 0.88rem;
+            color: #7c2d12;
+        }
+        .issue-list li strong { color: #9a3412; }
+
+        /* Recommendations */
+        .rec-list {
+            counter-reset: item;
+            list-style: none;
+            padding: 0;
+        }
+        .rec-list li {
+            counter-increment: item;
+            font-size: 0.9rem;
+            color: #475569;
+            padding: 14px 16px 14px 52px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            position: relative;
+            line-height: 1.6;
+        }
+        .rec-list li::before {
+            content: counter(item);
+            position: absolute;
+            left: 16px;
+            top: 14px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #0f172a;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .rec-list li strong { color: #0f172a; }
+
+        .footer {
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            padding: 24px 56px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .footer p {
+            margin: 0;
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+        .footer .status-badge {
+            background: #0f172a;
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+
+    <!-- Header -->
+    <div class="header">
+        <div class="header-top">
+            <div class="badge">DAY 7 — DEVELOPMENT REPORT</div>
+        </div>
+        <h1>KraftX Platform<br>UI/UX Overhaul & E-Commerce Expansion</h1>
+        <p class="sub">Seventh-day development session report covering cart logic, product detail pages, customer review system, catalogue UI redesign, global footer, and Design Studio mockup improvements.</p>
+        <div class="meta-grid">
+            <div class="meta-item">
+                <label>Date</label>
+                <span>April 9, 2026</span>
+            </div>
+            <div class="meta-item">
+                <label>Project</label>
+                <span>Tailoring Turba / KraftX</span>
+            </div>
+            <div class="meta-item">
+                <label>Session Status</label>
+                <span>✓ All tasks completed</span>
+            </div>
+            <div class="meta-item">
+                <label>Sprint Day</label>
+                <span>Day 7 of ongoing build</span>
+            </div>
+            <div class="meta-item">
+                <label>Environment</label>
+                <span>localhost:3000</span>
+            </div>
+            <div class="meta-item">
+                <label>Framework</label>
+                <span>Next.js 14 (App Router)</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+
+        <!-- Executive Summary -->
+        <div class="section">
+            <div class="section-label">Section 1</div>
+            <h2>Executive Summary</h2>
+            <p>Day 7 was focused on elevating the platform from a functional prototype to a polished, production-grade B2B/B2C e-commerce experience. The session addressed critical UX problems across the entire shopping journey — from product discovery and the cart to checkout routing and post-purchase review collection.</p>
+            <p>Major architectural additions include a conditional checkout router (cart threshold logic), a real customer review system with photo uploads, a site-wide global footer, and a full product detail page (PDP) redesign incorporating similar products, breadcrumbs, and social proof.</p>
+        </div>
+
+        <!-- Features Delivered -->
+        <div class="section">
+            <div class="section-label">Section 2</div>
+            <h2>Features Delivered</h2>
+            <div class="card-grid">
+                <div class="card">
+                    <h4>🛒 Conditional Cart Checkout</h4>
+                    <ul>
+                        <li>New <code>/cart</code> review page created</li>
+                        <li>≤10 items → Retail Checkout <code>/checkout</code></li>
+                        <li>&gt;10 items → Bulk Enquiry <code>/contact?mode=inquiry</code></li>
+                        <li>Checkout stub page with shipping form built</li>
+                        <li>Security redirect on direct URL access</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h4>📦 Product Detail Page Overhaul</h4>
+                    <ul>
+                        <li>Dynamic product name, price, and badge</li>
+                        <li>Breadcrumb navigation added</li>
+                        <li>Category-matched thumbnail strip</li>
+                        <li>Similar Products grid (same category)</li>
+                        <li>Apparel-only conditional (size/colour options)</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h4>⭐ Customer Review System</h4>
+                    <ul>
+                        <li>Zero fake/hardcoded reviews</li>
+                        <li>Interactive star picker (hover + click)</li>
+                        <li>Photo upload — max 5, with preview + remove</li>
+                        <li>localStorage persistence per product</li>
+                        <li>Rating distribution bars (like Amazon)</li>
+                        <li>Photo lightbox on click</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h4>🌐 Global Footer</h4>
+                    <ul>
+                        <li>Dark-themed footer on all pages</li>
+                        <li>4-column layout: Brand, Explore, Corporate, Contact</li>
+                        <li>GST, Privacy Policy, Terms of Service links</li>
+                        <li>Social media icons included</li>
+                        <li>Injected globally via <code>layout.tsx</code></li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h4>🎨 Catalogue UI Redesign</h4>
+                    <ul>
+                        <li>Replaced clunky row layout with CSS Grid</li>
+                        <li>Font sizes reduced from 3.5rem → 2.5rem</li>
+                        <li>Price display refined (2.75rem → 1.6rem)</li>
+                        <li>Send Inquiry → outline "Request Quote" button</li>
+                        <li>"Add to Selection" → clean "Add to Cart"</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h4>🧹 Navigation & Data Cleanup</h4>
+                    <ul>
+                        <li>Mega Menu dropdown removed from Navbar</li>
+                        <li>Quick Links removed from Products sidebar</li>
+                        <li>"Sr 137" style names replaced with clean names</li>
+                        <li>Random Unsplash images (shoes/bitcoin) replaced</li>
+                        <li>Shared <code>products-data.ts</code> created as single source</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Task Completion Table -->
+        <div class="section">
+            <div class="section-label">Section 3</div>
+            <h2>Task Completion Log</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Task</th>
+                        <th>File(s) Affected</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Navbar cart button → <code>/cart</code></td>
+                        <td><code>Navbar.tsx</code></td>
+                        <td><span class="pill done">Done</span></td>
+                    </tr>
+                    <tr>
+                        <td>Cart Review page with threshold logic</td>
+                        <td><code>cart/page.tsx</code>, <code>cart/page.module.css</code></td>
+                        <td><span class="pill new">New</span></td>
+                    </tr>
+                    <tr>
+                        <td>Retail Checkout stub</td>
+                        <td><code>checkout/page.tsx</code></td>
+                        <td><span class="pill new">New</span></td>
+                    </tr>
+                    <tr>
+                        <td>Product listing names cleaned up</td>
+                        <td><code>products/page.tsx</code>, <code>ProductsSection.tsx</code></td>
+                        <td><span class="pill fixed">Fixed</span></td>
+                    </tr>
+                    <tr>
+                        <td>Shared products data file</td>
+                        <td><code>lib/products-data.ts</code></td>
+                        <td><span class="pill new">New</span></td>
+                    </tr>
+                    <tr>
+                        <td>PDP — dynamic product from shared data</td>
+                        <td><code>products/[id]/page.tsx</code></td>
+                        <td><span class="pill improved">Improved</span></td>
+                    </tr>
+                    <tr>
+                        <td>PDP — Similar Products section</td>
+                        <td><code>products/[id]/page.tsx</code></td>
+                        <td><span class="pill new">New</span></td>
+                    </tr>
+                    <tr>
+                        <td>PDP — Live Customer Review system</td>
+                        <td><code>products/[id]/page.tsx</code></td>
+                        <td><span class="pill new">New</span></td>
+                    </tr>
+                    <tr>
+                        <td>Global Footer component</td>
+                        <td><code>components/Footer.tsx</code>, <code>layout.tsx</code></td>
+                        <td><span class="pill new">New</span></td>
+                    </tr>
+                    <tr>
+                        <td>Catalogue card grid redesign</td>
+                        <td><code>catalogue/[slug]/page.module.css</code></td>
+                        <td><span class="pill improved">Improved</span></td>
+                    </tr>
+                    <tr>
+                        <td>Catalogue button labels refined</td>
+                        <td><code>catalogue/[slug]/page.tsx</code></td>
+                        <td><span class="pill improved">Improved</span></td>
+                    </tr>
+                    <tr>
+                        <td>Navbar Mega Menu removed</td>
+                        <td><code>Navbar.tsx</code></td>
+                        <td><span class="pill done">Done</span></td>
+                    </tr>
+                    <tr>
+                        <td>Quick Links sidebar removed</td>
+                        <td><code>products/page.tsx</code></td>
+                        <td><span class="pill done">Done</span></td>
+                    </tr>
+                    <tr>
+                        <td>T-shirt mockup image replaced</td>
+                        <td><code>public/mockups/round.png</code></td>
+                        <td><span class="pill improved">Improved</span></td>
+                    </tr>
+                    <tr>
+                        <td>Footer "use client" hydration fix</td>
+                        <td><code>components/Footer.tsx</code></td>
+                        <td><span class="pill fixed">Fixed</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Bugs Fixed -->
+        <div class="section">
+            <div class="section-label">Section 4</div>
+            <h2>Bugs Found & Resolved</h2>
+            <ul class="issue-list">
+                <li><strong>Wrong page on "My Cart" click:</strong> Cart Navbar button was pointing to <code>/contact?mode=inquiry</code> instead of <code>/cart</code>. Fixed.</li>
+                <li><strong>T-shirt shown on gift set PDP:</strong> Product Detail Page had hardcoded "Basic T-Shirt" content regardless of which product was clicked. Replaced with dynamic data from shared products catalogue.</li>
+                <li><strong>T-shirt thumbnails on gift set PDP:</strong> Thumbnail strip was using a hardcoded array of t-shirt model photos. Now dynamically renders same-category product images.</li>
+                <li><strong>Footer hydration crash:</strong> <code>Footer.tsx</code> used <code>onMouseEnter/onMouseLeave</code> event handlers without <code>"use client"</code> directive, causing a Next.js runtime error. Fixed.</li>
+                <li><strong>Random images (Nike shoes, Bitcoin):</strong> Products had leftover Unsplash placeholder images from the initial design phase that were completely unrelated to corporate gifts. Replaced with contextually relevant images.</li>
+                <li><strong>Fake reviews displayed:</strong> Three hardcoded fabricated reviews were being shown. Removed completely. Replaced with a real user-submitted review system.</li>
+            </ul>
+        </div>
+
+        <!-- Files Changed -->
+        <div class="section">
+            <div class="section-label">Section 5</div>
+            <h2>Files Created / Modified</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>File</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>src/components/Footer.tsx</code></td><td><span class="pill new">New</span></td><td>Global dark footer component</td></tr>
+                    <tr><td><code>src/lib/products-data.ts</code></td><td><span class="pill new">New</span></td><td>Centralized shared products array</td></tr>
+                    <tr><td><code>src/app/cart/page.tsx</code></td><td><span class="pill new">New</span></td><td>Cart review + conditional routing logic</td></tr>
+                    <tr><td><code>src/app/cart/page.module.css</code></td><td><span class="pill new">New</span></td><td>Cart page styles</td></tr>
+                    <tr><td><code>src/app/checkout/page.tsx</code></td><td><span class="pill new">New</span></td><td>Retail checkout stub form</td></tr>
+                    <tr><td><code>src/app/products/[id]/page.tsx</code></td><td><span class="pill improved">Modified</span></td><td>PDP with similar products, reviews, dynamic data</td></tr>
+                    <tr><td><code>src/app/products/[id]/page.module.css</code></td><td><span class="pill improved">Modified</span></td><td>PDP layout: 2-column grid, thumbnail strip</td></tr>
+                    <tr><td><code>src/app/products/page.tsx</code></td><td><span class="pill improved">Modified</span></td><td>Removed Quick Links, switched to shared data</td></tr>
+                    <tr><td><code>src/components/landing/ProductsSection.tsx</code></td><td><span class="pill improved">Modified</span></td><td>Cleaned product names and images</td></tr>
+                    <tr><td><code>src/app/products/catalogue/[slug]/page.module.css</code></td><td><span class="pill improved">Modified</span></td><td>Grid redesign, refined typography & buttons</td></tr>
+                    <tr><td><code>src/app/products/catalogue/[slug]/page.tsx</code></td><td><span class="pill improved">Modified</span></td><td>Button labels updated (Add to Cart, Request Quote)</td></tr>
+                    <tr><td><code>src/components/Navbar.tsx</code></td><td><span class="pill improved">Modified</span></td><td>Removed mega menu, cart link → <code>/cart</code></td></tr>
+                    <tr><td><code>src/app/layout.tsx</code></td><td><span class="pill improved">Modified</span></td><td>Footer injected globally</td></tr>
+                    <tr><td><code>public/mockups/round.png</code></td><td><span class="pill improved">Replaced</span></td><td>Flat cartoon → high-quality AI-generated mockup</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Recommendations -->
+        <div class="section">
+            <div class="section-label">Section 6</div>
+            <h2>Recommended Next Steps</h2>
+            <ol class="rec-list">
+                <li><strong>Backend Review API:</strong> Currently reviews are stored in <code>localStorage</code> per browser. For production, implement a Prisma <code>Review</code> model and a <code>POST /api/reviews</code> route so reviews persist across devices and are user-verified.</li>
+                <li><strong>Real Checkout Integration:</strong> The <code>/checkout</code> page is currently a UI stub. Integrate Razorpay order creation and webhook handling to complete the B2C payment lifecycle.</li>
+                <li><strong>Mockup Set Completion:</strong> Only the round-neck front mockup has been updated. Replace <code>round_back.png</code>, <code>vneck.png</code>, <code>vneck_back.png</code>, <code>polo.png</code>, and <code>polo_back.png</code> with matching high-quality images for visual consistency in the Design Studio.</li>
+                <li><strong>Product Image Consistency:</strong> The corporate gift products currently use generic Unsplash images. These should be replaced with actual catalogue photography from the client's physical catalogue once available.</li>
+                <li><strong>Cart Persistence:</strong> The cart currently resets on page refresh. Consider persisting cart state to <code>localStorage</code> or a backend session so users don't lose their selections on navigation.</li>
+                <li><strong>Order Confirmation Emails:</strong> After <code>/checkout</code> is completed, trigger a Nodemailer email confirmation to the customer with an order summary and reference number.</li>
+            </ol>
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <p>KraftX Platform – Tailoring Turba &nbsp;|&nbsp; Confidential Development Report</p>
+        <div class="status-badge">Day 7 Complete ✓</div>
+    </div>
+
+</div>
+</body>
+</html>

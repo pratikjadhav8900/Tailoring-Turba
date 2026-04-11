@@ -1,0 +1,25 @@
+export const allProducts = [
+  { id: 1, name: "Chromo Gift Set", price: "₹1499", type: "Wallet, Belt, Pen & Keychain", category: "Gift Sets", badge: "Premium", image: "https://images.unsplash.com/photo-1544816155-12df9643f363?w=600&q=80", isApparel: false },
+  { id: 2, name: "Estilo Brown Set", price: "₹1299", type: "Wallet, Keychain, Pen & Cardholder", category: "Gift Sets", badge: "Best Seller", image: "https://images.unsplash.com/photo-1586281380117-5a60ae2050cc?w=600&q=80", isApparel: false },
+  { id: 3, name: "Estilo Black Set", price: "₹1299", type: "Wallet, Keychain, Pen & Cardholder", category: "Gift Sets", badge: "", image: "https://images.unsplash.com/photo-1505085444855-32128bca68d9?w=600&q=80", isApparel: false },
+  { id: 4, name: "Perfumo Luxury Set", price: "₹1899", type: "Wallet, Perfume, Pen & Cardholder", category: "Gift Sets", badge: "Luxury", image: "https://images.unsplash.com/photo-1497215848596-f94943fcf3a1?w=600&q=80", isApparel: false },
+  { id: 5, name: "Sip & Stash Duo", price: "₹999", type: "Containers & 1L Bottle", category: "Drinkware", badge: "", image: "https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=600&q=80", isApparel: false },
+  { id: 6, name: "The Twin Pair", price: "₹1199", type: "Containers & 2 Bottles", category: "Drinkware", badge: "", image: "https://images.unsplash.com/photo-1616423640778-28d1b53229bd?w=600&q=80", isApparel: false },
+  { id: 7, name: "The Twins Sip-Pout", price: "₹899", type: "Two 1L Sip-Pout Bottles", category: "Drinkware", badge: "", image: "https://images.unsplash.com/photo-1616423640778-28d1b53229bd?w=600&q=80", isApparel: false },
+  { id: 8, name: "Black Elastic Diary", price: "₹599", type: "Metal Pen & A5 Diary", category: "Diaries", badge: "", image: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=600&q=80", isApparel: false },
+  { id: 9, name: "Red Elastic Diary", price: "₹599", type: "Metal Pen & A5 Diary", category: "Diaries", badge: "", image: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=600&q=80", isApparel: false },
+  { id: 10, name: "Blue Elastic Diary", price: "₹599", type: "Metal Pen & A5 Diary", category: "Diaries", badge: "", image: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=600&q=80", isApparel: false },
+  { id: 11, name: "Brown Mars Diary", price: "₹699", type: "Metal Pen & A5 Diary", category: "Diaries", badge: "Popular", image: "https://images.unsplash.com/photo-1544816155-12df9643f363?w=600&q=80", isApparel: false },
+  { id: 12, name: "Green Royale Diary", price: "₹799", type: "Metal Pen & A5 Diary", category: "Diaries", badge: "Premium", image: "https://images.unsplash.com/photo-1506784951206-b96ab32014b2?w=600&q=80", isApparel: false },
+  { id: 13, name: "Black Blocks Diary", price: "₹699", type: "Metal Pen & A5 Diary", category: "Diaries", badge: "", image: "https://images.unsplash.com/photo-1506784951206-b96ab32014b2?w=600&q=80", isApparel: false },
+  { id: 14, name: "Cork Elastic Diary", price: "₹899", type: "Metal Pen & A5 Diary", category: "Eco-Friendly", badge: "Eco", image: "https://images.unsplash.com/photo-1512314889357-e157c22f938d?w=600&q=80", isApparel: false },
+  { id: 15, name: "Desk Pen & Keychain", price: "₹399", type: "Pen & Keychain Set", category: "Accessories", badge: "", image: "https://images.unsplash.com/photo-1585336261022-680e2a5ce4f2?w=600&q=80", isApparel: false },
+  { id: 16, name: "Rotating Keychain Set", price: "₹499", type: "Pen & Rotating Keychain", category: "Accessories", badge: "", image: "https://images.unsplash.com/photo-1585336261022-680e2a5ce4f2?w=600&q=80", isApparel: false },
+  { id: 17, name: "Cardholder Pen Set", price: "₹499", type: "Pen & Cardholder Set", category: "Accessories", badge: "", image: "https://images.unsplash.com/photo-1555099962-4199c345e5dd?w=600&q=80", isApparel: false },
+  { id: 18, name: "Complete Accessories Set", price: "₹699", type: "Complete Set", category: "Gift Sets", badge: "", image: "https://images.unsplash.com/photo-1544816155-12df9643f363?w=600&q=80", isApparel: false },
+  { id: 19, name: "Escala Black Access", price: "₹899", type: "Pen, Keychain & Wallet", category: "Gift Sets", badge: "Trending", image: "https://images.unsplash.com/photo-1505085444855-32128bca68d9?w=600&q=80", isApparel: false },
+  { id: 20, name: "Eco Elastic Notebook", price: "₹649", type: "Metal Pen & A5 Diary", category: "Eco-Friendly", badge: "", image: "https://images.unsplash.com/photo-1512314889357-e157c22f938d?w=600&q=80", isApparel: false },
+  // Adding apparel so the fallback to customizer works seamlessly
+  { id: 101, name: "Basic T-Shirt", price: "₹499", type: "Apparel", category: "T-Shirts", badge: "Core", image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&q=80", isApparel: true },
+  { id: 102, name: "Premium Polo", price: "₹799", type: "Apparel", category: "Polos", badge: "Popular", image: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=600&q=80", isApparel: true }
+];

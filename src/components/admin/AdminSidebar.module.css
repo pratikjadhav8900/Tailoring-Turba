@@ -1,0 +1,88 @@
+.sidebar {
+  width: 240px;
+  min-height: 100vh;
+  background: #0A0A18;
+  border-right: 1px solid rgba(255,255,255,0.05);
+  display: flex;
+  flex-direction: column;
+  padding: 24px 0;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.logo {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: white;
+  padding: 0 20px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  margin-bottom: 8px;
+}
+.logo span:first-child { color: #FF6B35; }
+
+.badge {
+  font-size: 0.6rem !important;
+  font-weight: 800 !important;
+  background: rgba(255,107,53,0.2);
+  color: #FF6B35 !important;
+  padding: 2px 7px;
+  border-radius: 4px;
+  letter-spacing: 1px;
+}
+
+.roleChip {
+  font-size: 0.75rem;
+  color: #ECC94B;
+  padding: 0 20px 16px;
+  font-weight: 600;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 10px;
+  flex: 1;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  color: #718096;
+  font-size: 0.87rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  position: relative;
+  text-decoration: none;
+}
+.item:hover { background: rgba(255,255,255,0.04); color: white; }
+.active { background: rgba(255,107,53,0.12) !important; color: #FF6B35 !important; font-weight: 600; }
+.indicator {
+  position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+  width: 3px; height: 18px; background: #FF6B35; border-radius: 2px 0 0 2px;
+}
+.icon { font-size: 1rem; width: 18px; text-align: center; }
+
+.logout {
+  margin: 16px;
+  background: rgba(252,129,129,0.08);
+  border: 1px solid rgba(252,129,129,0.15);
+  color: #FC8181;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s;
+}
+.logout:hover { background: rgba(252,129,129,0.15); }

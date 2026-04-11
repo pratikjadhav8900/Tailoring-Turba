@@ -1,0 +1,188 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          Role      @default(USER)
+  phone         String?
+  companyName   String?
+  gstNumber     String?
+  isB2BApproved Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts      Account[]
+  designs       Design[]
+  orders        Order[]
+  bookings      Booking[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  slug      String    @unique
+  image     String?
+  products  Product[]
+}
+
+model Product {
+  id               String      @id @default(cuid())
+  name             String
+  description      String
+  basePrice        Float
+  minOrderQuantity Int         @default(1)
+  categoryId       String
+  category         Category    @relation(fields: [categoryId], references: [id])
+  images           String[]
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  designs          Design[]
+  orderItems       OrderItem[]
+}
+
+model Design {
+  id          String   @id @default(cuid())
+  userId      String
+  productId   String
+  name        String
+  imageUrl    String?
+  rawUrl      String?  // For .cdr / heavy files
+  stateJson   String?  // SVG customizer state
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id])
+  product     Product  @relation(fields: [productId], references: [id])
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  userId        String
+  totalAmount   Float
+  status        OrderStatus @default(PENDING)
+  paymentId     String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  user          User        @relation(fields: [userId], references: [id])
+  items         OrderItem[]
+  orderSheet    OrderSheet?
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  productId String
+  quantity  Int
+  price     Float
+
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id])
+}
+
+model OrderSheet {
+  id        String   @id @default(cuid())
+  orderId   String   @unique
+  sheetData Json     // Store roster info like names, sizes, numbers
+  createdAt DateTime @default(now())
+
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model Booking {
+  id           String        @id @default(cuid())
+  userId       String
+  date         DateTime
+  timeSlot     String
+  status       BookingStatus @default(REQUESTED)
+  notes        String?
+  createdAt    DateTime      @default(now())
+
+  user         User          @relation(fields: [userId], references: [id])
+}
+
+enum Role {
+  USER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  CATALOGUE_ENQUIRY
+}
+
+model CatalogueCategory {
+  id          String             @id @default(cuid())
+  name        String
+  slug        String             @unique
+  description String
+  hsn         String?
+  gst         String?
+  pages       Int[]              // array of catalogue page numbers
+  products    CatalogueProduct[]
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+}
+
+model CatalogueProduct {
+  id               String             @id @default(cuid())
+  code             String
+  name             String
+  spec             String?
+  hsn              String?
+  gst              String?
+  minOrderQuantity Int                @default(50)
+  isB2B            Boolean            @default(true)
+  category         CatalogueCategory  @relation(fields: [categoryId], references: [id])
+  categoryId       String
+  createdAt        DateTime           @default(now())
+}
+
+enum BookingStatus {
+  REQUESTED
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}

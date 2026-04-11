@@ -1,0 +1,131 @@
+.pageWrapper {
+  background: #f1f5f9;
+  min-height: 100vh;
+}
+
+.main {
+  padding: 80px 0;
+}
+
+.contactContainer {
+  display: flex;
+  justify-content: center;
+}
+
+.formCard {
+  background: white;
+  padding: 60px;
+  border-radius: 24px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+  max-width: 800px;
+  width: 100%;
+}
+
+.title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.subtitle {
+  font-size: 1.1rem;
+  color: #64748b;
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.group label {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #1e293b;
+}
+
+.group input, .group textarea {
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.group input:focus, .group textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.submitBtn {
+  background: var(--accent);
+  color: white;
+  border: none;
+  padding: 18px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  cursor: pointer;
+  margin-top: 12px;
+  transition: opacity 0.2s;
+}
+
+.submitBtn:hover {
+  opacity: 0.9;
+}
+
+.successMessage {
+  text-align: center;
+  padding: 40px 0;
+}
+
+.successMessage h2 {
+  color: #10b981;
+  font-size: 2rem;
+  margin-bottom: 16px;
+}
+
+.successMessage p {
+  color: #64748b;
+  margin-bottom: 32px;
+}
+
+.backBtn {
+  background: #0f172a;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+@media (max-width: 640px) {
+  .row {
+    grid-template-columns: 1fr;
+  }
+  
+  .formCard {
+    padding: 30px;
+  }
+  
+  .title {
+    font-size: 2rem;
+  }
+}

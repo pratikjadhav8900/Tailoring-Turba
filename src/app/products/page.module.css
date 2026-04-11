@@ -1,0 +1,77 @@
+.main { padding: 80px 0 80px; min-height: 100vh; background: var(--bg-main); }
+
+.banner {
+  background: var(--bg-card);
+  padding: 60px 24px;
+  border-bottom: 1px solid var(--border-light);
+  margin-bottom: 40px;
+}
+
+.title { font-size: 2.5rem; font-weight: 800; color: var(--text-main); margin-bottom: 12px; letter-spacing: -1px; }
+.sub { color: var(--text-muted); font-size: 1.1rem; }
+
+.layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 40px;
+  align-items: start;
+}
+
+.sidebar {
+  position: sticky;
+  top: 100px;
+}
+
+.filterTitle { font-size: 0.95rem; font-weight: 700; color: var(--text-main); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+.filterList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filterBtn {
+  text-align: left;
+  padding: 10px 16px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  justify-content: space-between;
+}
+
+.filterBtn:hover { background: #F3F4F6; color: var(--text-main); }
+.filterActive { background: white !important; border-color: var(--border-light) !important; color: var(--text-main) !important; font-weight: 700 !important; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+
+.count { color: #9CA3AF; font-size: 0.8rem; font-weight: 500; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.linkRow {
+  display: block;
+  padding: 12px 16px;
+  background: white;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-main);
+  text-decoration: none;
+  transition: all 0.2s;
+}
+.linkRow:hover { border-color: var(--accent); color: var(--accent); }
+
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { position: static; margin-bottom: 32px; }
+  .filterList { flex-direction: row; flex-wrap: wrap; }
+}

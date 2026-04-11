@@ -1,0 +1,113 @@
+.main { padding: 120px 0 80px; min-height: 100vh; background: var(--bg-main); }
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 60px;
+  align-items: start;
+}
+
+.title { font-size: clamp(2rem, 5vw, 3rem); color: var(--text-main); font-weight: 800; margin-bottom: 12px; }
+.sub { color: var(--text-muted); font-size: 1.05rem; line-height: 1.7; margin-bottom: 32px; }
+
+.details { display: flex; flex-direction: column; gap: 24px; margin-bottom: 32px; }
+
+.detail {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.detailIcon {
+  font-size: 1.8rem;
+  margin-top: 2px;
+}
+
+.detail strong { display: block; color: var(--text-main); font-size: 0.95rem; font-weight: 700; margin-bottom: 4px; }
+.detail p { color: var(--text-muted); font-size: 0.9rem; line-height: 1.5; }
+
+.perks {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.perk {
+  background: #ECFDF5;
+  border: 1px solid #A7F3D0;
+  color: #059669;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.form { padding: 40px; background: white; }
+
+.formTitle { font-size: 1.5rem; font-weight: 800; color: var(--text-main); margin-bottom: 24px; }
+
+.error {
+  background: #FEF2F2;
+  border: 1px solid #FECDD3;
+  color: #E11D48;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 24px;
+}
+
+.formBody { display: flex; flex-direction: column; gap: 20px; }
+
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+.slots {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.slot {
+  padding: 10px 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: white;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.slot:hover {
+  border-color: var(--accent);
+  color: var(--text-main);
+  background: #FFF1F2;
+}
+
+.slotSelected {
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+  color: white !important;
+}
+
+.success {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.successIcon { font-size: 4rem; margin-bottom: 16px; }
+.success h2 { font-size: 1.8rem; font-weight: 800; color: var(--text-main); margin-bottom: 8px; }
+.success p { color: var(--text-muted); font-size: 1rem; }
+
+@media (max-width: 900px) {
+  .grid { grid-template-columns: 1fr; }
+  .slots { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 480px) {
+  .form { padding: 24px; }
+  .row { grid-template-columns: 1fr; }
+  .slots { grid-template-columns: repeat(2, 1fr); }
+  .perks { grid-template-columns: 1fr; }
+}
