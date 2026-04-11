@@ -3,15 +3,19 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { Trash2, AlertCircle, ShoppingBag } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import AuthModal from "@/components/auth/AuthModal";
 import { useCart } from "@/context/CartContext";
 import styles from "./page.module.css";
 
 export default function CartPage() {
   const { cart, removeFromCart, cartCount } = useCart();
   const [mounted, setMounted] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const router = useRouter();
+  const { data: session } = useSession();
 
   useEffect(() => {
     setMounted(true);
@@ -34,12 +38,28 @@ export default function CartPage() {
 
   const estimatedTotal = calculateTotal();
 
-  const handleCheckoutClick = (e: React.MouseEvent) => {
-    e.preventDefault();
+  const handleCheckoutClick = () => {
+    if (!session) {
+      // Show authentication modal for guest users
+      setShowAuthModal(true);
+      return;
+    }
+
     if (isWholesale) {
-      router.push("/contact?mode=inquiry");
+      // For wholesale, redirect to contact page or special quote form
+      router.push('/contact?wholesale=true');
     } else {
-      router.push("/checkout");
+      // For retail, proceed to checkout
+      router.push('/checkout');
+    }
+  };
+
+  const handleAuthSuccess = () => {
+    // User successfully authenticated, proceed with checkout
+    if (isWholesale) {
+      router.push('/contact?wholesale=true');
+    } else {
+      router.push('/checkout');
     }
   };
 
@@ -47,7 +67,15 @@ export default function CartPage() {
     <div className={styles.pageWrapper}>
       <Navbar />
       <main className={`container ${styles.main}`}>
-        <h1 className={styles.title}>Your Selection</h1>
+        <div className={styles.cartHeader}>
+  <h1 className={styles.title}>Your Selection</h1>
+  {!session && (
+    <div className={styles.guestIndicator}>
+      <ShoppingBag size={16} />
+      <span>Guest Cart</span>
+    </div>
+  )}
+</div>
 
         {cart.length === 0 ? (
           <div className={styles.emptyCart}>
@@ -136,15 +164,24 @@ export default function CartPage() {
 
               <div className={styles.checkoutInfo}>
                 <AlertCircle size={16} style={{ flexShrink: 0, marginTop: 2, color: isWholesale ? '#8b5cf6' : 'var(--text-muted)' }} />
-                {isWholesale 
-                  ? "Orders over 10 pieces qualify for wholesale pricing. You will be directed to our corporate team for an exact quote."
-                  : "You have 10 or fewer items. You can proceed directly to standard retail checkout."
+                {!session 
+                  ? "Please sign in or create an account to proceed with checkout. Your cart items will be saved."
+                  : isWholesale 
+                    ? "Orders over 10 pieces qualify for wholesale pricing. You will be directed to our corporate team for an exact quote."
+                    : "You have 10 or fewer items. You can proceed directly to standard retail checkout."
                 }
               </div>
             </div>
           </div>
         )}
       </main>
+      
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={handleAuthSuccess}
+        redirectTo={isWholesale ? "/contact?wholesale=true" : "/checkout"}
+      />
     </div>
   );
 }

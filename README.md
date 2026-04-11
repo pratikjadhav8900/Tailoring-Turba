@@ -1,4 +1,4 @@
-# 👕 KraftX - Custom Garment Design Platform
+# 👕 Tailoring Turba - Custom Garment Design Platform
 
 <div align="center">
   <img src="https://img.shields.io/badge/Next.js-14-black?logo=next.js&logoColor=white" alt="Next.js" />
@@ -8,7 +8,7 @@
   <img src="https://img.shields.io/badge/Cloudinary-F24E1E?logo=cloudinary&logoColor=white" alt="Cloudinary" />
 </div>
 
-A modern, responsive web application for custom garment design and ordering. Built with Next.js 14, TypeScript, and Tailwind CSS, KraftX allows users to design custom clothing with real-time preview, fabric selection, and seamless ordering experience.
+A modern, responsive web application for custom garment design and ordering. Built with Next.js 14, TypeScript, and Tailwind CSS, Tailoring Turba allows users to design custom clothing with real-time preview, fabric selection, and seamless ordering experience.
 
 ## ✨ Features
 
@@ -104,7 +104,7 @@ Open [http://localhost:3000](http://localhost:3000) to view the application.
 ## 📁 Project Structure
 
 ```
-kraftx/
+tailoring-turba/
 ├── src/
 │   ├── app/                 # Next.js App Router pages
 │   │   ├── (auth)/          # Authentication routes
@@ -169,7 +169,7 @@ CLOUDINARY_API_KEY="..."
 
 ## 📱 Mobile Responsiveness
 
-KraftX is built mobile-first with responsive breakpoints:
+Tailoring Turba is built mobile-first with responsive breakpoints:
 
 - **Mobile**: < 768px
 - **Tablet**: 768px - 1024px  
@@ -281,7 +281,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Documentation**: Check our [Wiki](https://github.com/pratikjadhav8900/Tailoring-Turba/wiki)
 - **Issues**: [GitHub Issues](https://github.com/pratikjadhav8900/Tailoring-Turba/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/pratikjadhav8900/Tailoring-Turba/discussions)
-- **Email**: support@kraftx.com
+- **Email**: support@tailoring-turba.com
 
 ---
 

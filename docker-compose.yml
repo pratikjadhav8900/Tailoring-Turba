@@ -6,7 +6,7 @@ services:
     environment:
       POSTGRES_USER: root
       POSTGRES_PASSWORD: rootpassword
-      POSTGRES_DB: kraftx_db
+      POSTGRES_DB: tailoring_turba_db
     ports:
       - "5432:5432"
     volumes:
