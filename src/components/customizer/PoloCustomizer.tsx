@@ -2,117 +2,118 @@
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { Rnd } from "react-rnd";
-import { Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, AlignJustify, Trash2, Type, MoveVertical, ScanText } from "lucide-react";
+import { Type, UploadCloud, Image as ImageIcon, Layers, Palette, X, Trash2, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, ScanText, RotateCw, Move } from "lucide-react";
 import styles from "./PoloCustomizer.module.css";
 import { DesignElement, CustomizerState, Side } from "@/types/customizer";
+import { GARMENTS, FABRICS, COLOR_PRESETS } from "@/lib/fabric-data";
 
-import { GARMENTS, FABRICS, FABRIC_CATEGORIES, TAG_COLORS, COLOR_PRESETS, FabricCategory, Fabric } from "@/lib/fabric-data";
-
-// Types
 type GarmentKey = keyof typeof GARMENTS;
+type ActiveTool = "Text" | "Uploads" | "Elements" | "Colors" | null;
 
 interface Props {
   onChange?: (state: CustomizerState) => void;
   initialState?: CustomizerState | null;
+  isPreviewMode?: boolean;
 }
 
-// Component
-export default function PoloCustomizer({ onChange, initialState }: Props) {
-  const [garmentType, setGarmentType] = useState<GarmentKey>((initialState?.garmentType as GarmentKey) || "round-neck");
-  const [activeSide, setActiveSide]   = useState<Side>("front");
-  const [isFlipping, setIsFlipping]   = useState(false);
-  const initialFabric = initialState?.fabricId ? FABRICS.find(f => f.id === initialState.fabricId) : null;
-  const [selectedFabric, setSelectedFabric] = useState<Fabric | null>(initialFabric || null);
-  const [bodyColor, setBodyColor]     = useState(initialState?.bodyColor || "#FFFFFF");
-
-  // Update fabric when initialState changes
-  useEffect(() => {
-    if (initialState?.fabricId) {
-      const fabric = FABRICS.find(f => f.id === initialState.fabricId);
-      if (fabric) {
-        setSelectedFabric(fabric);
-      }
-    }
-  }, [initialState?.fabricId]);
-
-  // Separate element lists per side
-  const [frontElements, setFrontElements] = useState<DesignElement[]>(initialState?.frontElements || [
-    { 
-      id: "f1", type: "text", x: 120, y: 170, width: 170, height: 55, 
-      value: "YOUR TEAM", color: "#000000", fontFamily: "Inter",
-      fontWeight: "bold", textAlign: "center", uppercase: true 
-    },
-  ]);
+export default function PoloCustomizer({ onChange, initialState, isPreviewMode }: Props) {
+  const [garmentType] = useState<GarmentKey>((initialState?.garmentType as GarmentKey) || "round-neck");
+  const [activeSide, setActiveSide] = useState<Side>("front");
+  const [bodyColor, setBodyColor] = useState(initialState?.bodyColor || "#111111");
+  const [activeTool, setActiveTool] = useState<ActiveTool>("Text");
+  const [frontElements, setFrontElements] = useState<DesignElement[]>(initialState?.frontElements || []);
   const [backElements, setBackElements] = useState<DesignElement[]>(initialState?.backElements || []);
   const [activeElementId, setActiveElementId] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // helpers
-  const elements    = activeSide === "front" ? frontElements : backElements;
+  const elements = activeSide === "front" ? frontElements : backElements;
   const setElements = activeSide === "front" ? setFrontElements : setBackElements;
+
+  // History Stack Logic
+  const [history, setHistory] = useState<{ bodyColor: string, frontElements: DesignElement[], backElements: DesignElement[] }[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const isFirstMount = useRef(true);
+  const isUndoingRef = useRef(false);
+  const saveHistoryRef = useRef<NodeJS.Timeout>();
+
+  useEffect(() => {
+    if (isFirstMount.current) {
+      setHistory([{ bodyColor, frontElements: JSON.parse(JSON.stringify(frontElements)), backElements: JSON.parse(JSON.stringify(backElements)) }]);
+      setHistoryIndex(0);
+      isFirstMount.current = false;
+      return;
+    }
+    
+    if (isUndoingRef.current) {
+      isUndoingRef.current = false;
+      return;
+    }
+    
+    if (saveHistoryRef.current) clearTimeout(saveHistoryRef.current);
+    
+    saveHistoryRef.current = setTimeout(() => {
+      setHistory(prev => {
+        const newHist = prev.slice(0, historyIndex + 1);
+        return [...newHist, { bodyColor, frontElements: JSON.parse(JSON.stringify(frontElements)), backElements: JSON.parse(JSON.stringify(backElements)) }];
+      });
+      setHistoryIndex(prev => prev + 1);
+    }, 600); // 600ms debounce
+    
+  }, [bodyColor, frontElements, backElements]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const handleUndo = () => {
+      if (historyIndex > 0) {
+        const prevState = history[historyIndex - 1];
+        isUndoingRef.current = true;
+        setBodyColor(prevState.bodyColor);
+        setFrontElements(prevState.frontElements);
+        setBackElements(prevState.backElements);
+        setHistoryIndex(historyIndex - 1);
+      }
+    };
+    
+    const handleRedo = () => {
+      if (historyIndex < history.length - 1) {
+        const nextState = history[historyIndex + 1];
+        isUndoingRef.current = true;
+        setBodyColor(nextState.bodyColor);
+        setFrontElements(nextState.frontElements);
+        setBackElements(nextState.backElements);
+        setHistoryIndex(historyIndex + 1);
+      }
+    };
+
+    window.addEventListener('undo-customizer', handleUndo);
+    window.addEventListener('redo-customizer', handleRedo);
+    
+    // Broadcast bounds to parent
+    window.dispatchEvent(new CustomEvent('history-bounds', { 
+      detail: { canUndo: historyIndex > 0, canRedo: historyIndex < history.length - 1 } 
+    }));
+
+    return () => {
+      window.removeEventListener('undo-customizer', handleUndo);
+      window.removeEventListener('redo-customizer', handleRedo);
+    };
+  }, [history, historyIndex]);
 
   useEffect(() => {
     if (onChange) {
-      onChange({
-        bodyColor,
-        garmentType,
-        frontElements,
-        backElements,
-      });
+      onChange({ bodyColor, garmentType, frontElements, backElements });
     }
   }, [frontElements, backElements, bodyColor, garmentType, onChange]);
-
-  const flip = (side: Side) => {
-    if (side === activeSide) return;
-    setActiveElementId(null);
-    setIsFlipping(true);
-    setTimeout(() => {
-      setActiveSide(side);
-      setIsFlipping(false);
-    }, 260);
-  };
 
   const addText = () => {
     const id = Date.now().toString();
     setElements([...elements, {
       id, type: "text",
-      x: 130, y: 200, width: 160, height: 52,
-      value: "ADD TEXT", color: bodyColor === "#111111" ? "#FFFFFF" : "#000000",
-      fontFamily: "Inter", fontWeight: "bold", textAlign: "center"
+      x: 200, y: 250, width: 200, height: 50,
+      value: "Add Text", color: "#000000",
+      fontFamily: "Inter", fontWeight: "bold", textAlign: "center", rotation: 0
     }]);
     setActiveElementId(id);
-  };
-
-  const removeElement = (id: string, e?: React.SyntheticEvent) => {
-    e?.stopPropagation();
-    e?.preventDefault();
-    
-    // Clear active element immediately
-    if (activeElementId === id) setActiveElementId(null);
-    
-    // Remove element without setTimeout to avoid DOM manipulation issues
-    const removeId = () => {
-      if (activeSide === "front") {
-        setFrontElements((prev) => prev.filter((el) => el.id !== id));
-      } else {
-        setBackElements((prev) => prev.filter((el) => el.id !== id));
-      }
-    };
-    
-    // Use requestAnimationFrame for safer DOM manipulation
-    requestAnimationFrame(removeId);
-  };
-
-  const updateElement = (id: string, updates: Partial<DesignElement>) => {
-    setElements((prev) => {
-      try {
-        return prev.map((e) => (e.id === id ? { ...e, ...updates } : e));
-      } catch (error) {
-        console.error('Error updating element:', error);
-        return prev; // Return previous state on error
-      }
-    });
   };
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -121,385 +122,317 @@ export default function PoloCustomizer({ onChange, initialState }: Props) {
     const url = URL.createObjectURL(file);
     setElements([...elements, {
       id: Date.now().toString(), type: "logo",
-      x: 120, y: 160, width: 140, height: 140,
+      x: 200, y: 200, width: 150, height: 150,
       value: url, color: "",
     }]);
   };
 
-  
+  const removeElement = (id: string, e?: React.SyntheticEvent) => {
+    e?.stopPropagation();
+    if (activeElementId === id) setActiveElementId(null);
+    requestAnimationFrame(() => {
+      if (activeSide === "front") setFrontElements((p) => p.filter((el) => el.id !== id));
+      else setBackElements((p) => p.filter((el) => el.id !== id));
+    });
+  };
+
+  const updateElement = (id: string, updates: Partial<DesignElement>) => {
+    setElements((prev) => prev.map((e) => (e.id === id ? { ...e, ...updates } : e)));
+  };
+
   const currentImg = GARMENTS[garmentType][activeSide];
-
-  // frontCount / backCount badges
-  const frontCount = frontElements.length;
-  const backCount  = backElements.length;
-
   const activeEl = elements.find((e) => e.id === activeElementId) as DesignElement | undefined;
 
-  // render
   return (
     <div className={styles.wrapper}>
-
-      {/* LEFT - Preview Canvas */}
-      <div className={styles.leftCol}>
-        {/* Front / Back switcher */}
-        <div className={styles.sideToggle}>
-          <button
-            className={`${styles.sideBtn} ${activeSide === "front" ? styles.sideBtnActive : ""}`}
-            onClick={() => flip("front")}
+      {/* LEFT SIDEBAR */}
+      {!isPreviewMode && (
+        <div className={styles.leftSidebar}>
+          <button 
+            className={`${styles.sidebarToolBtn} ${activeTool === "Text" ? styles.sidebarToolActive : ""}`}
+            onClick={() => setActiveTool("Text")}
           >
-            <span className={styles.sideBtnIcon}>T</span>
-            Front
-            {frontCount > 0 && <span className={styles.sideDot}>{frontCount}</span>}
+            <Type size={24} className={styles.sidebarToolIcon} />
+            <span className={styles.sidebarToolLabel}>Text</span>
           </button>
-          <button
-            className={`${styles.sideBtn} ${activeSide === "back" ? styles.sideBtnActive : ""}`}
-            onClick={() => flip("back")}
+          
+          <button 
+            className={`${styles.sidebarToolBtn} ${activeTool === "Uploads" ? styles.sidebarToolActive : ""}`}
+            onClick={() => setActiveTool("Uploads")}
           >
-            <span className={styles.sideBtnIcon}>T</span>
-            Back
-            {backCount > 0 && <span className={styles.sideDot}>{backCount}</span>}
+            <UploadCloud size={24} className={styles.sidebarToolIcon} />
+            <span className={styles.sidebarToolLabel}>Uploads</span>
+          </button>
+
+          <button 
+            className={`${styles.sidebarToolBtn} ${activeTool === "Colors" ? styles.sidebarToolActive : ""}`}
+            onClick={() => setActiveTool("Colors")}
+          >
+            <Palette size={24} className={styles.sidebarToolIcon} />
+            <span className={styles.sidebarToolLabel}>Colors</span>
+          </button>
+        </div>
+      )}
+
+      {/* CONTEXT PANEL */}
+      {activeTool && !isPreviewMode && (
+        <div className={styles.contextPanel}>
+          <div className={styles.contextHeader}>
+            <div className={styles.contextTitle}>
+              {activeTool === "Text" && "Add text to your design"}
+              {activeTool === "Uploads" && "Upload assets"}
+              {activeTool === "Colors" && "Change Garment Color"}
+            </div>
+            <button className={styles.closeContextBtn} onClick={() => setActiveTool(null)}>
+              <X size={20} />
+            </button>
+          </div>
+          
+          <div className={styles.contextBody}>
+            {activeTool === "Text" && (
+              <>
+                <div className={styles.contextHint}>Click the button below to add text to your design</div>
+                <button className={styles.addAssetBtn} onClick={addText}>
+                  <Type size={18} /> Add a text box
+                </button>
+              </>
+            )}
+
+            {activeTool === "Uploads" && (
+              <>
+                <div className={styles.contextHint}>Upload logos, SVGs, or high-res images.</div>
+                <button className={styles.addAssetBtn} onClick={() => fileInputRef.current?.click()}>
+                  <UploadCloud size={18} /> Upload Image
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  style={{ display: "none" }}
+                  onChange={handleLogoUpload}
+                />
+              </>
+            )}
+
+            {activeTool === "Colors" && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px' }}>
+                {COLOR_PRESETS.map((p) => (
+                  <button
+                    key={p.hex}
+                    onClick={() => setBodyColor(p.hex)}
+                    title={p.name}
+                    style={{
+                      width: '40px', height: '40px', borderRadius: '50%', background: p.hex,
+                      border: p.hex === "#FFFFFF" ? "1px solid #D1D5DB" : "none",
+                      boxShadow: bodyColor === p.hex ? '0 0 0 2px white, 0 0 0 4px #25338B' : 'none',
+                      cursor: 'pointer'
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* CANVAS AREA */}
+      <div className={styles.canvasArea} onClick={() => setActiveElementId(null)}>
+        
+        {/* Right Side Thumbnails */}
+        <div className={styles.rightThumbnails}>
+          <button 
+            className={`${styles.thumbnailBtn} ${activeSide === "front" ? styles.thumbnailBtnActive : ""}`}
+            onClick={(e) => { e.stopPropagation(); setActiveSide("front"); }}
+          >
+            <div className={styles.thumbnailImgWrap}>
+              <Image src={GARMENTS[garmentType].front} alt="Front" fill style={{objectFit: 'contain'}} />
+            </div>
+            <span className={styles.thumbnailLabel}>Front</span>
+          </button>
+          <button 
+            className={`${styles.thumbnailBtn} ${activeSide === "back" ? styles.thumbnailBtnActive : ""}`}
+            onClick={(e) => { e.stopPropagation(); setActiveSide("back"); }}
+          >
+            <div className={styles.thumbnailImgWrap}>
+              <Image src={GARMENTS[garmentType].back} alt="Back" fill style={{objectFit: 'contain'}} />
+            </div>
+            <span className={styles.thumbnailLabel}>Back</span>
           </button>
         </div>
 
-        {/* Canvas */}
-        <div 
-          className={`${styles.preview} ${isFlipping ? styles.previewFlip : ""}`}
-          onClick={() => setActiveElementId(null)}
-        >
-          <div className={styles.garmentContainer}>
-            <Image
-              key={`${garmentType}-${activeSide}`}
-              src={currentImg}
-              alt={`${GARMENTS[garmentType].label} ${activeSide}`}
-              fill
-              className={styles.garmentImage}
-              priority
-            />
-            {/* Side label watermark */}
-            <div className={styles.sideWatermark}>
-              {activeSide === "front" ? "FRONT" : "BACK"}
-            </div>
-          </div>
+        <div className={styles.garmentContainer}>
+          <Image
+            src={currentImg}
+            alt="Garment"
+            fill
+            className={styles.garmentImage}
+            style={{ mixBlendMode: 'darken' }}
+            priority
+          />
 
-          {/* Canva-Style Floating Toolbar */}
-          {activeEl && activeEl.type === "text" && (
+          {/* Printable Area Bounding Box */}
+          {!isPreviewMode && <div className={styles.printableArea}></div>}
+
+          {/* Floating Formatting Toolbar */}
+          {activeEl && !isPreviewMode && (
             <div 
               className={styles.formattingToolbarFloating}
               style={{
-                top: Math.max(10, activeEl.y - 75),
+                top: Math.max(10, activeEl.y - 65),
                 left: activeEl.x + (activeEl.width / 2),
               }}
               onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => e.stopPropagation()}
             >
-              {/* Font Family */}
-              <select 
-                className={styles.toolSelect}
-                value={activeEl.fontFamily || "Inter"}
-                onChange={(e) => updateElement(activeEl.id, { fontFamily: e.target.value })}
-              >
-                <option value="Inter">Inter</option>
-                <option value="Roboto">Roboto</option>
-                <option value="Oswald">Oswald</option>
-                <option value="Montserrat">Montserrat</option>
-                <option value="Playfair Display">Playfair</option>
-                <option value="Bebas Neue">Bebas Neue</option>
-                <option value="Caveat">Caveat</option>
-                <option value="Pacifico">Pacifico</option>
-                <option value="Righteous">Righteous</option>
-                <option value="Anton">Anton</option>
-                <option value="Lora">Lora</option>
-              </select>
+              {activeEl.type === "text" && (
+                <>
+                  <select 
+                    className={styles.toolSelect}
+                    value={activeEl.fontFamily || "Inter"}
+                    onChange={(e) => updateElement(activeEl.id, { fontFamily: e.target.value })}
+                    style={{ width: '120px', fontWeight: 600 }}
+                  >
+                    <option value="Inter">Canva Sans</option>
+                    <option value="Roboto">Roboto</option>
+                    <option value="Oswald">Oswald</option>
+                  </select>
 
-              {/* Formatting Toggles */}
-              <div className={styles.toolGroup}>
-                <button 
-                  className={`${styles.toolBtn} ${activeEl.fontWeight === "bold" ? styles.toolBtnActive : ""}`}
-                  onClick={() => updateElement(activeEl.id, { fontWeight: activeEl.fontWeight === "bold" ? "normal" : "bold" })}
-                  title="Bold"
-                ><Bold size={16} /></button>
-                <button 
-                  className={`${styles.toolBtn} ${activeEl.fontStyle === "italic" ? styles.toolBtnActive : ""}`}
-                  onClick={() => updateElement(activeEl.id, { fontStyle: activeEl.fontStyle === "italic" ? "normal" : "italic" })}
-                  title="Italic"
-                ><Italic size={16} /></button>
-                <button 
-                  className={`${styles.toolBtn} ${activeEl.textDecoration === "underline" ? styles.toolBtnActive : ""}`}
-                  onClick={() => updateElement(activeEl.id, { textDecoration: activeEl.textDecoration === "underline" ? "none" : "underline" })}
-                  title="Underline"
-                ><Underline size={16} /></button>
-                <button 
-                  className={`${styles.toolBtn} ${activeEl.uppercase ? styles.toolBtnActive : ""}`}
-                  onClick={() => updateElement(activeEl.id, { uppercase: !activeEl.uppercase })}
-                  title="Uppercase"
-                ><Type size={16} /></button>
-              </div>
+                  <div className={styles.toolGroup} style={{ background: 'transparent' }}>
+                    <button className={styles.toolBtn} onClick={(e) => {
+                      e.stopPropagation();
+                      const scale = 0.95;
+                      const newWidth = activeEl.width * scale;
+                      const newHeight = activeEl.height * scale;
+                      updateElement(activeEl.id, { 
+                        width: newWidth, 
+                        height: newHeight,
+                        x: activeEl.x + (activeEl.width - newWidth) / 2,
+                        y: activeEl.y + (activeEl.height - newHeight) / 2
+                      });
+                    }}>-</button>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 600, width: '30px', textAlign: 'center' }}>
+                      {Math.round(Math.min(activeEl.width / (Math.max(1, ...activeEl.value.split('\n').map(l => l.length)) * 0.6 + 1), (activeEl.height / Math.max(1, activeEl.value.split('\n').length)) * 0.8))}
+                    </span>
+                    <button className={styles.toolBtn} onClick={(e) => {
+                      e.stopPropagation();
+                      const scale = 1.05;
+                      const newWidth = activeEl.width * scale;
+                      const newHeight = activeEl.height * scale;
+                      updateElement(activeEl.id, { 
+                        width: newWidth, 
+                        height: newHeight,
+                        x: activeEl.x - (newWidth - activeEl.width) / 2,
+                        y: activeEl.y - (newHeight - activeEl.height) / 2
+                      });
+                    }}>+</button>
+                  </div>
 
-              {/* Alignment */}
-              <div className={styles.toolGroup}>
-                <button 
-                  className={`${styles.toolBtn} ${activeEl.textAlign === "left" ? styles.toolBtnActive : ""}`}
-                  onClick={() => updateElement(activeEl.id, { textAlign: "left" })}
-                ><AlignLeft size={16} /></button>
-                <button 
-                  className={`${styles.toolBtn} ${activeEl.textAlign === "center" ? styles.toolBtnActive : ""}`}
-                  onClick={() => updateElement(activeEl.id, { textAlign: "center" })}
-                ><AlignCenter size={16} /></button>
-                <button 
-                  className={`${styles.toolBtn} ${activeEl.textAlign === "right" ? styles.toolBtnActive : ""}`}
-                  onClick={() => updateElement(activeEl.id, { textAlign: "right" })}
-                ><AlignRight size={16} /></button>
-              </div>
+                  <div className={styles.divider}></div>
 
-              {/* Spacing & Utilities */}
-              <div className={styles.toolGroup}>
-                <button 
-                  className={styles.toolBtn}
-                  onClick={() => updateElement(activeEl.id, { letterSpacing: (activeEl.letterSpacing || 0) + 1 })}
-                  title="Increase Letter Spacing"
-                ><ScanText size={16} /></button>
-                <input
-                  type="color"
-                  className={styles.toolColor}
-                  value={activeEl.color || "#000000"}
-                  onChange={(e) => updateElement(activeEl.id, { color: e.target.value })}
-                  title="Text Color"
-                />
-              </div>
+                  <div className={styles.toolGroup}>
+                    <input type="color" className={styles.toolColor} value={activeEl.color || "#000000"} onChange={(e) => updateElement(activeEl.id, { color: e.target.value })} />
+                  </div>
+                  
+                  <div className={styles.toolGroup}>
+                    <button className={`${styles.toolBtn} ${activeEl.fontWeight === "bold" ? styles.toolBtnActive : ""}`} onClick={() => updateElement(activeEl.id, { fontWeight: activeEl.fontWeight === "bold" ? "normal" : "bold" })}><Bold size={16} /></button>
+                    <button className={`${styles.toolBtn} ${activeEl.fontStyle === "italic" ? styles.toolBtnActive : ""}`} onClick={() => updateElement(activeEl.id, { fontStyle: activeEl.fontStyle === "italic" ? "normal" : "italic" })}><Italic size={16} /></button>
+                    <button className={`${styles.toolBtn} ${activeEl.textDecoration === "underline" ? styles.toolBtnActive : ""}`} onClick={() => updateElement(activeEl.id, { textDecoration: activeEl.textDecoration === "underline" ? "none" : "underline" })}><Underline size={16} /></button>
+                    <button className={`${styles.toolBtn} ${activeEl.uppercase ? styles.toolBtnActive : ""}`} onClick={() => updateElement(activeEl.id, { uppercase: !activeEl.uppercase })}><Type size={16} /></button>
+                  </div>
+
+                  <div className={styles.divider}></div>
+
+                  <div className={styles.toolGroup}>
+                    <button 
+                      className={`${styles.toolBtn} ${activeEl.textAlign ? styles.toolBtnActive : ""}`} 
+                      onClick={() => {
+                        const nextAlign = { "left": "center", "center": "right", "right": "justify", "justify": "left" }[activeEl.textAlign || "center"] as "left" | "center" | "right" | "justify";
+                        updateElement(activeEl.id, { textAlign: nextAlign });
+                      }}
+                      title="Align Text"
+                    >
+                      {activeEl.textAlign === "left" && <AlignLeft size={16} />}
+                      {activeEl.textAlign === "center" && <AlignCenter size={16} />}
+                      {activeEl.textAlign === "right" && <AlignRight size={16} />}
+                      {(activeEl.textAlign === "justify" || !activeEl.textAlign) && <AlignLeft size={16} />}
+                    </button>
+                  </div>
+                  
+                  <div className={styles.divider}></div>
+                </>
+              )}
               
-              <button 
-                className={`${styles.toolBtn} ${styles.toolBtnDanger}`}
-                onClick={(e) => removeElement(activeEl.id, e)}
-                title="Delete Element"
-              ><Trash2 size={16} /></button>
+              <button className={`${styles.toolBtn} ${styles.toolBtnDanger}`} onClick={(e) => removeElement(activeEl.id, e)} title="Delete Element"><Trash2 size={16} /></button>
             </div>
           )}
 
-          {/* Draggable elements */}
+          {/* Draggable Elements */}
           {elements.map((el) => {
-            const isActive = el.id === activeElementId;
+            const isActive = el.id === activeElementId && !isPreviewMode;
             return (
             <Rnd
               key={el.id}
               className={`${styles.rndBox} ${isActive ? styles.rndBoxActive : ""}`}
               bounds="parent"
+              dragHandleClassName="customizer-drag-handle"
               position={{ x: el.x, y: el.y }}
               size={{ width: el.width, height: el.height }}
-              onDragStop={(_, d) => {
-                try {
-                  updateElement(el.id, { x: d.x, y: d.y });
-                } catch (error) {
-                  console.error('Error updating element position:', error);
-                }
+              onDragStop={(_, d) => updateElement(el.id, { x: d.x, y: d.y })}
+              onResizeStop={(_, __, ref, ___, pos) => updateElement(el.id, { width: parseInt(ref.style.width), height: parseInt(ref.style.height), ...pos })}
+              disableDragging={!isActive || isPreviewMode}
+              enableResizing={isActive && !isPreviewMode}
+              resizeHandleClasses={{
+                top: "react-resizable-handle-n",
+                right: "react-resizable-handle-e",
+                bottom: "react-resizable-handle-s",
+                left: "react-resizable-handle-w",
+                topRight: "react-resizable-handle-ne",
+                bottomRight: "react-resizable-handle-se",
+                bottomLeft: "react-resizable-handle-sw",
+                topLeft: "react-resizable-handle-nw",
               }}
-              onResizeStop={(_, __, ref, ___, pos) => {
-                try {
-                  updateElement(el.id, {
-                    width: parseInt(ref.style.width) || el.width,
-                    height: parseInt(ref.style.height) || el.height,
-                    ...pos,
-                  });
-                } catch (error) {
-                  console.error('Error updating element size:', error);
-                }
-              }}
-              disableDragging={!isActive}
             >
-              <div className={styles.rndContent} onClick={(e) => { 
-                  e.stopPropagation(); 
-                  setActiveElementId(el.id);
-                }} onDoubleClick={(e) => {
-                  // Double-click to focus and edit text
-                  const textarea = e.currentTarget.querySelector('textarea');
-                  if (textarea) {
-                    e.stopPropagation();
-                    textarea.focus();
-                    textarea.select();
-                  }
-                }}>
+              <div className={styles.rndContent} style={{ transform: `rotate(${el.rotation || 0}deg)`, transition: 'transform 0.2s ease', width: '100%', height: '100%' }} onClick={(e) => { e.stopPropagation(); setActiveElementId(el.id); }}>
                 {el.type === "text" ? (
                   <textarea
-                    className={styles.rndText}
+                    className={`${styles.rndText} customizer-drag-handle`}
                     value={el.value}
                     spellCheck={false}
                     onChange={(e) => updateElement(el.id, { value: e.target.value })}
-                    onFocus={(e) => {
-                      // When editing, disable dragging temporarily
-                      e.target.style.pointerEvents = 'auto';
-                    }}
-                    onBlur={(e) => {
-                      if (!e.target.value.trim()) {
-                        // Use a timeout to avoid DOM manipulation conflicts
-                        setTimeout(() => removeElement(el.id), 10);
-                      }
-                      // Re-enable pointer events for dragging
-                      e.target.style.pointerEvents = 'none';
-                    }}
-                    onMouseDown={(e) => {
-                      // Prevent text selection during drag, but allow when focused
-                      if (e.target !== document.activeElement) {
-                        e.preventDefault();
+                    onBlur={() => {
+                      if (el.value.trim() === "") {
+                        removeElement(el.id);
                       }
                     }}
                     style={{
                       color: el.color,
                       fontSize: `${Math.min(el.width / (Math.max(1, ...el.value.split('\n').map(l => l.length)) * 0.6 + 1), (el.height / Math.max(1, el.value.split('\n').length)) * 0.8)}px`,
                       fontFamily: el.fontFamily || "Inter",
-                      fontWeight: el.fontWeight || "bold",
+                      fontWeight: el.fontWeight || "normal",
                       fontStyle: el.fontStyle || "normal",
-                      textDecoration: el.textDecoration || "none",
                       textAlign: el.textAlign || "center",
+                      textDecoration: el.textDecoration || "none",
                       textTransform: el.uppercase ? "uppercase" : "none",
                       letterSpacing: `${el.letterSpacing || 0}px`,
-                      opacity: el.opacity ?? 1,
-                      scrollbarWidth: "none",
-                      msOverflowStyle: "none",
+                      pointerEvents: isActive ? 'auto' : 'none',
                     }}
                   />
                 ) : (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img 
-                    src={el.value} 
-                    alt="logo" 
-                    draggable={false}
-                    style={{ 
-                      width: "100%", 
-                      height: "100%", 
-                      objectFit: "contain",
-                      pointerEvents: "none",
-                      userSelect: "none",
-                      WebkitUserSelect: "none"
-                    }} 
-                  />
+                  <img src={el.value} alt="logo" draggable={false} className="customizer-drag-handle" style={{ width: "100%", height: "100%", objectFit: "contain", pointerEvents: isActive ? "auto" : "none" }} />
                 )}
               </div>
+              
+              {/* Canva floating buttons below active element */}
+              {isActive && (
+                <div className={styles.floatingActionBtns}>
+                  <div className={styles.circleActionBtn} onClick={(e) => { e.stopPropagation(); updateElement(el.id, { rotation: ((el.rotation || 0) + 90) % 360 }); }} title="Rotate 90°"><RotateCw size={14} /></div>
+                  <div className={`${styles.circleActionBtn} customizer-drag-handle`} title="Move"><Move size={14} /></div>
+                </div>
+              )}
             </Rnd>
             );
           })}
-
-          {/* Fabric badge */}
-          {selectedFabric && (
-            <div className={styles.fabricBadge}>
-              {selectedFabric.brand} · {selectedFabric.gsm} GSM · {selectedFabric.priceRange}
-            </div>
-          )}
         </div>
-
-        {/* Hint under canvas */}
-        <p className={styles.canvasHint}>
-          Select an element to edit · Drag to move · Drag corners to resize
-        </p>
-      </div>
-
-      {/* RIGHT - Controls Panel */}
-      <div className={styles.controls}>
-
-        {/* Step 1: Garment */}
-        <div className={styles.block}>
-          <div className={styles.blockTitle}>1. Select Garment</div>
-          <div className={styles.tabs}>
-            {(Object.keys(GARMENTS) as GarmentKey[]).map((key) => (
-              <button
-                key={key}
-                className={`${styles.tab} ${garmentType === key ? styles.tabActive : ""}`}
-                onClick={() => setGarmentType(key)}
-              >
-                {GARMENTS[key].label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Step 2: Selected Fabric Details */}
-        <div className={styles.block}>
-          <div className={styles.blockTitle}>2. Selected Fabric Details</div>
-          
-          {selectedFabric && (
-            <div className={styles.selectedStrip}>
-              <div className={styles.selectedStripLeft}>
-                <span className={styles.selectedCheck}> </span>
-                <div>
-                  <div className={styles.selectedName}>{selectedFabric.brand}</div>
-                  <div className={styles.selectedDetail}>
-                    {selectedFabric.fabric} · {selectedFabric.gsm} GSM · {selectedFabric.sizes}
-                  </div>
-                </div>
-              </div>
-              <div className={styles.selectedPrice}>{selectedFabric.priceRange}</div>
-            </div>
-          )}
-        </div>
-
-        {/* Step 3: Color */}
-        <div className={styles.block}>
-          <div className={styles.blockTitle}>3. Choose Fabric Color</div>
-          <div className={styles.colorGrid}>
-            {COLOR_PRESETS.map((p) => (
-              <button
-                key={p.hex}
-                className={`${styles.colorSwatch} ${bodyColor === p.hex ? styles.colorSwatchActive : ""}`}
-                onClick={() => setBodyColor(p.hex)}
-                title={p.name}
-              >
-                <span
-                  className={styles.swatchDot}
-                  style={{
-                    background: p.hex,
-                    border: p.hex === "#FFFFFF" ? "1px solid #D1D5DB" : "none",
-                  }}
-                />
-                <span className={styles.swatchName}>{p.name}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Step 4: Design */}
-        <div className={styles.block}>
-          <div className={styles.blockTitle}>
-            4. Customize Design
-            <span className={styles.sidePill}>
-              Editing: <strong>{activeSide === "front" ? "Front" : "Back"}</strong>
-            </span>
-          </div>
-          <p className={styles.hint}>
-            Use the <strong>Front / Back</strong> toggle above the preview to switch sides and add different designs to each.
-          </p>
-
-          <div className={styles.designActions}>
-            {/* Quick-switch side btns inside panel */}
-            <div className={styles.miniSideToggle}>
-              <button
-                className={`${styles.miniSideBtn} ${activeSide === "front" ? styles.miniSideBtnActive : ""}`}
-                onClick={() => flip("front")}
-              >
-                Front {frontCount > 0 && `(${frontCount})`}
-              </button>
-              <button
-                className={`${styles.miniSideBtn} ${activeSide === "back" ? styles.miniSideBtnActive : ""}`}
-                onClick={() => flip("back")}
-              >
-                Back {backCount > 0 && `(${backCount})`}
-              </button>
-            </div>
-
-            <div className={styles.addBtns}>
-              <button className={styles.addAssetBtn} onClick={addText}>
-                + Add Text
-              </button>
-              <button className={styles.addAssetBtn} onClick={() => fileInputRef.current?.click()}>
-                + Upload Logo
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".png,.jpg,.jpeg,.svg,.webp"
-                style={{ display: "none" }}
-                onChange={handleLogoUpload}
-              />
-            </div>
-          </div>
-        </div>
-
       </div>
     </div>
   );

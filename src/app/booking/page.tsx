@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import styles from "./page.module.css";
+import { Calendar, MapPin, Clock, Phone, CheckCircle2 } from "lucide-react";
 
 const timeSlots = [
   "10:00 AM", "11:00 AM", "12:00 PM",
@@ -49,29 +50,29 @@ export default function BookingPage() {
           <div className={styles.grid}>
             {/* Left — Info */}
             <div className={styles.info}>
-              <div className="section-badge">📅 Pune Showroom</div>
+              <div className={styles.badge}><Calendar size={14} /> Pune Showroom</div>
               <h1 className={styles.title}>Book a Visit</h1>
               <p className={styles.sub}>
-                Visit our Pune showroom to feel the fabric quality, see colour options in person, and discuss bulk orders with our team. Appointments are free!
+                Visit our Pune showroom to feel the fabric quality, see colour options in person, and discuss bulk orders with our tailoring experts.
               </p>
 
               <div className={styles.details}>
                 <div className={styles.detail}>
-                  <div className={styles.detailIcon}>📍</div>
+                  <div className={styles.detailIcon}><MapPin size={24} /></div>
                   <div>
                     <strong>Location</strong>
                     <p>Tailoring Turba, Kothrud,<br />Pune - 411038, Maharashtra</p>
                   </div>
                 </div>
                 <div className={styles.detail}>
-                  <div className={styles.detailIcon}>🕐</div>
+                  <div className={styles.detailIcon}><Clock size={24} /></div>
                   <div>
                     <strong>Hours</strong>
                     <p>Monday – Saturday<br />10:00 AM to 7:00 PM</p>
                   </div>
                 </div>
                 <div className={styles.detail}>
-                  <div className={styles.detailIcon}>📞</div>
+                  <div className={styles.detailIcon}><Phone size={24} /></div>
                   <div>
                     <strong>Direct Call</strong>
                     <p>+91 99999 99999</p>
@@ -81,19 +82,21 @@ export default function BookingPage() {
 
               <div className={styles.perks}>
                 {["Free fabric samples", "Live printing demo", "Bulk quote in 10 mins", "GST invoice ready"].map((p, i) => (
-                  <div key={i} className={styles.perk}>✅ {p}</div>
+                  <div key={i} className={styles.perk}>
+                    <CheckCircle2 size={18} color="var(--tth-olive)" /> {p}
+                  </div>
                 ))}
               </div>
             </div>
 
             {/* Right — Booking Form */}
-            <div className={`${styles.form} glass-card`}>
+            <div className={styles.form}>
               {submitted ? (
                 <div className={styles.success}>
-                  <div className={styles.successIcon}>🎉</div>
-                  <h2>Booking Confirmed!</h2>
-                  <p>We&apos;ll send a confirmation to your email. See you at the showroom!</p>
-                  <button className="btn-primary" onClick={() => setSubmitted(false)} style={{ marginTop: 20 }}>
+                  <div className={styles.successIcon}><CheckCircle2 size={64} /></div>
+                  <h2>Booking Confirmed.</h2>
+                  <p>We&apos;ve sent a confirmation to your email. We look forward to seeing you.</p>
+                  <button className={styles.btnSubmit} onClick={() => setSubmitted(false)}>
                     Book Another Slot
                   </button>
                 </div>
@@ -103,28 +106,28 @@ export default function BookingPage() {
                   {error && <div className={styles.error}>{error}</div>}
 
                   <div className={styles.row}>
-                    <div className="form-group">
-                      <label className="form-label">Your Name</label>
-                      <input id="book-name" type="text" className="form-input" placeholder="Rahul Sharma" value={form.name} onChange={e => set("name", e.target.value)} required />
+                    <div className={styles.formGroup}>
+                      <label className={styles.label}>Your Name</label>
+                      <input id="book-name" type="text" className={styles.input} placeholder="e.g. Rahul Sharma" value={form.name} onChange={e => set("name", e.target.value)} required />
                     </div>
-                    <div className="form-group">
-                      <label className="form-label">Phone Number</label>
-                      <input id="book-phone" type="tel" className="form-input" placeholder="+91 98765 43210" value={form.phone} onChange={e => set("phone", e.target.value)} required />
+                    <div className={styles.formGroup}>
+                      <label className={styles.label}>Phone Number</label>
+                      <input id="book-phone" type="tel" className={styles.input} placeholder="+91 98765 43210" value={form.phone} onChange={e => set("phone", e.target.value)} required />
                     </div>
                   </div>
 
-                  <div className="form-group">
-                    <label className="form-label">Email</label>
-                    <input id="book-email" type="email" className="form-input" placeholder="you@company.com" value={form.email} onChange={e => set("email", e.target.value)} />
+                  <div className={styles.formGroup}>
+                    <label className={styles.label}>Email Address</label>
+                    <input id="book-email" type="email" className={styles.input} placeholder="you@company.com" value={form.email} onChange={e => set("email", e.target.value)} />
                   </div>
 
-                  <div className="form-group">
-                    <label className="form-label">Preferred Date</label>
-                    <input id="book-date" type="date" className="form-input" min={minDate} value={form.date} onChange={e => set("date", e.target.value)} required />
+                  <div className={styles.formGroup}>
+                    <label className={styles.label}>Preferred Date</label>
+                    <input id="book-date" type="date" className={styles.input} min={minDate} value={form.date} onChange={e => set("date", e.target.value)} required />
                   </div>
 
-                  <div className="form-group">
-                    <label className="form-label">Preferred Time Slot</label>
+                  <div className={styles.formGroup}>
+                    <label className={styles.label}>Preferred Time Slot</label>
                     <div className={styles.slots}>
                       {timeSlots.map(slot => (
                         <button
@@ -139,21 +142,21 @@ export default function BookingPage() {
                     </div>
                   </div>
 
-                  <div className="form-group">
-                    <label className="form-label">Notes / What to Discuss (optional)</label>
+                  <div className={styles.formGroup}>
+                    <label className={styles.label}>Notes / What to Discuss (optional)</label>
                     <textarea
                       id="book-notes"
-                      className="form-input"
+                      className={styles.input}
                       rows={3}
-                      placeholder="e.g. 150 cricket jerseys, need sublimation print, want to see jersey samples"
+                      placeholder="e.g. 150 cricket jerseys, need sublimation print..."
                       value={form.notes}
                       onChange={e => set("notes", e.target.value)}
                       style={{ resize: "vertical" }}
                     />
                   </div>
 
-                  <button id="book-submit" type="submit" className="btn-primary" style={{ width: "100%", justifyContent: "center" }} disabled={loading}>
-                    {loading ? "Booking..." : "📅 Confirm Booking"}
+                  <button id="book-submit" type="submit" className={styles.btnSubmit} disabled={loading}>
+                    {loading ? "Booking..." : "Confirm Booking"}
                   </button>
                 </form>
               )}

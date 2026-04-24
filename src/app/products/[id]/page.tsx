@@ -7,6 +7,7 @@ import styles from "./page.module.css";
 import { allProducts } from "@/lib/products-data";
 import { useCart } from "@/context/CartContext";
 import { useRouter } from "next/navigation";
+import { Receipt, RotateCcw, Brush, Truck, Package } from "lucide-react";
 
 type Review = {
   id: string;
@@ -23,7 +24,7 @@ export default function ProductDetailsPage({ params }: { params: { id: string } 
   const { addToCart } = useCart();
   const product = allProducts.find(p => p.id === parseInt(params.id)) || allProducts[0];
 
-  const [activeImage, setActiveImage] = useState(product.image);
+  const [activeImage, setActiveImage] = useState(product.gallery?.[0] || product.image);
   const [qty, setQty] = useState(1);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [showForm, setShowForm] = useState(false);
@@ -145,63 +146,104 @@ export default function ProductDetailsPage({ params }: { params: { id: string } 
 
         {/* Hero Product Section */}
         <div className={`container ${styles.layout}`}>
-          {/* Main Image */}
-          <div className={styles.mainImageContainer}>
-            <Image src={activeImage} alt={product.name} fill style={{ objectFit: "cover" }} priority />
-            {product.badge && (
-              <span style={{ position: "absolute", top: 16, left: 16, background: "var(--accent)", color: "white", padding: "6px 12px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase" }}>
-                {product.badge}
-              </span>
+
+          {/* ── LEFT COLUMN: Image + Description ── */}
+          <div className={styles.leftColumn}>
+            {/* Main Image */}
+            <div className={styles.mainImageContainer}>
+              <Image src={activeImage} alt={product.name} fill style={{ objectFit: "cover" }} priority />
+              {product.badge && (
+                <span style={{ position: "absolute", top: 16, left: 16, background: "var(--tth-olive-dark)", color: "white", padding: "6px 14px", fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                  {product.badge}
+                </span>
+              )}
+            </div>
+
+            {/* Thumbnail Strip */}
+            {product.gallery && product.gallery.length > 1 && (
+              <div className={styles.thumbnailStrip}>
+                {product.gallery.map((img: string, i: number) => (
+                  <button key={i} className={`${styles.thumbnailBtn} ${activeImage === img ? styles.active : ""}`} onClick={() => setActiveImage(img)} title={`View ${i + 1}`}>
+                    <Image src={img} alt={`${product.name} view ${i + 1}`} fill style={{ objectFit: "cover" }} />
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Description below image */}
+            {product.description && (
+              <div style={{ paddingTop: "32px", borderTop: "1px solid #f1f5f9" }}>
+                <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "#94a3b8", marginBottom: "12px" }}>About this product</p>
+                <p style={{ fontSize: "0.95rem", color: "#475569", lineHeight: 1.8, margin: 0 }}>{product.description}</p>
+              </div>
+            )}
+
+            {/* Features */}
+            {product.features && product.features.length > 0 && (
+              <div style={{ paddingTop: "28px", borderTop: "1px solid #f1f5f9" }}>
+                <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "#94a3b8", marginBottom: "14px" }}>What makes it special</p>
+                <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "10px" }}>
+                  {product.features.map((f: string, i: number) => (
+                    <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: "10px", fontSize: "0.9rem", color: "#334155" }}>
+                      <span style={{ color: "var(--tth-olive-dark)", fontWeight: 700, flexShrink: 0, marginTop: "2px" }}>—</span>
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
           </div>
 
-          {/* Thumbnail Strip */}
-          <div className={styles.thumbnailStrip}>
-            {relatedProducts.slice(0, 4).map((p, i) => (
-              <button key={i} className={`${styles.thumbnailBtn} ${activeImage === p.image ? styles.active : ""}`} onClick={() => setActiveImage(p.image)} title={p.name}>
-                <Image src={p.image} alt={p.name} fill style={{ objectFit: "cover" }} />
-              </button>
-            ))}
-          </div>
-
-          {/* Details */}
+          {/* ── RIGHT COLUMN: Purchase Panel ── */}
           <div className={styles.detailsContainer}>
             <div>
-              <span style={{ fontSize: "0.8rem", fontWeight: 600, textTransform: "uppercase", color: "#94a3b8", letterSpacing: "0.06em" }}>{product.type}</span>
+              <span style={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", color: "var(--tth-olive-dark)", letterSpacing: "0.1em" }}>{product.category}</span>
               <h1 className={styles.title}>{product.name}</h1>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+              <p style={{ fontSize: "0.82rem", color: "#94a3b8", fontWeight: 500, marginBottom: "6px", letterSpacing: "0.04em" }}>{product.type}</p>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                 <div>{renderStars(averageRating)}</div>
-                <span style={{ fontSize: "0.85rem", color: "#64748b" }}>
+                <span style={{ fontSize: "0.82rem", color: "#64748b" }}>
                   {reviews.length > 0 ? `${averageRating.toFixed(1)} (${reviews.length} review${reviews.length > 1 ? "s" : ""})` : "No reviews yet"}
                 </span>
               </div>
             </div>
 
-            <div>
+            <div style={{ borderTop: "1px solid #f1f5f9", paddingTop: "20px" }}>
               <div className={styles.price}>{product.price}</div>
-              <div style={{ fontSize: "0.8rem", color: "#10b981", fontWeight: 600, marginTop: "4px" }}>✓ Wholesale / Bulk Eligible</div>
+              <div style={{ fontSize: "0.78rem", color: "#10b981", fontWeight: 700, marginTop: "6px", letterSpacing: "0.04em" }}>✓ Wholesale / Bulk Eligible</div>
             </div>
 
-            <div style={{ padding: "16px", background: "#f8fafc", borderRadius: "10px", border: "1px solid #e2e8f0", fontSize: "0.9rem", color: "#475569", display: "flex", gap: "10px" }}>
-              <span style={{ fontSize: "1.2rem" }}>📦</span>
+            <div style={{ padding: "14px 16px", background: "#f8fafc", border: "1px solid #e2e8f0", fontSize: "0.85rem", color: "#475569", display: "flex", gap: "10px", alignItems: "flex-start" }}>
+              <Package size={16} strokeWidth={1.5} style={{ color: "var(--tth-olive-dark)", flexShrink: 0, marginTop: "2px" }} />
               <div>
-                <strong style={{ color: "#1e293b" }}>Bulk orders available</strong>
-                <div style={{ marginTop: "4px", fontSize: "0.8rem" }}>Dispatches based on customization timeline. Branding available.</div>
+                <strong style={{ color: "#1e293b", fontSize: "0.88rem" }}>Bulk orders available</strong>
+                <div style={{ marginTop: "3px", fontSize: "0.78rem" }}>Dispatches based on customization timeline. Branding available.</div>
               </div>
             </div>
 
             <div className={styles.actions}>
               <div className={styles.qtyRow}>
-                <span style={{ fontWeight: 600, fontSize: "0.9rem", color: "#1e293b" }}>Qty:</span>
+                <span style={{ fontWeight: 600, fontSize: "0.85rem", color: "#1e293b", letterSpacing: "0.04em" }}>Qty:</span>
                 <input type="number" value={qty} onChange={(e) => setQty(Math.max(1, parseInt(e.target.value) || 1))} min={1} className={styles.qtyInput} />
               </div>
               <button className={styles.btnCart} onClick={handleAddToCart}>Add to Cart</button>
+              <Link href={`/customizer?productId=${product.id}`} className={styles.btnCart} style={{ textDecoration: 'none', textAlign: 'center' }}>
+                Customize in Studio
+              </Link>
               <Link href={`/contact?product=${product.name}`} className={styles.btnInquire}>Request Bulk Quote</Link>
             </div>
 
-            <div style={{ borderTop: "1px solid #f1f5f9", paddingTop: "16px", display: "flex", flexDirection: "column", gap: "8px" }}>
-              {["🏷️ GST Invoice included", "🔁 Hassle-free returns within 7 days", "🎨 Custom branding & logo printing available", "🚚 Pan-India delivery"].map((ft, i) => (
-                <div key={i} style={{ fontSize: "0.85rem", color: "#64748b" }}>{ft}</div>
+            <div style={{ borderTop: "1px solid #f1f5f9", paddingTop: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+              {[
+                { icon: <Receipt size={14} strokeWidth={1.5} />, text: "GST Invoice included" },
+                { icon: <RotateCcw size={14} strokeWidth={1.5} />, text: "Hassle-free returns within 7 days" },
+                { icon: <Brush size={14} strokeWidth={1.5} />, text: "Custom branding & logo printing available" },
+                { icon: <Truck size={14} strokeWidth={1.5} />, text: "Pan-India delivery" },
+              ].map((ft, i) => (
+                <div key={i} style={{ fontSize: "0.83rem", color: "#64748b", display: "flex", alignItems: "center", gap: "10px" }}>
+                  <span style={{ color: "var(--tth-olive-dark)", flexShrink: 0 }}>{ft.icon}</span>
+                  {ft.text}
+                </div>
               ))}
             </div>
           </div>
@@ -209,7 +251,7 @@ export default function ProductDetailsPage({ params }: { params: { id: string } 
 
         {/* Related Products */}
         {relatedProducts.length > 0 && (
-          <section style={{ background: "#f8fafc", marginTop: "80px", padding: "64px 0" }}>
+          <section style={{ background: "#f8fafc", padding: "64px 0" }}>
             <div className="container">
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "36px" }}>
                 <div>
@@ -243,7 +285,7 @@ export default function ProductDetailsPage({ params }: { params: { id: string } 
         )}
 
         {/* Reviews Section */}
-        <section style={{ padding: "64px 0", borderTop: "1px solid #f1f5f9" }}>
+        <section style={{ padding: "48px 0 64px" }}>
           <div className="container">
             {/* Header Row */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "40px", flexWrap: "wrap", gap: "16px" }}>

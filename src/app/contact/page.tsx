@@ -3,104 +3,167 @@ import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import styles from "./page.module.css";
+import { CheckCircle2, Mail, Phone, MapPin } from "lucide-react";
 
 function ContactForm() {
   const searchParams = useSearchParams();
-  const productCode = searchParams.get("product");
-  const categorySlug = searchParams.get("category");
+  const productName = searchParams.get("product");
 
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     company: "",
     quantity: "50",
-    message: productCode 
-      ? `I am interested in ordering ${productCode} from the ${categorySlug} collection.` 
-      : ""
+    message: productName
+      ? `I am interested in placing a bulk order for: ${productName}. Please share pricing and availability details.`
+      : "",
   });
 
   const [isSubmitted, setIsSubmitted] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate API call
-    console.log("Form Submitted", formData);
     setIsSubmitted(true);
   };
 
   return (
-    <div className={styles.contactContainer}>
-      <div className={styles.formCard}>
-        <h1 className={styles.title}>Bulk Order Enquiry</h1>
-        <p className={styles.subtitle}>
-          Get a professional quote for your corporate requirements. Our team will contact you within 24 hours.
-        </p>
+    <div className={styles.layout}>
+      {/* ─── Left Panel ─── */}
+      <div className={styles.leftPanel}>
+        <div className={styles.bgImage} />
+        <div className={styles.bgOverlay} />
 
-        {isSubmitted ? (
-          <div className={styles.successMessage}>
-            <h2>Thank you for your interest!</h2>
-            <p>Your enquiry has been received. Our corporate relationship manager will reach out to you shortly.</p>
-            <button className={styles.backBtn} onClick={() => window.history.back()}>Back to Catalogue</button>
+        <div className={styles.leftContent}>
+          <p className={styles.eyebrow}>Bulk Enquiry</p>
+
+          <h1 className={styles.leftTitle}>
+            Let&apos;s build<br />
+            <em>something great</em><br />
+            together.
+          </h1>
+
+          <p className={styles.leftSubtitle}>
+            Whether you need 50 units or 50,000 — our team crafts every order with precision and care. Get a tailored quote within 24 hours.
+          </p>
+
+          {productName && (
+            <div className={styles.productBadge}>
+              <span />
+              Enquiring for: {productName}
+            </div>
+          )}
+
+          <div className={styles.contactDetails}>
+            <div className={styles.contactItem}>
+              <Mail size={14} strokeWidth={1.5} className={styles.contactIcon} />
+              <span className={styles.contactValue}>hello@tailoringturba.in</span>
+            </div>
+            <div className={styles.contactItem}>
+              <Phone size={14} strokeWidth={1.5} className={styles.contactIcon} />
+              <span className={styles.contactValue}>+91 98765 43210</span>
+            </div>
+            <div className={styles.contactItem}>
+              <MapPin size={14} strokeWidth={1.5} className={styles.contactIcon} />
+              <span className={styles.contactValue}>Mumbai, Maharashtra, India</span>
+            </div>
           </div>
-        ) : (
-          <form className={styles.form} onSubmit={handleSubmit}>
-            <div className={styles.row}>
-              <div className={styles.group}>
-                <label>Full Name</label>
-                <input 
-                  type="text" 
-                  required 
-                  value={formData.name}
-                  onChange={(e) => setFormData({...formData, name: e.target.value})}
-                  placeholder="John Doe"
-                />
+        </div>
+      </div>
+
+      {/* ─── Right Panel ─── */}
+      <div className={styles.rightPanel}>
+        <div className={styles.formWrapper}>
+          {isSubmitted ? (
+            <div className={styles.successState}>
+              <div className={styles.successIcon}>
+                <CheckCircle2 size={28} strokeWidth={1.5} />
               </div>
-              <div className={styles.group}>
-                <label>Work Email</label>
-                <input 
-                  type="email" 
-                  required 
-                  value={formData.email}
-                  onChange={(e) => setFormData({...formData, email: e.target.value})}
-                  placeholder="john@company.com"
-                />
+              <h2 className={styles.successTitle}>Enquiry Received</h2>
+              <p className={styles.successText}>
+                Thank you for reaching out. Our corporate relationship manager will review your requirements and get back to you within 24 hours.
+              </p>
+              <button className={styles.backBtn} onClick={() => window.history.back()}>
+                Return to Catalogue
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className={styles.formHeader}>
+                <h2 className={styles.formTitle}>Request a Quote</h2>
+                <p className={styles.formSubtitle}>
+                  Fill in your details below and we&apos;ll send you a personalised pricing sheet within 24 hours.
+                </p>
               </div>
-            </div>
 
-            <div className={styles.group}>
-              <label>Company Name</label>
-              <input 
-                type="text" 
-                required 
-                value={formData.company}
-                onChange={(e) => setFormData({...formData, company: e.target.value})}
-                placeholder="ABC Corp"
-              />
-            </div>
+              <form className={styles.form} onSubmit={handleSubmit}>
+                <div className={styles.row}>
+                  <div className={styles.group}>
+                    <label className={styles.label}>Full Name</label>
+                    <input
+                      className={styles.input}
+                      type="text"
+                      required
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      placeholder="Priya Sharma"
+                    />
+                  </div>
+                  <div className={styles.group}>
+                    <label className={styles.label}>Work Email</label>
+                    <input
+                      className={styles.input}
+                      type="email"
+                      required
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      placeholder="priya@company.com"
+                    />
+                  </div>
+                </div>
 
-            <div className={styles.group}>
-              <label>Quantity Required (MOQ: 50)</label>
-              <input 
-                type="number" 
-                min="50"
-                value={formData.quantity}
-                onChange={(e) => setFormData({...formData, quantity: e.target.value})}
-              />
-            </div>
+                <div className={styles.row}>
+                  <div className={styles.group}>
+                    <label className={styles.label}>Company Name</label>
+                    <input
+                      className={styles.input}
+                      type="text"
+                      required
+                      value={formData.company}
+                      onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                      placeholder="ABC Corp"
+                    />
+                  </div>
+                  <div className={styles.group}>
+                    <label className={styles.label}>Quantity (Min. 50)</label>
+                    <input
+                      className={styles.input}
+                      type="number"
+                      min="50"
+                      value={formData.quantity}
+                      onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                      placeholder="50"
+                    />
+                  </div>
+                </div>
 
-            <div className={styles.group}>
-              <label>Special Instructions / Product Details</label>
-              <textarea 
-                rows={4}
-                value={formData.message}
-                onChange={(e) => setFormData({...formData, message: e.target.value})}
-                placeholder="e.g. Logo printing type, delivery timeline..."
-              />
-            </div>
+                <div className={styles.group}>
+                  <label className={styles.label}>Product Details & Requirements</label>
+                  <textarea
+                    className={styles.textarea}
+                    rows={5}
+                    value={formData.message}
+                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                    placeholder="e.g. logo placement, delivery timeline, colour preferences..."
+                  />
+                </div>
 
-            <button type="submit" className={styles.submitBtn}>Submit Quote Request</button>
-          </form>
-        )}
+                <button type="submit" className={styles.submitBtn}>
+                  Submit Quote Request →
+                </button>
+              </form>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -110,13 +173,9 @@ export default function ContactPage() {
   return (
     <div className={styles.pageWrapper}>
       <Navbar />
-      <main className={styles.main}>
-        <div className="container">
-          <Suspense fallback={<div>Loading enquiry form...</div>}>
-            <ContactForm />
-          </Suspense>
-        </div>
-      </main>
+      <Suspense fallback={<div style={{ height: "100vh" }} />}>
+        <ContactForm />
+      </Suspense>
     </div>
   );
 }

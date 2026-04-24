@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { useCart } from "@/context/CartContext";
+import styles from "./page.module.css";
 
 export default function CheckoutPage() {
   const { cart, cartCount, clearCart } = useCart();
@@ -41,17 +42,34 @@ export default function CheckoutPage() {
 
   if (isSuccess) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb' }}>
+      <div key="success-screen" className={styles.pageWrapper}>
         <Navbar />
-        <main className="container" style={{ paddingTop: '120px', textAlign: 'center' }}>
-          <div style={{ background: 'white', padding: '60px', borderRadius: '16px', border: '1px solid var(--border-light)', maxWidth: '600px', margin: '0 auto' }}>
-            <CheckCircle2 size={64} color="#10b981" style={{ margin: '0 auto 24px' }} />
-            <h1 style={{ fontFamily: 'Outfit', fontSize: '2rem', marginBottom: '16px', color: 'var(--text-main)' }}>Order Confirmed!</h1>
-            <p style={{ color: 'var(--text-muted)', marginBottom: '32px' }}>
-              Thank you for retail order. We have received your payment and will begin processing your items immediately.
+        <main className={styles.successMain}>
+          {/* Background Collage Elements */}
+          <img 
+            src="https://images.unsplash.com/photo-1612423284934-2850a4ea6b0f?q=80&w=800" 
+            alt="" 
+            className={`${styles.collageImg} ${styles.imgMachine}`}
+          />
+          <img 
+            src="https://images.unsplash.com/photo-1556228578-0d85b1a4d571?q=80&w=800" 
+            alt="" 
+            className={`${styles.collageImg} ${styles.imgThread}`}
+          />
+          <img 
+            src="https://images.unsplash.com/photo-1584916201218-f4242ceb4809?q=80&w=800" 
+            alt="" 
+            className={`${styles.collageImg} ${styles.imgFabric}`}
+          />
+
+          <div className={styles.successContent}>
+            <CheckCircle2 size={40} className={styles.successIcon} strokeWidth={1.5} />
+            <h1 className={styles.successTitle}>Order<br/>Confirmed</h1>
+            <p className={styles.successText}>
+              Thank you for your retail order. We have received your payment and will begin processing your items immediately. A receipt has been sent to your email.
             </p>
-            <Link href="/" className="btn-primary" style={{ display: 'inline-block' }}>
-              Return to Home
+            <Link href="/" className={styles.homeBtn}>
+              Return to Catalog
             </Link>
           </div>
         </main>
@@ -68,98 +86,108 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb' }}>
+    <div key="checkout-form-screen" className={styles.pageWrapper}>
       <Navbar />
-      <main className="container" style={{ paddingTop: '120px', paddingBottom: '60px' }}>
-        <Link href="/cart" style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)', marginBottom: '24px', textDecoration: 'none', fontWeight: 500 }}>
-          <ArrowLeft size={16} /> Back to Cart
-        </Link>
-        
-        <h1 style={{ fontFamily: 'Outfit', fontSize: '2.5rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '32px', letterSpacing: '-0.5px' }}>
-          Retail Checkout
-        </h1>
+      
+      <div className={styles.layout}>
+        {/* Form Side (Left) */}
+        <div className={styles.leftColumn}>
+          <div className={styles.leftContent}>
+            <Link href="/cart" className={styles.backLink}>
+              <ArrowLeft size={16} /> Back to Cart
+            </Link>
+            
+            <h1 className={styles.title}>
+              Retail Checkout
+            </h1>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: '32px' }}>
-          {/* Form Side */}
-          <div style={{ background: 'white', padding: '32px', borderRadius: '16px', border: '1px solid var(--border-light)' }}>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '24px', paddingBottom: '16px', borderBottom: '1px solid var(--border-light)' }}>
+            <h2 className={styles.sectionTitle}>
               Shipping Details
             </h2>
             
-            <form id="checkout-form" onSubmit={handleCheckout} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <label style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)' }}>First Name</label>
-                  <input type="text" required style={{ padding: '12px', borderRadius: '8px', border: '1px solid var(--border-light)' }} />
+            <form id="checkout-form" onSubmit={handleCheckout} className={styles.form}>
+              <div className={styles.formRow}>
+                <div className={styles.inputGroup}>
+                  <label className={styles.label}>First Name</label>
+                  <input type="text" required className={styles.input} />
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <label style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)' }}>Last Name</label>
-                  <input type="text" required style={{ padding: '12px', borderRadius: '8px', border: '1px solid var(--border-light)' }} />
+                <div className={styles.inputGroup}>
+                  <label className={styles.label}>Last Name</label>
+                  <input type="text" required className={styles.input} />
                 </div>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <label style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)' }}>Email Address</label>
-                <input type="email" required style={{ padding: '12px', borderRadius: '8px', border: '1px solid var(--border-light)' }} />
+              <div className={styles.inputGroup}>
+                <label className={styles.label}>Email Address</label>
+                <input type="email" required className={styles.input} />
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <label style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)' }}>Shipping Address</label>
-                <input type="text" required placeholder="Street address or P.O. Box" style={{ padding: '12px', borderRadius: '8px', border: '1px solid var(--border-light)' }} />
+              <div className={styles.inputGroup}>
+                <label className={styles.label}>Shipping Address</label>
+                <input type="text" required placeholder="Street address or P.O. Box" className={styles.input} />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '16px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <label style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)' }}>City</label>
-                  <input type="text" required style={{ padding: '12px', borderRadius: '8px', border: '1px solid var(--border-light)' }} />
+              <div className={styles.formRow3}>
+                <div className={styles.inputGroup}>
+                  <label className={styles.label}>City</label>
+                  <input type="text" required className={styles.input} />
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <label style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)' }}>State</label>
-                  <select required style={{ padding: '12px', borderRadius: '8px', border: '1px solid var(--border-light)', background: 'white' }}>
+                <div className={styles.inputGroup}>
+                  <label className={styles.label}>State</label>
+                  <select required className={styles.input}>
                     <option value="">Select</option>
                     <option value="MH">Maharashtra</option>
                     <option value="DL">Delhi</option>
                     <option value="KA">Karnataka</option>
                   </select>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <label style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)' }}>PIN Code</label>
-                  <input type="text" required style={{ padding: '12px', borderRadius: '8px', border: '1px solid var(--border-light)' }} />
+                <div className={styles.inputGroup}>
+                  <label className={styles.label}>PIN Code</label>
+                  <input type="text" required className={styles.input} />
                 </div>
               </div>
 
-              <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: '16px 0 8px', paddingBottom: '16px', borderBottom: '1px solid var(--border-light)' }}>
-                Payment Method
+              <h2 className={styles.sectionTitle} style={{ marginTop: '16px' }}>
+                Secure Payment
               </h2>
 
-              <div style={{ padding: '16px', border: '1px solid var(--accent)', borderRadius: '8px', background: 'rgba(234, 88, 12, 0.05)', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <input type="radio" id="card" name="payment" defaultChecked style={{ accentColor: 'var(--accent)', width: '18px', height: '18px' }} />
-                <label htmlFor="card" style={{ fontWeight: 600 }}>Credit / Debit Card</label>
-              </div>
-              
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <label style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)' }}>Card Number</label>
-                <input type="text" placeholder="XXXX XXXX XXXX XXXX" style={{ padding: '12px', borderRadius: '8px', border: '1px solid var(--border-light)' }} />
+              <div style={{ 
+                padding: '20px', 
+                background: 'var(--tth-offwhite)', 
+                border: '1px solid var(--tth-beige-light)',
+                borderRadius: '2px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px'
+              }}>
+                <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 600, color: 'var(--tth-black)', fontSize: '0.95rem' }}>
+                  Razorpay Secure Checkout
+                </span>
+                <span style={{ fontFamily: 'var(--font-sans)', color: 'var(--tth-text-muted)', fontSize: '0.85rem', lineHeight: 1.5 }}>
+                  Clicking "Pay" will securely redirect you to Razorpay to complete your transaction via UPI, Cards, or Netbanking.
+                </span>
               </div>
             </form>
           </div>
+        </div>
 
-          {/* Cart Summary Side */}
-          <div style={{ background: 'white', padding: '32px', borderRadius: '16px', border: '1px solid var(--border-light)', height: 'max-content', position: 'sticky', top: '100px' }}>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '24px', paddingBottom: '16px', borderBottom: '1px solid var(--border-light)' }}>
+        {/* Cart Summary Side (Right) */}
+        <div className={styles.rightColumn}>
+          <div className={styles.rightContent}>
+            <h2 className={styles.sectionTitle}>
               In your cart
             </h2>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+            <div className={styles.cartItems}>
               {cart.map(item => (
-                <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>{item.quantity}x {item.name}</span>
-                  <span style={{ fontWeight: 600 }}>{item.price}</span>
+                <div key={item.id} className={styles.cartItem}>
+                  <span className={styles.itemName}>{item.quantity}x {item.name}</span>
+                  <span className={styles.itemPrice}>{item.price}</span>
                 </div>
               ))}
             </div>
 
-            <div style={{ borderTop: '1px solid var(--border-light)', paddingTop: '16px', display: 'flex', justifyContent: 'space-between', fontSize: '1.2rem', fontWeight: 700, margin: '24px 0' }}>
+            <div className={styles.totalRow}>
               <span>Total</span>
               <span>₹{estimatedTotal}</span>
             </div>
@@ -168,25 +196,13 @@ export default function CheckoutPage() {
               form="checkout-form"
               type="submit"
               disabled={isProcessing}
-              style={{
-                width: '100%',
-                padding: '16px',
-                borderRadius: '8px',
-                background: 'var(--accent)',
-                color: 'white',
-                fontWeight: 700,
-                fontSize: '1.1rem',
-                border: 'none',
-                cursor: isProcessing ? 'not-allowed' : 'pointer',
-                opacity: isProcessing ? 0.7 : 1,
-                transition: 'all 0.2s'
-              }}
+              className={styles.payBtn}
             >
-              {isProcessing ? "Processing Payment..." : `Pay ₹${estimatedTotal}`}
+              {isProcessing ? "Processing..." : `Pay ₹${estimatedTotal}`}
             </button>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }

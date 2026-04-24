@@ -163,6 +163,7 @@ export default function PoloCustomizer({ onChange, initialState }: Props) {
               alt={`${GARMENTS[garmentType].label} ${activeSide}`}
               fill
               className={styles.garmentImage}
+              style={{ mixBlendMode: 'darken' }}
               priority
             />
             {/* Side label watermark */}

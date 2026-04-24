@@ -1,15 +1,22 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 
 export default function Footer() {
+  const pathname = usePathname();
+  if (pathname === "/customizer") return null;
+
+  const noMarginPages = ["/checkout", "/contact"];
+  const isCheckout = noMarginPages.includes(pathname) || pathname.startsWith("/products");
+
   return (
     <footer style={{
       background: "#0a0a0a",
       color: "#e2e8f0",
       paddingTop: "64px",
       paddingBottom: "32px",
-      marginTop: "80px",
+      marginTop: isCheckout ? "0" : "80px",
       borderTop: "1px solid rgba(255,255,255,0.06)"
     }}>
       <div className="container">

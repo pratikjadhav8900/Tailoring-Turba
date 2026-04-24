@@ -145,7 +145,7 @@ export default function CartPage() {
               
               <div className={`${styles.summaryRow} ${styles.total}`}>
                 {isWholesale ? (
-                  <span style={{ color: 'var(--accent)', fontSize: '0.9rem' }}>Pricing will be finalized in quote</span>
+                  <span style={{ color: 'var(--tth-olive-dark)', fontSize: '0.9rem', fontWeight: '500' }}>Pricing finalized in quote</span>
                 ) : (
                   <>
                     <span>Total</span>
@@ -157,13 +157,13 @@ export default function CartPage() {
               <button 
                 onClick={handleCheckoutClick}
                 className={styles.checkoutBtn}
-                style={isWholesale ? { backgroundColor: 'var(--color-neutral-800)' } : {}}
+                style={isWholesale ? { backgroundColor: 'var(--tth-black)' } : {}}
               >
                 {isWholesale ? "Request Bulk Quote" : "Proceed to Checkout"}
               </button>
 
               <div className={styles.checkoutInfo}>
-                <AlertCircle size={16} style={{ flexShrink: 0, marginTop: 2, color: isWholesale ? '#8b5cf6' : 'var(--text-muted)' }} />
+                <AlertCircle size={16} style={{ flexShrink: 0, marginTop: 2, color: 'var(--tth-olive-dark)' }} />
                 {!session 
                   ? "Please sign in or create an account to proceed with checkout. Your cart items will be saved."
                   : isWholesale 

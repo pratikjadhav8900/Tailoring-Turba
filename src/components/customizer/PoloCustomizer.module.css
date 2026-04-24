@@ -1,726 +1,385 @@
-/* ═══════════════════════════════════════════════════════
-   Layout
-═══════════════════════════════════════════════════════ */
 .wrapper {
-  display: grid;
-  grid-template-columns: 1fr 1.2fr;
-  gap: 36px;
-  align-items: start;
+  display: flex;
+  height: 100%;
+  width: 100%;
+  background: #F3F4F6;
 }
 
-/* ═══════════════════════════════════════════════════════
-   Left Column (sticky canvas)
-═══════════════════════════════════════════════════════ */
-.leftCol {
-  position: sticky;
-  top: 90px;
+/* LEFT SIDEBAR (TOOLS) */
+.leftSidebar {
+  width: 80px;
+  background: white;
+  border-right: 1px solid #E5E7EB;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  align-items: center;
+  padding: 16px 0;
+  gap: 8px;
+  z-index: 20;
 }
 
-/* ── Front / Back Toggle ──────────────────────────── */
-.sideToggle {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0;
-  background: var(--color-neutral-100);
-  border: 1px solid #E2E8F0;
-  border-radius: 14px;
-  padding: 4px;
-}
-
-.sideBtn {
+.sidebarToolBtn {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  padding: 10px 20px;
-  border-radius: 10px;
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: #64748B;
-  cursor: pointer;
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  background: none;
   border: none;
-  background: transparent;
-  transition: all 0.2s ease;
-  position: relative;
+  cursor: pointer;
+  color: #4B5563;
+  gap: 4px;
+  transition: all 0.2s;
 }
 
-.sideBtn:hover {
-  color: #334155;
+.sidebarToolBtn:hover {
+  background: #F3F4F6;
+  color: #111827;
 }
 
-.sideBtnActive {
-  background: white !important;
-  color: var(--accent) !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+.sidebarToolBtnActive {
+  background: #EEF2FF;
+  color: #25338B;
 }
 
-.sideBtnIcon {
-  font-size: 1rem;
+.sidebarToolIcon {
+  margin-bottom: 2px;
 }
 
-.sideDot {
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
-  background: var(--accent);
-  color: white;
-  border-radius: 50px;
+.sidebarToolLabel {
   font-size: 0.65rem;
-  font-weight: 800;
+  font-weight: 600;
+}
+
+/* CONTEXT PANEL (OPTIONS FOR ACTIVE TOOL) */
+.contextPanel {
+  width: 320px;
+  background: white;
+  border-right: 1px solid #E5E7EB;
+  padding: 24px;
+  z-index: 15;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 4px 0 12px rgba(0,0,0,0.02);
+}
+
+.contextHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.contextTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.closeContextBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9CA3AF;
+}
+
+.contextBody {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.contextHint {
+  font-size: 0.85rem;
+  color: #6B7280;
+  margin-bottom: 8px;
+}
+
+.addAssetBtn {
+  width: 100%;
+  padding: 12px;
+  background: #25338B;
+  color: white;
+  border: none;
+  border-radius: 24px;
+  font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
-  line-height: 1;
+  gap: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
 }
 
-.preview {
+.addAssetBtn:hover {
+  background: #1A2566;
+}
+
+/* CANVAS AREA */
+.canvasArea {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   position: relative;
-  width: 100%;
-  height: 520px;
-  background: var(--color-neutral-50);
-  border: 1.5px solid #E2E8F0;
-  border-radius: 20px;
   overflow: hidden;
-  box-shadow:
-    0 4px 32px rgba(0, 0, 0, 0.08),
-    inset 0 1px 2px rgba(255, 255, 255, 0.9);
-  transition: transform 0.26s ease, opacity 0.26s ease;
-}
-
-/* flip animation */
-.previewFlip {
-  transform: scaleX(0.55) scaleY(0.95);
-  opacity: 0;
 }
 
 .garmentContainer {
-  position: absolute;
-  inset: 0;
-}
-
-.garmentImage {
-  object-fit: contain !important;
-  padding: 20px;
-}
-
-.colorOverlay {
-  position: absolute;
-  inset: 0;
-  mix-blend-mode: color;
-  pointer-events: none;
-  transition: background-color 0.35s ease;
-}
-
-
-
-/* "FRONT" / "BACK" watermark */
-.sideWatermark {
-  position: absolute;
-  top: 12px;
-  right: 16px;
-  font-size: 0.6rem;
-  font-weight: 900;
-  letter-spacing: 2px;
-  color: rgba(0, 0, 0, 0.15);
-  text-transform: uppercase;
-  pointer-events: none;
-  user-select: none;
-}
-
-/* ── Draggable elements ───────────────────────────── */
-.rndBox {
-  border: 1.5px dashed transparent;
-  border-radius: 4px;
-  transition: border-color 0.15s;
-}
-
-.rndBox:hover {
-  border-color: rgba(0, 75, 107, 0.45);
-}
-
-.rndBoxActive {
-  border-color: var(--color-primary-500) !important;
-  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
-}
-
-.rndContent {
   position: relative;
-  width: 100%;
-  height: 100%;
+  width: 600px;
+  height: 600px;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.garmentImage {
+  object-fit: contain;
+  pointer-events: none;
+  z-index: 1;
+  mix-blend-mode: multiply;
+}
+
+/* DASHED BOUNDING BOX (PRINTABLE AREA) */
+.printableArea {
+  position: absolute;
+  top: 18%;
+  left: 28%;
+  width: 44%;
+  height: 60%;
+  border: 1px dashed rgba(255,255,255,0.6);
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* RND STYLING (DRAGGABLE ELEMENTS) */
+.rndBox {
+  z-index: 5;
+  cursor: move;
+}
+
+.rndBoxActive {
+  /* Canva purple bounding box */
+  outline: 1.5px solid #8b3dff;
+  z-index: 10;
+}
+
+/* Hide handles when not active */
+.rndBox:not(.rndBoxActive) .react-resizable-handle {
+  display: none !important;
+}
+
+/* Style corners (circles) */
+.rndBoxActive :global(.react-resizable-handle-nw),
+.rndBoxActive :global(.react-resizable-handle-ne),
+.rndBoxActive :global(.react-resizable-handle-sw),
+.rndBoxActive :global(.react-resizable-handle-se) {
+  width: 12px !important;
+  height: 12px !important;
+  background: white !important;
+  border: 1.5px solid #8b3dff !important;
+  border-radius: 50% !important;
+  z-index: 20 !important;
+}
+
+/* Adjust corner positions */
+.rndBoxActive :global(.react-resizable-handle-nw) { top: -6px !important; left: -6px !important; cursor: nwse-resize !important; }
+.rndBoxActive :global(.react-resizable-handle-ne) { top: -6px !important; right: -6px !important; cursor: nesw-resize !important; }
+.rndBoxActive :global(.react-resizable-handle-sw) { bottom: -6px !important; left: -6px !important; cursor: nesw-resize !important; }
+.rndBoxActive :global(.react-resizable-handle-se) { bottom: -6px !important; right: -6px !important; cursor: nwse-resize !important; }
+
+/* Style edges (pills) */
+.rndBoxActive :global(.react-resizable-handle-n),
+.rndBoxActive :global(.react-resizable-handle-s) {
+  width: 24px !important;
+  height: 8px !important;
+  background: white !important;
+  border: 1.5px solid #8b3dff !important;
+  border-radius: 4px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  z-index: 20 !important;
+  cursor: ns-resize !important;
+}
+.rndBoxActive :global(.react-resizable-handle-n) { top: -4px !important; }
+.rndBoxActive :global(.react-resizable-handle-s) { bottom: -4px !important; }
+
+.rndBoxActive :global(.react-resizable-handle-e),
+.rndBoxActive :global(.react-resizable-handle-w) {
+  width: 8px !important;
+  height: 24px !important;
+  background: white !important;
+  border: 1.5px solid #8b3dff !important;
+  border-radius: 4px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  z-index: 20 !important;
+  cursor: ew-resize !important;
+}
+.rndBoxActive :global(.react-resizable-handle-e) { right: -4px !important; }
+.rndBoxActive :global(.react-resizable-handle-w) { left: -4px !important; }
+
+.rndContent {
+  width: 100%;
+  height: 100%;
+  position: relative;
 }
 
 .rndText {
   width: 100%;
   height: 100%;
+  background: transparent;
+  border: none;
   resize: none;
-  background: transparent;
-  border: none;
   outline: none;
-  cursor: text;
-  line-height: 1.2;
-  padding: 4px;
-  white-space: pre;
-  box-sizing: border-box;
   overflow: hidden;
-  pointer-events: none; /* Allow drag events to pass through by default */
-}
-
-.rndText:focus,
-.rndText:hover {
-  pointer-events: auto; /* Enable pointer events when editing or hovering */
-}
-.rndText::-webkit-scrollbar {
-  display: none;
-}
-
-.removeBtn {
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: #EF4444;
-  color: white;
-  font-size: 0.6rem;
-  font-weight: 900;
-  border: 2px solid white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.15s;
-  line-height: 1;
   padding: 0;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
-}
-
-.rndBox:hover .removeBtn {
-  opacity: 1;
-}
-
-/* ── Fabric badge on canvas ───────────────────────── */
-.fabricBadge {
-  position: absolute;
-  bottom: 14px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.72);
-  backdrop-filter: blur(8px);
-  border-radius: 50px;
-  padding: 5px 14px;
-  white-space: nowrap;
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: white;
-  pointer-events: none;
-}
-
-/* ── Canvas hint ──────────────────────────────────── */
-.canvasHint {
-  text-align: center;
-  font-size: 0.72rem;
-  color: #94A3B8;
   margin: 0;
+  display: block;
 }
 
-/* ═══════════════════════════════════════════════════════
-   Right Controls
-═══════════════════════════════════════════════════════ */
-.controls {
+/* RIGHT THUMBNAILS (FRONT/BACK VIEWS) */
+.rightThumbnails {
+  position: absolute;
+  right: 24px;
+  top: 24px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
+  z-index: 20;
 }
 
-.block {
+.thumbnailBtn {
+  width: 80px;
   background: white;
-  border: 1px solid #E2E8F0;
-  border-radius: 18px;
-  padding: 22px 24px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
-}
-
-.blockTitle {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 0.78rem;
-  font-weight: 800;
-  color: #1E293B;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #F1F5F9;
-}
-
-/* ── Garment Tabs ─────────────────────────────────── */
-.tabs {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-}
-
-.tab {
-  padding: 12px 8px;
-  background: var(--color-neutral-50);
-  border: 1.5px solid #E2E8F0;
-  border-radius: 12px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #64748B;
-  cursor: pointer;
-  transition: all 0.18s;
-  text-align: center;
-}
-
-.tab:hover {
-  background: var(--color-neutral-100);
-  color: #334155;
-}
-
-.tabActive {
-  background: white !important;
-  border-color: var(--accent) !important;
-  color: var(--accent) !important;
-  box-shadow: 0 2px 8px rgba(0, 75, 107, 0.12);
-}
-
-/* ── Fabric category pills ────────────────────────── */
-.categoryPills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
-  margin-bottom: 14px;
-}
-
-.pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 5px 11px;
-  background: var(--color-neutral-50);
-  border: 1px solid #E2E8F0;
-  border-radius: 50px;
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: #64748B;
-  cursor: pointer;
-  transition: all 0.18s;
-  white-space: nowrap;
-}
-
-.pill:hover { background: var(--color-neutral-100); color: #334155; }
-
-.pillActive {
-  background: var(--accent) !important;
-  border-color: var(--accent) !important;
-  color: white !important;
-}
-
-.pillCount {
-  background: rgba(255, 255, 255, 0.28);
-  font-size: 0.62rem;
-  font-weight: 800;
-  padding: 1px 5px;
-  border-radius: 50px;
-}
-
-/* ── Fabric Cards ─────────────────────────────────── */
-.fabricGrid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 9px;
-  max-height: 310px;
-  overflow-y: auto;
-  padding-right: 3px;
-  scrollbar-width: thin;
-  scrollbar-color: #CBD5E1 transparent;
-}
-
-.fabricGrid::-webkit-scrollbar { width: 4px; }
-.fabricGrid::-webkit-scrollbar-track { background: transparent; }
-.fabricGrid::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
-
-.fabricCard {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  padding: 12px;
-  background: #FAFAFA;
-  border: 1.5px solid #E2E8F0;
-  border-radius: 12px;
-  cursor: pointer;
-  text-align: left;
-  transition: all 0.18s;
-}
-
-.fabricCard:hover {
-  background: white;
-  border-color: #94A3B8;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.07);
-  transform: translateY(-1px);
-}
-
-.fabricCardActive {
-  background: white !important;
-  border: 2px solid var(--accent) !important;
-  box-shadow: 0 0 0 3px rgba(0, 75, 107, 0.08),
-              0 3px 10px rgba(0,0,0,0.06) !important;
-}
-
-.fabricCardTop {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 6px;
-}
-
-.fabricBrand {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: #1E293B;
-  line-height: 1.2;
-}
-
-.fabricType {
-  font-size: 0.68rem;
-  color: #64748B;
-  margin-top: 2px;
-  line-height: 1.3;
-}
-
-.fabricTag {
-  flex-shrink: 0;
-  font-size: 0.58rem;
-  font-weight: 800;
-  color: white;
-  padding: 2px 6px;
-  border-radius: 50px;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-  white-space: nowrap;
-}
-
-.fabricCardBottom {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.fabricGsm {
-  font-size: 0.68rem;
-  font-weight: 700;
-  color: #64748B;
-  background: var(--color-neutral-100);
-  padding: 2px 7px;
-  border-radius: 50px;
-}
-
-.fabricPrice {
-  font-size: 0.68rem;
-  font-weight: 800;
-  color: var(--color-primary-600);
-}
-
-.fabricSizes {
-  font-size: 0.64rem;
-  color: #94A3B8;
-}
-
-.emptyFabric {
-  grid-column: 1 / -1;
-  text-align: center;
-  padding: 28px;
-  color: #94A3B8;
-  font-size: 0.82rem;
-}
-
-/* ── Selected fabric strip ────────────────────────── */
-.selectedStrip {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 12px;
-  padding: 11px 14px;
-  background: linear-gradient(135deg, #f0fdf4, #ecfeff);
-  border: 1.5px solid #86efac;
-  border-radius: 12px;
-}
-
-.selectedStripLeft {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.selectedCheck {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: #10B981;
-  color: white;
-  font-size: 0.68rem;
-  font-weight: 900;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.selectedName   { font-size: 0.8rem; font-weight: 700; color: #065F46; }
-.selectedDetail { font-size: 0.68rem; color: #059669; margin-top: 1px; }
-.selectedPrice  { font-size: 0.78rem; font-weight: 800; color: #047857; white-space: nowrap; }
-
-/* ── Color grid ───────────────────────────────────── */
-.colorGrid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-}
-
-.colorSwatch {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
-  background: white;
-  border: 1.5px solid #E2E8F0;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.18s;
-}
-
-.colorSwatch:hover {
-  background: var(--color-neutral-50);
-  border-color: #94A3B8;
-}
-
-.colorSwatchActive {
-  border-color: var(--accent) !important;
-  background: #F0F9FF !important;
-  box-shadow: 0 0 0 2px rgba(0, 75, 107, 0.12);
-}
-
-.swatchDot {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.swatchName {
-  font-size: 0.68rem;
-  font-weight: 600;
-  color: #334155;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* ── Step 4 design controls ───────────────────────── */
-.sidePill {
-  margin-left: auto;
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: #64748B;
-  background: var(--color-neutral-100);
-  padding: 3px 10px;
-  border-radius: 50px;
-  text-transform: none;
-  letter-spacing: 0;
-}
-
-.sidePill strong { color: var(--color-primary-600); }
-
-.hint {
-  font-size: 0.78rem;
-  color: #64748B;
-  line-height: 1.5;
-  margin-bottom: 16px;
-}
-
-.designActions {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.miniSideToggle {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0;
-  background: var(--color-neutral-100);
-  border: 1px solid #E2E8F0;
-  border-radius: 10px;
-  padding: 3px;
-}
-
-.miniSideBtn {
+  border: 2px solid transparent;
+  border-radius: 4px;
   padding: 8px;
-  border-radius: 8px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: #64748B;
-  background: transparent;
-  border: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   cursor: pointer;
-  transition: all 0.18s;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  transition: all 0.2s;
 }
 
-.miniSideBtn:hover { color: #334155; }
-
-.miniSideBtnActive {
-  background: white !important;
-  color: var(--accent) !important;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+.thumbnailBtn:hover {
+  border-color: #CBD5E1;
 }
 
-.addBtns {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+.thumbnailBtnActive {
+  border-color: #25338B;
 }
 
-.addAssetBtn {
-  padding: 11px 12px;
-  background: var(--color-neutral-50);
-  border: 1.5px dashed #CBD5E1;
-  border-radius: 10px;
-  font-weight: 700;
-  font-size: 0.82rem;
-  color: #334155;
-  cursor: pointer;
-  transition: all 0.18s;
-  text-align: center;
+.thumbnailImgWrap {
+  width: 60px;
+  height: 60px;
+  position: relative;
+  margin-bottom: 4px;
 }
 
-.addAssetBtn:hover {
-  background: white;
-  border-color: var(--color-primary-600);
-  color: var(--color-primary-600);
+.thumbnailLabel {
+  font-size: 0.7rem;
+  color: #4B5563;
+  font-weight: 600;
 }
 
-/* ═══════════════════════════════════════════════════════
-   Responsive
-═══════════════════════════════════════════════════════ */
-@media (max-width: 960px) {
-  .wrapper { grid-template-columns: 1fr; }
-  .leftCol { position: relative; top: unset; }
-  .preview { height: 400px; }
-  .colorGrid { grid-template-columns: repeat(3, 1fr); }
-}
-
-@media (max-width: 600px) {
-  .tabs { grid-template-columns: 1fr; }
-  .colorGrid { grid-template-columns: repeat(2, 1fr); }
-  .fabricGrid { grid-template-columns: 1fr; max-height: 240px; }
-  .addBtns { grid-template-columns: 1fr; }
-}
-
-/* ── Canva-Style Formatting Toolbar ────────────────────────── */
+/* FLOATING FORMATTING TOOLBAR */
 .formattingToolbarFloating {
   position: absolute;
-  z-index: 100;
+  background: white;
+  border-radius: 8px;
+  padding: 6px;
   display: flex;
   align-items: center;
-  gap: 12px;
-  background: white;
-  padding: 8px 12px;
-  border-radius: 50px;
-  border: 1px solid #E5E7EB;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  flex-wrap: nowrap;
-  max-width: 90vw;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  gap: 8px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  z-index: 30;
   transform: translateX(-50%);
-}
-.formattingToolbarFloating::-webkit-scrollbar {
-  display: none;
+  border: 1px solid #E5E7EB;
 }
 
 .toolGroup {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 0 8px;
-  border-right: 1px solid #E5E7EB;
-}
-.toolGroup:last-child {
-  border-right: none;
-}
-
-.toolSelect {
-  padding: 8px 12px;
-  border: 1px solid #E5E7EB;
+  background: #F3F4F6;
   border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #111827;
-  outline: none;
-  background: #F9FAFB;
-  cursor: pointer;
-  min-width: 130px;
-}
-.toolSelect:focus {
-  border-color: var(--color-primary-500);
+  padding: 2px;
 }
 
 .toolBtn {
-  display: inline-flex;
+  background: none;
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 6px;
-  border: none;
-  background: transparent;
-  color: #4B5563;
   cursor: pointer;
-  transition: all 0.2s;
+  color: #4B5563;
 }
-.toolBtn:hover {
-  background: #F3F4F6;
-  color: #111827;
-}
-.toolBtnActive {
-  background: var(--color-primary-50);
-  color: var(--color-primary-600);
-}
-.toolBtnDanger {
-  color: #DC2626;
-}
-.toolBtnDanger:hover {
-  background: #FEF2F2;
-  color: #B91C1C;
+
+.toolBtn:hover { background: #E5E7EB; }
+.toolBtnActive { background: white; color: #111827; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+
+.toolSelect {
+  border: 1px solid #E5E7EB;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 0.85rem;
+  outline: none;
 }
 
 .toolColor {
-  appearance: none;
-  -webkit-appearance: none;
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   padding: 0;
   border: none;
-  border-radius: 50%;
-  overflow: hidden;
+  border-radius: 4px;
   cursor: pointer;
+  background: none;
 }
-.toolColor::-webkit-color-swatch-wrapper {
-  padding: 0;
+
+.toolBtnDanger { color: #EF4444; }
+.toolBtnDanger:hover { background: #FEE2E2; }
+
+/* Canva Style Floating Bottom Buttons (Rotate/Move) */
+.floatingActionBtns {
+  position: absolute;
+  bottom: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 12px;
+  pointer-events: auto;
 }
-.toolColor::-webkit-color-swatch {
-  border: 1px solid #E5E7EB;
+
+.circleActionBtn {
+  width: 32px;
+  height: 32px;
+  background: white;
   border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  cursor: pointer;
+  color: #4B5563;
+  border: 1px solid #E5E7EB;
+}
+
+.circleActionBtn:hover {
+  background: #F3F4F6;
+}
+
+.divider {
+  width: 1px;
+  height: 24px;
+  background: #E5E7EB;
+  margin: 0 4px;
 }

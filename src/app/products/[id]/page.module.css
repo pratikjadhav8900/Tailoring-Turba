@@ -4,38 +4,44 @@
   padding-bottom: 0;
 }
 
+/* Layout Grid: 2 equal columns */
 .layout {
   display: grid;
   grid-template-columns: 1fr 400px;
-  grid-template-rows: auto auto;
-  gap: 32px 48px;
-  padding-bottom: 24px;
+  gap: 64px;
+  padding-top: 32px;
+  padding-bottom: 48px;
+  align-items: start;
 }
 
-/* Main Image spans full height on left */
+/* Left column: image + thumbs + description/features */
+.leftColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Main Image */
 .mainImageContainer {
   position: relative;
   background: #f8fafc;
-  border-radius: 16px;
   overflow: hidden;
-  height: 560px;
-  grid-row: 1;
-  grid-column: 1;
+  height: 600px;
+  width: 100%;
 }
 
-/* Thumbnail strip below the main image */
+/* Thumbnail strip */
 .thumbnailStrip {
   display: flex;
   gap: 12px;
-  grid-row: 2;
-  grid-column: 1;
+  overflow-x: auto;
 }
 
 .thumbnailBtn {
   width: 80px;
   height: 80px;
   border: 2px solid #e2e8f0;
-  border-radius: 8px;
+  border-radius: 0;
   overflow: hidden;
   position: relative;
   cursor: pointer;
@@ -49,29 +55,30 @@
 }
 
 .thumbnailBtn.active {
-  border-color: var(--accent);
+  border-color: var(--tth-olive-dark, #4a5e3a);
 }
 
-/* Details column spans both rows on right */
+/* Right column: sticky purchase panel */
 .detailsContainer {
-  grid-row: 1 / 3;
-  grid-column: 2;
   display: flex;
   flex-direction: column;
   gap: 24px;
-  padding-top: 8px;
+  position: sticky;
+  top: 100px;
 }
 
 .title {
-  font-family: 'Outfit', sans-serif;
-  font-size: 1.75rem;
-  font-weight: 800;
+  font-family: var(--font-serif);
+  font-size: 2rem;
+  font-weight: 500;
   color: #0f172a;
-  margin: 8px 0 4px;
-  line-height: 1.2;
+  margin: 6px 0 4px;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
 }
 
 .price {
+  font-family: var(--font-sans);
   font-size: 2.25rem;
   font-weight: 900;
   color: #0f172a;
@@ -81,82 +88,86 @@
 .actions {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .qtyRow {
   display: flex;
   align-items: center;
   gap: 12px;
+  margin-bottom: 4px;
 }
 
 .qtyInput {
   width: 80px;
   padding: 10px;
   border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  border-radius: 0;
   text-align: center;
   font-size: 1rem;
 }
 
 .btnCart {
   width: 100%;
-  background: #0f172a;
+  background: var(--tth-olive-dark, #4a5e3a);
   color: white;
-  border: none;
-  border-radius: 10px;
+  border: 2px solid var(--tth-olive-dark, #4a5e3a);
+  border-radius: 0;
   padding: 16px;
-  font-weight: 700;
-  font-size: 1rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: background 0.3s, color 0.3s;
+  display: block;
 }
 
-.btnCart:hover {
-  opacity: 0.85;
+.btnCart:active {
+  background: transparent;
+  color: var(--tth-olive-dark, #4a5e3a);
 }
 
 .btnInquire {
   display: block;
   width: 100%;
-  border: 1.5px solid #e2e8f0;
+  border: 2px solid var(--tth-olive-dark, #4a5e3a);
   background: transparent;
-  color: #1e293b;
-  border-radius: 10px;
+  color: var(--tth-olive-dark, #4a5e3a);
+  border-radius: 0;
   padding: 14px;
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   text-align: center;
   text-decoration: none;
-  transition: border-color 0.2s, background 0.2s;
+  transition: background 0.3s, color 0.3s;
   box-sizing: border-box;
 }
 
-.btnInquire:hover {
-  border-color: #1e293b;
-  background: rgba(0,0,0,0.02);
+.btnInquire:active {
+  background: var(--tth-olive-dark, #4a5e3a);
+  color: white;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 960px) {
   .layout {
     grid-template-columns: 1fr;
-    grid-template-rows: auto auto auto;
-  }
-
-  .mainImageContainer {
-    height: 360px;
-    grid-row: 1;
-    grid-column: 1;
-  }
-
-  .thumbnailStrip {
-    grid-row: 2;
-    grid-column: 1;
-    overflow-x: auto;
+    gap: 40px;
   }
 
   .detailsContainer {
-    grid-row: 3;
-    grid-column: 1;
+    position: static;
+  }
+
+  .mainImageContainer {
+    height: 400px;
+  }
+}
+
+@media (max-width: 480px) {
+  .mainImageContainer {
+    height: 300px;
   }
 }
