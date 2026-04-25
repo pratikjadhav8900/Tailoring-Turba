@@ -173,7 +173,7 @@ model CatalogueProduct {
   spec             String?
   hsn              String?
   gst              String?
-  minOrderQuantity Int                @default(50)
+  minOrderQuantity Int                @default(10)
   isB2B            Boolean            @default(true)
   category         CatalogueCategory  @relation(fields: [categoryId], references: [id])
   categoryId       String

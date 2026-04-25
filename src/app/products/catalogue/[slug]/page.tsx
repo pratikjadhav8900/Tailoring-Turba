@@ -29,7 +29,7 @@ export default function CategoryDetailPage({ params }: { params: { slug: string 
   const [data, setData] = useState<CategoryData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { addToCart } = useCart();
-  
+
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -44,62 +44,86 @@ export default function CategoryDetailPage({ params }: { params: { slug: string 
       });
   }, [params.slug]);
 
-  if (isLoading) return <div className={styles.loadingState}>Loading premium collection...</div>;
-  if (!data) return <div className={styles.loadingState}>Category not found.</div>;
+  if (isLoading) return (
+    <div className={styles.loadingState}>
+      <div className={styles.loadingBar}></div>
+      <p>Loading collection…</p>
+    </div>
+  );
+  if (!data) return <div className={styles.loadingState}>Collection not found.</div>;
 
   return (
-    <div className={styles.pageWrapper}>
+    <div className={styles.pageWrapper} suppressHydrationWarning>
       <Navbar />
       <main className={styles.main}>
-        <div className="container">
-          {/* Header Section */}
-          <div className={styles.header}>
+
+        {/* Hero Header — full bleed, matches catalogue */}
+        <div className={styles.heroHeader}>
+          <div className={styles.heroOverlay}></div>
+          <div className={styles.heroContent}>
             <div className={styles.breadcrumb}>
               <Link href="/">Home</Link>
-              <span className={styles.separator}>/</span>
+              <span className={styles.sep}>/</span>
               <Link href="/products/catalogue">Catalogue</Link>
-              <span className={styles.separator}>/</span>
-              <span className={styles.current}>{data.name}</span>
+              <span className={styles.sep}>/</span>
+              <span>{data.name}</span>
             </div>
-            
-            <div className={styles.headerContent}>
-              <h1 className={styles.title}>{data.name}</h1>
-              <p className={styles.subtitle}>{data.description}</p>
-              <div className={styles.headerMeta}>
-                <span className={styles.metaCap}>Unit Pricing & GST Included</span>
-                <span className={styles.metaDivider}>|</span>
-                <span className={styles.metaDetail}>HSN: {data.hsn || "Various"}</span>
-              </div>
+            <p className={styles.eyebrow}>Collection</p>
+            <h1 className={styles.title}>{data.name}</h1>
+            {data.description && (
+              <p className={styles.sub}>{data.description}</p>
+            )}
+            <div className={styles.metaRow}>
+              <span>Unit Pricing & GST Included</span>
+              <span className={styles.metaDot}>·</span>
+              <span>HSN: {data.hsn || "Various"}</span>
+              {data.gst && (
+                <>
+                  <span className={styles.metaDot}>·</span>
+                  <span>GST: {data.gst}</span>
+                </>
+              )}
             </div>
           </div>
+        </div>
 
-          {/* Shoppable Product Cards */}
-          <div className={styles.shoppableArea}>
-            <div className={styles.productFlex}>
+        {/* Products Grid */}
+        <div className={styles.mainContent}>
+          {data.products.length === 0 ? (
+            <div className={styles.emptyState}>
+              <p>No products found in this collection.</p>
+              <Link href="/products/catalogue" className={styles.backLink}>← Back to Catalogue</Link>
+            </div>
+          ) : (
+            <div className={styles.productGrid}>
               {data.products.map(product => (
-                <div key={product.id} className={styles.premiumCard}>
+                <div key={product.id} className={styles.card}>
                   <div className={styles.cardVisual}>
-                    {/* Using the first page as a fallback product image if we don't have individual ones */}
-                    <Image 
-                      src={data.pageImages[0]?.url || "/placeholder.jpg"} 
-                      alt={product.name} 
-                      fill 
-                      style={{ objectFit: "cover", opacity: 0.8 }} 
+                    <Image
+                      src={data.pageImages[0]?.url || "/placeholder.jpg"}
+                      alt={product.name}
+                      fill
+                      style={{ objectFit: "cover" }}
                     />
+                    <div className={styles.cardOverlay}></div>
+                    <div className={styles.cardCode}>{product.code}</div>
                   </div>
-                  
-                  <div className={styles.cardDetails}>
+
+                  <div className={styles.cardBody}>
+                    <div className={styles.cardTag}>Product</div>
                     <h3 className={styles.cardName}>{product.name}</h3>
-                    <p className={styles.cardSpec}>{product.spec || "Premium quality, custom branding available."}</p>
-                    
-                    <div className={styles.cardPricing}>
+                    {product.spec && (
+                      <p className={styles.cardSpec}>{product.spec}</p>
+                    )}
+
+                    <div className={styles.pricingBlock}>
                       <div className={styles.priceLabel}>Starting from</div>
                       <div className={styles.priceValue}>₹{product.price || "1,499"}</div>
                       <div className={styles.gstNote}>Inc. {data.gst || "18%"} GST</div>
                     </div>
 
                     <div className={styles.cardActions}>
-                      <button 
+                      <button
                         className={styles.addToCartBtn}
                         onClick={() => addToCart({
                           id: product.id,
@@ -111,9 +135,9 @@ export default function CategoryDetailPage({ params }: { params: { slug: string 
                       >
                         Add to Cart
                       </button>
-                      <Link 
-                        href={`/contact?product=${product.code}&category=${data.slug}`} 
-                        className={styles.buyNowBtn}
+                      <Link
+                        href={`/contact?product=${product.code}&category=${data.slug}`}
+                        className={styles.quoteBtn}
                       >
                         Request Quote
                       </Link>
@@ -122,24 +146,60 @@ export default function CategoryDetailPage({ params }: { params: { slug: string 
                 </div>
               ))}
             </div>
-          </div>
+          )}
+
+          {/* Catalogue Page Images — lightbox strip */}
+          {data.pageImages.length > 0 && (
+            <div className={styles.pagesSection}>
+              <div className={styles.pagesSectionHeader}>
+                <h2 className={styles.pagesSectionTitle}>Catalogue Pages</h2>
+                <p className={styles.pagesSectionSub}>Click any page to view full size</p>
+              </div>
+              <div className={styles.pagesGrid}>
+                {data.pageImages.map((img, i) => (
+                  <button
+                    key={i}
+                    className={styles.pageThumb}
+                    onClick={() => { setCurrentIndex(i); setLightboxOpen(true); }}
+                  >
+                    <Image src={img.url} alt={`Page ${img.pageNumber}`} fill style={{ objectFit: "cover" }} />
+                    <div className={styles.pageNum}>Pg {img.pageNumber}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Lightbox */}
-        {lightboxOpen && data.pageImages[currentIndex] && (
-          <div className={styles.lightbox} onClick={() => setLightboxOpen(false)}>
-            <div className={styles.lightboxContent} onClick={(e) => e.stopPropagation()}>
-              <Image 
-                src={data.pageImages[currentIndex].url} 
-                alt="Catalogue View" 
-                fill 
-                style={{ objectFit: 'contain' }} 
-              />
-              <button className={styles.closeBtn} onClick={() => setLightboxOpen(false)}>×</button>
+      </main>
+
+      {/* Lightbox */}
+      {lightboxOpen && data.pageImages[currentIndex] && (
+        <div className={styles.lightbox} onClick={() => setLightboxOpen(false)}>
+          <div className={styles.lightboxInner} onClick={(e) => e.stopPropagation()}>
+            <button className={styles.closeBtn} onClick={() => setLightboxOpen(false)}>×</button>
+            <Image
+              src={data.pageImages[currentIndex].url}
+              alt="Catalogue Page"
+              fill
+              style={{ objectFit: "contain" }}
+            />
+            <div className={styles.lightboxNav}>
+              <button
+                className={styles.navBtn}
+                onClick={() => setCurrentIndex(i => Math.max(0, i - 1))}
+                disabled={currentIndex === 0}
+              >←</button>
+              <span className={styles.navCount}>{currentIndex + 1} / {data.pageImages.length}</span>
+              <button
+                className={styles.navBtn}
+                onClick={() => setCurrentIndex(i => Math.min(data.pageImages.length - 1, i + 1))}
+                disabled={currentIndex === data.pageImages.length - 1}
+              >→</button>
             </div>
           </div>
-        )}
-      </main>
+        </div>
+      )}
     </div>
   );
 }

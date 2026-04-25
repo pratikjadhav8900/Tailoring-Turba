@@ -39,9 +39,17 @@ function ProductContent() {
 
   const categories = ["All", ...Array.from(new Set(allProducts.map(p => p.category)))];
 
+  const normalizedSearch = activeCategory.toLowerCase().replace(/s$/, '');
+  
   const filtered = activeCategory === "All" 
     ? allProducts 
-    : allProducts.filter(p => p.category === activeCategory);
+    : allProducts.filter(p => 
+        p.category === activeCategory || 
+        (p.type && p.type.toLowerCase().includes(normalizedSearch)) ||
+        (p.name && p.name.toLowerCase().includes(normalizedSearch)) ||
+        (p.type && p.type.toLowerCase().includes(activeCategory.toLowerCase())) ||
+        (p.name && p.name.toLowerCase().includes(activeCategory.toLowerCase()))
+      );
 
   // Mock colors for swatches
   const mockColors = ["#1a1a1a", "#ffffff", "#1e3a8a", "#6b7d60", "#7f1d1d"];

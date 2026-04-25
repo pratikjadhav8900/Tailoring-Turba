@@ -2,6 +2,9 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import styles from "./page.module.css";
+import { Package, Plus, FileText } from "lucide-react";
+
+import Image from "next/image";
 
 export default async function OrdersPage() {
   const session = await auth();
@@ -15,35 +18,55 @@ export default async function OrdersPage() {
 
   return (
     <div className={styles.page}>
-      <div className={styles.header}>
-        <div>
-          <h1 className={styles.title}>My Orders</h1>
-          <p className={styles.sub}>{orders.length} total orders</p>
+      
+      {/* Premium Hero Header */}
+      <div className={styles.heroHeader}>
+        <div className={styles.heroBg}>
+          <Image 
+            src="https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=2000"
+            alt="Tailoring Background"
+            fill
+            priority
+          />
         </div>
-        <Link href="/customizer" className="btn-primary">+ New Order</Link>
+        <div className={styles.heroOverlay}></div>
+        <div className={styles.heroContent}>
+          <div>
+            <h1 className={styles.title}>My Orders</h1>
+            <p className={styles.sub}>{orders.length} total orders</p>
+          </div>
+          <Link href="/customizer" className={styles.primaryBtn}>
+            <Plus size={18} /> New Order
+          </Link>
+        </div>
       </div>
 
-      {orders.length === 0 ? (
-        <div className={styles.empty}>
-          <div className={styles.emptyIcon}>📦</div>
-          <h3>No orders yet</h3>
-          <p>Start by customizing a product and placing your first order.</p>
-          <Link href="/customizer" className="btn-primary" style={{ marginTop: 16 }}>Start Designing</Link>
-        </div>
-      ) : (
+      <div className={styles.mainContent}>
+        {orders.length === 0 ? (
+          <div className={styles.emptyGlass}>
+            <div className={styles.emptyIconBox}>
+              <Package size={32} />
+            </div>
+            <h2>No orders yet</h2>
+            <p>Start by customizing a product and placing your first order.</p>
+            <Link href="/customizer" className={styles.primaryBtn} style={{ marginTop: '16px' }}>
+              Start Designing
+            </Link>
+          </div>
+        ) : (
         <div className={styles.orderList}>
           {orders.map(order => (
-            <div key={order.id} className={`${styles.orderCard} glass-card`}>
+            <div key={order.id} className={styles.orderCard}>
               <div className={styles.orderTop}>
                 <div>
-                  <div className={styles.orderId}>Order #{order.id.slice(-10).toUpperCase()}</div>
+                  <div className={styles.orderId}>Order #{order.id.slice(-8).toUpperCase()}</div>
                   <div className={styles.orderDate}>
                     {new Date(order.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
                   </div>
                 </div>
                 <div className={styles.orderRight}>
                   <div className={styles.amount}>₹{order.totalAmount.toLocaleString()}</div>
-                  <div className={`badge badge-${order.status.toLowerCase()}`}>{order.status}</div>
+                  <div className={`${styles.badge} ${styles[`badge-${order.status.toLowerCase()}`]}`}>{order.status}</div>
                 </div>
               </div>
 
@@ -61,13 +84,14 @@ export default async function OrdersPage() {
               {/* Roster if available */}
               {order.orderSheet && (
                 <div className={styles.rosterBadge}>
-                  📋 Roster / Order Sheet attached
+                  <FileText size={16} /> Roster attached
                 </div>
               )}
             </div>
           ))}
         </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

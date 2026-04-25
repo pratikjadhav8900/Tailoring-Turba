@@ -4,13 +4,21 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import styles from "./DashboardSidebar.module.css";
 
+import { 
+  LayoutDashboard, 
+  Paintbrush, 
+  Package, 
+  CalendarCheck, 
+  CreditCard, 
+  User 
+} from "lucide-react";
+
 const navItems = [
-  { icon: "📊", label: "Overview", href: "/dashboard" },
-  { icon: "🎨", label: "My Designs", href: "/dashboard/designs" },
-  { icon: "📦", label: "My Orders", href: "/dashboard/orders" },
-  { icon: "📅", label: "Bookings", href: "/dashboard/bookings" },
-  { icon: "💳", label: "Transactions", href: "/dashboard/transactions" },
-  { icon: "👤", label: "Profile", href: "/dashboard/profile" },
+  { icon: <LayoutDashboard size={20} />, label: "Overview", href: "/dashboard" },
+  { icon: <Paintbrush size={20} />, label: "My Designs", href: "/dashboard/designs" },
+  { icon: <Package size={20} />, label: "My Orders", href: "/dashboard/orders" },
+  { icon: <CalendarCheck size={20} />, label: "Bookings", href: "/dashboard/bookings" },
+  { icon: <User size={20} />, label: "Profile", href: "/dashboard/profile" },
 ];
 
 interface Props {
@@ -23,7 +31,7 @@ export default function DashboardSidebar({ user }: Props) {
   return (
     <aside className={styles.sidebar}>
       <Link href="/" className={styles.logo}>
-        <span>K</span>raftX
+        Tailoring <span>Turba</span>
       </Link>
 
       <nav className={styles.nav}>
@@ -59,7 +67,7 @@ export default function DashboardSidebar({ user }: Props) {
           className={styles.logout}
           onClick={() => signOut({ callbackUrl: "/" })}
         >
-          🚪 Sign Out
+          Sign Out
         </button>
       </div>
     </aside>

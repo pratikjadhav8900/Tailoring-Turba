@@ -25,7 +25,7 @@ export default function ProductDetailsPage({ params }: { params: { id: string } 
   const product = allProducts.find(p => p.id === parseInt(params.id)) || allProducts[0];
 
   const [activeImage, setActiveImage] = useState(product.gallery?.[0] || product.image);
-  const [qty, setQty] = useState(1);
+  const [qty, setQty] = useState(10);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [lightboxImg, setLightboxImg] = useState<string | null>(null);
@@ -224,7 +224,7 @@ export default function ProductDetailsPage({ params }: { params: { id: string } 
             <div className={styles.actions}>
               <div className={styles.qtyRow}>
                 <span style={{ fontWeight: 600, fontSize: "0.85rem", color: "#1e293b", letterSpacing: "0.04em" }}>Qty:</span>
-                <input type="number" value={qty} onChange={(e) => setQty(Math.max(1, parseInt(e.target.value) || 1))} min={1} className={styles.qtyInput} />
+                <input type="number" value={qty} onChange={(e) => setQty(Math.max(10, parseInt(e.target.value) || 10))} min={10} className={styles.qtyInput} />
               </div>
               <button className={styles.btnCart} onClick={handleAddToCart}>Add to Cart</button>
               <Link href={`/customizer?productId=${product.id}`} className={styles.btnCart} style={{ textDecoration: 'none', textAlign: 'center' }}>
