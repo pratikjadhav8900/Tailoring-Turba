@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendMail } from "@/lib/mail";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(req: NextRequest) {
   try {
@@ -8,6 +9,17 @@ export async function POST(req: NextRequest) {
     if (!name || !email || !message) {
       return NextResponse.json({ error: "Name, email and message are required." }, { status: 400 });
     }
+
+    // 0. Save to Database
+    await prisma.inquiry.create({
+      data: {
+        name,
+        email,
+        companyName: company,
+        quantity: parseInt(quantity as string) || 0,
+        requirements: message,
+      }
+    });
 
     // 1. Alert operations team
     const opsHtml = `

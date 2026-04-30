@@ -13,7 +13,8 @@ import {
   Calendar, 
   CreditCard, 
   LogOut,
-  ArrowLeft
+  ArrowLeft,
+  Mail
 } from "lucide-react";
 
 const navItems = [
@@ -23,6 +24,7 @@ const navItems = [
   { icon: Shirt, label: "Products", href: "/admin/products" },
   { icon: Layers, label: "Categories", href: "/admin/categories" },
   { icon: Calendar, label: "Bookings", href: "/admin/bookings" },
+  { icon: Mail, label: "Inquiries", href: "/admin/inquiries" },
   { icon: CreditCard, label: "Transactions", href: "/admin/transactions" },
 ];
 
