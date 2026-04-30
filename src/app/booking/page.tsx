@@ -44,7 +44,6 @@ export default function BookingPage() {
 
   return (
     <>
-      <Navbar />
       <main className={styles.main}>
         <div className="container">
           <div className={styles.grid}>

@@ -68,7 +68,6 @@ export default function CartPage() {
 
   return (
     <div className={styles.pageWrapper}>
-      <Navbar />
       <main className={`container ${styles.main}`}>
         <div className={styles.cartHeader}>
   <h1 className={styles.title}>Your Selection</h1>

@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
 import "@/app/globals.css";
 import { Providers } from "./providers";
-import Footer from "@/components/Footer";
-import Navbar from "@/components/Navbar";
-import MarqueeTicker from "@/components/landing/MarqueeTicker";
-import WhatsAppButton from "@/components/WhatsAppButton";
+import LayoutWrapper from "./LayoutWrapper";
 
 export const metadata: Metadata = {
   title: "Tailoring Turba | Custom B2B Apparel manufacturing",
@@ -26,17 +23,11 @@ export default function RootLayout({
     <html lang="en" translate="no" suppressHydrationWarning>
       <body suppressHydrationWarning>
         <Providers>
-          <div style={{ position: "fixed", top: 0, left: 0, width: "100%", zIndex: 1001 }}>
-            <MarqueeTicker />
-          </div>
-          <div style={{ paddingTop: 38 }}>
-            <Navbar />
-          </div>
-          <main>
-            {children}
-          </main>
-          <Footer />
-          <WhatsAppButton />
+          <LayoutWrapper>
+            <main>
+              {children}
+            </main>
+          </LayoutWrapper>
         </Providers>
       </body>
     </html>

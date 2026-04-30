@@ -46,7 +46,6 @@ export default function CheckoutPage() {
   if (isSuccess) {
     return (
       <div key="success-screen" className={styles.pageWrapper}>
-        <Navbar />
         <main className={styles.successMain}>
           {/* Background Collage Elements */}
           <img 
@@ -90,8 +89,6 @@ export default function CheckoutPage() {
 
   return (
     <div key="checkout-form-screen" className={styles.pageWrapper}>
-      <Navbar />
-      
       <div className={styles.layout}>
         {/* Form Side (Left) */}
         <div className={styles.leftColumn}>
