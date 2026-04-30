@@ -71,6 +71,7 @@ export default function Navbar({ transparent = false }: { transparent?: boolean 
             </div>
           </div>
           
+          <Link href="/about" className={styles.navLink}>Our Story</Link>
           <Link href="/booking" className={styles.navLink}>Book a Visit</Link>
         </div>
 

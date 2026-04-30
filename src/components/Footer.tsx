@@ -60,6 +60,7 @@ export default function Footer() {
               {[
                 { label: "Design Studio", href: "/customizer" },
                 { label: "Products", href: "/products" },
+                { label: "Our Story", href: "/about" },
                 { label: "Full Catalogue", href: "/products/catalogue" },
                 { label: "Book Showroom", href: "/booking" },
               ].map(link => (
