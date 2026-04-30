@@ -288,7 +288,7 @@ export default function AboutPage() {
       </section>
 
       {/* 6. FOUNDER SECTION */}
-      <section className="py-20 md:py-32 bg-white border-t border-[#fafaf8]">
+      <section className="pt-20 md:pt-32 pb-8 bg-white border-t border-[#fafaf8]">
         <div className="container px-4 max-w-4xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -321,7 +321,7 @@ export default function AboutPage() {
       </section>
 
       {/* 7. CTA SECTION */}
-      <section className="py-16 bg-[#fafaf8]">
+      <section className="py-10 bg-[#fafaf8]">
         <div className="container px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-serif text-[#0f172a] mb-8">Ready to create your brand's signature look?</h2>
           <motion.div
