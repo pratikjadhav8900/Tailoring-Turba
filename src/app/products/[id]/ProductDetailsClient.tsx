@@ -6,7 +6,8 @@ import Navbar from "@/components/Navbar";
 import styles from "./page.module.css";
 import { useCart } from "@/context/CartContext";
 import { useRouter } from "next/navigation";
-import { Receipt, RotateCcw, Brush, Truck, Package, ShieldCheck, Lock, Award } from "lucide-react";
+import { Receipt, RotateCcw, Brush, Truck, Package, ShieldCheck, Lock, Award, ArrowRightLeft, Check } from "lucide-react";
+import { useCompare } from "@/context/CompareContext";
 
 type Review = {
   id: string;
@@ -21,6 +22,7 @@ type Review = {
 export default function ProductDetailsClient({ product, relatedProducts }: { product: any, relatedProducts: any[] }) {
   const router = useRouter();
   const { addToCart } = useCart();
+  const { addToCompare, removeFromCompare, isInCompare } = useCompare();
 
   const [activeImage, setActiveImage] = useState(product.gallery?.[0] || product.image);
   const [qty, setQty] = useState<number | string>(10);
@@ -221,6 +223,31 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
               <Link href={`/customizer?productId=${product.id}`} className={styles.btnCart} style={{ textDecoration: 'none', textAlign: 'center' }}>
                 Customize in Studio
               </Link>
+              <button 
+                onClick={() => isInCompare(product.id) ? removeFromCompare(product.id) : addToCompare(product)}
+                style={{
+                  width: "100%",
+                  padding: "14px",
+                  borderRadius: "10px",
+                  border: "1px solid #e2e8f0",
+                  background: isInCompare(product.id) ? "#f8fafc" : "white",
+                  color: "#1e293b",
+                  fontSize: "0.95rem",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "8px",
+                  transition: "all 0.2s"
+                }}
+              >
+                {isInCompare(product.id) ? (
+                  <><Check size={18} color="#10b981" /> Added to Compare</>
+                ) : (
+                  <><ArrowRightLeft size={18} /> Add to Compare</>
+                )}
+              </button>
               <Link href={`/contact?product=${product.name}`} className={styles.btnInquire}>Request Bulk Quote</Link>
             </div>
 

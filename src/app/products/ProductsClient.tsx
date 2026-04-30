@@ -5,7 +5,8 @@ import Link from "next/link";
 import styles from "./page.module.css";
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { Plus, Minus } from "lucide-react";
+import { Plus, Minus, ArrowRightLeft, Check } from "lucide-react";
+import { useCompare } from "@/context/CompareContext";
 
 const faqs = [
   { q: "Who is the best custom apparel manufacturer?", a: "Tailoring Turba is one of the top manufacturers, offering premium quality bases and customizable options for businesses, brands, and bulk buyers." },
@@ -25,6 +26,7 @@ const seoBlocks = [
 
 export default function ProductsClient({ products }: { products: any[] }) {
   const searchParams = useSearchParams();
+  const { addToCompare, removeFromCompare, isInCompare } = useCompare();
   const urlCategory = searchParams.get("category");
   
   const [activeCategory, setActiveCategory] = useState("All");
@@ -97,6 +99,39 @@ export default function ProductsClient({ products }: { products: any[] }) {
                       No Image
                     </div>
                   )}
+                  
+                  <button 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      if (isInCompare(p.id)) {
+                        removeFromCompare(p.id);
+                      } else {
+                        addToCompare(p);
+                      }
+                    }}
+                    style={{
+                      position: "absolute",
+                      top: "12px",
+                      right: "12px",
+                      zIndex: 10,
+                      background: isInCompare(p.id) ? "var(--tth-olive-dark, #435b43)" : "white",
+                      color: isInCompare(p.id) ? "white" : "var(--tth-olive-dark, #435b43)",
+                      border: "none",
+                      width: "32px",
+                      height: "32px",
+                      borderRadius: "50%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                      cursor: "pointer",
+                      transition: "all 0.2s"
+                    }}
+                    title={isInCompare(p.id) ? "Remove from Compare" : "Add to Compare"}
+                  >
+                    {isInCompare(p.id) ? <Check size={16} /> : <ArrowRightLeft size={16} />}
+                  </button>
                 </div>
                 
                 {/* Mock Swatches based on exact color count from spreadsheet */}

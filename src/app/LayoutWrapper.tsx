@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import MarqueeTicker from "@/components/landing/MarqueeTicker";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import CompareTray from "@/components/CompareTray";
 
 export default function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -32,6 +33,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
       
       {!hideNavigation && <Footer />}
       {!hideNavigation && <WhatsAppButton />}
+      {!hideNavigation && <CompareTray />}
     </>
   );
 }
