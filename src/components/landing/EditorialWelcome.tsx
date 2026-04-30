@@ -18,7 +18,7 @@ export default function EditorialWelcome() {
           <p className={styles.body}>
             From a 5-piece sample run to a 50,000-piece corporate rollout —
             Tailoring Turba is Pune&apos;s premier B2B blank apparel manufacturer.
-            Our three in-house brands (Magic, Folkswear, TTH) cover every
+            Our three in-house brands (Magic, Folkswear, Tailoring Turba) cover every
             fabric weight, silhouette, and price point.
           </p>
 

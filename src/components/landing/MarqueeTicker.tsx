@@ -5,7 +5,7 @@ import styles from "./MarqueeTicker.module.css";
 export default function MarqueeTicker() {
   const items = [
     "✦ 100% QUALITY GUARANTEED",
-    "✦ MAGIC - FOLKSWEAR - TTH — ALL UNDER ONE ROOF",
+    "✦ MAGIC - FOLKSWEAR - TAILORING TURBA — ALL UNDER ONE ROOF",
     "✦ FREE SAMPLE DISPATCH WITHIN 48 HOURS",
     "✦ CORPORATE BULK ORDERS WELCOME",
     "✦ PUNE-BASED PREMIUM B2B APPAREL MANUFACTURER",

@@ -9,7 +9,7 @@ export default function Home() {
   const stats = [
     { value: "10,000+", label: "Garments Delivered" },
     { value: "48 hrs", label: "Sample Dispatch" },
-    { value: "3 Brands", label: "Magic · Folkswear · TTH" },
+    { value: "3 Brands", label: "Magic · Folkswear · Tailoring Turba" },
     { value: "50+", label: "Colors Available" },
     { value: "5 pcs", label: "Minimum Order" },
   ];

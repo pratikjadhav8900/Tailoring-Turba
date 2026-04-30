@@ -254,7 +254,7 @@ export default function AboutPage() {
             
             <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-16">
               <div>
-                <h2 className="text-4xl md:text-5xl font-serif mb-8">Why Businesses <br />Trust TTH.</h2>
+                <h2 className="text-4xl md:text-5xl font-serif mb-8">Why Businesses <br />Trust Tailoring Turba.</h2>
                 <p className="text-white/60 mb-10 leading-relaxed">
                   We combine the agility of a startup with the precision of a world-class factory. 
                   Our commitment to quality is matched only by our commitment to our purpose.
@@ -288,7 +288,7 @@ export default function AboutPage() {
       </section>
 
       {/* 6. FOUNDER SECTION */}
-      <section className="py-32 md:py-48 bg-white border-t border-[#fafaf8]">
+      <section className="py-20 md:py-32 bg-white border-t border-[#fafaf8]">
         <div className="container px-4 max-w-4xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -321,7 +321,7 @@ export default function AboutPage() {
       </section>
 
       {/* 7. CTA SECTION */}
-      <section className="py-24 bg-[#fafaf8]">
+      <section className="py-16 bg-[#fafaf8]">
         <div className="container px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-serif text-[#0f172a] mb-8">Ready to create your brand's signature look?</h2>
           <motion.div
