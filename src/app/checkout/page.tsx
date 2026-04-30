@@ -24,7 +24,10 @@ export default function CheckoutPage() {
     }, 0);
   };
 
-  const estimatedTotal = calculateTotal();
+  const subtotal = calculateTotal();
+  const designCharge = cartCount > 0 ? 250 : 0;
+  const gst = cartCount > 0 ? Math.round((subtotal + designCharge) * 0.05) : 0;
+  const estimatedTotal = subtotal + designCharge + gst;
 
   const handleCheckout = (e: React.FormEvent) => {
     e.preventDefault();
@@ -185,6 +188,21 @@ export default function CheckoutPage() {
                   <span className={styles.itemPrice}>{item.price}</span>
                 </div>
               ))}
+            </div>
+
+            <div className={styles.summaryBreakdown}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>Subtotal</span>
+                <span>₹{subtotal}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>Design & Setup</span>
+                <span>₹{designCharge}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>GST (5%)</span>
+                <span>₹{gst}</span>
+              </div>
             </div>
 
             <div className={styles.totalRow}>

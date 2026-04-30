@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import styles from "./auth.module.css";
@@ -31,54 +32,86 @@ export default function LoginPage() {
 
   return (
     <div className={styles.page}>
-      <div className={styles.bg1}></div>
-      <div className={styles.bg2}></div>
+      {/* Left Split: Premium Image */}
+      <div className={styles.imagePane}>
+        <div className={styles.imageOverlay} />
+        <Image 
+          src="/premium_tailoring_auth_login_1777472320461.png" 
+          alt="Premium Tailoring" 
+          fill 
+          style={{ objectFit: "cover" }} 
+          priority
+        />
+      </div>
 
-      <div className={styles.card}>
-        <Link href="/" className={styles.logo}>Tailoring <span>Turba</span></Link>
-        <h1 className={styles.title}>Welcome back</h1>
-        <p className={styles.sub}>Sign in to your Tailoring Turba account</p>
+      {/* Right Split: Login Form */}
+      <div className={styles.formPane}>
+        <div className={styles.formContainer}>
+          <Link href="/" className={styles.logo}>Tailoring <span>Turba</span></Link>
+          <h1 className={styles.title}>Welcome back</h1>
+          <p className={styles.sub}>Sign in to your Tailoring Turba account.</p>
 
-        {error && <div className={styles.error}>{error}</div>}
-
-        <form onSubmit={handleSubmit} className={styles.form}>
-          <div className="form-group">
-            <label className="form-label">Email Address</label>
-            <input
-              id="login-email"
-              type="email"
-              className="form-input"
-              placeholder="you@company.com"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label className="form-label">Password</label>
-            <input
-              id="login-password"
-              type="password"
-              className="form-input"
-              placeholder="Enter your password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          <button id="login-submit" type="submit" className="btn-primary" style={{ width: "100%", justifyContent: "center" }} disabled={loading}>
-            {loading ? "Signing in..." : "Sign In →"}
+          <button 
+            type="button" 
+            onClick={() => signIn('google', { callbackUrl: '/dashboard' })} 
+            className={`${styles.submitBtn} ${styles.googleBtn}`}
+          >
+            <Image src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" width={18} height={18} style={{ marginRight: "12px" }} />
+            Continue with Google
           </button>
-        </form>
+          
+          <div className={styles.separator}>
+            <div className={styles.sepLine}></div>
+            <span className={styles.sepText}>Or sign in with email</span>
+            <div className={styles.sepLine}></div>
+          </div>
 
-        <p className={styles.footer}>
-          Don&apos;t have an account?{" "}
-          <Link href="/register" className={styles.link}>Create one free</Link>
-        </p>
-        <p className={styles.footer}>
-          Are you an admin?{" "}
-          <Link href="/admin/login" className={styles.link}>Admin Login</Link>
-        </p>
+          {error && <div className={styles.error}>{error}</div>}
+
+          <form onSubmit={handleSubmit} className={styles.form} autoComplete="off">
+            {/* Dummy inputs to fool browser autofill managers */}
+            <input type="text" name="prevent_autofill" style={{ display: 'none' }} tabIndex={-1} />
+            <input type="password" name="password_fake" style={{ display: 'none' }} tabIndex={-1} />
+
+            <div className={styles.formGroup}>
+              <label className={styles.label}>Email Address</label>
+              <input
+                id="user_email_kraftx"
+                name="user_email_kraftx"
+                type="email"
+                className={styles.input}
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+                autoComplete="new-password" 
+              />
+            </div>
+            <div className={styles.formGroup}>
+              <label className={styles.label}>Password</label>
+              <input
+                id="user_pass_kraftx"
+                name="user_pass_kraftx"
+                type="password"
+                className={styles.input}
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+                autoComplete="new-password"
+              />
+            </div>
+            <button id="login-submit" type="submit" className={styles.submitBtn} disabled={loading}>
+              {loading ? "Signing in..." : "Sign In →"}
+            </button>
+          </form>
+
+          <p className={styles.footer}>
+            Don&apos;t have an account?{" "}
+            <Link href="/register" className={styles.link}>Create one free</Link>
+          </p>
+          <p className={styles.footer} style={{ marginTop: 8 }}>
+            <Link href="/forgot-password" className={styles.link}>Forgot your password?</Link>
+          </p>
+        </div>
       </div>
     </div>
   );

@@ -36,7 +36,10 @@ export default function CartPage() {
     }, 0);
   };
 
-  const estimatedTotal = calculateTotal();
+  const subtotal = calculateTotal();
+  const designCharge = cartCount > 0 ? 250 : 0; // Base design charge (adjustable)
+  const gst = cartCount > 0 ? Math.round((subtotal + designCharge) * 0.05) : 0; // 5% GST
+  const estimatedTotal = subtotal + designCharge + gst;
 
   const handleCheckoutClick = () => {
     if (!session) {
@@ -139,8 +142,18 @@ export default function CartPage() {
               </div>
               
               <div className={styles.summaryRow}>
-                <span>Estimated Price</span>
-                <span>~₹{estimatedTotal}</span>
+                <span>Subtotal</span>
+                <span>₹{subtotal}</span>
+              </div>
+              
+              <div className={styles.summaryRow}>
+                <span>Design & Setup (Est.)</span>
+                <span>₹{designCharge}</span>
+              </div>
+              
+              <div className={styles.summaryRow}>
+                <span>GST (5%)</span>
+                <span>₹{gst}</span>
               </div>
               
               <div className={`${styles.summaryRow} ${styles.total}`}>

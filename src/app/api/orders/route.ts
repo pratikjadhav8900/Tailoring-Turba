@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { sendOperationsOrderAlert } from "@/lib/mail";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -8,8 +9,8 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { items, orderSheetData } = body;
-    // items: [{ productId, quantity, price }]
+    const { items, orderSheetData, addressId } = body;
+    // items: [{ productId, quantity, price, designId? }]
 
     if (!items?.length) return NextResponse.json({ error: "Cart is empty." }, { status: 400 });
 
@@ -31,11 +32,13 @@ export async function POST(req: NextRequest) {
       data: {
         userId: session.user.id,
         totalAmount,
+        ...(addressId && { shippingAddressId: addressId }),
         items: {
-          create: items.map((i: { productId: string; quantity: number; price: number }) => ({
+          create: items.map((i: { productId: string; quantity: number; price: number; designId?: string }) => ({
             productId: i.productId,
             quantity: i.quantity,
             price: i.price,
+            ...(i.designId && { designId: i.designId })
           })),
         },
         ...(orderSheetData && {
@@ -43,6 +46,15 @@ export async function POST(req: NextRequest) {
         }),
       },
       include: { items: true, orderSheet: true },
+    });
+
+    // Notify Operations
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const orderDetailsUrl = `${baseUrl}/admin/orders/${order.id}`;
+    
+    // We trigger the email without awaiting to prevent blocking the response
+    sendOperationsOrderAlert(order.id, orderDetailsUrl).catch(err => {
+      console.error("[MAIL_ERROR] Failed to send operations alert:", err);
     });
 
     return NextResponse.json({ orderId: order.id, totalAmount: order.totalAmount }, { status: 201 });

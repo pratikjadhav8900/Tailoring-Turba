@@ -5,9 +5,9 @@ import { usePathname } from "next/navigation";
 
 export default function Footer() {
   const pathname = usePathname();
-  if (pathname === "/customizer") return null;
+  if (pathname === "/customizer" || pathname === "/admin/login") return null;
 
-  const noMarginPages = ["/checkout", "/contact"];
+  const noMarginPages = ["/checkout", "/contact", "/login", "/register"];
   const isCheckout = noMarginPages.includes(pathname) || pathname.startsWith("/products");
 
   return (

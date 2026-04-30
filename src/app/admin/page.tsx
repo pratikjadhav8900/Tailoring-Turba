@@ -1,5 +1,12 @@
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { 
+  TrendingUp, 
+  Users, 
+  ShoppingBag, 
+  Clock, 
+  Calendar, 
+  Shirt,
+  ChevronRight
+} from "lucide-react";
 import styles from "./page.module.css";
 
 export default async function AdminDashboard() {
@@ -19,12 +26,12 @@ export default async function AdminDashboard() {
   });
 
   const stats = [
-    { label: "Total Revenue", value: `₹${(revenue._sum.totalAmount ?? 0).toLocaleString()}`, icon: "💰", color: "#48BB78", change: "+12%" },
-    { label: "Total Users", value: userCount, icon: "👥", color: "#667EEA", change: "+8%" },
-    { label: "Total Orders", value: orderCount, icon: "📦", color: "#FF6B35", change: "+23%" },
-    { label: "Pending Orders", value: pendingOrders, icon: "⏳", color: "#ECC94B", change: "" },
-    { label: "Bookings", value: bookingCount, icon: "📅", color: "#FC8181", change: "" },
-    { label: "Products", value: products.length, icon: "👕", color: "#F6AD55", change: "" },
+    { label: "Revenue", value: `₹${(revenue._sum.totalAmount ?? 0).toLocaleString()}`, icon: TrendingUp, color: "var(--tth-black)", change: "+12.5%" },
+    { label: "Customers", value: userCount, icon: Users, color: "var(--tth-black)", change: "+8%" },
+    { label: "Orders", value: orderCount, icon: ShoppingBag, color: "var(--tth-black)", change: "+23%" },
+    { label: "Pending", value: pendingOrders, icon: Clock, color: "var(--tth-olive-dark)", change: "" },
+    { label: "Bookings", value: bookingCount, icon: Calendar, color: "var(--tth-black)", change: "" },
+    { label: "Inventory", value: products.length, icon: Shirt, color: "var(--tth-black)", change: "" },
   ];
 
   return (
@@ -38,22 +45,20 @@ export default async function AdminDashboard() {
 
       <div className={styles.statsGrid}>
         {stats.map((s, i) => (
-          <div key={i} className={`${styles.statCard} glass-card`}>
-            <div className={styles.statTop}>
-              <div className={styles.statLabel}>{s.label}</div>
-              {s.change && <div className={styles.change}>{s.change}</div>}
-            </div>
+          <div key={i} className={styles.statCard}>
+            <div className={styles.statLabel}>{s.label}</div>
             <div className={styles.statValue} style={{ color: s.color }}>{s.value}</div>
-            <div className={styles.statIcon}>{s.icon}</div>
+            {s.change && <div className={styles.change}>{s.change}</div>}
+            <div className={styles.statIcon}><s.icon size={24} /></div>
           </div>
         ))}
       </div>
 
       {/* Recent Orders Table */}
-      <div className={`${styles.tableBlock} glass-card`}>
+      <div className={styles.tableBlock}>
         <div className={styles.tableHeader}>
-          <h2>Recent Orders</h2>
-          <a href="/admin/orders" className={styles.link}>View all →</a>
+          <h2>Recent Activity</h2>
+          <a href="/admin/orders" className={styles.link}>All Orders <ChevronRight size={14} style={{ display: 'inline', verticalAlign: 'middle' }} /></a>
         </div>
         <div className={styles.tableWrap}>
           <table className={styles.table}>

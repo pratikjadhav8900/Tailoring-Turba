@@ -1,25 +1,30 @@
 .marqueeContainer {
-  background-color: var(--tth-black, #111);
-  color: var(--tth-gold, #b8941f);
+  background-color: var(--tth-black, #000);
+  color: var(--tth-gold, #c49d32);
   overflow: hidden;
   white-space: nowrap;
-  padding: 8px 0;
+  height: 38px;
   width: 100%;
   display: flex;
+  align-items: center;
   border-bottom: 1px solid rgba(255,255,255,0.1);
-  font-family: var(--font-sans);
+  font-family: var(--font-sans, sans-serif);
   font-size: 0.75rem;
   letter-spacing: 0.05em;
   font-weight: 600;
 }
 
 .marqueeContent {
-  display: inline-flex;
+  display: flex;
+  white-space: nowrap;
+  flex-shrink: 0;
   animation: scroll 40s linear infinite;
 }
 
 .marqueeItem {
-  margin: 0 16px;
+  margin: 0 24px;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 @keyframes scroll {

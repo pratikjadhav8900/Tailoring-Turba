@@ -77,6 +77,17 @@
   border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
 
+.rightContent .summaryBreakdown {
+  color: rgba(255, 255, 255, 0.9);
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 0.9rem;
+}
+
 .rightContent .payBtn {
   background: var(--tth-white);
   color: var(--tth-olive-dark);

@@ -20,11 +20,34 @@ function ContactForm() {
   });
 
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitted(true);
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      if (res.ok) {
+        setIsSubmitted(true);
+      } else {
+        const data = await res.json();
+        setError(data.error || "Something went wrong. Please try again.");
+      }
+    } catch {
+      setError("Network error. Please check your connection and try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
+
 
   return (
     <div className={styles.layout}>
@@ -157,8 +180,14 @@ function ContactForm() {
                   />
                 </div>
 
-                <button type="submit" className={styles.submitBtn}>
-                  Submit Quote Request →
+                {error && (
+                  <div style={{ padding: "12px 16px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "8px", color: "#dc2626", fontSize: "0.875rem", marginBottom: "12px" }}>
+                    ⚠️ {error}
+                  </div>
+                )}
+
+                <button type="submit" className={styles.submitBtn} disabled={isLoading} style={{ opacity: isLoading ? 0.7 : 1, cursor: isLoading ? "not-allowed" : "pointer" }}>
+                  {isLoading ? "Sending your request..." : "Submit Quote Request →"}
                 </button>
               </form>
             </>
@@ -172,7 +201,6 @@ function ContactForm() {
 export default function ContactPage() {
   return (
     <div className={styles.pageWrapper}>
-      <Navbar />
       <Suspense fallback={<div style={{ height: "100vh" }} />}>
         <ContactForm />
       </Suspense>

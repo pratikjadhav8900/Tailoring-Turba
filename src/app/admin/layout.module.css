@@ -1,2 +1,22 @@
-.shell { display: flex; min-height: 100vh; background: var(--bg-main); }
-.main { flex: 1; padding: 40px; overflow-y: auto; background: var(--bg-main); }
+.shell {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--tth-offwhite);
+}
+
+.main {
+  flex: 1;
+  padding: 48px;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+@media (max-width: 1024px) {
+  .shell {
+    flex-direction: column;
+  }
+  .main {
+    padding: 24px;
+  }
+}

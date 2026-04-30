@@ -2,15 +2,18 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
-import { Search, User, ShoppingCart, ChevronDown } from "lucide-react";
+import { Search, User, ShoppingCart, ChevronDown, LayoutDashboard, ShieldCheck } from "lucide-react";
 import styles from "./Navbar.module.css";
 import { useCart } from "@/context/CartContext";
+import { useSession } from "next-auth/react";
 
 // Assuming we want a "transparent" prop to still exist so we don't break page.tsx, 
 // but we will ignore it in the CSS to make the navbar solid as agreed.
 export default function Navbar({ transparent = false }: { transparent?: boolean }) {
   const [scrolled, setScrolled] = useState(false);
   const { cartCount } = useCart();
+  const { data: session, status } = useSession();
+  const isAdmin = session?.user?.role === "ADMIN";
 
   useEffect(() => {
     const handleScroll = () => {
@@ -76,9 +79,23 @@ export default function Navbar({ transparent = false }: { transparent?: boolean 
           <button className={styles.iconBtn} aria-label="Search">
             <Search size={22} />
           </button>
-          <Link href="/dashboard" className={styles.iconBtn} aria-label="Profile">
-            <User size={22} />
-          </Link>
+
+          {isAdmin && (
+            <Link href="/admin" className={styles.iconBtn} aria-label="Admin Panel" title="Admin Panel">
+              <ShieldCheck size={22} color="var(--tth-olive-dark)" />
+            </Link>
+          )}
+
+          {session ? (
+            <Link href="/dashboard" className={styles.iconBtn} aria-label="Dashboard" title="User Dashboard">
+              <User size={22} />
+            </Link>
+          ) : (
+            <Link href="/login" className={styles.navLink} style={{ fontSize: '0.85rem', fontWeight: 600 }}>
+              Sign In
+            </Link>
+          )}
+
           <Link href="/cart" className={styles.iconBtn} aria-label="Cart">
             <ShoppingCart size={22} />
             {cartCount > 0 && <span className={styles.badge}>{cartCount}</span>}

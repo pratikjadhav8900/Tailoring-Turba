@@ -1,38 +1,66 @@
 "use client";
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import styles from "./AdminSidebar.module.css";
+import { 
+  LayoutDashboard, 
+  Package, 
+  Users, 
+  Shirt, 
+  Layers, 
+  Calendar, 
+  CreditCard, 
+  LogOut,
+  ArrowLeft
+} from "lucide-react";
 
 const navItems = [
-  { icon: "📊", label: "Dashboard", href: "/admin" },
-  { icon: "📦", label: "Orders", href: "/admin/orders" },
-  { icon: "👥", label: "Users", href: "/admin/users" },
-  { icon: "👕", label: "Products", href: "/admin/products" },
-  { icon: "🗂️", label: "Categories", href: "/admin/categories" },
-  { icon: "📅", label: "Bookings", href: "/admin/bookings" },
-  { icon: "💳", label: "Transactions", href: "/admin/transactions" },
+  { icon: LayoutDashboard, label: "Dashboard", href: "/admin" },
+  { icon: Package, label: "Orders", href: "/admin/orders" },
+  { icon: Users, label: "Users", href: "/admin/users" },
+  { icon: Shirt, label: "Products", href: "/admin/products" },
+  { icon: Layers, label: "Categories", href: "/admin/categories" },
+  { icon: Calendar, label: "Bookings", href: "/admin/bookings" },
+  { icon: CreditCard, label: "Transactions", href: "/admin/transactions" },
 ];
 
 export default function AdminSidebar({ role }: { role: string }) {
   const pathname = usePathname();
+  
   return (
     <aside className={styles.sidebar}>
-      <div className={styles.logo}><span>K</span>raftX <span className={styles.badge}>ADMIN</span></div>
-      <div className={styles.roleChip}>{role === "SUPER_ADMIN" ? "⭐ Super Admin" : "🔑 Admin"}</div>
+      <div className={styles.header}>
+        <Link href="/" className={styles.logo}>
+          Tailoring <span>Turba</span>
+        </Link>
+        <div className={styles.roleChip}>
+          {role === "SUPER_ADMIN" ? "Super Admin" : "Platform Admin"}
+        </div>
+      </div>
+
       <nav className={styles.nav}>
-        {navItems.map(item => {
-          const isActive = item.href === "/admin" ? pathname === "/admin" : pathname.startsWith(item.href);
+        {navItems.map(Item => {
+          const isActive = Item.href === "/admin" ? pathname === "/admin" : pathname.startsWith(Item.href);
           return (
-            <Link key={item.href} href={item.href} className={`${styles.item} ${isActive ? styles.active : ""}`}>
-              <span className={styles.icon}>{item.icon}</span>
-              <span>{item.label}</span>
-              {isActive && <div className={styles.indicator}></div>}
+            <Link key={Item.href} href={Item.href} className={`${styles.item} ${isActive ? styles.active : ""}`}>
+              <Item.icon size={18} strokeWidth={isActive ? 2.5 : 2} />
+              <span>{Item.label}</span>
+              {isActive && <div className={styles.indicator} />}
             </Link>
           );
         })}
       </nav>
-      <button className={styles.logout} onClick={() => signOut({ callbackUrl: "/" })}>🚪 Sign Out</button>
+
+      <div className={styles.footer}>
+        <Link href="/" className={styles.backBtn}>
+          <ArrowLeft size={16} /> Back to Site
+        </Link>
+        <button className={styles.logout} onClick={() => signOut({ callbackUrl: "/" })}>
+          <LogOut size={16} /> Sign Out
+        </button>
+      </div>
     </aside>
   );
 }

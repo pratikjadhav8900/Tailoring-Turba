@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { sendOperationsBookingAlert, sendCustomerBookingConfirmation } from "@/lib/mail";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -11,7 +12,32 @@ export async function POST(req: NextRequest) {
 
   const booking = await prisma.booking.create({
     data: { userId: session.user.id, date: new Date(date), timeSlot, notes: notes || null },
+    include: { user: true }
   });
+
+  // Notify Operations
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const bookingDetailsUrl = `${baseUrl}/admin/bookings`;
+  
+  const formattedDate = new Date(booking.date).toLocaleDateString("en-IN", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const customerName = booking.user?.name || booking.user?.email || "A Customer";
+
+  sendOperationsBookingAlert(booking.id, bookingDetailsUrl, customerName, formattedDate, booking.timeSlot).catch(err => {
+    console.error("[MAIL_ERROR] Failed to send booking operations alert:", err);
+  });
+
+  // Send confirmation to the customer
+  if (booking.user?.email) {
+    sendCustomerBookingConfirmation(
+      booking.user.email,
+      customerName,
+      formattedDate,
+      booking.timeSlot,
+      booking.notes
+    ).catch(err => {
+      console.error("[MAIL_ERROR] Failed to send customer confirmation:", err);
+    });
+  }
 
   return NextResponse.json(booking, { status: 201 });
 }

@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -27,11 +21,11 @@ model User {
   isB2BApproved Boolean   @default(false)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-
   accounts      Account[]
+  Address       Address[]
+  bookings      Booking[]
   designs       Design[]
   orders        Order[]
-  bookings      Booking[]
 }
 
 model Account {
@@ -40,25 +34,24 @@ model Account {
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
 
 model Category {
-  id        String    @id @default(cuid())
-  name      String    @unique
-  slug      String    @unique
-  image     String?
-  products  Product[]
+  id       String    @id @default(cuid())
+  name     String    @unique
+  slug     String    @unique
+  image    String?
+  products Product[]
 }
 
 model Product {
@@ -68,42 +61,46 @@ model Product {
   basePrice        Float
   minOrderQuantity Int         @default(1)
   categoryId       String
-  category         Category    @relation(fields: [categoryId], references: [id])
   images           String[]
+  type             String?
+  badge            String?
+  colors           Int?
+  features         String[]
   createdAt        DateTime    @default(now())
   updatedAt        DateTime    @updatedAt
-
   designs          Design[]
   orderItems       OrderItem[]
+  category         Category    @relation(fields: [categoryId], references: [id])
 }
 
 model Design {
-  id          String   @id @default(cuid())
-  userId      String
-  productId   String
-  name        String
-  imageUrl    String?
-  rawUrl      String?  // For .cdr / heavy files
-  stateJson   String?  // SVG customizer state
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  user        User     @relation(fields: [userId], references: [id])
-  product     Product  @relation(fields: [productId], references: [id])
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  name      String
+  imageUrl  String?
+  rawUrl    String?
+  stateJson String?
+  createdAt DateTime @default(now())
+  updatedAt  DateTime    @updatedAt
+  product    Product     @relation(fields: [productId], references: [id])
+  user       User        @relation(fields: [userId], references: [id])
+  orderItems OrderItem[]
 }
 
 model Order {
-  id            String      @id @default(cuid())
-  userId        String
-  totalAmount   Float
-  status        OrderStatus @default(PENDING)
-  paymentId     String?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-
-  user          User        @relation(fields: [userId], references: [id])
-  items         OrderItem[]
-  orderSheet    OrderSheet?
+  id          String      @id @default(cuid())
+  userId      String
+  totalAmount Float
+  status      OrderStatus @default(PENDING)
+  paymentId   String?
+  createdAt   DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  user              User        @relation(fields: [userId], references: [id])
+  items             OrderItem[]
+  orderSheet        OrderSheet?
+  shippingAddressId String?
+  shippingAddress   Address?    @relation(fields: [shippingAddressId], references: [id])
 }
 
 model OrderItem {
@@ -112,7 +109,8 @@ model OrderItem {
   productId String
   quantity  Int
   price     Float
-
+  designId  String?
+  design    Design? @relation(fields: [designId], references: [id])
   order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product   Product @relation(fields: [productId], references: [id])
 }
@@ -120,22 +118,63 @@ model OrderItem {
 model OrderSheet {
   id        String   @id @default(cuid())
   orderId   String   @unique
-  sheetData Json     // Store roster info like names, sizes, numbers
+  sheetData Json
   createdAt DateTime @default(now())
-
   order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }
 
 model Booking {
-  id           String        @id @default(cuid())
-  userId       String
-  date         DateTime
-  timeSlot     String
-  status       BookingStatus @default(REQUESTED)
-  notes        String?
-  createdAt    DateTime      @default(now())
+  id        String        @id @default(cuid())
+  userId    String
+  date      DateTime
+  timeSlot  String
+  status    BookingStatus @default(REQUESTED)
+  notes     String?
+  createdAt DateTime      @default(now())
+  user      User          @relation(fields: [userId], references: [id])
+}
 
-  user         User          @relation(fields: [userId], references: [id])
+model CatalogueCategory {
+  id          String             @id @default(cuid())
+  name        String
+  slug        String             @unique
+  description String
+  hsn         String?
+  gst         String?
+  pages       Int[]
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  products    CatalogueProduct[]
+}
+
+model CatalogueProduct {
+  id               String            @id @default(cuid())
+  code             String
+  name             String
+  spec             String?
+  hsn              String?
+  gst              String?
+  minOrderQuantity Int               @default(50)
+  isB2B            Boolean           @default(true)
+  categoryId       String
+  createdAt        DateTime          @default(now())
+  category         CatalogueCategory @relation(fields: [categoryId], references: [id])
+}
+
+model Address {
+  id         String   @id
+  userId     String
+  name       String
+  street     String
+  city       String
+  state      String
+  postalCode String
+  country    String   @default("India")
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime
+  User       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders     Order[]
 }
 
 enum Role {
@@ -153,36 +192,18 @@ enum OrderStatus {
   CATALOGUE_ENQUIRY
 }
 
-model CatalogueCategory {
-  id          String             @id @default(cuid())
-  name        String
-  slug        String             @unique
-  description String
-  hsn         String?
-  gst         String?
-  pages       Int[]              // array of catalogue page numbers
-  products    CatalogueProduct[]
-  createdAt   DateTime           @default(now())
-  updatedAt   DateTime           @updatedAt
-}
-
-model CatalogueProduct {
-  id               String             @id @default(cuid())
-  code             String
-  name             String
-  spec             String?
-  hsn              String?
-  gst              String?
-  minOrderQuantity Int                @default(10)
-  isB2B            Boolean            @default(true)
-  category         CatalogueCategory  @relation(fields: [categoryId], references: [id])
-  categoryId       String
-  createdAt        DateTime           @default(now())
-}
-
 enum BookingStatus {
   REQUESTED
   CONFIRMED
   CANCELLED
   COMPLETED
+}
+
+model PasswordResetToken {
+  id      String   @id @default(cuid())
+  email   String
+  otp     String   @unique
+  expires DateTime
+
+  @@unique([email, otp])
 }
