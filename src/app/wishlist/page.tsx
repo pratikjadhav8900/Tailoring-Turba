@@ -13,7 +13,6 @@ export default function WishlistPage() {
 
   return (
     <>
-      <Navbar />
       <main style={{ 
         minHeight: "100vh", 
         paddingTop: "140px", 
