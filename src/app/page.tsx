@@ -35,7 +35,8 @@ export default function Home() {
         justifyContent: "center",
         gap: "64px",
         flexWrap: "wrap",
-        textAlign: "center"
+        textAlign: "center",
+        margin: 0 // Ensure no stray margins
       }}>
         {stats.map((stat) => (
           <div key={stat.label}>

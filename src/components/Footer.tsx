@@ -7,8 +7,8 @@ export default function Footer() {
   const pathname = usePathname();
   if (pathname === "/customizer" || pathname === "/admin/login") return null;
 
-  const noMarginPages = ["/checkout", "/contact", "/login", "/register"];
-  const isCheckout = noMarginPages.includes(pathname) || pathname.startsWith("/products");
+  const noMarginPages = ["/", "/checkout", "/contact", "/login", "/register"];
+  const isNoMargin = noMarginPages.includes(pathname) || pathname.startsWith("/products");
 
   return (
     <footer style={{
@@ -16,7 +16,7 @@ export default function Footer() {
       color: "#e2e8f0",
       paddingTop: "64px",
       paddingBottom: "32px",
-      marginTop: isCheckout ? "0" : "80px",
+      marginTop: isNoMargin ? "0" : "80px",
       borderTop: "1px solid rgba(255,255,255,0.06)"
     }}>
       <div className="container">
