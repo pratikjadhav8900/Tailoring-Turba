@@ -251,6 +251,40 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
               ))}
             </div>
 
+            {/* Sampling Policy Card */}
+            <div style={{ 
+              marginTop: "16px", 
+              padding: "16px", 
+              background: "#eff6ff", 
+              border: "1px solid #dbeafe", 
+              borderRadius: "12px",
+              display: "flex",
+              gap: "12px",
+              alignItems: "flex-start"
+            }}>
+              <div style={{ color: "#3b82f6", background: "white", padding: "8px", borderRadius: "8px", boxShadow: "0 2px 4px rgba(59,130,246,0.1)" }}>
+                <Package size={20} />
+              </div>
+              <div>
+                <h4 style={{ fontSize: "0.85rem", fontWeight: 700, color: "#1e3a8a", marginBottom: "4px" }}>Test Before You Bulk Order</h4>
+                <p style={{ fontSize: "0.78rem", color: "#1e40af", lineHeight: 1.4, margin: 0 }}>
+                  Order a single sample to check fit and fabric. 
+                  <strong> 100% sample cost refund </strong> when you place a bulk order of 50+ units.
+                </p>
+                <Link href={`/contact?product=${product.name}&subject=Sample Request`} style={{ 
+                  display: "inline-block", 
+                  marginTop: "8px", 
+                  fontSize: "0.75rem", 
+                  fontWeight: 700, 
+                  color: "#2563eb", 
+                  textDecoration: "none",
+                  borderBottom: "1px solid #bfdbfe"
+                }}>
+                  Request Sample Pack →
+                </Link>
+              </div>
+            </div>
+
             <div style={{ borderTop: "1px solid #f1f5f9", marginTop: "16px", paddingTop: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
               {[
                 { icon: <Receipt size={14} strokeWidth={1.5} />, text: "Full GST tax invoice provided" },
