@@ -17,7 +17,7 @@ export default function WishlistPage() {
         minHeight: "100vh", 
         paddingTop: "140px", 
         paddingBottom: "100px",
-        backgroundImage: "url('/premium_textile_texture_bg_1777560282652.png')",
+        backgroundImage: "url('/premium_textile_texture_bg.png')",
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundAttachment: "fixed",
