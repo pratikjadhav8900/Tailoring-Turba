@@ -4,14 +4,12 @@ import { useCompare } from "@/context/CompareContext";
 import Image from "next/image";
 import Link from "next/link";
 import { X, ArrowLeft, ShoppingCart, MessageSquare } from "lucide-react";
-import Navbar from "@/components/Navbar";
 
 export default function ComparePage() {
   const { compareItems, removeFromCompare } = useCompare();
 
   return (
     <>
-      <Navbar />
       <main style={{ minHeight: "100vh", background: "#f8fafc", paddingTop: "120px", paddingBottom: "80px" }}>
         <div className="container">
           <Link href="/products" style={{ display: "flex", alignItems: "center", gap: "8px", color: "#64748b", textDecoration: "none", fontSize: "0.9rem", marginBottom: "32px" }}>
