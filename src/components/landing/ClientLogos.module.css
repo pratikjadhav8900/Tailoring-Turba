@@ -1,0 +1,52 @@
+.section {
+  padding: 64px 0;
+  background: white;
+  border-bottom: 1px solid #f1f5f9;
+  overflow: hidden;
+}
+
+.label {
+  text-align: center;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: #94a3b8;
+  margin-bottom: 40px;
+  font-weight: 700;
+}
+
+.wrapper {
+  display: flex;
+  position: relative;
+  width: 100%;
+}
+
+.track {
+  display: flex;
+  width: max-content;
+  animation: scroll 40s linear infinite;
+  gap: 80px;
+}
+
+.logo {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  color: #cbd5e1;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  user-select: none;
+  filter: grayscale(1);
+  opacity: 0.8;
+  transition: opacity 0.3s, color 0.3s;
+}
+
+.logo:hover {
+  opacity: 1;
+  color: #1e293b;
+}
+
+@keyframes scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}

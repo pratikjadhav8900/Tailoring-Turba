@@ -4,6 +4,8 @@ import CategoryCarousel from "@/components/landing/CategoryCarousel";
 import FeaturesGrid from "@/components/landing/FeaturesGrid";
 import TargetAudienceGrid from "@/components/landing/TargetAudienceGrid";
 import AppShowcase from "@/components/landing/AppShowcase";
+import ClientLogos from "@/components/landing/ClientLogos";
+import HowItWorks from "@/components/landing/HowItWorks";
 
 export default function Home() {
   const stats = [
@@ -18,8 +20,10 @@ export default function Home() {
     <>
       <HeroSlider />
       <EditorialWelcome />
+      <ClientLogos />
       <CategoryCarousel />
       <FeaturesGrid />
+      <HowItWorks />
       <TargetAudienceGrid />
       <AppShowcase />
 
