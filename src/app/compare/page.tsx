@@ -36,31 +36,45 @@ export default function ComparePage() {
               }}>Browse Products</Link>
             </div>
           ) : (
-            <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", minWidth: "800px", borderCollapse: "separate", borderSpacing: "0" }}>
+            <div style={{ overflowX: "auto", paddingBottom: "20px" }}>
+              <table style={{ 
+                width: "100%", 
+                minWidth: "1000px", 
+                borderCollapse: "separate", 
+                borderSpacing: "12px 0", // Add spacing between columns for a card feel
+                tableLayout: "fixed" // FORCE EQUAL WIDTHS
+              }}>
                 <thead>
                   <tr>
-                    <th style={{ width: "200px", background: "transparent", border: "none" }}></th>
+                    <th style={{ width: "180px", background: "transparent", border: "none" }}></th>
                     {compareItems.map(item => (
-                      <th key={item.id} style={{ background: "white", padding: "32px 20px", border: "1px solid #e2e8f0", borderBottom: "none", borderRadius: "16px 16px 0 0", verticalAlign: "top" }}>
-                        <div style={{ position: "relative", width: "100%", aspectRatio: "1", borderRadius: "12px", overflow: "hidden", marginBottom: "20px" }}>
+                      <th key={item.id} style={{ 
+                        background: "white", 
+                        padding: "24px", 
+                        border: "1px solid #e2e8f0", 
+                        borderBottom: "none", 
+                        borderRadius: "20px 20px 0 0", 
+                        verticalAlign: "top",
+                        boxShadow: "0 -4px 20px rgba(0,0,0,0.02)"
+                      }}>
+                        <div style={{ position: "relative", width: "100%", aspectRatio: "1/1.2", borderRadius: "12px", overflow: "hidden", marginBottom: "20px", background: "#f8fafc" }}>
                           <Image src={item.image} alt={item.name} fill style={{ objectFit: "cover" }} />
                           <button 
                             onClick={() => removeFromCompare(item.id)}
-                            style={{ position: "absolute", top: "10px", right: "10px", background: "white", border: "none", borderRadius: "50%", padding: "4px", cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.1)" }}
+                            style={{ position: "absolute", top: "10px", right: "10px", background: "white", border: "none", borderRadius: "50%", padding: "6px", cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.1)", zIndex: 20 }}
                           >
-                            <X size={16} color="#ef4444" />
+                            <X size={14} color="#ef4444" />
                           </button>
                         </div>
-                        <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "#1e293b", marginBottom: "8px", textAlign: "left" }}>{item.name}</h3>
-                        <div style={{ fontSize: "1.25rem", fontWeight: 800, color: "var(--tth-olive-dark)", textAlign: "left" }}>{item.price}</div>
+                        <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "#1e293b", marginBottom: "8px", textAlign: "left", lineHeight: 1.4, height: "2.8em", overflow: "hidden" }}>{item.name}</h3>
+                        <div style={{ fontSize: "1.2rem", fontWeight: 800, color: "var(--tth-olive-dark)", textAlign: "left" }}>{item.price}</div>
                       </th>
                     ))}
                     {Array.from({ length: 4 - compareItems.length }).map((_, i) => (
-                      <th key={i} style={{ padding: "32px 20px" }}>
-                        <div style={{ width: "100%", aspectRatio: "1", borderRadius: "16px", border: "2px dashed #cbd5e1", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "12px", color: "#94a3b8" }}>
+                      <th key={i} style={{ padding: "24px" }}>
+                        <div style={{ width: "100%", aspectRatio: "1/1.2", borderRadius: "20px", border: "2px dashed #cbd5e1", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "12px", color: "#94a3b8" }}>
                            <PlusCircle size={32} />
-                           <span style={{ fontSize: "0.85rem" }}>Add product</span>
+                           <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>Add product</span>
                         </div>
                       </th>
                     ))}
@@ -81,20 +95,28 @@ export default function ComparePage() {
                   <tr>
                     <td style={{ padding: "24px", border: "none" }}></td>
                     {compareItems.map(item => (
-                      <td key={item.id} style={{ padding: "24px 20px", background: "white", border: "1px solid #e2e8f0", borderTop: "none", borderRadius: "0 0 16px 16px" }}>
+                      <td key={item.id} style={{ 
+                        padding: "24px", 
+                        background: "white", 
+                        border: "1px solid #e2e8f0", 
+                        borderTop: "none", 
+                        borderRadius: "0 0 20px 20px",
+                        boxShadow: "0 4px 20px rgba(0,0,0,0.02)"
+                      }}>
                         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                           <Link href={`/products/${item.id}`} style={{ 
                             background: "var(--tth-olive-dark)", 
                             color: "white", 
                             padding: "12px", 
-                            borderRadius: "8px", 
+                            borderRadius: "10px", 
                             textDecoration: "none", 
                             fontWeight: 700, 
                             fontSize: "0.85rem",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            gap: "8px"
+                            gap: "8px",
+                            transition: "opacity 0.2s"
                           }}>
                             <ShoppingCart size={16} /> Order Now
                           </Link>
@@ -102,7 +124,7 @@ export default function ComparePage() {
                             background: "white", 
                             color: "#1e293b", 
                             padding: "12px", 
-                            borderRadius: "8px", 
+                            borderRadius: "10px", 
                             textDecoration: "none", 
                             fontWeight: 700, 
                             fontSize: "0.85rem",
@@ -131,17 +153,18 @@ export default function ComparePage() {
 function ComparisonRow({ label, values, isSmall = false }: { label: string, values: any[], isSmall?: boolean }) {
   return (
     <tr>
-      <td style={{ padding: "20px 24px", fontWeight: 700, fontSize: "0.9rem", color: "#64748b", border: "none" }}>{label}</td>
+      <td style={{ padding: "16px 24px", fontWeight: 700, fontSize: "0.8rem", color: "#64748b", border: "none", textTransform: "uppercase", letterSpacing: "0.05em" }}>{label}</td>
       {values.map((v, i) => (
         <td key={i} style={{ 
-          padding: "20px", 
+          padding: "20px 24px", 
           background: "white", 
           borderLeft: "1px solid #e2e8f0", 
           borderRight: "1px solid #e2e8f0", 
           borderBottom: "1px solid #f1f5f9",
           fontSize: isSmall ? "0.8rem" : "0.9rem",
-          color: "#1e293b",
-          lineHeight: 1.5
+          color: "#475569",
+          lineHeight: 1.6,
+          boxShadow: "4px 0 10px rgba(0,0,0,0.01)"
         }}>
           {v}
         </td>
