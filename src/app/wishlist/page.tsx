@@ -14,9 +14,8 @@ export default function WishlistPage() {
   return (
     <>
       <main style={{ 
-        minHeight: "100vh", 
         paddingTop: "140px", 
-        paddingBottom: "100px",
+        paddingBottom: "80px",
         backgroundImage: "url('/premium_studio_bg.png')",
         backgroundSize: "cover",
         backgroundPosition: "center",
