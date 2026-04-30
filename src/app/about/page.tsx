@@ -320,21 +320,6 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* 7. CTA SECTION */}
-      <section className="py-10 bg-[#fafaf8]">
-        <div className="container px-4 text-center">
-          <h2 className="text-3xl md:text-4xl font-serif text-[#0f172a] mb-8">Ready to create your brand's signature look?</h2>
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="inline-block"
-          >
-            <button className="bg-[#0f172a] text-white px-10 py-5 rounded-full flex items-center gap-3 font-semibold group transition-all hover:bg-[#c49d32]">
-              Partner with Us <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform" />
-            </button>
-          </motion.div>
-        </div>
-      </section>
     </div>
   );
 }
