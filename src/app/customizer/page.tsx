@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef, Suspense } from "react";
+import { useState, useEffect, useRef, Suspense, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import PoloCustomizer from "@/components/customizer/PoloCustomizer";
 import { CustomizerState } from "@/types/customizer";
@@ -21,10 +21,14 @@ function CustomizerContent() {
   const [toast, setToast] = useState<{message: string, visible: boolean}>({message: "", visible: false});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { addToCart } = useCart();
-
-  // Read URL parameters and pre-populate customizer state
-  const productId = searchParams.get('productId');
-  const selectedProduct = productId ? allProducts.find(p => p.id === parseInt(productId)) : null;
+  const [isSaving, setIsSaving] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  // Pre-calculate selected product from URL to avoid race conditions
+  const selectedProduct = useMemo(() => {
+    const productId = searchParams.get('id') || searchParams.get('productId');
+    if (!productId) return null;
+    return allProducts.find(p => String(p.id) === String(productId)) || null;
+  }, [searchParams]);
 
   // Map product category to garment type
   const categoryToGarment = (category: string): string => {
@@ -49,15 +53,28 @@ function CustomizerContent() {
       ? categoryToGarment(selectedProduct.category) 
       : (garment || 'round-neck');
     
-    setCustomizerState({
-      garmentType: derivedGarment,
-      bodyColor: '#111111',
-      frontElements: [],
-      backElements: [],
-      fabricId: fabricId || undefined,
-      sizes: { S: 0, M: 0, L: 0, XL: 0, XXL: 0 }
-    });
-  }, [searchParams]);
+    // Only set initial state once
+    if (!customizerState) {
+      setCustomizerState({
+        garmentType: derivedGarment,
+        bodyColor: '#111111',
+        frontElements: [],
+        backElements: [],
+        fabricId: fabricId || undefined,
+        sizes: { S: 0, M: 0, L: 0, XL: 0, XXL: 0 }
+      });
+    } else if (selectedProduct && customizerState.garmentType !== derivedGarment) {
+      // Update garment type if it changes from product selection
+      setCustomizerState(prev => prev ? ({ ...prev, garmentType: derivedGarment }) : null);
+    }
+  }, [searchParams, selectedProduct]);
+
+  useEffect(() => {
+    // Mark as unsaved whenever customizerState changes after initial load
+    if (customizerState) {
+      setHasUnsavedChanges(true);
+    }
+  }, [customizerState?.frontElements, customizerState?.backElements, customizerState?.bodyColor, customizerState?.garmentType]);
 
   useEffect(() => {
     const handleBounds = (e: any) => {
@@ -80,24 +97,32 @@ function CustomizerContent() {
   const handleNext = () => {
     if (activeTab === "Design") {
       setActiveTab("Options");
+      setIsPreviewMode(false);
     } else if (activeTab === "Options") {
-      if (totalQuantity === 0) {
-        showToast("Please add at least one garment size to proceed.");
+      if (totalQuantity < MOQ) {
+        showToast(`Minimum order quantity is ${MOQ} pieces. Please add more sizes.`);
         return;
       }
       setActiveTab("Review");
+      setIsPreviewMode(false);
     } else {
       if (!customizerState || totalQuantity === 0) {
         showToast("Please add at least one garment size to proceed.");
         return;
       }
+      // Just send the base price to the cart. 
+      // The cart will handle the customization fee and GST for a cleaner breakdown.
+      const priceMatch = selectedProduct?.price.match(/\d+/);
+      const basePrice = priceMatch ? priceMatch[0] : "85";
+
       // Add to cart
       addToCart({
         id: `custom-${Date.now()}`,
         code: "CUSTOM-DESIGN",
-        name: `Customized ${customizerState.garmentType.replace(/-/g, ' ')}`,
-        price: "199.00", 
+        name: selectedProduct ? `Custom ${selectedProduct.name}` : `Custom ${customizerState.garmentType.replace(/-/g, ' ')}`,
+        price: basePrice, 
         quantity: totalQuantity,
+        image: selectedProduct?.image,
         customDesign: customizerState,
         uploadedAssets: productionFiles.map(f => f.name),
       });
@@ -118,6 +143,8 @@ function CustomizerContent() {
     });
   };
 
+  const MOQ = 10;
+
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files).map(f => ({
@@ -132,6 +159,44 @@ function CustomizerContent() {
     setProductionFiles(prev => prev.filter((_, i) => i !== index));
   };
 
+  const handleSaveDesign = async () => {
+    if (!customizerState) return;
+    
+    setIsSaving(true);
+    try {
+      // Check auth status
+      const authRes = await fetch('/api/auth/session');
+      const session = await authRes.json();
+      
+      if (!session || !Object.keys(session).length || !session.user) {
+        showToast("Please login to save your design to your account.");
+        setIsSaving(false);
+        // Could also store in localStorage here for guest users
+        return;
+      }
+
+      const res = await fetch('/api/designs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: `Custom ${customizerState.garmentType.replace(/-/g, ' ')}`,
+          stateJson: customizerState,
+          sourceProductId: productId || null,
+        })
+      });
+
+      if (!res.ok) throw new Error("Failed to save design");
+      
+      setHasUnsavedChanges(false);
+      showToast("Design saved to your account!");
+    } catch (err) {
+      console.error(err);
+      showToast("An error occurred while saving the design.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <main className={styles.appLayout}>
       {/* Top App Bar (Zazzle-style) */}
@@ -144,7 +209,7 @@ function CustomizerContent() {
               window.location.href = dest;
             }}
           >
-            <X size={18} /> {selectedProduct ? 'Back to Product' : 'Save and Exit'}
+            <X size={18} /> {selectedProduct ? 'Back to Product' : 'Exit'}
           </button>
           <div className={styles.productName}>
             {selectedProduct ? selectedProduct.name : 'Custom Design'}
@@ -155,21 +220,53 @@ function CustomizerContent() {
               {selectedProduct.type}
             </div>
           )}
-          <div className={styles.saveStatus}>
-            <div className={styles.saveDot} /> Saved
-          </div>
+          <button 
+            onClick={handleSaveDesign}
+            disabled={isSaving}
+            style={{ 
+              display: 'flex',
+              alignItems: 'center',
+              gap: '7px',
+              cursor: isSaving ? 'not-allowed' : 'pointer', 
+              border: hasUnsavedChanges ? '1.5px solid var(--tth-olive-dark)' : '1.5px solid #e5e5e5',
+              background: hasUnsavedChanges ? 'var(--tth-olive-dark)' : '#f1f5f9',
+              color: hasUnsavedChanges ? 'white' : '#64748b',
+              padding: '7px 16px',
+              borderRadius: '6px',
+              fontSize: '0.8rem',
+              fontWeight: 700,
+              letterSpacing: '0.04em',
+              opacity: isSaving ? 0.7 : 1,
+              transition: 'all 0.2s',
+              fontFamily: 'var(--font-sans)',
+            }}
+          >
+            {isSaving ? (
+              <>Saving...</>
+            ) : hasUnsavedChanges ? (
+              <>Save Design</>
+            ) : (
+              <>Saved ✓</>
+            )}
+          </button>
         </div>
 
         <div className={styles.topBarCenter}>
           <button 
             className={`${styles.tab} ${activeTab === "Design" ? styles.tabActive : ""}`}
-            onClick={() => setActiveTab("Design")}
+            onClick={() => {
+              setActiveTab("Design");
+              setIsPreviewMode(false);
+            }}
           >
             Design
           </button>
           <button 
             className={`${styles.tab} ${activeTab === "Options" ? styles.tabActive : ""}`}
-            onClick={() => setActiveTab("Options")}
+            onClick={() => {
+              setActiveTab("Options");
+              setIsPreviewMode(false);
+            }}
           >
             Options
           </button>
@@ -179,9 +276,11 @@ function CustomizerContent() {
               if (totalQuantity === 0 && activeTab !== "Review") {
                 showToast("Please add at least one garment size to proceed.");
                 setActiveTab("Options");
+                setIsPreviewMode(false);
                 return;
               }
               setActiveTab("Review");
+              setIsPreviewMode(false);
             }}
           >
             Review
@@ -190,11 +289,18 @@ function CustomizerContent() {
 
         <div className={styles.topBarRight}>
           <div className={styles.actionIcons}>
-            <button className={styles.iconBtn} title="Undo" onClick={() => window.dispatchEvent(new Event('undo-customizer'))} style={{ opacity: canUndo ? 1 : 0.4, cursor: canUndo ? 'pointer' : 'default' }} disabled={!canUndo}><Undo2 size={16} /></button>
-            <button className={styles.iconBtn} title="Redo" onClick={() => window.dispatchEvent(new Event('redo-customizer'))} style={{ opacity: canRedo ? 1 : 0.4, cursor: canRedo ? 'pointer' : 'default' }} disabled={!canRedo}><Redo2 size={16} /></button>
+            <button className={styles.iconBtn} title="Undo" onClick={() => window.dispatchEvent(new CustomEvent('undo-customizer'))} style={{ opacity: canUndo ? 1 : 0.4, cursor: canUndo ? 'pointer' : 'default' }} disabled={!canUndo}><Undo2 size={16} /></button>
+            <button className={styles.iconBtn} title="Redo" onClick={() => window.dispatchEvent(new CustomEvent('redo-customizer'))} style={{ opacity: canRedo ? 1 : 0.4, cursor: canRedo ? 'pointer' : 'default' }} disabled={!canRedo}><Redo2 size={16} /></button>
           </div>
-          <button className={styles.previewBtn} onClick={() => setIsPreviewMode(!isPreviewMode)}>
-            {isPreviewMode ? <EyeOff size={18} /> : <Eye size={18} />} Preview
+          <button className={styles.previewBtn} onClick={() => {
+            if (!isPreviewMode) {
+              setActiveTab("Design");
+              setIsPreviewMode(true);
+            } else {
+              setIsPreviewMode(false);
+            }
+          }}>
+            {isPreviewMode ? 'Exit Preview' : 'Preview'}
           </button>
           <button className={styles.nextBtn} onClick={handleNext}>
             {nextText}
@@ -214,69 +320,84 @@ function CustomizerContent() {
         
         {activeTab === "Options" && (
           <div className={styles.tabContent}>
-            <div className={styles.tabContentInner} style={{ maxWidth: '600px', margin: '40px auto', background: 'white', padding: '40px', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
-              <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '8px', color: '#111' }}>Garment Options</h2>
-              <p style={{ color: '#666', marginBottom: '32px' }}>Enter the quantities for each size you'd like to order for this design.</p>
+            <div style={{ maxWidth: '700px', margin: '32px auto', padding: '0 24px' }}>
               
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {['S', 'M', 'L', 'XL', 'XXL'].map((size) => (
-                  <div key={size} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', border: '1px solid #E5E7EB', borderRadius: '8px' }}>
-                    <div style={{ fontWeight: 'bold', fontSize: '18px', width: '40px' }}>{size}</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <button 
-                        style={{ width: '32px', height: '32px', borderRadius: '4px', border: '1px solid #D1D5DB', background: 'white', cursor: 'pointer' }}
-                        onClick={() => handleSizeChange(size, (customizerState?.sizes?.[size as keyof typeof customizerState.sizes] || 0) - 1)}
-                      >-</button>
-                      <input 
-                        type="number" 
-                        value={customizerState?.sizes?.[size as keyof typeof customizerState.sizes] || 0}
-                        onChange={(e) => handleSizeChange(size, parseInt(e.target.value) || 0)}
-                        style={{ width: '60px', textAlign: 'center', border: '1px solid #D1D5DB', borderRadius: '4px', height: '32px' }}
-                      />
-                      <button 
-                        style={{ width: '32px', height: '32px', borderRadius: '4px', border: '1px solid #D1D5DB', background: 'white', cursor: 'pointer' }}
-                        onClick={() => handleSizeChange(size, (customizerState?.sizes?.[size as keyof typeof customizerState.sizes] || 0) + 1)}
-                      >+</button>
-                    </div>
-                  </div>
-                ))}
+              {/* Header */}
+              <div style={{ marginBottom: '32px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                  <h2 style={{ fontSize: '1.6rem', fontWeight: 700, color: '#0f172a', fontFamily: 'var(--font-serif)', margin: 0 }}>Size Breakdown</h2>
+                  <span style={{ background: totalQuantity >= MOQ ? '#dcfce7' : '#fef9c3', color: totalQuantity >= MOQ ? '#166534' : '#854d0e', fontSize: '0.75rem', fontWeight: 700, padding: '4px 12px', borderRadius: '20px', letterSpacing: '0.05em' }}>
+                    {totalQuantity >= MOQ ? `✓ MOQ Met` : `MOQ: ${MOQ} pcs min`}
+                  </span>
+                </div>
+                <p style={{ color: '#64748b', fontSize: '0.9rem', margin: 0 }}>Distribute your order across sizes. Minimum {MOQ} pieces total to proceed.</p>
               </div>
 
-              <div style={{ marginTop: '32px', paddingTop: '24px', borderTop: '1px solid #E5E7EB', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '18px', fontWeight: 'bold' }}>Total Quantity</span>
-                <span style={{ fontSize: '24px', fontWeight: 'bold', color: '#25338B' }}>{totalQuantity}</span>
+              {/* Size Grid */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px', marginBottom: '28px' }}>
+                {['S', 'M', 'L', 'XL', 'XXL'].map((size) => {
+                  const qty = customizerState?.sizes?.[size as keyof typeof customizerState.sizes] || 0;
+                  return (
+                    <div key={size} style={{ background: qty > 0 ? '#f0fdf4' : '#f8fafc', border: `2px solid ${qty > 0 ? '#86efac' : '#e2e8f0'}`, borderRadius: '12px', padding: '16px 12px', textAlign: 'center', transition: 'all 0.2s' }}>
+                      <div style={{ fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.1em', color: '#94a3b8', marginBottom: '12px' }}>{size}</div>
+                      <button
+                        onClick={() => handleSizeChange(size, qty - 1)}
+                        style={{ width: '28px', height: '28px', borderRadius: '6px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', fontSize: '1rem', lineHeight: 1, color: '#64748b' }}
+                      >−</button>
+                      <div style={{ fontSize: '1.5rem', fontWeight: 800, color: qty > 0 ? '#166534' : '#1e293b', margin: '8px 0', lineHeight: 1 }}>{qty}</div>
+                      <button
+                        onClick={() => handleSizeChange(size, qty + 1)}
+                        style={{ width: '28px', height: '28px', borderRadius: '6px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', fontSize: '1rem', lineHeight: 1, color: '#64748b' }}
+                      >+</button>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* MOQ Progress Bar */}
+              <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px 24px', marginBottom: '28px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                  <span style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.95rem' }}>Total Quantity</span>
+                  <span style={{ fontWeight: 800, fontSize: '1.6rem', color: totalQuantity >= MOQ ? '#16a34a' : '#0f172a' }}>{totalQuantity}</span>
+                </div>
+                <div style={{ height: '6px', background: '#e2e8f0', borderRadius: '99px', overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${Math.min(100, (totalQuantity / MOQ) * 100)}%`, background: totalQuantity >= MOQ ? '#16a34a' : '#f59e0b', borderRadius: '99px', transition: 'width 0.3s ease' }} />
+                </div>
+                {totalQuantity < MOQ && (
+                  <div style={{ marginTop: '8px', fontSize: '0.8rem', color: '#92400e' }}>{MOQ - totalQuantity} more piece{MOQ - totalQuantity !== 1 ? 's' : ''} needed to meet minimum order quantity</div>
+                )}
               </div>
 
               {/* Production Assets Section */}
-              <div style={{ marginTop: '40px', paddingTop: '32px', borderTop: '2px solid #E5E7EB' }}>
-                <h3 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '8px', color: '#111' }}>Production Assets</h3>
-                <p style={{ color: '#666', marginBottom: '16px', fontSize: '14px' }}>Please upload the high-resolution vector files (.ai, .cdr, .pdf) or high-quality images (.png, .jpg) of your logos and artworks for manufacturing.</p>
+              <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '28px' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: '6px' }}>Production Assets</h3>
+                <p style={{ color: '#64748b', marginBottom: '16px', fontSize: '0.85rem' }}>Upload high-res vector files (.ai, .cdr, .pdf) or images (.png, .jpg) of your logos and artworks for manufacturing.</p>
                 
                 <div 
                   onClick={() => fileInputRef.current?.click()}
-                  style={{ border: '2px dashed #D1D5DB', borderRadius: '8px', padding: '32px', textAlign: 'center', cursor: 'pointer', background: '#F9FAFB', transition: 'border-color 0.2s, background 0.2s' }}
-                  onMouseOver={(e) => { e.currentTarget.style.borderColor = '#25338B'; e.currentTarget.style.background = '#F3F4F6'; }}
-                  onMouseOut={(e) => { e.currentTarget.style.borderColor = '#D1D5DB'; e.currentTarget.style.background = '#F9FAFB'; }}
+                  style={{ border: '2px dashed #cbd5e1', borderRadius: '10px', padding: '28px', textAlign: 'center', cursor: 'pointer', background: '#f8fafc', transition: 'all 0.2s' }}
+                  onMouseOver={(e) => { e.currentTarget.style.borderColor = 'var(--tth-olive-dark)'; e.currentTarget.style.background = '#f0fdf4'; }}
+                  onMouseOut={(e) => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.background = '#f8fafc'; }}
                 >
-                  <UploadCloud size={32} color="#6B7280" style={{ margin: '0 auto 12px' }} />
-                  <div style={{ fontWeight: 'bold', color: '#374151' }}>Click to upload files</div>
-                  <div style={{ fontSize: '12px', color: '#6B7280', marginTop: '4px' }}>Any file type supported up to 50MB</div>
+                  <UploadCloud size={28} color="#94a3b8" style={{ margin: '0 auto 10px' }} />
+                  <div style={{ fontWeight: 600, color: '#475569', fontSize: '0.9rem' }}>Click to upload production files</div>
+                  <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '4px' }}>Any file type · Up to 50MB</div>
                 </div>
                 <input type="file" multiple ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileUpload} />
 
                 {productionFiles.length > 0 && (
-                  <div style={{ marginTop: '24px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     {productionFiles.map((file, i) => (
-                      <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'white', border: '1px solid #E5E7EB', borderRadius: '8px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                          <FileText size={20} color="#25338B" />
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <FileText size={18} color="var(--tth-olive-dark)" />
                           <div>
-                            <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#111', wordBreak: 'break-all' }}>{file.name}</div>
-                            <div style={{ fontSize: '12px', color: '#6B7280' }}>{(file.size / 1024 / 1024).toFixed(2)} MB</div>
+                            <div style={{ fontWeight: 600, fontSize: '0.85rem', color: '#1e293b' }}>{file.name}</div>
+                            <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{(file.size / 1024).toFixed(1)} KB</div>
                           </div>
                         </div>
-                        <button onClick={() => removeFile(i)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#EF4444' }} title="Remove file">
-                          <Trash2 size={18} />
+                        <button onClick={() => removeFile(i)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: '4px' }}>
+                          <Trash2 size={16} />
                         </button>
                       </div>
                     ))}
@@ -355,24 +476,68 @@ function CustomizerContent() {
               )}
 
               <div style={{ borderTop: '2px solid #E5E7EB', paddingTop: '24px', marginBottom: '32px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '18px', fontWeight: 'bold' }}>Total Estimate</span>
-                  <span style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--tth-olive-dark)' }}>
-                    ₹{selectedProduct 
-                      ? (totalQuantity * parseInt(selectedProduct.price.replace(/[^0-9]/g, ''))).toLocaleString('en-IN')
-                      : (totalQuantity * 199).toLocaleString('en-IN')}
-                  </span>
-                </div>
-                <p style={{ fontSize: '12px', color: '#666', marginTop: '8px', textAlign: 'right' }}>
-                  {selectedProduct ? selectedProduct.price : '₹199'} per unit
+                {/* Calculations */}
+                {(() => {
+                  const priceMatch = selectedProduct?.price.match(/\d+/);
+                  const basePrice = priceMatch ? parseInt(priceMatch[0], 10) : 85;
+                  const subtotal = totalQuantity * basePrice;
+                  const hasCustomization = (customizerState?.frontElements.length || 0) > 0 || (customizerState?.backElements.length || 0) > 0;
+                  const customCharge = hasCustomization ? 300 : 0;
+                  const gst = (subtotal + customCharge) * 0.05;
+                  const total = subtotal + customCharge + gst;
+
+                  return (
+                    <>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                        <span style={{ color: '#666' }}>Subtotal ({totalQuantity} units)</span>
+                        <span style={{ fontWeight: 600 }}>₹{subtotal.toLocaleString('en-IN')}</span>
+                      </div>
+                      
+                      {hasCustomization && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                          <span style={{ color: '#666' }}>Customization Fee</span>
+                          <span style={{ fontWeight: 600 }}>₹{customCharge.toLocaleString('en-IN')}</span>
+                        </div>
+                      )}
+
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
+                        <span style={{ color: '#666' }}>GST (5%)</span>
+                        <span style={{ fontWeight: 600 }}>₹{Math.round(gst).toLocaleString('en-IN')}</span>
+                      </div>
+
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '18px', fontWeight: 'bold' }}>Total Estimate</span>
+                        <span style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--tth-olive-dark)' }}>
+                          ₹{Math.round(total).toLocaleString('en-IN')}
+                        </span>
+                      </div>
+                    </>
+                  );
+                })()}
+                
+                <p style={{ fontSize: '11px', color: '#888', marginTop: '12px', fontStyle: 'italic' }}>
+                  * Includes 5% GST and flat customization setup fee where applicable.
                 </p>
               </div>
 
               <button 
                 onClick={handleNext}
-                style={{ width: '100%', padding: '16px', background: '#25338B', color: 'white', border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', transition: 'background 0.2s' }}
-                onMouseOver={(e) => e.currentTarget.style.background = '#1a2466'}
-                onMouseOut={(e) => e.currentTarget.style.background = '#25338B'}
+                style={{ 
+                  width: '100%', 
+                  padding: '16px', 
+                  background: 'var(--tth-olive-dark)', 
+                  color: 'white', 
+                  border: 'none', 
+                  borderRadius: '8px', 
+                  fontSize: '16px', 
+                  fontWeight: 'bold', 
+                  cursor: 'pointer', 
+                  transition: 'all 0.2s',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.background = '#3a4d2c'}
+                onMouseOut={(e) => e.currentTarget.style.background = 'var(--tth-olive-dark)'}
               >
                 Add To Cart
               </button>

@@ -26,6 +26,9 @@ export default function PoloCustomizer({ onChange, initialState, isPreviewMode }
   const [activeElementId, setActiveElementId] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // Keep a stable ref to activeSide so upload handler never has stale closure
+  const activeSideRef = useRef<Side>("front");
+  useEffect(() => { activeSideRef.current = activeSide; }, [activeSide]);
 
   const elements = activeSide === "front" ? frontElements : backElements;
   const setElements = activeSide === "front" ? setFrontElements : setBackElements;
@@ -39,14 +42,19 @@ export default function PoloCustomizer({ onChange, initialState, isPreviewMode }
 
   useEffect(() => {
     if (isFirstMount.current) {
-      setHistory([{ bodyColor, frontElements: JSON.parse(JSON.stringify(frontElements)), backElements: JSON.parse(JSON.stringify(backElements)) }]);
+      const initialStateData = { 
+        bodyColor, 
+        frontElements: JSON.parse(JSON.stringify(frontElements)), 
+        backElements: JSON.parse(JSON.stringify(backElements)) 
+      };
+      setHistory([initialStateData]);
       setHistoryIndex(0);
       isFirstMount.current = false;
       return;
     }
     
+    // If we are currently performing an undo/redo, don't record this change as a new history entry
     if (isUndoingRef.current) {
-      isUndoingRef.current = false;
       return;
     }
     
@@ -55,10 +63,19 @@ export default function PoloCustomizer({ onChange, initialState, isPreviewMode }
     saveHistoryRef.current = setTimeout(() => {
       setHistory(prev => {
         const newHist = prev.slice(0, historyIndex + 1);
-        return [...newHist, { bodyColor, frontElements: JSON.parse(JSON.stringify(frontElements)), backElements: JSON.parse(JSON.stringify(backElements)) }];
+        const newState = { 
+          bodyColor, 
+          frontElements: JSON.parse(JSON.stringify(frontElements)), 
+          backElements: JSON.parse(JSON.stringify(backElements)) 
+        };
+        // Avoid duplicate history entries if nothing actually changed
+        const lastState = newHist[newHist.length - 1];
+        if (lastState && JSON.stringify(lastState) === JSON.stringify(newState)) return prev;
+        
+        return [...newHist, newState];
       });
       setHistoryIndex(prev => prev + 1);
-    }, 600); // 600ms debounce
+    }, 400); // Slightly faster debounce
     
   }, [bodyColor, frontElements, backElements]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -68,9 +85,11 @@ export default function PoloCustomizer({ onChange, initialState, isPreviewMode }
         const prevState = history[historyIndex - 1];
         isUndoingRef.current = true;
         setBodyColor(prevState.bodyColor);
-        setFrontElements(prevState.frontElements);
-        setBackElements(prevState.backElements);
+        setFrontElements(JSON.parse(JSON.stringify(prevState.frontElements)));
+        setBackElements(JSON.parse(JSON.stringify(prevState.backElements)));
         setHistoryIndex(historyIndex - 1);
+        // Reset the undoing flag after a short delay to allow effects to run
+        setTimeout(() => { isUndoingRef.current = false; }, 100);
       }
     };
     
@@ -79,9 +98,11 @@ export default function PoloCustomizer({ onChange, initialState, isPreviewMode }
         const nextState = history[historyIndex + 1];
         isUndoingRef.current = true;
         setBodyColor(nextState.bodyColor);
-        setFrontElements(nextState.frontElements);
-        setBackElements(nextState.backElements);
+        setFrontElements(JSON.parse(JSON.stringify(nextState.frontElements)));
+        setBackElements(JSON.parse(JSON.stringify(nextState.backElements)));
         setHistoryIndex(historyIndex + 1);
+        // Reset the undoing flag after a short delay to allow effects to run
+        setTimeout(() => { isUndoingRef.current = false; }, 100);
       }
     };
 
@@ -120,11 +141,19 @@ export default function PoloCustomizer({ onChange, initialState, isPreviewMode }
     const file = e.target.files?.[0];
     if (!file) return;
     const url = URL.createObjectURL(file);
-    setElements([...elements, {
-      id: Date.now().toString(), type: "logo",
+    const newEl = {
+      id: Date.now().toString(), type: "logo" as const,
       x: 200, y: 200, width: 150, height: 150,
       value: url, color: "",
-    }]);
+    };
+    // Use activeSideRef to avoid stale closure when switching sides
+    if (activeSideRef.current === "front") {
+      setFrontElements(prev => [...prev, newEl]);
+    } else {
+      setBackElements(prev => [...prev, newEl]);
+    }
+    // Reset file input so the same image can be uploaded again
+    e.target.value = "";
   };
 
   const removeElement = (id: string, e?: React.SyntheticEvent) => {

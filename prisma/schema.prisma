@@ -74,18 +74,19 @@ model Product {
 }
 
 model Design {
-  id        String   @id @default(cuid())
-  userId    String
-  productId String
-  name      String
-  imageUrl  String?
-  rawUrl    String?
-  stateJson String?
-  createdAt DateTime @default(now())
-  updatedAt  DateTime    @updatedAt
-  product    Product     @relation(fields: [productId], references: [id])
-  user       User        @relation(fields: [userId], references: [id])
-  orderItems OrderItem[]
+  id              String      @id @default(cuid())
+  userId          String
+  productId       String?
+  sourceProductId String?
+  name            String
+  imageUrl        String?
+  rawUrl          String?
+  stateJson       String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  product         Product?    @relation(fields: [productId], references: [id])
+  user            User        @relation(fields: [userId], references: [id])
+  orderItems      OrderItem[]
 }
 
 model Order {
@@ -124,14 +125,17 @@ model OrderSheet {
 }
 
 model Booking {
-  id        String        @id @default(cuid())
-  userId    String
-  date      DateTime
-  timeSlot  String
-  status    BookingStatus @default(REQUESTED)
-  notes     String?
-  createdAt DateTime      @default(now())
-  user      User          @relation(fields: [userId], references: [id])
+  id          String        @id @default(cuid())
+  userId      String?
+  guestName   String?
+  guestEmail  String?
+  guestPhone  String?
+  date        DateTime
+  timeSlot    String
+  status      BookingStatus @default(REQUESTED)
+  notes       String?
+  createdAt   DateTime      @default(now())
+  user        User?         @relation(fields: [userId], references: [id])
 }
 
 model CatalogueCategory {

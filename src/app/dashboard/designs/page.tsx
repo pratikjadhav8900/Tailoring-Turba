@@ -66,7 +66,7 @@ export default async function DesignsPage() {
               <div className={styles.content}>
                 <h3 className={styles.name}>{design.name}</h3>
                 <div className={styles.meta}>
-                  <span>{design.product.name}</span>
+                  <span>{design.product?.name || "Custom Apparel"}</span>
                   <span>{new Date(design.createdAt).toLocaleDateString()}</span>
                 </div>
                 <div className={styles.actions}>

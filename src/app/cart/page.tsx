@@ -23,69 +23,52 @@ export default function CartPage() {
 
   if (!mounted) return null;
 
-  // Wholesale threshold logic
   const isWholesale = cartCount > 10;
   
-  // Calculate total price (parsing string prices like "₹115–₹140/pc" by extracting the first number)
-  const calculateTotal = () => {
-    return cart.reduce((total, item) => {
-      // Extract numeric value from price string (e.g., "₹115–₹140/pc" -> 115)
-      const priceMatch = item.price.match(/\d+/);
-      const numericPrice = priceMatch ? parseInt(priceMatch[0], 10) : 0;
-      return total + (numericPrice * item.quantity);
-    }, 0);
-  };
+  // Logic to calculate subtotal, customization fees (per item), and GST
+  const subtotal = cart.reduce((total, item) => {
+    const priceMatch = item.price.match(/[\d.]+/);
+    const numericPrice = priceMatch ? parseFloat(priceMatch[0]) : 0;
+    return total + (numericPrice * item.quantity);
+  }, 0);
 
-  const subtotal = calculateTotal();
-  const designCharge = cartCount > 0 ? 250 : 0; // Base design charge (adjustable)
-  const gst = cartCount > 0 ? Math.round((subtotal + designCharge) * 0.05) : 0; // 5% GST
+  // Design charge should be ₹300 for EACH unique customized product in the cart
+  const customItemsCount = cart.filter(item => item.customDesign).length;
+  const designCharge = customItemsCount * 300; 
+  
+  const gst = Math.round((subtotal + designCharge) * 0.05);
   const estimatedTotal = subtotal + designCharge + gst;
 
   const handleCheckoutClick = () => {
     if (!session) {
-      // Show authentication modal for guest users
       setShowAuthModal(true);
       return;
     }
-
-    if (isWholesale) {
-      // For wholesale, redirect to contact page or special quote form
-      router.push('/contact?wholesale=true');
-    } else {
-      // For retail, proceed to checkout
-      router.push('/checkout');
-    }
+    router.push(isWholesale ? '/contact?wholesale=true' : '/checkout');
   };
 
   const handleAuthSuccess = () => {
-    // User successfully authenticated, proceed with checkout
-    if (isWholesale) {
-      router.push('/contact?wholesale=true');
-    } else {
-      router.push('/checkout');
-    }
+    router.push(isWholesale ? '/contact?wholesale=true' : '/checkout');
   };
 
   return (
     <div className={styles.pageWrapper}>
-      <main className={`container ${styles.main}`}>
+      <main className={styles.main}>
         <div className={styles.cartHeader}>
-  <h1 className={styles.title}>Your Selection</h1>
-  {!session && (
-    <div className={styles.guestIndicator}>
-      <ShoppingBag size={16} />
-      <span>Guest Cart</span>
-    </div>
-  )}
-</div>
+          <h1 className={styles.title}>Your Selection</h1>
+          <div className={styles.guestIndicator}>
+            <ShoppingBag size={14} />
+            <span>{cartCount} Items</span>
+          </div>
+        </div>
 
         {cart.length === 0 ? (
           <div className={styles.emptyCart}>
-            <ShoppingBag size={48} color="var(--border-dark)" style={{ marginBottom: 16, opacity: 0.5 }} />
+            <ShoppingBag size={48} color="#e5e2da" style={{ marginBottom: 24 }} />
             <h2>Your cart is empty</h2>
-            <p>Looks like you haven't added any items to your selection yet.</p>
+            <p>Select from our premium catalog to begin your journey.</p>
             <Link href="/products" className={styles.continueBtn}>
-              Browse Products
+              Explore Collection
             </Link>
           </div>
         ) : (
@@ -94,39 +77,36 @@ export default function CartPage() {
               {cart.map((item) => (
                 <div key={item.id} className={styles.cartItem}>
                   <div className={styles.itemImage}>
+                    {item.customDesign && <span className={styles.customBadge}>Custom</span>}
                     {item.image ? (
-                      <Image 
-                        src={item.image} 
-                        alt={item.name} 
-                        fill 
-                        style={{ objectFit: 'cover' }} 
-                      />
+                      <Image src={item.image} alt={item.name} fill style={{ objectFit: 'contain', padding: '10%' }} />
                     ) : (
-                      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#e5e7eb', color: '#9ca3af' }}>
-                        No Image
+                      <div style={{ opacity: 0.15, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+                        <ShoppingBag size={48} strokeWidth={1} />
                       </div>
                     )}
                   </div>
                   
                   <div className={styles.itemDetails}>
-                    <div className={styles.itemHeader}>
-                      <div>
-                        <h3 className={styles.itemName}>{item.name}</h3>
-                        <span className={styles.itemCode}>Code: {item.code}</span>
-                      </div>
-                      <div className={styles.itemPrice}>{item.price}</div>
+                    <h3 className={styles.itemName}>{item.name}</h3>
+                    <div className={styles.itemMeta}>
+                      <span className={styles.metaBadge}>{item.code}</span>
+                      {item.customDesign && <span className={styles.metaBadge}>Personalized</span>}
                     </div>
                     
-                    <div style={{ marginTop: '12px' }}>
-                      <span className={styles.cartQuantity}>Qty: {item.quantity}</span>
-                    </div>
+                    <div className={styles.itemPrice}>₹{item.price}</div>
 
-                    <button 
-                      className={styles.removeBtn}
-                      onClick={() => removeFromCart(item.id)}
-                    >
-                      <Trash2 size={16} /> Remove
-                    </button>
+                    <div className={styles.itemActions}>
+                      <div className={styles.quantityDisplay}>
+                        Quantity: <b>{item.quantity}</b>
+                      </div>
+                      <button 
+                        className={styles.removeBtn}
+                        onClick={() => removeFromCart(item.id)}
+                      >
+                        <Trash2 size={14} /> Remove
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -136,58 +116,51 @@ export default function CartPage() {
               <h2 className={styles.summaryTitle}>Order Summary</h2>
               
               <div className={styles.summaryRow}>
-                <span>Total Items</span>
-                <span>{cartCount} pieces</span>
-              </div>
-              
-              <div className={styles.summaryRow}>
                 <span>Subtotal</span>
-                <span>₹{subtotal}</span>
+                <b>₹{subtotal.toLocaleString('en-IN')}</b>
               </div>
+              
+              {designCharge > 0 && (
+                <div className={styles.summaryRow}>
+                  <span>Customization Fee</span>
+                  <b>₹{designCharge}</b>
+                </div>
+              )}
               
               <div className={styles.summaryRow}>
-                <span>Design & Setup (Est.)</span>
-                <span>₹{designCharge}</span>
-              </div>
-              
-              <div className={styles.summaryRow}>
-                <span>GST (5%)</span>
-                <span>₹{gst}</span>
-              </div>
-              
-              <div className={`${styles.summaryRow} ${styles.total}`}>
-                {isWholesale ? (
-                  <span style={{ color: 'var(--tth-olive-dark)', fontSize: '0.9rem', fontWeight: '500' }}>Pricing finalized in quote</span>
-                ) : (
-                  <>
-                    <span>Total</span>
-                    <span>₹{estimatedTotal}</span>
-                  </>
-                )}
+                <span>Tax (GST 5%)</span>
+                <b>₹{gst.toLocaleString('en-IN')}</b>
               </div>
 
-              <button 
-                onClick={handleCheckoutClick}
-                className={styles.checkoutBtn}
-                style={isWholesale ? { backgroundColor: 'var(--tth-black)' } : {}}
-              >
-                {isWholesale ? "Request Bulk Quote" : "Proceed to Checkout"}
+              <div className={styles.divider} />
+              
+              <div className={styles.totalRow}>
+                <span className={styles.totalLabel}>
+                  {isWholesale ? "Est. Quote" : "Total Estimate"}
+                </span>
+                <span className={styles.totalValue}>
+                  ₹{estimatedTotal.toLocaleString('en-IN')}
+                </span>
+              </div>
+
+              <button onClick={handleCheckoutClick} className={styles.checkoutBtn}>
+                {isWholesale ? "Request Bulk Quote" : "Secure Checkout"}
               </button>
 
               <div className={styles.checkoutInfo}>
                 <AlertCircle size={16} style={{ flexShrink: 0, marginTop: 2, color: 'var(--tth-olive-dark)' }} />
-                {!session 
-                  ? "Please sign in or create an account to proceed with checkout. Your cart items will be saved."
-                  : isWholesale 
-                    ? "Orders over 10 pieces qualify for wholesale pricing. You will be directed to our corporate team for an exact quote."
-                    : "You have 10 or fewer items. You can proceed directly to standard retail checkout."
-                }
+                <span>
+                  {isWholesale 
+                    ? "As a B2B order (10+ units), this qualifies for wholesale pricing. Our team will contact you with a final pro-forma invoice."
+                    : "Standard retail pricing applies. Complete your order to proceed to payment."
+                  }
+                </span>
               </div>
             </div>
           </div>
         )}
       </main>
-      
+
       <AuthModal
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}

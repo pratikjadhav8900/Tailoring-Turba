@@ -5,13 +5,22 @@ import { sendOperationsBookingAlert, sendCustomerBookingConfirmation } from "@/l
 
 export async function POST(req: NextRequest) {
   const session = await auth();
-  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-
-  const { date, timeSlot, notes } = await req.json();
+  
+  const { date, timeSlot, notes, name, email, phone } = await req.json();
   if (!date || !timeSlot) return NextResponse.json({ error: "Date and time slot are required." }, { status: 400 });
 
+  const userId = session?.user?.id;
+
   const booking = await prisma.booking.create({
-    data: { userId: session.user.id, date: new Date(date), timeSlot, notes: notes || null },
+    data: { 
+      userId: userId || null, 
+      guestName: !userId ? name : null,
+      guestEmail: !userId ? email : null,
+      guestPhone: !userId ? phone : null,
+      date: new Date(date), 
+      timeSlot, 
+      notes: notes || null 
+    },
     include: { user: true }
   });
 
@@ -20,16 +29,17 @@ export async function POST(req: NextRequest) {
   const bookingDetailsUrl = `${baseUrl}/admin/bookings`;
   
   const formattedDate = new Date(booking.date).toLocaleDateString("en-IN", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-  const customerName = booking.user?.name || booking.user?.email || "A Customer";
+  const customerName = booking.user?.name || booking.guestName || "A Customer";
+  const customerEmail = booking.user?.email || booking.guestEmail;
 
   sendOperationsBookingAlert(booking.id, bookingDetailsUrl, customerName, formattedDate, booking.timeSlot).catch(err => {
     console.error("[MAIL_ERROR] Failed to send booking operations alert:", err);
   });
 
   // Send confirmation to the customer
-  if (booking.user?.email) {
+  if (customerEmail) {
     sendCustomerBookingConfirmation(
-      booking.user.email,
+      customerEmail,
       customerName,
       formattedDate,
       booking.timeSlot,

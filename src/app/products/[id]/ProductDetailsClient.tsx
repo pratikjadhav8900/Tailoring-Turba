@@ -126,6 +126,17 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
     pct: reviews.length > 0 ? Math.round((reviews.filter(r => r.rating === star).length / reviews.length) * 100) : 0
   }));
 
+  const isTShirt = Boolean(
+    product.type?.toLowerCase().includes("polo") || 
+    product.type?.toLowerCase().includes("round neck") || 
+    product.type?.toLowerCase().includes("t-shirt") ||
+    product.type?.toLowerCase().includes("crewneck") ||
+    product.type?.toLowerCase().includes("oversize") ||
+    product.name?.toLowerCase().includes("t-shirt") ||
+    product.name?.toLowerCase().includes("polo") ||
+    product.name?.toLowerCase().includes("crewneck")
+  );
+
   return (
     <>
       <main className={styles.main}>
@@ -243,9 +254,11 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
                 </button>
               </div>
               <button className={styles.btnCart} onClick={handleAddToCart}>Add to Cart</button>
-              <Link href={`/customizer?productId=${product.id}`} className={styles.btnCart} style={{ textDecoration: 'none', textAlign: 'center' }}>
-                Customize in Studio
-              </Link>
+              {isTShirt && (
+                <Link href={`/customizer?id=${product.id}`} className={styles.btnCart} style={{ textDecoration: 'none', textAlign: 'center' }}>
+                  Customize in Studio
+                </Link>
+              )}
               <button 
                 onClick={() => isInCompare(product.id) ? removeFromCompare(product.id) : addToCompare(product)}
                 style={{
@@ -273,6 +286,23 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
               </button>
               <Link href={`/contact?product=${product.name}`} className={styles.btnInquire}>Request Bulk Quote</Link>
             </div>
+
+            {!isTShirt && (
+              <div style={{ marginTop: "16px", padding: "16px", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "10px" }}>
+                <h4 style={{ color: "#166534", fontWeight: 700, marginBottom: "8px", fontSize: "0.95rem" }}>Custom Requirements & Uniforms</h4>
+                <p style={{ color: "#15803d", fontSize: "0.85rem", lineHeight: 1.5, marginBottom: "16px" }}>
+                  For corporate uniforms, workwear, and custom branding needs, our experts need to understand your exact requirements. Connect with us directly to discuss your project.
+                </p>
+                <div style={{ display: "flex", gap: "12px" }}>
+                  <Link href="/booking" style={{ flex: 1, textAlign: "center", textDecoration: "none", background: "#16a34a", color: "white", padding: "12px", borderRadius: "8px", fontWeight: 600, fontSize: "0.9rem" }}>
+                    Book Appointment
+                  </Link>
+                  <a href={`https://wa.me/919022553346?text=Hi, I am interested in custom uniforms for ${product.name}`} target="_blank" rel="noreferrer" style={{ flex: 1, textAlign: "center", textDecoration: "none", background: "#25D366", color: "white", padding: "12px", borderRadius: "8px", fontWeight: 600, fontSize: "0.9rem", display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}>
+                    WhatsApp Us
+                  </a>
+                </div>
+              </div>
+            )}
 
             {/* Trust Badges Strip */}
             <div style={{ 
