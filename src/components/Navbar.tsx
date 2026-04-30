@@ -2,9 +2,10 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
-import { Search, User, ShoppingCart, ChevronDown, LayoutDashboard, ShieldCheck } from "lucide-react";
+import { Search, User, ShoppingCart, ChevronDown, LayoutDashboard, ShieldCheck, Heart } from "lucide-react";
 import styles from "./Navbar.module.css";
 import { useCart } from "@/context/CartContext";
+import { useWishlist } from "@/context/WishlistContext";
 import { useSession } from "next-auth/react";
 
 // Assuming we want a "transparent" prop to still exist so we don't break page.tsx, 
@@ -12,7 +13,9 @@ import { useSession } from "next-auth/react";
 export default function Navbar({ transparent = false }: { transparent?: boolean }) {
   const [scrolled, setScrolled] = useState(false);
   const { cartCount } = useCart();
+  const { wishlistItems } = useWishlist();
   const { data: session, status } = useSession();
+  const wishlistCount = wishlistItems.length;
   const isAdmin = session?.user?.role === "ADMIN";
 
   useEffect(() => {
@@ -96,6 +99,11 @@ export default function Navbar({ transparent = false }: { transparent?: boolean 
               Sign In
             </Link>
           )}
+
+          <Link href="/wishlist" className={styles.iconBtn} aria-label="Shortlist">
+            <Heart size={22} fill={wishlistCount > 0 ? "#ef4444" : "none"} color={wishlistCount > 0 ? "#ef4444" : "currentColor"} />
+            {wishlistCount > 0 && <span className={styles.badge}>{wishlistCount}</span>}
+          </Link>
 
           <Link href="/cart" className={styles.iconBtn} aria-label="Cart">
             <ShoppingCart size={22} />

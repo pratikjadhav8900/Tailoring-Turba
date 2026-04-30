@@ -5,8 +5,9 @@ import Link from "next/link";
 import styles from "./page.module.css";
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { Plus, Minus, ArrowRightLeft, Check } from "lucide-react";
+import { Plus, Minus, ArrowRightLeft, Check, Heart } from "lucide-react";
 import { useCompare } from "@/context/CompareContext";
+import { useWishlist } from "@/context/WishlistContext";
 
 const faqs = [
   { q: "Who is the best custom apparel manufacturer?", a: "Tailoring Turba is one of the top manufacturers, offering premium quality bases and customizable options for businesses, brands, and bulk buyers." },
@@ -27,6 +28,7 @@ const seoBlocks = [
 export default function ProductsClient({ products }: { products: any[] }) {
   const searchParams = useSearchParams();
   const { addToCompare, removeFromCompare, isInCompare } = useCompare();
+  const { wishlistItems, toggleWishlist, isInWishlist } = useWishlist();
   const urlCategory = searchParams.get("category");
   
   const [activeCategory, setActiveCategory] = useState("All");
@@ -131,6 +133,35 @@ export default function ProductsClient({ products }: { products: any[] }) {
                     title={isInCompare(p.id) ? "Remove from Compare" : "Add to Compare"}
                   >
                     {isInCompare(p.id) ? <Check size={16} /> : <ArrowRightLeft size={16} />}
+                  </button>
+
+                  <button 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      toggleWishlist(p);
+                    }}
+                    style={{
+                      position: "absolute",
+                      top: "12px",
+                      left: "12px",
+                      zIndex: 10,
+                      background: "white",
+                      color: isInWishlist(p.id) ? "#ef4444" : "#64748b",
+                      border: "none",
+                      width: "32px",
+                      height: "32px",
+                      borderRadius: "50%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                      cursor: "pointer",
+                      transition: "all 0.2s"
+                    }}
+                    title={isInWishlist(p.id) ? "Remove from Shortlist" : "Add to Shortlist"}
+                  >
+                    <Heart size={16} fill={isInWishlist(p.id) ? "#ef4444" : "none"} />
                   </button>
                 </div>
                 

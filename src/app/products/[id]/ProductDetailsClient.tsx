@@ -6,8 +6,9 @@ import Navbar from "@/components/Navbar";
 import styles from "./page.module.css";
 import { useCart } from "@/context/CartContext";
 import { useRouter } from "next/navigation";
-import { Receipt, RotateCcw, Brush, Truck, Package, ShieldCheck, Lock, Award, ArrowRightLeft, Check } from "lucide-react";
+import { Receipt, RotateCcw, Brush, Truck, Package, ShieldCheck, Lock, Award, ArrowRightLeft, Check, Heart } from "lucide-react";
 import { useCompare } from "@/context/CompareContext";
+import { useWishlist } from "@/context/WishlistContext";
 
 type Review = {
   id: string;
@@ -23,6 +24,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
   const router = useRouter();
   const { addToCart } = useCart();
   const { addToCompare, removeFromCompare, isInCompare } = useCompare();
+  const { toggleWishlist, isInWishlist } = useWishlist();
 
   const [activeImage, setActiveImage] = useState(product.gallery?.[0] || product.image);
   const [qty, setQty] = useState<number | string>(10);
@@ -215,9 +217,30 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
             </div>
 
             <div className={styles.actions}>
-              <div className={styles.qtyRow}>
-                <span style={{ fontWeight: 600, fontSize: "0.85rem", color: "#1e293b", letterSpacing: "0.04em" }}>Qty:</span>
-                <input type="number" value={qty} onChange={(e) => setQty(e.target.value === '' ? '' : parseInt(e.target.value) || '')} onBlur={() => setQty(Math.max(10, parseInt(qty as string) || 10))} min={10} className={styles.qtyInput} />
+              <div className={styles.qtyRow} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                  <span style={{ fontWeight: 600, fontSize: "0.85rem", color: "#1e293b", letterSpacing: "0.04em" }}>Qty:</span>
+                  <input type="number" value={qty} onChange={(e) => setQty(e.target.value === '' ? '' : parseInt(e.target.value) || '')} onBlur={() => setQty(Math.max(10, parseInt(qty as string) || 10))} min={10} className={styles.qtyInput} />
+                </div>
+                <button 
+                  onClick={() => toggleWishlist(product)}
+                  style={{ 
+                    background: "none", 
+                    border: "none", 
+                    cursor: "pointer", 
+                    padding: "8px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    fontSize: "0.85rem",
+                    fontWeight: 600,
+                    color: isInWishlist(product.id) ? "#ef4444" : "#64748b",
+                    transition: "all 0.2s"
+                  }}
+                >
+                  <Heart size={20} fill={isInWishlist(product.id) ? "#ef4444" : "none"} />
+                  {isInWishlist(product.id) ? "Shortlisted" : "Save for later"}
+                </button>
               </div>
               <button className={styles.btnCart} onClick={handleAddToCart}>Add to Cart</button>
               <Link href={`/customizer?productId=${product.id}`} className={styles.btnCart} style={{ textDecoration: 'none', textAlign: 'center' }}>
