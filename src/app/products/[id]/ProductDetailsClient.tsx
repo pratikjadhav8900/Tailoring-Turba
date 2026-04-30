@@ -6,7 +6,7 @@ import Navbar from "@/components/Navbar";
 import styles from "./page.module.css";
 import { useCart } from "@/context/CartContext";
 import { useRouter } from "next/navigation";
-import { Receipt, RotateCcw, Brush, Truck, Package } from "lucide-react";
+import { Receipt, RotateCcw, Brush, Truck, Package, ShieldCheck, Lock, Award } from "lucide-react";
 
 type Review = {
   id: string;
@@ -224,12 +224,39 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
               <Link href={`/contact?product=${product.name}`} className={styles.btnInquire}>Request Bulk Quote</Link>
             </div>
 
-            <div style={{ borderTop: "1px solid #f1f5f9", paddingTop: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+            {/* Trust Badges Strip */}
+            <div style={{ 
+              marginTop: "16px", 
+              padding: "16px", 
+              background: "white", 
+              border: "1px solid #f1f5f9", 
+              borderRadius: "12px",
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "12px"
+            }}>
               {[
-                { icon: <Receipt size={14} strokeWidth={1.5} />, text: "GST Invoice included" },
+                { icon: <Receipt size={16} />, title: "GST Invoice", sub: "Guaranteed" },
+                { icon: <ShieldCheck size={16} />, title: "Made in India", sub: "Pure Quality" },
+                { icon: <Lock size={16} />, title: "Secure Pay", sub: "100% Safe" },
+                { icon: <Award size={16} />, title: "Certified", sub: "B2B Expert" },
+              ].map((badge, i) => (
+                <div key={i} style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                  <div style={{ color: "var(--tth-olive-dark)", background: "#f8fafc", padding: "6px", borderRadius: "6px" }}>{badge.icon}</div>
+                  <div>
+                    <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#1e293b", lineHeight: 1 }}>{badge.title}</div>
+                    <div style={{ fontSize: "0.65rem", color: "#94a3b8", marginTop: "2px" }}>{badge.sub}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ borderTop: "1px solid #f1f5f9", marginTop: "16px", paddingTop: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+              {[
+                { icon: <Receipt size={14} strokeWidth={1.5} />, text: "Full GST tax invoice provided" },
                 { icon: <RotateCcw size={14} strokeWidth={1.5} />, text: "Hassle-free returns within 7 days" },
                 { icon: <Brush size={14} strokeWidth={1.5} />, text: "Custom branding & logo printing available" },
-                { icon: <Truck size={14} strokeWidth={1.5} />, text: "Pan-India delivery" },
+                { icon: <Truck size={14} strokeWidth={1.5} />, text: "Reliable Pan-India delivery" },
               ].map((ft, i) => (
                 <div key={i} style={{ fontSize: "0.83rem", color: "#64748b", display: "flex", alignItems: "center", gap: "10px" }}>
                   <span style={{ color: "var(--tth-olive-dark)", flexShrink: 0 }}>{ft.icon}</span>
