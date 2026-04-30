@@ -47,7 +47,7 @@ export default function InquiryTable({ initialInquiries }: { initialInquiries: I
       iq.email,
       iq.companyName || "N/A",
       iq.quantity,
-      `"${iq.requirements.replace(/"/g, '""')}"`, // Escape quotes for CSV
+      `"${iq.requirements.replace(/"/g, '""')}"`,
       iq.status,
       format(new Date(iq.createdAt), "yyyy-MM-dd HH:mm")
     ]);
@@ -173,66 +173,67 @@ export default function InquiryTable({ initialInquiries }: { initialInquiries: I
               </tr>
             ) : (
               filteredInquiries.map(iq => (
-              <tr key={iq.id} style={{ borderBottom: "1px solid #f1f5f9", transition: "background 0.2s" }} onMouseEnter={e => (e.currentTarget.style.background = "#fcfcfd")} onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
-                <td style={{ padding: "20px 24px" }}>
-                  <div style={{ fontWeight: 600, color: "#1e293b" }}>{iq.name}</div>
-                  <div style={{ fontSize: "0.85rem", color: "#64748b", display: "flex", alignItems: "center", gap: "4px", marginTop: "2px" }}>
-                    <Mail size={12} /> {iq.email}
-                  </div>
-                  {iq.companyName && (
+                <tr key={iq.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                  <td style={{ padding: "20px 24px" }}>
+                    <div style={{ fontWeight: 600, color: "#1e293b" }}>{iq.name}</div>
                     <div style={{ fontSize: "0.85rem", color: "#64748b", display: "flex", alignItems: "center", gap: "4px", marginTop: "2px" }}>
-                      <Building2 size={12} /> {iq.companyName}
+                      <Mail size={12} /> {iq.email}
                     </div>
-                  )}
-                </td>
-                <td style={{ padding: "20px 24px", maxWidth: "300px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.85rem", color: "var(--tth-olive-dark)", fontWeight: 700, marginBottom: "4px" }}>
-                    <Package size={14} /> {iq.quantity} units
-                  </div>
-                  <div style={{ fontSize: "0.85rem", color: "#475569", lineHeight: 1.5, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
-                    {iq.requirements}
-                  </div>
-                </td>
-                <td style={{ padding: "20px 24px", fontSize: "0.85rem", color: "#64748b" }}>
-                  {format(new Date(iq.createdAt), "MMM d, yyyy")}
-                </td>
-                <td style={{ padding: "20px 24px" }}>
-                  <span style={{ 
-                    padding: "4px 10px", 
-                    borderRadius: "999px", 
-                    fontSize: "0.7rem", 
-                    fontWeight: 700, 
-                    background: STATUS_COLORS[iq.status]?.bg || "#f1f5f9", 
-                    color: STATUS_COLORS[iq.status]?.text || "#64748b" 
-                  }}>
-                    {iq.status}
-                  </span>
-                </td>
-                <td style={{ padding: "20px 24px" }}>
-                  <select 
-                    value={iq.status} 
-                    disabled={updatingId === iq.id}
-                    onChange={(e) => updateStatus(iq.id, e.target.value)}
-                    style={{ 
-                      padding: "6px 10px", 
-                      borderRadius: "6px", 
-                      border: "1px solid #e2e8f0", 
-                      fontSize: "0.8rem", 
-                      background: "white", 
-                      cursor: "pointer",
-                      outline: "none"
-                    }}
-                  >
-                    {Object.keys(STATUS_COLORS).map(s => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
-                  </select>
-                </td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+                    {iq.companyName && (
+                      <div style={{ fontSize: "0.85rem", color: "#64748b", display: "flex", alignItems: "center", gap: "4px", marginTop: "2px" }}>
+                        <Building2 size={12} /> {iq.companyName}
+                      </div>
+                    )}
+                  </td>
+                  <td style={{ padding: "20px 24px", maxWidth: "300px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.85rem", color: "var(--tth-olive-dark)", fontWeight: 700, marginBottom: "4px" }}>
+                      <Package size={14} /> {iq.quantity} units
+                    </div>
+                    <div style={{ fontSize: "0.85rem", color: "#475569", lineHeight: 1.5, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
+                      {iq.requirements}
+                    </div>
+                  </td>
+                  <td style={{ padding: "20px 24px", fontSize: "0.85rem", color: "#64748b" }}>
+                    {format(new Date(iq.createdAt), "MMM d, yyyy")}
+                  </td>
+                  <td style={{ padding: "20px 24px" }}>
+                    <span style={{ 
+                      padding: "4px 10px", 
+                      borderRadius: "999px", 
+                      fontSize: "0.7rem", 
+                      fontWeight: 700, 
+                      background: STATUS_COLORS[iq.status]?.bg || "#f1f5f9", 
+                      color: STATUS_COLORS[iq.status]?.text || "#64748b" 
+                    }}>
+                      {iq.status}
+                    </span>
+                  </td>
+                  <td style={{ padding: "20px 24px" }}>
+                    <select 
+                      value={iq.status} 
+                      disabled={updatingId === iq.id}
+                      onChange={(e) => updateStatus(iq.id, e.target.value)}
+                      style={{ 
+                        padding: "6px 10px", 
+                        borderRadius: "6px", 
+                        border: "1px solid #e2e8f0", 
+                        fontSize: "0.8rem", 
+                        background: "white", 
+                        cursor: "pointer",
+                        outline: "none"
+                      }}
+                    >
+                      {Object.keys(STATUS_COLORS).map(s => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
