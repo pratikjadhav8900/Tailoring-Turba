@@ -1,4 +1,5 @@
 export const dynamic = "force-dynamic";
+import { cookies, headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
@@ -7,6 +8,10 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  // Force dynamic
+  cookies();
+  headers();
+
   try {
     const session = await auth();
     const role = (session?.user as { role?: string })?.role;

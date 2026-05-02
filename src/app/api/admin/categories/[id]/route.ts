@@ -1,4 +1,5 @@
 export const dynamic = "force-dynamic";
+import { cookies, headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
@@ -7,6 +8,10 @@ export async function DELETE(
   request: Request,
   { params }: { params: { id: string } }
 ) {
+  // Explicitly trigger dynamic behavior for build stability
+  cookies();
+  headers();
+  
   const session = await auth();
   if (!session || (session.user.role !== "ADMIN" && session.user.role !== "SUPER_ADMIN")) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
