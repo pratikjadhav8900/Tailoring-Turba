@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { 
   TrendingUp, 
   Users, 
@@ -93,3 +94,4 @@ export default async function AdminDashboard() {
     </div>
   );
 }
+

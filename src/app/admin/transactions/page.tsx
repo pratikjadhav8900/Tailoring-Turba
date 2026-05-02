@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import styles from "../page.module.css";
@@ -81,3 +82,4 @@ export default async function AdminTransactionsPage() {
     </div>
   );
 }
+

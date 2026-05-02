@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import BookingsClient from "./BookingsClient";
@@ -25,3 +26,4 @@ export default async function AdminBookingsPage() {
 
   return <BookingsClient initialBookings={serialized} />;
 }
+

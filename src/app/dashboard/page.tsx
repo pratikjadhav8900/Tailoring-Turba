@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
@@ -160,3 +161,4 @@ function getGreeting() {
   if (h < 17) return "afternoon";
   return "evening";
 }
+

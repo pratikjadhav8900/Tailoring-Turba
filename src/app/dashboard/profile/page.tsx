@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Image from "next/image";
@@ -126,3 +127,4 @@ export default async function ProfilePage() {
     </form>
   );
 }
+

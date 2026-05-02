@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { prisma } from "@/lib/prisma";
 import { format } from "date-fns";
 import InquiryTable from "@/components/admin/InquiryTable";
@@ -18,3 +19,4 @@ export default async function InquiriesPage() {
     </div>
   );
 }
+
