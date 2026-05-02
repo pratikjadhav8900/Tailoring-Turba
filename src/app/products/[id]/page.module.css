@@ -30,6 +30,7 @@
   overflow: hidden;
   height: 600px;
   width: 100%;
+  border-radius: 12px;
 }
 
 /* Thumbnail strip */
@@ -154,7 +155,8 @@
 @media (max-width: 960px) {
   .layout {
     grid-template-columns: 1fr;
-    gap: 40px;
+    gap: 32px;
+    padding-top: 16px;
   }
 
   .detailsContainer {
@@ -162,12 +164,35 @@
   }
 
   .mainImageContainer {
-    height: 400px;
+    height: 500px;
+  }
+
+  .title {
+    font-size: 1.75rem;
   }
 }
 
 @media (max-width: 480px) {
   .mainImageContainer {
-    height: 300px;
+    height: 350px;
   }
+  .price {
+    font-size: 1.75rem;
+  }
+  .thumbnailBtn {
+    width: 60px;
+    height: 60px;
+  }
+  .breadcrumb {
+    font-size: 0.75rem;
+    flex-wrap: wrap;
+  }
+}
+
+.breadcrumb {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }

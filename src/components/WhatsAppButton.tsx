@@ -17,7 +17,7 @@ export default function WhatsAppButton() {
 
   return (
     <>
-      <div style={{
+      <div className="whatsapp-btn-wrapper" style={{
         position: "fixed",
         bottom: "32px",
         right: "32px",
@@ -88,22 +88,12 @@ export default function WhatsAppButton() {
           border-radius: 50%;
           border: 2px solid #25D366;
           animation: whatsapp-pulse 2s ease-out infinite;
-          pointerEvents: none;
+          pointer-events: none;
         }
         @keyframes whatsapp-pulse {
           0%   { transform: scale(1);   opacity: 0.8; }
           100% { transform: scale(1.6); opacity: 0; }
         }
-        @keyframes gentle-wiggle {
-          0%, 100% { transform: rotate(0deg); }
-          25% { transform: rotate(-8deg); }
-          75% { transform: rotate(8deg); }
-        }
-        .whatsapp-btn-container {
-          animation: gentle-wiggle 0.5s ease-in-out infinite;
-          animation-play-state: paused;
-        }
-        /* Wiggle every 8 seconds to catch eye */
         @keyframes periodic-wiggle {
           0%, 90%, 100% { transform: rotate(0deg) scale(1); }
           92% { transform: rotate(-10deg) scale(1.1); }
@@ -112,6 +102,24 @@ export default function WhatsAppButton() {
         }
         .whatsapp-btn-container {
           animation: periodic-wiggle 8s infinite;
+        }
+
+        @media (max-width: 768px) {
+          .whatsapp-btn-wrapper {
+            bottom: 20px !important;
+            right: 20px !important;
+          }
+          .whatsapp-btn-container {
+            width: 50px !important;
+            height: 50px !important;
+          }
+          .whatsapp-btn-container svg {
+            width: 26px !important;
+            height: 26px !important;
+          }
+          .whatsapp-label {
+            display: none !important;
+          }
         }
       `}</style>
     </>

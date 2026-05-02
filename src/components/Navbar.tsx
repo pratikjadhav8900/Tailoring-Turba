@@ -16,7 +16,12 @@ export default function Navbar({ transparent = false }: { transparent?: boolean 
   const { wishlistItems } = useWishlist();
   const { data: session, status } = useSession();
   const wishlistCount = wishlistItems.length;
-  const isAdmin = session?.user?.role === "ADMIN";
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    setIsAdmin(session?.user?.role === "ADMIN");
+  }, [session]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -29,6 +34,18 @@ export default function Navbar({ transparent = false }: { transparent?: boolean 
   return (
     <header className={`${styles.header} ${scrolled ? styles.scrolled : ""}`}>
       <div className={styles.nav}>
+        {/* Hamburger Menu Toggle (Mobile only) */}
+        <button 
+          className={styles.mobileMenuToggle} 
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          aria-label="Toggle Menu"
+        >
+          <div className={`${styles.hamburger} ${mobileMenuOpen ? styles.open : ""}`}>
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </button>
 
         {/* Left: Logo */}
         <Link href="/" className={styles.logo}>
@@ -43,7 +60,7 @@ export default function Navbar({ transparent = false }: { transparent?: boolean 
         </Link>
 
         {/* Center: Nav Links */}
-        <div className={styles.leftLinks}>
+        <div className={`${styles.leftLinks} ${mobileMenuOpen ? styles.mobileOpen : ""}`}>
           <div className={styles.dropdownContainer}>
             <Link href="/products" className={styles.navLink}>
               Products <ChevronDown size={14} />

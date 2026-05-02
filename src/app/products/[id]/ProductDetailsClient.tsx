@@ -146,8 +146,8 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
     <>
       <main className={styles.main}>
         {/* Breadcrumb */}
-        <div className="container" style={{ paddingTop: "120px", paddingBottom: "16px" }}>
-          <nav style={{ fontSize: "0.85rem", color: "#94a3b8", display: "flex", gap: "8px", alignItems: "center" }}>
+        <div className="container" style={{ paddingTop: "100px", paddingBottom: "16px" }}>
+          <nav className={styles.breadcrumb}>
             <Link href="/" style={{ color: "#94a3b8", textDecoration: "none" }}>Home</Link>
             <span>/</span>
             <Link href="/products" style={{ color: "#94a3b8", textDecoration: "none" }}>Products</Link>
@@ -177,7 +177,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
               <div className={styles.thumbnailStrip}>
                 {product.gallery.map((img: string, i: number) => (
                   <button key={i} className={`${styles.thumbnailBtn} ${activeImage === img ? styles.active : ""}`} onClick={() => setActiveImage(img)} title={`View ${i + 1}`}>
-                    <Image src={img} alt={`${product.name} view ${i + 1}`} fill style={{ objectFit: "cover" }} />
+                    <Image src={img} alt={`${product.name} view ${i + 1}`} fill style={{ objectFit: "cover", padding: "4px" }} />
                   </button>
                 ))}
               </div>

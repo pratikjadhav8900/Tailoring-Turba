@@ -130,6 +130,7 @@ body {
   color: var(--text-main);
   font-family: 'Inter', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
 /* Base Clean Classes */
