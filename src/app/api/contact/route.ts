@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from "next/server";
 import { sendMail } from "@/lib/mail";
 import { prisma } from "@/lib/prisma";
@@ -81,3 +82,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Failed to send enquiry." }, { status: 500 });
   }
 }
+

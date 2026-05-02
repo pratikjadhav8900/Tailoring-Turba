@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { v2 as cloudinary } from "cloudinary";
 import { NextResponse } from "next/server";
 
@@ -48,3 +49,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Upload failed", details: error.message }, { status: 500 });
   }
 }
+

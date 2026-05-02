@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
@@ -57,3 +58,4 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
