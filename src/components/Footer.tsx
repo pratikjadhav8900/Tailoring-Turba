@@ -21,13 +21,7 @@ export default function Footer() {
     }}>
       <div className="container">
         {/* Top Row */}
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "1.5fr 1fr 1fr 1fr",
-          gap: "48px",
-          paddingBottom: "56px",
-          borderBottom: "1px solid rgba(255,255,255,0.08)"
-        }}>
+        <div className="footer-grid">
           {/* Brand Column */}
           <div>
             <div style={{ marginBottom: "24px" }}>
@@ -120,23 +114,59 @@ export default function Footer() {
         </div>
 
         {/* Bottom Row */}
-        <div style={{
-          paddingTop: "24px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: "16px",
-          color: "#475569",
-          fontSize: "0.8rem"
-        }}>
+        <div className="footer-bottom">
           <span>© {new Date().getFullYear()} Tailoring Turba. All rights reserved.</span>
-          <div style={{ display: "flex", gap: "24px" }}>
+          <div className="footer-bottom-links">
             <Link href="#" style={{ color: "#475569", textDecoration: "none" }}>Privacy Policy</Link>
             <Link href="#" style={{ color: "#475569", textDecoration: "none" }}>Terms of Service</Link>
             <Link href="#" style={{ color: "#475569", textDecoration: "none" }}>GST: 27XXXXX000X1ZX</Link>
           </div>
         </div>
+
+        <style>{`
+          .footer-grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr 1fr 1fr;
+            gap: 48px;
+            padding-bottom: 56px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+          }
+          .footer-bottom {
+            padding-top: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            color: #475569;
+            font-size: 0.8rem;
+          }
+          .footer-bottom-links {
+            display: flex;
+            gap: 24px;
+          }
+          @media (max-width: 1024px) {
+            .footer-grid {
+              grid-template-columns: 1fr 1fr;
+              gap: 40px;
+            }
+          }
+          @media (max-width: 640px) {
+            .footer-grid {
+              grid-template-columns: 1fr;
+              gap: 32px;
+            }
+            .footer-bottom {
+              flex-direction: column;
+              align-items: flex-start;
+              gap: 12px;
+            }
+            .footer-bottom-links {
+              flex-direction: column;
+              gap: 12px;
+            }
+          }
+        `}</style>
       </div>
     </footer>
   );
