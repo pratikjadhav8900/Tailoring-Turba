@@ -106,12 +106,14 @@ export default function WhatsAppButton() {
 
         @media (max-width: 768px) {
           .whatsapp-btn-wrapper {
-            bottom: 20px !important;
-            right: 20px !important;
+            bottom: 140px !important;
+            right: auto !important;
+            left: 20px !important;
+            flex-direction: row !important;
           }
           .whatsapp-btn-container {
-            width: 50px !important;
-            height: 50px !important;
+            width: 44px !important;
+            height: 44px !important;
           }
           .whatsapp-btn-container svg {
             width: 26px !important;

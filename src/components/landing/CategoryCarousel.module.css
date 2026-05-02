@@ -62,8 +62,9 @@
   color: white;
 }
 .carouselWrap {
-  overflow: hidden;
-  padding-bottom: 20px;
+  overflow: visible;
+  padding: 0 4% 20px 4%;
+  margin: 0 -4%;
 }
 .grid {
   display: flex;
@@ -127,4 +128,23 @@
   font-weight: 700;
   font-size: 1.25rem;
   margin: 0;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+@media (max-width: 480px) {
+  .cardTitle {
+    font-size: 1.1rem;
+  }
+  .card {
+    flex: 0 0 220px;
+  }
+  .tab {
+    font-size: 0.95rem;
+    gap: 16px;
+  }
+  .tabs {
+    gap: 20px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
 }

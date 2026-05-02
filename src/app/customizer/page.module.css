@@ -45,21 +45,6 @@
   border-left: 1px solid #E5E7EB;
 }
 
-.saveStatus {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.8rem;
-  color: #10B981;
-}
-
-.saveDot {
-  width: 6px;
-  height: 6px;
-  background: #10B981;
-  border-radius: 50%;
-}
-
 .topBarCenter {
   display: flex;
   align-items: center;
@@ -112,10 +97,6 @@
   color: var(--tth-black);
 }
 
-.iconBtn:hover {
-  background: #E5E7EB;
-}
-
 .previewBtn {
   display: flex;
   align-items: center;
@@ -128,12 +109,7 @@
   padding: 7px 14px;
   border-radius: 6px;
   color: #374151;
-  letter-spacing: 0.03em;
   transition: all 0.2s;
-}
-
-.previewBtn:hover {
-  background: #f3f4f6;
 }
 
 .nextBtn {
@@ -143,18 +119,12 @@
   border-radius: 6px;
   font-weight: 600;
   font-size: 0.85rem;
-  letter-spacing: 0.04em;
   border: none;
   cursor: pointer;
   transition: background 0.2s;
   text-transform: uppercase;
 }
 
-.nextBtn:hover {
-  background: #3a4d2c;
-}
-
-/* MAIN CONTENT AREA */
 .mainContent {
   display: flex;
   flex: 1;
@@ -162,7 +132,46 @@
   position: relative;
 }
 
-/* Options / Review Tabs inside */
+@media (max-width: 1024px) {
+  .appLayout {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+  
+  .topBar {
+    flex-direction: column;
+    height: auto;
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .topBarLeft {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .productName {
+    display: none;
+  }
+
+  .topBarCenter {
+    width: 100%;
+    justify-content: center;
+    border-top: 1px solid #eee;
+    border-bottom: 1px solid #eee;
+  }
+
+  .topBarRight {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .mainContent {
+    overflow: visible;
+  }
+}
+
 .tabContent {
   width: 100%;
   height: 100%;
@@ -173,7 +182,111 @@
   justify-content: center;
 }
 
+@media (max-width: 768px) {
+  .tabContent {
+    padding: 20px 16px;
+  }
+}
+
 .tabContentInner {
   max-width: 800px;
   width: 100%;
+}
+
+.reviewGrid {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 40px;
+  padding: 40px;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+@media (max-width: 1100px) {
+  .reviewGrid {
+    grid-template-columns: 1fr;
+    padding: 20px 16px;
+    gap: 24px;
+  }
+}
+
+.sizeGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+@media (max-width: 600px) {
+  .sizeGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.sizeCard {
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px 12px;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.sizeCardActive {
+  background: #f0fdf4 !important;
+  border-color: #86efac !important;
+}
+
+.sizeLabel {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #94a3b8;
+  margin-bottom: 12px;
+}
+
+.sizeQty {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 8px 0;
+  line-height: 1;
+}
+
+.sizeQtyActive {
+  color: #166534 !important;
+}
+
+.qtyBtn {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  background: white;
+  cursor: pointer;
+  font-size: 1rem;
+  color: #64748b;
+}
+
+.progressBarContainer {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 28px;
+}
+
+.uploadArea {
+  border: 2px dashed #cbd5e1;
+  border-radius: 10px;
+  padding: 28px;
+  text-align: center;
+  cursor: pointer;
+  background: #f8fafc;
+  transition: all 0.2s;
+}
+
+.uploadArea:hover {
+  border-color: var(--tth-olive-dark, #4a5e3a);
+  background: #f0fdf4;
 }

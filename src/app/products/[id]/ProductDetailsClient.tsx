@@ -146,13 +146,13 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
     <>
       <main className={styles.main}>
         {/* Breadcrumb */}
-        <div className="container" style={{ paddingTop: "100px", paddingBottom: "16px" }}>
+        <div className={styles.breadcrumbContainer}>
           <nav className={styles.breadcrumb}>
-            <Link href="/" style={{ color: "#94a3b8", textDecoration: "none" }}>Home</Link>
-            <span>/</span>
-            <Link href="/products" style={{ color: "#94a3b8", textDecoration: "none" }}>Products</Link>
-            <span>/</span>
-            <span style={{ color: "#1e293b", fontWeight: 600 }}>{product.name}</span>
+            <Link href="/" className={styles.breadcrumbLink}>Home</Link>
+            <span className={styles.breadcrumbSep}>/</span>
+            <Link href="/products" className={styles.breadcrumbLink}>Products</Link>
+            <span className={styles.breadcrumbSep}>/</span>
+            <span className={styles.breadcrumbCurrent}>{product.name}</span>
           </nav>
         </div>
 
@@ -167,7 +167,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
                 <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#e5e7eb', color: '#9ca3af' }}>No Image</div>
               )}
               {product.badge && (
-                <span style={{ position: "absolute", top: 16, left: 16, background: "var(--tth-olive-dark)", color: "white", padding: "6px 14px", fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                <span className={styles.productBadge}>
                   {product.badge}
                 </span>
               )}
@@ -184,19 +184,19 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
             )}
 
             {product.description && (
-              <div style={{ paddingTop: "32px", borderTop: "1px solid #f1f5f9" }}>
-                <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "#94a3b8", marginBottom: "12px" }}>About this product</p>
-                <p style={{ fontSize: "0.95rem", color: "#475569", lineHeight: 1.8, margin: 0 }}>{product.description}</p>
+              <div className={styles.aboutSection}>
+                <p className={styles.sectionEyebrow}>About this product</p>
+                <p className={styles.description}>{product.description}</p>
               </div>
             )}
 
             {product.features && product.features.length > 0 && (
-              <div style={{ paddingTop: "28px", borderTop: "1px solid #f1f5f9" }}>
-                <p style={{ fontSize: "0.7rem", fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "#94a3b8", marginBottom: "14px" }}>What makes it special</p>
-                <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "10px" }}>
+              <div className={styles.sectionBlock}>
+                <p className={styles.sectionEyebrow}>What makes it special</p>
+                <ul className={styles.featureList}>
                   {product.features.map((f: string, i: number) => (
-                    <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: "10px", fontSize: "0.9rem", color: "#334155" }}>
-                      <span style={{ color: "var(--tth-olive-dark)", fontWeight: 700, flexShrink: 0, marginTop: "2px" }}>—</span>
+                    <li key={i} className={styles.featureItem}>
+                      <span className={styles.bullet}>—</span>
                       {f}
                     </li>
                   ))}
@@ -208,13 +208,13 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
           {/* RIGHT COLUMN */}
           <div className={styles.detailsContainer}>
             <div>
-              <span style={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", color: "var(--tth-olive-dark)", letterSpacing: "0.1em" }}>{product.category}</span>
+              <span className={styles.categoryLabel}>{product.category}</span>
               <h1 className={styles.title}>{product.name}</h1>
-              <p style={{ fontSize: "0.82rem", color: "#94a3b8", fontWeight: 500, marginBottom: "6px", letterSpacing: "0.04em" }}>{product.type}</p>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <div>{renderStars(averageRating)}</div>
-                <span style={{ fontSize: "0.82rem", color: "#64748b" }}>
-                  {reviews.length > 0 ? `${averageRating.toFixed(1)} (${reviews.length} review${reviews.length > 1 ? "s" : ""})` : "No reviews yet"}
+              <p className={styles.typeLabel}>{product.type}</p>
+              <div className={styles.ratingRow}>
+                <div className={styles.stars}>{renderStars(averageRating)}</div>
+                <span className={styles.ratingText}>
+                  {reviews.length > 0 ? `${averageRating.toFixed(1)} (${reviews.length} reviews)` : "No reviews yet"}
                 </span>
               </div>
             </div>
@@ -293,16 +293,16 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
             </div>
 
             {!isTShirt && (
-              <div style={{ marginTop: "16px", padding: "16px", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "10px" }}>
-                <h4 style={{ color: "#166534", fontWeight: 700, marginBottom: "8px", fontSize: "0.95rem" }}>Custom Requirements & Uniforms</h4>
-                <p style={{ color: "#15803d", fontSize: "0.85rem", lineHeight: 1.5, marginBottom: "16px" }}>
-                  For corporate uniforms, workwear, and custom branding needs, our experts need to understand your exact requirements. Connect with us directly to discuss your project.
+              <div className={styles.customPromoCard}>
+                <h4 className={styles.promoTitle}>Custom Requirements & Uniforms</h4>
+                <p className={styles.promoText}>
+                  For corporate uniforms, workwear, and custom branding needs, our experts need to understand your project.
                 </p>
-                <div style={{ display: "flex", gap: "12px" }}>
-                  <Link href="/booking" style={{ flex: 1, textAlign: "center", textDecoration: "none", background: "#16a34a", color: "white", padding: "12px", borderRadius: "8px", fontWeight: 600, fontSize: "0.9rem" }}>
+                <div className={styles.promoActions}>
+                  <Link href="/booking" className={styles.promoBtn}>
                     Book Appointment
                   </Link>
-                  <a href={`https://wa.me/919022553346?text=Hi, I am interested in custom uniforms for ${product.name}`} target="_blank" rel="noreferrer" style={{ flex: 1, textAlign: "center", textDecoration: "none", background: "#25D366", color: "white", padding: "12px", borderRadius: "8px", fontWeight: 600, fontSize: "0.9rem", display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}>
+                  <a href={`https://wa.me/919022553346?text=Hi, I am interested in custom uniforms for ${product.name}`} target="_blank" rel="noreferrer" className={styles.promoBtnWhatsapp}>
                     WhatsApp Us
                   </a>
                 </div>
@@ -310,75 +310,49 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
             )}
 
             {/* Trust Badges Strip */}
-            <div style={{ 
-              marginTop: "16px", 
-              padding: "16px", 
-              background: "white", 
-              border: "1px solid #f1f5f9", 
-              borderRadius: "12px",
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "12px"
-            }}>
+            <div className={styles.badgeGrid}>
               {[
                 { icon: <Receipt size={16} />, title: "GST Invoice", sub: "Guaranteed" },
                 { icon: <ShieldCheck size={16} />, title: "Made in India", sub: "Pure Quality" },
                 { icon: <Lock size={16} />, title: "Secure Pay", sub: "100% Safe" },
                 { icon: <Award size={16} />, title: "Certified", sub: "B2B Expert" },
               ].map((badge, i) => (
-                <div key={i} style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                  <div style={{ color: "var(--tth-olive-dark)", background: "#f8fafc", padding: "6px", borderRadius: "6px" }}>{badge.icon}</div>
+                <div key={i} className={styles.badgeItem}>
+                  <div className={styles.badgeIconWrapper}>{badge.icon}</div>
                   <div>
-                    <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "#1e293b", lineHeight: 1 }}>{badge.title}</div>
-                    <div style={{ fontSize: "0.65rem", color: "#94a3b8", marginTop: "2px" }}>{badge.sub}</div>
+                    <div className={styles.badgeTitle}>{badge.title}</div>
+                    <div className={styles.badgeSub}>{badge.sub}</div>
                   </div>
                 </div>
               ))}
             </div>
 
             {/* Sampling Policy Card */}
-            <div style={{ 
-              marginTop: "16px", 
-              padding: "16px", 
-              background: "#eff6ff", 
-              border: "1px solid #dbeafe", 
-              borderRadius: "12px",
-              display: "flex",
-              gap: "12px",
-              alignItems: "flex-start"
-            }}>
-              <div style={{ color: "#3b82f6", background: "white", padding: "8px", borderRadius: "8px", boxShadow: "0 2px 4px rgba(59,130,246,0.1)" }}>
+            <div className={styles.samplingCard}>
+              <div className={styles.samplingIcon}>
                 <Package size={20} />
               </div>
               <div>
-                <h4 style={{ fontSize: "0.85rem", fontWeight: 700, color: "#1e3a8a", marginBottom: "4px" }}>Test Before You Bulk Order</h4>
-                <p style={{ fontSize: "0.78rem", color: "#1e40af", lineHeight: 1.4, margin: 0 }}>
+                <h4 className={styles.samplingTitle}>Test Before You Bulk Order</h4>
+                <p className={styles.samplingText}>
                   Order a single sample to check fit and fabric. 
                   <strong> 100% sample cost refund </strong> when you place a bulk order of 50+ units.
                 </p>
-                <Link href={`/contact?product=${product.name}&subject=Sample Request`} style={{ 
-                  display: "inline-block", 
-                  marginTop: "8px", 
-                  fontSize: "0.75rem", 
-                  fontWeight: 700, 
-                  color: "#2563eb", 
-                  textDecoration: "none",
-                  borderBottom: "1px solid #bfdbfe"
-                }}>
+                <Link href={`/contact?product=${product.name}&subject=Sample Request`} className={styles.samplingLink}>
                   Request Sample Pack →
                 </Link>
               </div>
             </div>
 
-            <div style={{ borderTop: "1px solid #f1f5f9", marginTop: "16px", paddingTop: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+            <div className={styles.policyStrip}>
               {[
-                { icon: <Receipt size={14} strokeWidth={1.5} />, text: "Full GST tax invoice provided" },
-                { icon: <RotateCcw size={14} strokeWidth={1.5} />, text: "Hassle-free returns within 7 days" },
-                { icon: <Brush size={14} strokeWidth={1.5} />, text: "Custom branding & logo printing available" },
-                { icon: <Truck size={14} strokeWidth={1.5} />, text: "Reliable Pan-India delivery" },
+                { icon: <Receipt size={14} />, text: "Full GST tax invoice provided" },
+                { icon: <RotateCcw size={14} />, text: "Hassle-free returns within 7 days" },
+                { icon: <Brush size={14} />, text: "Custom branding available" },
+                { icon: <Truck size={14} />, text: "Pan-India delivery" },
               ].map((ft, i) => (
-                <div key={i} style={{ fontSize: "0.83rem", color: "#64748b", display: "flex", alignItems: "center", gap: "10px" }}>
-                  <span style={{ color: "var(--tth-olive-dark)", flexShrink: 0 }}>{ft.icon}</span>
+                <div key={i} className={styles.policyItem}>
+                  <span className={styles.policyIcon}>{ft.icon}</span>
                   {ft.text}
                 </div>
               ))}

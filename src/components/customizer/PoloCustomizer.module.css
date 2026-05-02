@@ -383,3 +383,94 @@
   background: #E5E7EB;
   margin: 0 4px;
 }
+
+@media (max-width: 1024px) {
+  .wrapper {
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .leftSidebar {
+    width: 100%;
+    flex-direction: row;
+    height: 64px;
+    padding: 0 8px;
+    justify-content: space-around;
+    border-right: none;
+    border-bottom: 1px solid #eee;
+    flex-shrink: 0;
+  }
+
+  .sidebarToolBtn {
+    width: 48px;
+    height: 48px;
+    gap: 2px;
+  }
+
+  .sidebarToolLabel {
+    font-size: 0.6rem;
+  }
+
+  .contextPanel {
+    width: 100%;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 35vh;
+    border-right: none;
+    border-top: 1px solid #eee;
+    box-shadow: 0 -8px 24px rgba(0,0,0,0.12);
+    border-radius: 20px 20px 0 0;
+    padding: 16px;
+    z-index: 100;
+  }
+
+  .canvasArea {
+    flex: 1;
+    min-height: 0;
+    padding: 0;
+    background: #f8fafc;
+  }
+
+  .garmentContainer {
+    width: 85vw;
+    height: 85vw;
+    max-width: 400px;
+    max-height: 400px;
+    margin-top: -40px;
+  }
+
+  .rightThumbnails {
+    right: 12px;
+    top: 12px;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .thumbnailBtn {
+    width: 54px;
+    padding: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+
+  .thumbnailImgWrap {
+    width: 36px;
+    height: 36px;
+  }
+
+  .thumbnailLabel {
+    font-size: 0.55rem;
+  }
+
+  .formattingToolbarFloating {
+    width: 95vw;
+    bottom: 20px;
+    top: auto !important;
+    left: 50% !important;
+    padding: 8px;
+    border-radius: 12px;
+  }
+}
+

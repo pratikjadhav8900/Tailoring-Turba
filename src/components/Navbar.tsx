@@ -107,15 +107,9 @@ export default function Navbar({ transparent = false }: { transparent?: boolean 
             </Link>
           )}
 
-          {session ? (
-            <Link href="/dashboard" className={styles.iconBtn} aria-label="Dashboard" title="User Dashboard">
-              <User size={22} />
-            </Link>
-          ) : (
-            <Link href="/login" className={styles.navLink} style={{ fontSize: '0.85rem', fontWeight: 600 }}>
-              Sign In
-            </Link>
-          )}
+          <Link href={session ? "/dashboard" : "/login"} className={styles.iconBtn} aria-label={session ? "Dashboard" : "Sign In"}>
+            <User size={22} />
+          </Link>
 
           <Link href="/wishlist" className={styles.iconBtn} aria-label="Shortlist">
             <Heart size={22} fill={wishlistCount > 0 ? "#ef4444" : "none"} color={wishlistCount > 0 ? "#ef4444" : "currentColor"} />

@@ -429,7 +429,7 @@ function CustomizerContent() {
         
         {activeTab === "Options" && (
           <div className={styles.tabContent}>
-            <div style={{ maxWidth: '700px', margin: '32px auto', padding: '0 24px' }}>
+            <div className={styles.tabContentInner}>
               
               {/* Header */}
               <div style={{ marginBottom: '32px' }}>
@@ -443,20 +443,20 @@ function CustomizerContent() {
               </div>
 
               {/* Size Grid */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px', marginBottom: '28px' }}>
+              <div className={styles.sizeGrid}>
                 {['S', 'M', 'L', 'XL', 'XXL'].map((size) => {
                   const qty = customizerState?.sizes?.[size as keyof typeof customizerState.sizes] || 0;
                   return (
-                    <div key={size} style={{ background: qty > 0 ? '#f0fdf4' : '#f8fafc', border: `2px solid ${qty > 0 ? '#86efac' : '#e2e8f0'}`, borderRadius: '12px', padding: '16px 12px', textAlign: 'center', transition: 'all 0.2s' }}>
-                      <div style={{ fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.1em', color: '#94a3b8', marginBottom: '12px' }}>{size}</div>
+                    <div key={size} className={`${styles.sizeCard} ${qty > 0 ? styles.sizeCardActive : ""}`}>
+                      <div className={styles.sizeLabel}>{size}</div>
                       <button
                         onClick={() => handleSizeChange(size, qty - 1)}
-                        style={{ width: '28px', height: '28px', borderRadius: '6px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', fontSize: '1rem', lineHeight: 1, color: '#64748b' }}
+                        className={styles.qtyBtn}
                       >−</button>
-                      <div style={{ fontSize: '1.5rem', fontWeight: 800, color: qty > 0 ? '#166534' : '#1e293b', margin: '8px 0', lineHeight: 1 }}>{qty}</div>
+                      <div className={`${styles.sizeQty} ${qty > 0 ? styles.sizeQtyActive : ""}`}>{qty}</div>
                       <button
                         onClick={() => handleSizeChange(size, qty + 1)}
-                        style={{ width: '28px', height: '28px', borderRadius: '6px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer', fontSize: '1rem', lineHeight: 1, color: '#64748b' }}
+                        className={styles.qtyBtn}
                       >+</button>
                     </div>
                   );
@@ -464,7 +464,7 @@ function CustomizerContent() {
               </div>
 
               {/* MOQ Progress Bar */}
-              <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px 24px', marginBottom: '28px' }}>
+              <div className={styles.progressBarContainer}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                   <span style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.95rem' }}>Total Quantity</span>
                   <span style={{ fontWeight: 800, fontSize: '1.6rem', color: totalQuantity >= MOQ ? '#16a34a' : '#0f172a' }}>{totalQuantity}</span>
@@ -484,9 +484,7 @@ function CustomizerContent() {
                 
                 <div 
                   onClick={() => fileInputRef.current?.click()}
-                  style={{ border: '2px dashed #cbd5e1', borderRadius: '10px', padding: '28px', textAlign: 'center', cursor: 'pointer', background: '#f8fafc', transition: 'all 0.2s' }}
-                  onMouseOver={(e) => { e.currentTarget.style.borderColor = 'var(--tth-olive-dark)'; e.currentTarget.style.background = '#f0fdf4'; }}
-                  onMouseOut={(e) => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.background = '#f8fafc'; }}
+                  className={styles.uploadArea}
                 >
                   <UploadCloud size={28} color="#94a3b8" style={{ margin: '0 auto 10px' }} />
                   <div style={{ fontWeight: 600, color: '#475569', fontSize: '0.9rem' }}>Click to upload production files</div>
@@ -518,154 +516,156 @@ function CustomizerContent() {
         )}
 
         {activeTab === "Review" && (
-          <div className={styles.tabContent} style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: '40px', padding: '40px', maxWidth: '1400px', margin: '0 auto', height: '100%' }}>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <div style={{ background: '#F9FAFB', borderRadius: '12px', overflow: 'hidden', border: '1px solid #E5E7EB', position: 'relative', flex: 1 }}>
-                <div style={{ padding: '12px', fontSize: '10px', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em', borderBottom: '1px solid #eee' }}>Front View</div>
-                <PoloCustomizer 
-                  initialState={customizerState}
-                  isPreviewMode={true}
-                  activeSide="front"
-                  mockupId="review-mockup-front"
-                />
-              </div>
-              <div style={{ background: '#F9FAFB', borderRadius: '12px', overflow: 'hidden', border: '1px solid #E5E7EB', position: 'relative', flex: 1 }}>
-                <div style={{ padding: '12px', fontSize: '10px', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em', borderBottom: '1px solid #eee' }}>Back View</div>
-                <PoloCustomizer 
-                  initialState={customizerState}
-                  isPreviewMode={true}
-                  activeSide="back"
-                  mockupId="review-mockup-back"
-                />
-              </div>
-            </div>
-
-            <div style={{ background: 'white', padding: '32px', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', height: 'fit-content' }}>
-              <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '24px', color: '#111' }}>Order Summary</h2>
+          <div className={styles.tabContent} style={{ padding: '0' }}>
+            <div className={styles.reviewGrid}>
               
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
-                {dbProduct && (
-                  <div style={{ display: 'flex', gap: '16px', alignItems: 'center', padding: '16px', background: '#f9f9f7', border: '1px solid #e5e2da', borderRadius: '8px', marginBottom: '8px' }}>
-                    <div style={{ position: 'relative', width: '64px', height: '64px', borderRadius: '4px', overflow: 'hidden', flexShrink: 0 }}>
-                      <Image src={dbProduct.images?.[0] || dbProduct.image} alt={dbProduct.name} fill style={{ objectFit: 'cover' }} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                <div style={{ background: '#F9FAFB', borderRadius: '12px', overflow: 'hidden', border: '1px solid #E5E7EB', position: 'relative', flex: 1 }}>
+                  <div style={{ padding: '12px', fontSize: '10px', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em', borderBottom: '1px solid #eee' }}>Front View</div>
+                  <PoloCustomizer 
+                    initialState={customizerState}
+                    isPreviewMode={true}
+                    activeSide="front"
+                    mockupId="review-mockup-front"
+                  />
+                </div>
+                <div style={{ background: '#F9FAFB', borderRadius: '12px', overflow: 'hidden', border: '1px solid #E5E7EB', position: 'relative', flex: 1 }}>
+                  <div style={{ padding: '12px', fontSize: '10px', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em', borderBottom: '1px solid #eee' }}>Back View</div>
+                  <PoloCustomizer 
+                    initialState={customizerState}
+                    isPreviewMode={true}
+                    activeSide="back"
+                    mockupId="review-mockup-back"
+                  />
+                </div>
+              </div>
+
+              <div style={{ background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', height: 'fit-content' }}>
+                <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '24px', color: '#111' }}>Order Summary</h2>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
+                  {dbProduct && (
+                    <div style={{ display: 'flex', gap: '16px', alignItems: 'center', padding: '16px', background: '#f9f9f7', border: '1px solid #e5e2da', borderRadius: '8px', marginBottom: '8px' }}>
+                      <div style={{ position: 'relative', width: '64px', height: '64px', borderRadius: '4px', overflow: 'hidden', flexShrink: 0 }}>
+                        <Image src={dbProduct.images?.[0] || dbProduct.image} alt={dbProduct.name} fill style={{ objectFit: 'cover' }} />
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#111' }}>{dbProduct.name}</div>
+                        <div style={{ fontSize: '0.8rem', color: '#888', marginTop: '2px' }}>{dbProduct.type || dbProduct.category?.name}</div>
+                        <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--tth-olive-dark)', marginTop: '4px' }}>{dbProduct.price} / unit</div>
+                      </div>
                     </div>
-                    <div>
-                      <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#111' }}>{dbProduct.name}</div>
-                      <div style={{ fontSize: '0.8rem', color: '#888', marginTop: '2px' }}>{dbProduct.type || dbProduct.category?.name}</div>
-                      <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--tth-olive-dark)', marginTop: '4px' }}>{dbProduct.price} / unit</div>
+                  )}
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: '#666' }}>Garment Type</span>
+                    <span style={{ fontWeight: 'bold', textTransform: 'capitalize' }}>{customizerState?.garmentType.replace('-', ' ')}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: '#666' }}>Base Color</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: customizerState?.bodyColor, border: '1px solid #D1D5DB' }}></div>
+                      <span style={{ fontWeight: 'bold', textTransform: 'uppercase' }}>{customizerState?.bodyColor}</span>
                     </div>
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: '32px' }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', borderBottom: '1px solid #E5E7EB', paddingBottom: '8px' }}>Size Breakdown</h3>
+                  {['S', 'M', 'L', 'XL', 'XXL'].map((size) => {
+                    const qty = customizerState?.sizes?.[size as keyof typeof customizerState.sizes] || 0;
+                    if (qty > 0) {
+                      return (
+                        <div key={size} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                          <span>Size {size}</span>
+                          <span style={{ fontWeight: 'bold' }}>{qty}x</span>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })}
+                </div>
+
+                {productionFiles.length > 0 && (
+                  <div style={{ marginBottom: '32px' }}>
+                    <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', borderBottom: '1px solid #E5E7EB', paddingBottom: '8px' }}>Attached Files</h3>
+                    {productionFiles.map((f, i) => (
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', fontSize: '14px' }}>
+                        <FileText size={14} color="#6B7280" />
+                        <span style={{ color: '#374151', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '200px' }}>{f.name}</span>
+                      </div>
+                    ))}
                   </div>
                 )}
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#666' }}>Garment Type</span>
-                  <span style={{ fontWeight: 'bold', textTransform: 'capitalize' }}>{customizerState?.garmentType.replace('-', ' ')}</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#666' }}>Base Color</span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: customizerState?.bodyColor, border: '1px solid #D1D5DB' }}></div>
-                    <span style={{ fontWeight: 'bold', textTransform: 'uppercase' }}>{customizerState?.bodyColor}</span>
-                  </div>
-                </div>
-              </div>
 
-              <div style={{ marginBottom: '32px' }}>
-                <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', borderBottom: '1px solid #E5E7EB', paddingBottom: '8px' }}>Size Breakdown</h3>
-                {['S', 'M', 'L', 'XL', 'XXL'].map((size) => {
-                  const qty = customizerState?.sizes?.[size as keyof typeof customizerState.sizes] || 0;
-                  if (qty > 0) {
+                <div style={{ borderTop: '2px solid #E5E7EB', paddingTop: '24px', marginBottom: '32px' }}>
+                  {/* Calculations */}
+                  {(() => {
+                    const priceMatch = dbProduct?.price?.match(/\d+/);
+                    const basePrice = priceMatch ? parseInt(priceMatch[0], 10) : (dbProduct?.basePrice || 85);
+                    const subtotal = totalQuantity * basePrice;
+                    const hasCustomization = (customizerState?.frontElements.length || 0) > 0 || (customizerState?.backElements.length || 0) > 0;
+                    const customCharge = hasCustomization ? 300 : 0;
+                    const gst = (subtotal + customCharge) * 0.05;
+                    const total = subtotal + customCharge + gst;
+
                     return (
-                      <div key={size} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                        <span>Size {size}</span>
-                        <span style={{ fontWeight: 'bold' }}>{qty}x</span>
-                      </div>
-                    );
-                  }
-                  return null;
-                })}
-              </div>
-
-              {productionFiles.length > 0 && (
-                <div style={{ marginBottom: '32px' }}>
-                  <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', borderBottom: '1px solid #E5E7EB', paddingBottom: '8px' }}>Attached Files</h3>
-                  {productionFiles.map((f, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', fontSize: '14px' }}>
-                      <FileText size={14} color="#6B7280" />
-                      <span style={{ color: '#374151', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '250px' }}>{f.name}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div style={{ borderTop: '2px solid #E5E7EB', paddingTop: '24px', marginBottom: '32px' }}>
-                {/* Calculations */}
-                {(() => {
-                  const priceMatch = dbProduct?.price?.match(/\d+/);
-                  const basePrice = priceMatch ? parseInt(priceMatch[0], 10) : (dbProduct?.basePrice || 85);
-                  const subtotal = totalQuantity * basePrice;
-                  const hasCustomization = (customizerState?.frontElements.length || 0) > 0 || (customizerState?.backElements.length || 0) > 0;
-                  const customCharge = hasCustomization ? 300 : 0;
-                  const gst = (subtotal + customCharge) * 0.05;
-                  const total = subtotal + customCharge + gst;
-
-                  return (
-                    <>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                        <span style={{ color: '#666' }}>Subtotal ({totalQuantity} units)</span>
-                        <span style={{ fontWeight: 600 }}>₹{subtotal.toLocaleString('en-IN')}</span>
-                      </div>
-                      
-                      {hasCustomization && (
+                      <>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                          <span style={{ color: '#666' }}>Customization Fee</span>
-                          <span style={{ fontWeight: 600 }}>₹{customCharge.toLocaleString('en-IN')}</span>
+                          <span style={{ color: '#666' }}>Subtotal ({totalQuantity} units)</span>
+                          <span style={{ fontWeight: 600 }}>₹{subtotal.toLocaleString('en-IN')}</span>
                         </div>
-                      )}
+                        
+                        {hasCustomization && (
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                            <span style={{ color: '#666' }}>Customization Fee</span>
+                            <span style={{ fontWeight: 600 }}>₹{customCharge.toLocaleString('en-IN')}</span>
+                          </div>
+                        )}
 
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
-                        <span style={{ color: '#666' }}>GST (5%)</span>
-                        <span style={{ fontWeight: 600 }}>₹{Math.round(gst).toLocaleString('en-IN')}</span>
-                      </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
+                          <span style={{ color: '#666' }}>GST (5%)</span>
+                          <span style={{ fontWeight: 600 }}>₹{Math.round(gst).toLocaleString('en-IN')}</span>
+                        </div>
 
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '18px', fontWeight: 'bold' }}>Total Estimate</span>
-                        <span style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--tth-olive-dark)' }}>
-                          ₹{Math.round(total).toLocaleString('en-IN')}
-                        </span>
-                      </div>
-                    </>
-                  );
-                })()}
-                
-                <p style={{ fontSize: '11px', color: '#888', marginTop: '12px', fontStyle: 'italic' }}>
-                  * Includes 5% GST and flat customization setup fee where applicable.
-                </p>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: '18px', fontWeight: 'bold' }}>Total Estimate</span>
+                          <span style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--tth-olive-dark)' }}>
+                            ₹{Math.round(total).toLocaleString('en-IN')}
+                          </span>
+                        </div>
+                      </>
+                    );
+                  })()}
+                  
+                  <p style={{ fontSize: '11px', color: '#888', marginTop: '12px', fontStyle: 'italic' }}>
+                    * Includes 5% GST and flat customization setup fee where applicable.
+                  </p>
+                </div>
+
+                <button 
+                  onClick={handleNext}
+                  style={{ 
+                    width: '100%', 
+                    padding: '16px', 
+                    background: 'var(--tth-olive-dark)', 
+                    color: 'white', 
+                    border: 'none', 
+                    borderRadius: '8px', 
+                    fontSize: '16px', 
+                    fontWeight: 'bold', 
+                    cursor: 'pointer', 
+                    transition: 'all 0.2s',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.background = '#3a4d2c'}
+                  onMouseOut={(e) => e.currentTarget.style.background = 'var(--tth-olive-dark)'}
+                >
+                  Add To Cart
+                </button>
               </div>
 
-              <button 
-                onClick={handleNext}
-                style={{ 
-                  width: '100%', 
-                  padding: '16px', 
-                  background: 'var(--tth-olive-dark)', 
-                  color: 'white', 
-                  border: 'none', 
-                  borderRadius: '8px', 
-                  fontSize: '16px', 
-                  fontWeight: 'bold', 
-                  cursor: 'pointer', 
-                  transition: 'all 0.2s',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em'
-                }}
-                onMouseOver={(e) => e.currentTarget.style.background = '#3a4d2c'}
-                onMouseOut={(e) => e.currentTarget.style.background = 'var(--tth-olive-dark)'}
-              >
-                Add To Cart
-              </button>
             </div>
-
           </div>
         )}
       </div>
