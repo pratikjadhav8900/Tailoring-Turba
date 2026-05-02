@@ -190,6 +190,7 @@ model Inquiry {
   id           String        @id @default(cuid())
   name         String
   email        String
+  phone        String?
   companyName  String?
   quantity     Int
   requirements String

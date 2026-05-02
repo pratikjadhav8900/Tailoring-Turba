@@ -12,6 +12,7 @@ function ContactForm() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    phone: "",
     company: "",
     quantity: "50",
     message: productName
@@ -146,16 +147,27 @@ function ContactForm() {
 
                 <div className={styles.row}>
                   <div className={styles.group}>
+                    <label className={styles.label}>Phone Number</label>
+                    <input
+                      className={styles.input}
+                      type="tel"
+                      required
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      placeholder="9022553346"
+                    />
+                  </div>
+                  <div className={styles.group}>
                     <label className={styles.label}>Company Name</label>
                     <input
                       className={styles.input}
                       type="text"
-                      required
                       value={formData.company}
                       onChange={(e) => setFormData({ ...formData, company: e.target.value })}
                       placeholder="ABC Corp"
                     />
                   </div>
+                </div>
                   <div className={styles.group}>
                     <label className={styles.label}>Quantity (Min. 50)</label>
                     <input

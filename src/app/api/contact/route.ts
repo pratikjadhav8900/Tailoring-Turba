@@ -5,10 +5,10 @@ import { prisma } from "@/lib/prisma";
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, company, quantity, message } = await req.json();
+    const { name, email, phone, company, quantity, message } = await req.json();
 
-    if (!name || !email || !message) {
-      return NextResponse.json({ error: "Name, email and message are required." }, { status: 400 });
+    if (!name || !email || !phone || !message) {
+      return NextResponse.json({ error: "Name, email, phone and message are required." }, { status: 400 });
     }
 
     // 0. Save to Database
@@ -16,6 +16,7 @@ export async function POST(req: NextRequest) {
       data: {
         name,
         email,
+        phone,
         companyName: company,
         quantity: parseInt(quantity as string) || 0,
         requirements: message,
@@ -28,6 +29,7 @@ export async function POST(req: NextRequest) {
         <h2 style="color: #435b43;">📩 New Bulk Quote Request</h2>
         <table style="width: 100%; border-collapse: collapse;">
           <tr><td style="padding: 8px 0; font-weight: 700; width: 140px; color: #555;">Name:</td><td style="padding: 8px 0;">${name}</td></tr>
+          <tr><td style="padding: 8px 0; font-weight: 700; color: #555;">Phone:</td><td style="padding: 8px 0;"><a href="tel:${phone}">${phone}</a></td></tr>
           <tr><td style="padding: 8px 0; font-weight: 700; color: #555;">Email:</td><td style="padding: 8px 0;"><a href="mailto:${email}">${email}</a></td></tr>
           <tr><td style="padding: 8px 0; font-weight: 700; color: #555;">Company:</td><td style="padding: 8px 0;">${company || "—"}</td></tr>
           <tr><td style="padding: 8px 0; font-weight: 700; color: #555;">Quantity:</td><td style="padding: 8px 0;">${quantity || "—"} units</td></tr>

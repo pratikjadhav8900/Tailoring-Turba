@@ -8,6 +8,7 @@ type Inquiry = {
   id: string;
   name: string;
   email: string;
+  phone: string;
   companyName: string | null;
   quantity: number;
   requirements: string;
@@ -40,11 +41,13 @@ export default function InquiryTable({ initialInquiries }: { initialInquiries: I
   });
 
   const exportToCSV = () => {
-    const headers = ["Customer Name", "Quantity", "Email", "Requirements"];
+    if (!startDate || !endDate) return; // require date range
+    const headers = ["Customer Name", "Phone", "Email", "Quantity", "Requirements"];
     const rows = filteredInquiries.map(iq => [
       `"${iq.name.replace(/"/g, '""')}"`,
-      iq.quantity,
+      iq.phone || "",
       iq.email,
+      iq.quantity,
       `"${iq.requirements.replace(/"/g, '""')}"`
     ]);
 
@@ -53,7 +56,7 @@ export default function InquiryTable({ initialInquiries }: { initialInquiries: I
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
     link.setAttribute("href", url);
-    link.setAttribute("download", `Tailoring_Turba_Inquiries_${format(new Date(), "yyyy-MM-dd")}.csv`);
+    link.setAttribute("download", `Tailoring_Turba_Inquiries_${startDate}_to_${endDate}.csv`);
     link.style.visibility = "hidden";
     document.body.appendChild(link);
     link.click();
@@ -127,7 +130,8 @@ export default function InquiryTable({ initialInquiries }: { initialInquiries: I
 
         <button 
           onClick={exportToCSV}
-          disabled={filteredInquiries.length === 0}
+          disabled={!startDate || !endDate || filteredInquiries.length === 0}
+          title={(!startDate || !endDate) ? "Please select a date range first" : ""}
           style={{ 
             display: "flex", 
             alignItems: "center", 
@@ -139,9 +143,9 @@ export default function InquiryTable({ initialInquiries }: { initialInquiries: I
             border: "none", 
             fontSize: "0.85rem", 
             fontWeight: 700, 
-            cursor: "pointer",
+            cursor: (!startDate || !endDate || filteredInquiries.length === 0) ? "not-allowed" : "pointer",
             transition: "opacity 0.2s",
-            opacity: filteredInquiries.length === 0 ? 0.5 : 1
+            opacity: (!startDate || !endDate || filteredInquiries.length === 0) ? 0.4 : 1
           }}
         >
           <Download size={18} />
@@ -174,6 +178,9 @@ export default function InquiryTable({ initialInquiries }: { initialInquiries: I
                     <div style={{ fontWeight: 600, color: "#1e293b" }}>{iq.name}</div>
                     <div style={{ fontSize: "0.85rem", color: "#64748b", display: "flex", alignItems: "center", gap: "4px", marginTop: "2px" }}>
                       <Mail size={12} /> {iq.email}
+                    </div>
+                    <div style={{ fontSize: "0.85rem", color: "#64748b", display: "flex", alignItems: "center", gap: "4px", marginTop: "2px", fontWeight: 600 }}>
+                      📞 {iq.phone}
                     </div>
                     {iq.companyName && (
                       <div style={{ fontSize: "0.85rem", color: "#64748b", display: "flex", alignItems: "center", gap: "4px", marginTop: "2px" }}>
