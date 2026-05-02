@@ -267,10 +267,36 @@
     flex-direction: row;
     overflow-x: auto;
     padding-bottom: 16px;
-    border-bottom: 1px solid var(--tth-beige-light);
+    gap: 12px;
+    border-bottom: none;
+    -webkit-overflow-scrolling: touch;
+    /* Allow scrolling past edges cleanly */
+    padding-left: 4px;
+    padding-right: 24px;
+  }
+  .sidebar::-webkit-scrollbar {
+    display: none; /* Hide scrollbar for cleaner look */
   }
   .filterBtn {
     white-space: nowrap;
+    padding: 8px 20px;
+    background: var(--tth-grey);
+    border: 1px solid var(--tth-beige-light);
+    border-radius: 50px;
+    font-size: 0.9rem;
+    color: var(--tth-text-muted);
+    transition: all 0.2s;
+  }
+  .filterBtn:hover {
+    color: var(--tth-black);
+  }
+  .filterActive {
+    background: var(--tth-black);
+    color: white;
+    border-color: var(--tth-black);
+  }
+  .filterActive::after {
+    display: none;
   }
 }
 
