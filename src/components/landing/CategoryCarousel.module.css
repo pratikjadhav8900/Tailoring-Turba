@@ -1,6 +1,7 @@
 .section {
   padding: 60px 0;
   background: var(--tth-white, #fafaf8);
+  overflow: hidden;
 }
 .header {
   display: flex;

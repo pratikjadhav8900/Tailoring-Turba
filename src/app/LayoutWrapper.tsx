@@ -17,7 +17,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
   const hideNavigation = isAuthPage || isAdminPage || isDashboardPage || isCustomizer;
 
   return (
-    <>
+    <div style={{ overflowX: "hidden", width: "100%", position: "relative" }}>
       {!hideNavigation && (
         <>
           <div style={{ position: "fixed", top: 0, left: 0, width: "100%", zIndex: 1001 }}>
@@ -34,6 +34,6 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
       {!hideNavigation && <Footer />}
       {!hideNavigation && <WhatsAppButton />}
       {!hideNavigation && <CompareTray />}
-    </>
+    </div>
   );
 }
