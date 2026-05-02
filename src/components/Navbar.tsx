@@ -62,37 +62,37 @@ export default function Navbar({ transparent = false }: { transparent?: boolean 
         {/* Center: Nav Links */}
         <div className={`${styles.leftLinks} ${mobileMenuOpen ? styles.mobileOpen : ""}`}>
           <div className={styles.dropdownContainer}>
-            <Link href="/products" className={styles.navLink}>
+            <Link href="/products" className={styles.navLink} onClick={() => setMobileMenuOpen(false)}>
               Products <ChevronDown size={14} />
             </Link>
             
             <div className={styles.dropdownMenu}>
               <div className={styles.dropdownGroup}>
                 <span className={styles.dropdownGroupTitle}>For Men</span>
-                <Link href="/products?category=Crewnecks" className={styles.dropdownItem}>Crewnecks</Link>
-                <Link href="/products?category=Hoodies" className={styles.dropdownItem}>Hoodies</Link>
-                <Link href="/products?category=Jackets" className={styles.dropdownItem}>Jackets</Link>
-                <Link href="/products?category=Polos" className={styles.dropdownItem}>Polos</Link>
+                <Link href="/products?category=Crewnecks" className={styles.dropdownItem} onClick={() => setMobileMenuOpen(false)}>Crewnecks</Link>
+                <Link href="/products?category=Hoodies" className={styles.dropdownItem} onClick={() => setMobileMenuOpen(false)}>Hoodies</Link>
+                <Link href="/products?category=Jackets" className={styles.dropdownItem} onClick={() => setMobileMenuOpen(false)}>Jackets</Link>
+                <Link href="/products?category=Polos" className={styles.dropdownItem} onClick={() => setMobileMenuOpen(false)}>Polos</Link>
               </div>
               <div className={styles.dropdownDivider} />
               <div className={styles.dropdownGroup}>
                 <span className={styles.dropdownGroupTitle}>For Women</span>
-                <Link href="/products?category=Crop Tops" className={styles.dropdownItem}>Crop Tops</Link>
-                <Link href="/products?category=Oversized" className={styles.dropdownItem}>Oversized</Link>
+                <Link href="/products?category=Crop Tops" className={styles.dropdownItem} onClick={() => setMobileMenuOpen(false)}>Crop Tops</Link>
+                <Link href="/products?category=Oversized" className={styles.dropdownItem} onClick={() => setMobileMenuOpen(false)}>Oversized</Link>
               </div>
               <div className={styles.dropdownDivider} />
               <div className={styles.dropdownGroup}>
                 <span className={styles.dropdownGroupTitle}>For Kids</span>
-                <Link href="/products?category=T-Shirts" className={styles.dropdownItem}>T-Shirts</Link>
-                <Link href="/products?category=Uniforms" className={styles.dropdownItem}>Uniforms</Link>
+                <Link href="/products?category=T-Shirts" className={styles.dropdownItem} onClick={() => setMobileMenuOpen(false)}>T-Shirts</Link>
+                <Link href="/products?category=Uniforms" className={styles.dropdownItem} onClick={() => setMobileMenuOpen(false)}>Uniforms</Link>
               </div>
               <div className={styles.dropdownDivider} />
-              <Link href="/products" className={styles.viewAll}>View All Products &rarr;</Link>
+              <Link href="/products" className={styles.viewAll} onClick={() => setMobileMenuOpen(false)}>View All Products &rarr;</Link>
             </div>
           </div>
           
-          <Link href="/about" className={styles.navLink}>Our Story</Link>
-          <Link href="/booking" className={styles.navLink}>Book a Visit</Link>
+          <Link href="/about" className={styles.navLink} onClick={() => setMobileMenuOpen(false)}>Our Story</Link>
+          <Link href="/booking" className={styles.navLink} onClick={() => setMobileMenuOpen(false)}>Book a Visit</Link>
         </div>
 
         {/* Right: Icons */}
