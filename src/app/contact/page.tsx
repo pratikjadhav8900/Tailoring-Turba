@@ -79,15 +79,15 @@ function ContactForm() {
           <div className={styles.contactDetails}>
             <div className={styles.contactItem}>
               <Mail size={14} strokeWidth={1.5} className={styles.contactIcon} />
-              <span className={styles.contactValue}>hello@tailoringturba.in</span>
+              <span className={styles.contactValue}>tailoringturba@gmail.com</span>
             </div>
             <div className={styles.contactItem}>
               <Phone size={14} strokeWidth={1.5} className={styles.contactIcon} />
-              <span className={styles.contactValue}>+91 98765 43210</span>
+              <span className={styles.contactValue}>07942669612</span>
             </div>
             <div className={styles.contactItem}>
               <MapPin size={14} strokeWidth={1.5} className={styles.contactIcon} />
-              <span className={styles.contactValue}>Mumbai, Maharashtra, India</span>
+              <span className={styles.contactValue}>321/1 Pandit Jawaharlal Nehru Marg Pune 411042, Sanjay Departments, Pune, Maharashtra 411042, IN</span>
             </div>
           </div>
         </div>

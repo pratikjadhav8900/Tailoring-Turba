@@ -60,7 +60,7 @@ export default function BookingPage() {
                   <div className={styles.detailIcon}><MapPin size={24} /></div>
                   <div>
                     <strong>Location</strong>
-                    <p>Tailoring Turba, Kothrud,<br />Pune - 411038, Maharashtra</p>
+                    <p>321/1 Pandit Jawaharlal Nehru Marg Pune 411042, Sanjay Departments,<br />Pune, Maharashtra 411042, IN</p>
                   </div>
                 </div>
                 <div className={styles.detail}>
@@ -74,7 +74,7 @@ export default function BookingPage() {
                   <div className={styles.detailIcon}><Phone size={24} /></div>
                   <div>
                     <strong>Direct Call</strong>
-                    <p>+91 99999 99999</p>
+                    <p>07942669612</p>
                   </div>
                 </div>
               </div>
