@@ -32,8 +32,8 @@ export default function CheckoutPage() {
 
   const calculateTotal = () => {
     return cart.reduce((total, item) => {
-      const priceMatch = item.price.match(/\d+/);
-      const numericPrice = priceMatch ? parseInt(priceMatch[0], 10) : 0;
+      const cleanPrice = item.price.replace(/[^\d.]/g, '');
+      const numericPrice = parseFloat(cleanPrice) || 0;
       return total + (numericPrice * item.quantity);
     }, 0);
   };
@@ -53,8 +53,8 @@ export default function CheckoutPage() {
     try {
       // Prepare items for API
       const orderItems = cart.map(item => {
-        const priceMatch = item.price.match(/\d+/);
-        const numericPrice = priceMatch ? parseInt(priceMatch[0], 10) : 0;
+        const cleanPrice = item.price.replace(/[^\d.]/g, '');
+        const numericPrice = parseFloat(cleanPrice) || 0;
         return {
           productId: item.productId,
           quantity: item.quantity,

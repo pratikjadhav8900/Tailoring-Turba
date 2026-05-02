@@ -28,8 +28,8 @@ export default function CartPage() {
   
   // Logic to calculate subtotal, customization fees (per item), and GST
   const subtotal = cart.reduce((total, item) => {
-    const priceMatch = item.price.match(/[\d.]+/);
-    const numericPrice = priceMatch ? parseFloat(priceMatch[0]) : 0;
+    const cleanPrice = item.price.replace(/[^\d.]/g, '');
+    const numericPrice = parseFloat(cleanPrice) || 0;
     return total + (numericPrice * item.quantity);
   }, 0);
 
