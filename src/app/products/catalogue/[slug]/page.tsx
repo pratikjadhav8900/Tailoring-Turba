@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import Navbar from "@/components/Navbar";
 import styles from "./page.module.css";
 import { useCart } from "@/context/CartContext";
 import Skeleton from "@/components/Skeleton";
@@ -47,7 +46,6 @@ export default function CategoryDetailPage({ params }: { params: { slug: string 
 
   if (isLoading) return (
     <div className={styles.pageWrapper}>
-      <Navbar />
       <main className={styles.main}>
         <div className={styles.heroHeader} style={{ background: '#f8fafc' }}>
           <div className={styles.heroContent}>
@@ -88,7 +86,6 @@ export default function CategoryDetailPage({ params }: { params: { slug: string 
 
   return (
     <div className={styles.pageWrapper} suppressHydrationWarning>
-      <Navbar />
       <main className={styles.main}>
 
         {/* Hero Header — full bleed, matches catalogue */}
