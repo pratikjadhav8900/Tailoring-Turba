@@ -168,17 +168,17 @@ function ContactForm() {
                     />
                   </div>
                 </div>
-                  <div className={styles.group}>
-                    <label className={styles.label}>Quantity (Min. 50)</label>
-                    <input
-                      className={styles.input}
-                      type="number"
-                      min="50"
-                      value={formData.quantity}
-                      onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                      placeholder="50"
-                    />
-                  </div>
+
+                <div className={styles.group}>
+                  <label className={styles.label}>Quantity (Min. 50)</label>
+                  <input
+                    className={styles.input}
+                    type="number"
+                    min="50"
+                    value={formData.quantity}
+                    onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                    placeholder="50"
+                  />
                 </div>
 
                 <div className={styles.group}>
