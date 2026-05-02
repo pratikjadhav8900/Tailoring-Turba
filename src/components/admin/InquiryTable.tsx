@@ -40,16 +40,12 @@ export default function InquiryTable({ initialInquiries }: { initialInquiries: I
   });
 
   const exportToCSV = () => {
-    const headers = ["ID", "Name", "Email", "Company", "Quantity", "Requirements", "Status", "Date"];
+    const headers = ["Customer Name", "Quantity", "Email", "Requirements"];
     const rows = filteredInquiries.map(iq => [
-      iq.id,
-      iq.name,
-      iq.email,
-      iq.companyName || "N/A",
+      `"${iq.name.replace(/"/g, '""')}"`,
       iq.quantity,
-      `"${iq.requirements.replace(/"/g, '""')}"`,
-      iq.status,
-      format(new Date(iq.createdAt), "yyyy-MM-dd HH:mm")
+      iq.email,
+      `"${iq.requirements.replace(/"/g, '""')}"`
     ]);
 
     const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
