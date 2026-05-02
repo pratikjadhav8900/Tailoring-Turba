@@ -14,11 +14,18 @@ interface Props {
   onChange?: (state: CustomizerState) => void;
   initialState?: CustomizerState | null;
   isPreviewMode?: boolean;
+  activeSide?: Side;
+  onSideChange?: (side: Side) => void;
+  mockupId?: string;
 }
 
-export default function PoloCustomizer({ onChange, initialState, isPreviewMode }: Props) {
+export default function PoloCustomizer({ onChange, initialState, isPreviewMode, activeSide: propSide, onSideChange, mockupId = "customizer-mockup-area" }: Props) {
   const [garmentType] = useState<GarmentKey>((initialState?.garmentType as GarmentKey) || "round-neck");
-  const [activeSide, setActiveSide] = useState<Side>("front");
+  const [internalSide, setInternalSide] = useState<Side>("front");
+  
+  const activeSide = propSide || internalSide;
+  const setActiveSide = onSideChange || setInternalSide;
+
   const [bodyColor, setBodyColor] = useState(initialState?.bodyColor || "#111111");
   const [activeTool, setActiveTool] = useState<ActiveTool>("Text");
   const [frontElements, setFrontElements] = useState<DesignElement[]>(initialState?.frontElements || []);
@@ -137,23 +144,44 @@ export default function PoloCustomizer({ onChange, initialState, isPreviewMode }
     setActiveElementId(id);
   };
 
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const url = URL.createObjectURL(file);
-    const newEl = {
-      id: Date.now().toString(), type: "logo" as const,
-      x: 200, y: 200, width: 150, height: 150,
-      value: url, color: "",
-    };
-    // Use activeSideRef to avoid stale closure when switching sides
-    if (activeSideRef.current === "front") {
-      setFrontElements(prev => [...prev, newEl]);
-    } else {
-      setBackElements(prev => [...prev, newEl]);
+    
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) throw new Error("Upload failed");
+      const data = await res.json();
+      
+      const newEl = {
+        id: Date.now().toString(), 
+        type: "logo" as const,
+        x: 200, y: 200, width: 150, height: 150,
+        value: data.url, 
+        color: "",
+      };
+
+      if (activeSideRef.current === "front") {
+        setFrontElements(prev => [...prev, newEl]);
+      } else {
+        setBackElements(prev => [...prev, newEl]);
+      }
+    } catch (err: any) {
+      console.error("Logo upload failed:", err);
+      const errorMsg = err.message || "Failed to upload logo.";
+      alert(`${errorMsg} Please check your Cloudinary credentials.`);
+    } finally {
+      setIsUploading(false);
+      e.target.value = "";
     }
-    // Reset file input so the same image can be uploaded again
-    e.target.value = "";
   };
 
   const removeElement = (id: string, e?: React.SyntheticEvent) => {
@@ -230,8 +258,8 @@ export default function PoloCustomizer({ onChange, initialState, isPreviewMode }
             {activeTool === "Uploads" && (
               <>
                 <div className={styles.contextHint}>Upload logos, SVGs, or high-res images.</div>
-                <button className={styles.addAssetBtn} onClick={() => fileInputRef.current?.click()}>
-                  <UploadCloud size={18} /> Upload Image
+                <button className={styles.addAssetBtn} onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
+                  {isUploading ? "Uploading..." : <><UploadCloud size={18} /> Upload Image</>}
                 </button>
                 <input
                   ref={fileInputRef}
@@ -289,7 +317,7 @@ export default function PoloCustomizer({ onChange, initialState, isPreviewMode }
           </button>
         </div>
 
-        <div className={styles.garmentContainer}>
+        <div id={mockupId} className={styles.garmentContainer}>
           <Image
             src={currentImg}
             alt="Garment"
@@ -324,6 +352,17 @@ export default function PoloCustomizer({ onChange, initialState, isPreviewMode }
                     <option value="Inter">Canva Sans</option>
                     <option value="Roboto">Roboto</option>
                     <option value="Oswald">Oswald</option>
+                    <option value="Montserrat">Montserrat</option>
+                    <option value="Poppins">Poppins</option>
+                    <option value="Bebas Neue">Bebas Neue</option>
+                    <option value="Playfair Display">Playfair Display</option>
+                    <option value="Pacifico">Pacifico</option>
+                    <option value="Lora">Lora</option>
+                    <option value="Anton">Anton</option>
+                    <option value="Caveat">Caveat</option>
+                    <option value="Righteous">Righteous</option>
+                    <option value="Cormorant Garamond">Garamond</option>
+                    <option value="Outfit">Outfit</option>
                   </select>
 
                   <div className={styles.toolGroup} style={{ background: 'transparent' }}>

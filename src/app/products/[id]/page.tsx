@@ -1,9 +1,60 @@
+import { Metadata } from "next";
 import { prisma, withRetry } from "@/lib/prisma";
 import { allProducts } from "@/lib/products-data";
 import { notFound } from "next/navigation";
 import ProductDetailsClient from "./ProductDetailsClient";
 
 export const revalidate = 60;
+
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+  try {
+    const product = await withRetry(() => prisma.product.findUnique({
+      where: { id: params.id },
+      include: { category: true }
+    }));
+
+    if (!product) {
+      const staticProduct = allProducts.find(p => String(p.id) === params.id);
+      if (staticProduct) {
+        const title = `${staticProduct.name} | Bulk ${staticProduct.category} Manufacturer India | Tailoring Turba`;
+        return {
+          title,
+          description: staticProduct.description || `Premium quality ${staticProduct.name}. Manufacturer and wholesaler in India.`,
+          openGraph: {
+            images: [staticProduct.image],
+          }
+        };
+      }
+      return { title: "Product Not Found | Tailoring Turba" };
+    }
+
+    const categoryName = product.category?.name || "Custom Apparel";
+    const title = `${product.name} | Premium ${categoryName} Bulk Manufacturer India | Tailoring Turba`;
+    const description = product.description 
+      ? (product.description.length > 160 ? product.description.substring(0, 157) + "..." : product.description)
+      : `High-end manufacturing of ${product.name} in India. Specialized in B2B bulk orders, uniform supplies, and bespoke ${categoryName} for corporate clients.`;
+
+    return {
+      title,
+      description,
+      openGraph: {
+        title,
+        description,
+        images: product.images?.[0] ? [{ url: product.images[0] }] : [],
+        type: 'article',
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title,
+        description,
+        images: product.images?.[0] ? [product.images[0]] : [],
+      },
+      keywords: [`bulk ${categoryName}`, `${product.name} manufacturer`, "India textile export", "custom uniforms India", "corporate apparel wholesale"],
+    };
+  } catch (err) {
+    return { title: "Product Details | Tailoring Turba" };
+  }
+}
 
 export default async function ProductDetailsPage({ params }: { params: { id: string } }) {
   let formattedProduct;

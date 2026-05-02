@@ -9,6 +9,7 @@ import Navbar from "@/components/Navbar";
 import AuthModal from "@/components/auth/AuthModal";
 import { useCart } from "@/context/CartContext";
 import styles from "./page.module.css";
+import EmptyState from "@/components/EmptyState";
 
 export default function CartPage() {
   const { cart, removeFromCart, cartCount } = useCart();
@@ -23,7 +24,7 @@ export default function CartPage() {
 
   if (!mounted) return null;
 
-  const isWholesale = cartCount > 10;
+  const isWholesale = cartCount >= 50;
   
   // Logic to calculate subtotal, customization fees (per item), and GST
   const subtotal = cart.reduce((total, item) => {
@@ -54,23 +55,24 @@ export default function CartPage() {
   return (
     <div className={styles.pageWrapper}>
       <main className={styles.main}>
-        <div className={styles.cartHeader}>
-          <h1 className={styles.title}>Your Selection</h1>
-          <div className={styles.guestIndicator}>
-            <ShoppingBag size={14} />
-            <span>{cartCount} Items</span>
+        {cart.length > 0 && (
+          <div className={styles.cartHeader}>
+            <h1 className={styles.title}>Your Selection</h1>
+            <div className={styles.guestIndicator}>
+              <ShoppingBag size={14} />
+              <span>{cartCount} Items</span>
+            </div>
           </div>
-        </div>
+        )}
 
         {cart.length === 0 ? (
-          <div className={styles.emptyCart}>
-            <ShoppingBag size={48} color="#e5e2da" style={{ marginBottom: 24 }} />
-            <h2>Your cart is empty</h2>
-            <p>Select from our premium catalog to begin your journey.</p>
-            <Link href="/products" className={styles.continueBtn}>
-              Explore Collection
-            </Link>
-          </div>
+          <EmptyState 
+            illustration="/illustrations/empty_cart.png"
+            title="Your selection is empty"
+            description="Explore our curated collections of premium corporate apparel and start building your custom range today."
+            ctaText="Explore Collection"
+            ctaHref="/products"
+          />
         ) : (
           <div className={styles.cartLayout}>
             <div className={styles.cartItems}>
@@ -151,8 +153,8 @@ export default function CartPage() {
                 <AlertCircle size={16} style={{ flexShrink: 0, marginTop: 2, color: 'var(--tth-olive-dark)' }} />
                 <span>
                   {isWholesale 
-                    ? "As a B2B order (10+ units), this qualifies for wholesale pricing. Our team will contact you with a final pro-forma invoice."
-                    : "Standard retail pricing applies. Complete your order to proceed to payment."
+                    ? "As a B2B order (50+ units), this qualifies for bulk pricing. Our team will contact you with a final pro-forma invoice."
+                    : "Standard pricing applies. Complete your order to proceed to payment."
                   }
                 </span>
               </div>

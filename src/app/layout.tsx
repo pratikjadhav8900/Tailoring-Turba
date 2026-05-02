@@ -4,9 +4,19 @@ import { Providers } from "./providers";
 import LayoutWrapper from "./LayoutWrapper";
 
 export const metadata: Metadata = {
-  title: "Tailoring Turba | Custom B2B Apparel manufacturing",
+  title: {
+    default: "Tailoring Turba | Premium Bulk Apparel Manufacturer India",
+    template: "%s | Tailoring Turba"
+  },
   description:
-    "Design and order premium custom polo shirts, t-shirts, and teamwear online directly from Tailoring Turba manufacturing hub.",
+    "Tailoring Turba is a leading B2B apparel manufacturer in India. Design and order custom polo shirts, t-shirts, and corporate uniforms at wholesale prices. High-quality bulk manufacturing for global exports.",
+  keywords: ["bulk apparel manufacturer India", "custom uniforms manufacturer", "corporate t-shirt printing India", "premium polo shirt wholesaler", "Tailoring Turba manufacturing"],
+  openGraph: {
+    type: "website",
+    locale: "en_IN",
+    url: "https://tailoringturba.com",
+    siteName: "Tailoring Turba",
+  },
   icons: {
     icon: "/icon.svg",
     shortcut: "/icon.svg",

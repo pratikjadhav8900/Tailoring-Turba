@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import styles from "./page.module.css";
+import Skeleton from "@/components/Skeleton";
 
 type CatalogueCategory = {
   id: string;
@@ -66,9 +67,25 @@ export default function CataloguePage() {
             <p className={styles.errorSub}>The catalogue database may still be setting up. Please try again in a moment.</p>
           </div>
         ) : isLoading ? (
-          <div className={styles.stateBox}>
-            <div className={styles.loadingBar}></div>
-            <p className={styles.loadingText}>Loading collections…</p>
+          <div className={styles.mainContent}>
+            <div className={styles.grid}>
+              {[1, 2, 3, 4, 5, 6].map(i => (
+                <div key={i} className={styles.card} style={{ pointerEvents: 'none' }}>
+                  <div className={styles.imageWrapper}>
+                    <Skeleton height="100%" borderRadius="0" />
+                  </div>
+                  <div className={styles.content}>
+                    <Skeleton width="40%" height="0.7rem" style={{ marginBottom: "12px" }} />
+                    <Skeleton width="80%" height="1.5rem" style={{ marginBottom: "12px" }} />
+                    <Skeleton width="50%" height="0.9rem" style={{ marginBottom: "20px" }} />
+                    <div className={styles.btnGroup}>
+                      <Skeleton width="100%" height="2.5rem" borderRadius="8px" />
+                      <Skeleton width="100%" height="2.5rem" borderRadius="8px" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         ) : (
           <div className={styles.mainContent}>

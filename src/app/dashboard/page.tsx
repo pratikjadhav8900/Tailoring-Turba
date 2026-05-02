@@ -12,6 +12,7 @@ import {
   ClipboardList,
   User
 } from "lucide-react";
+import EmptyState from "@/components/EmptyState";
 
 import Image from "next/image";
 
@@ -72,71 +73,82 @@ export default async function DashboardPage() {
           ))}
         </div>
 
-      <div className={styles.grid2}>
-        {/* Recent Orders */}
-        <div className={styles.block}>
-          <div className={styles.blockHeader}>
-            <h2>Recent Orders</h2>
-            <Link href="/dashboard/orders" className={styles.seeAll}>
-              View Ledger <ArrowRight size={16} />
-            </Link>
+        {orders.length === 0 && bookings.length === 0 && designs.length === 0 ? (
+          <div style={{ marginTop: '40px' }}>
+            <EmptyState 
+              illustration="/illustrations/empty_dashboard.png"
+              title="Welcome to your Studio"
+              description="Your activity ledger is currently clean. Start by exploring our products or booking a showroom visit."
+              ctaText="Start Designing"
+              ctaHref="/products"
+            />
           </div>
-          {orders.length === 0 ? (
-            <div className={styles.empty}>
-              <Package size={48} strokeWidth={1} style={{ opacity: 0.5, marginBottom: '8px' }} />
-              <div>No orders yet. <Link href="/customizer">Start designing your first collection.</Link></div>
-            </div>
-          ) : (
-            <div className={styles.orderList}>
-              {orders.map(o => (
-                <div key={o.id} className={styles.orderRow}>
-                  <div className={styles.orderInfo}>
-                    <div className={styles.orderId}>#{o.id.slice(-8).toUpperCase()}</div>
-                    <div className={styles.orderMeta}>{o.items.length} item(s)</div>
-                  </div>
-                  <div className={styles.orderValue}>
-                    <div className={styles.orderAmount}>₹{o.totalAmount.toLocaleString()}</div>
-                    <div className={`${styles.badge} ${styles[`badge-${o.status.toLowerCase()}`]}`}>
-                      {o.status}
+        ) : (
+          <div className={styles.grid2}>
+            {/* Recent Orders */}
+            <div className={styles.block}>
+              <div className={styles.blockHeader}>
+                <h2>Recent Orders</h2>
+                <Link href="/dashboard/orders" className={styles.seeAll}>
+                  View Ledger <ArrowRight size={16} />
+                </Link>
+              </div>
+              {orders.length === 0 ? (
+                <div className={styles.empty}>
+                  <Package size={32} strokeWidth={1} style={{ opacity: 0.5, marginBottom: '8px' }} />
+                  <div>No orders yet.</div>
+                </div>
+              ) : (
+                <div className={styles.orderList}>
+                  {orders.map(o => (
+                    <div key={o.id} className={styles.orderRow}>
+                      <div className={styles.orderInfo}>
+                        <div className={styles.orderId}>#{o.id.slice(-8).toUpperCase()}</div>
+                        <div className={styles.orderMeta}>{o.items.length} item(s)</div>
+                      </div>
+                      <div className={styles.orderValue}>
+                        <div className={styles.orderAmount}>₹{o.totalAmount.toLocaleString()}</div>
+                        <div className={`${styles.badge} ${styles[`badge-${o.status.toLowerCase()}`]}`}>
+                          {o.status}
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
-          )}
-        </div>
 
-        {/* Upcoming Bookings */}
-        <div className={styles.block}>
-          <div className={styles.blockHeader}>
-            <h2>Pune Appointments</h2>
-            <Link href="/booking" className={styles.seeAll}>
-              Book Showroom <ArrowRight size={16} />
-            </Link>
+            {/* Upcoming Bookings */}
+            <div className={styles.block}>
+              <div className={styles.blockHeader}>
+                <h2>Pune Appointments</h2>
+                <Link href="/booking" className={styles.seeAll}>
+                  Book Showroom <ArrowRight size={16} />
+                </Link>
+              </div>
+              {bookings.length === 0 ? (
+                <div className={styles.empty}>
+                  <CalendarCheck size={32} strokeWidth={1} style={{ opacity: 0.5, marginBottom: '8px' }} />
+                  <div>No upcoming visits.</div>
+                </div>
+              ) : (
+                <div className={styles.bookingList}>
+                  {bookings.map(b => (
+                    <div key={b.id} className={styles.bookingRow}>
+                      <div className={styles.bookingDate}>
+                        {new Date(b.date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                      </div>
+                      <div className={styles.bookingSlot}>{b.timeSlot}</div>
+                      <div className={`${styles.badge} ${styles[`badge-${b.status.toLowerCase()}`]}`}>
+                        {b.status}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-          {bookings.length === 0 ? (
-            <div className={styles.empty}>
-              <CalendarCheck size={48} strokeWidth={1} style={{ opacity: 0.5, marginBottom: '8px' }} />
-              <div>No upcoming visits. <Link href="/booking">Schedule a showroom appointment.</Link></div>
-            </div>
-          ) : (
-            <div className={styles.bookingList}>
-              {bookings.map(b => (
-                <div key={b.id} className={styles.bookingRow}>
-                  <div className={styles.bookingDate}>
-                    {new Date(b.date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-                  </div>
-                  <div className={styles.bookingSlot}>{b.timeSlot}</div>
-                  <div className={`${styles.badge} ${styles[`badge-${b.status.toLowerCase()}`]}`}>
-                    {b.status}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
+        )}
       </div>
     </div>
   );

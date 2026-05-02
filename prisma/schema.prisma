@@ -62,12 +62,12 @@ model Product {
   minOrderQuantity Int         @default(1)
   categoryId       String
   images           String[]
-  type             String?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
   badge            String?
   colors           Int?
   features         String[]
-  createdAt        DateTime    @default(now())
-  updatedAt        DateTime    @updatedAt
+  type             String?
   designs          Design[]
   orderItems       OrderItem[]
   category         Category    @relation(fields: [categoryId], references: [id])
@@ -77,43 +77,48 @@ model Design {
   id              String      @id @default(cuid())
   userId          String
   productId       String?
-  sourceProductId String?
   name            String
   imageUrl        String?
   rawUrl          String?
   stateJson       String?
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
+  sourceProductId String?
   product         Product?    @relation(fields: [productId], references: [id])
   user            User        @relation(fields: [userId], references: [id])
   orderItems      OrderItem[]
 }
 
 model Order {
-  id          String      @id @default(cuid())
-  userId      String
-  totalAmount Float
-  status      OrderStatus @default(PENDING)
-  paymentId   String?
-  createdAt   DateTime    @default(now())
+  id                String      @id @default(cuid())
+  userId            String
+  totalAmount       Float
+  status            OrderStatus @default(PENDING)
+  paymentId         String?
+  createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
+  shippingAddressId String?
+  orderNumber       Int         @unique @default(autoincrement())
+  shippingAddress   Address?    @relation(fields: [shippingAddressId], references: [id])
   user              User        @relation(fields: [userId], references: [id])
   items             OrderItem[]
   orderSheet        OrderSheet?
-  shippingAddressId String?
-  shippingAddress   Address?    @relation(fields: [shippingAddressId], references: [id])
 }
 
 model OrderItem {
-  id        String  @id @default(cuid())
-  orderId   String
-  productId String
-  quantity  Int
-  price     Float
-  designId  String?
-  design    Design? @relation(fields: [designId], references: [id])
-  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product   Product @relation(fields: [productId], references: [id])
+  id              String   @id @default(cuid())
+  orderId         String
+  productId       String
+  quantity        Int
+  price           Float
+  designId        String?
+  customStateJson String?
+  printFiles      String[]
+  mockupUrl       String?
+  mockupUrlBack   String?
+  design          Design?  @relation(fields: [designId], references: [id])
+  order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product         Product  @relation(fields: [productId], references: [id])
 }
 
 model OrderSheet {
@@ -125,17 +130,17 @@ model OrderSheet {
 }
 
 model Booking {
-  id          String        @id @default(cuid())
-  userId      String?
-  guestName   String?
-  guestEmail  String?
-  guestPhone  String?
-  date        DateTime
-  timeSlot    String
-  status      BookingStatus @default(REQUESTED)
-  notes       String?
-  createdAt   DateTime      @default(now())
-  user        User?         @relation(fields: [userId], references: [id])
+  id         String        @id @default(cuid())
+  userId     String?
+  date       DateTime
+  timeSlot   String
+  status     BookingStatus @default(REQUESTED)
+  notes      String?
+  createdAt  DateTime      @default(now())
+  guestEmail String?
+  guestName  String?
+  guestPhone String?
+  user       User?         @relation(fields: [userId], references: [id])
 }
 
 model CatalogueCategory {
@@ -166,7 +171,7 @@ model CatalogueProduct {
 }
 
 model Address {
-  id         String   @id
+  id         String   @id @default(cuid())
   userId     String
   name       String
   street     String
@@ -179,6 +184,27 @@ model Address {
   updatedAt  DateTime
   User       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   orders     Order[]
+}
+
+model Inquiry {
+  id           String        @id @default(cuid())
+  name         String
+  email        String
+  companyName  String?
+  quantity     Int
+  requirements String
+  status       InquiryStatus @default(NEW)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model PasswordResetToken {
+  id      String   @id @default(cuid())
+  email   String
+  otp     String   @unique
+  expires DateTime
+
+  @@unique([email, otp])
 }
 
 enum Role {
@@ -203,18 +229,6 @@ enum BookingStatus {
   COMPLETED
 }
 
-model Inquiry {
-  id           String        @id @default(cuid())
-  name         String
-  email        String
-  companyName  String?
-  quantity     Int
-  requirements String
-  status       InquiryStatus @default(NEW)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-}
-
 enum InquiryStatus {
   NEW
   CONTACTED
@@ -222,13 +236,4 @@ enum InquiryStatus {
   SAMPLE_SENT
   CONVERTED
   CLOSED
-}
-
-model PasswordResetToken {
-  id      String   @id @default(cuid())
-  email   String
-  otp     String   @unique
-  expires DateTime
-
-  @@unique([email, otp])
 }

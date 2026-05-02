@@ -14,21 +14,48 @@ function CustomizerContent() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"Design" | "Options" | "Review">("Design");
   const [customizerState, setCustomizerState] = useState<CustomizerState | null>(null);
+  const [activeSide, setActiveSide] = useState<"front" | "back">("front");
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
-  const [productionFiles, setProductionFiles] = useState<{name: string, size: number}[]>([]);
+  const [productionFiles, setProductionFiles] = useState<{name: string, size: number, url: string}[]>([]);
   const [toast, setToast] = useState<{message: string, visible: boolean}>({message: "", visible: false});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { addToCart } = useCart();
   const [isSaving, setIsSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  // Pre-calculate selected product from URL to avoid race conditions
-  const selectedProduct = useMemo(() => {
-    const productId = searchParams.get('id') || searchParams.get('productId');
-    if (!productId) return null;
-    return allProducts.find(p => String(p.id) === String(productId)) || null;
-  }, [searchParams]);
+  const [dbProduct, setDbProduct] = useState<any>(null);
+  const [isLoadingProduct, setIsLoadingProduct] = useState(true);
+
+  const productId = searchParams.get('id') || searchParams.get('productId');
+
+  useEffect(() => {
+    if (!productId) {
+      setIsLoadingProduct(false);
+      return;
+    }
+
+    const fetchProduct = async () => {
+      try {
+        const res = await fetch(`/api/products/${productId}`);
+        if (!res.ok) throw new Error("Product not found");
+        const data = await res.json();
+        setDbProduct({
+          ...data,
+          price: `₹${data.basePrice}` // Format for consistency
+        });
+      } catch (err) {
+        console.error("Failed to fetch product for customizer:", err);
+        // Fallback to static data if available
+        const staticMatch = allProducts.find(p => String(p.id) === String(productId));
+        if (staticMatch) setDbProduct(staticMatch);
+      } finally {
+        setIsLoadingProduct(false);
+      }
+    };
+
+    fetchProduct();
+  }, [productId]);
 
   // Map product category to garment type
   const categoryToGarment = (category: string): string => {
@@ -43,14 +70,14 @@ function CustomizerContent() {
       'Uniforms': 'polo',
       'Formal Wear': 'polo',
     };
-    return map[category] || 'round-neck';
+    return map[category || ''] || 'round-neck';
   };
 
   useEffect(() => {
     const garment = searchParams.get('garment');
     const fabricId = searchParams.get('fabricId');
-    const derivedGarment = selectedProduct 
-      ? categoryToGarment(selectedProduct.category) 
+    const derivedGarment = dbProduct 
+      ? categoryToGarment(dbProduct.category?.name || dbProduct.category) 
       : (garment || 'round-neck');
     
     // Only set initial state once
@@ -63,11 +90,11 @@ function CustomizerContent() {
         fabricId: fabricId || undefined,
         sizes: { S: 0, M: 0, L: 0, XL: 0, XXL: 0 }
       });
-    } else if (selectedProduct && customizerState.garmentType !== derivedGarment) {
+    } else if (dbProduct && customizerState.garmentType !== derivedGarment) {
       // Update garment type if it changes from product selection
       setCustomizerState(prev => prev ? ({ ...prev, garmentType: derivedGarment }) : null);
     }
-  }, [searchParams, selectedProduct]);
+  }, [searchParams, dbProduct]);
 
   useEffect(() => {
     // Mark as unsaved whenever customizerState changes after initial load
@@ -94,7 +121,20 @@ function CustomizerContent() {
     setTimeout(() => setToast(prev => ({ ...prev, visible: false })), 3000);
   };
 
-  const handleNext = () => {
+  const [isUploadingAssets, setIsUploadingAssets] = useState(false);
+
+  const uploadFile = async (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      body: formData,
+    });
+    if (!res.ok) throw new Error("Upload failed");
+    return await res.json();
+  };
+
+  const handleNext = async () => {
     if (activeTab === "Design") {
       setActiveTab("Options");
       setIsPreviewMode(false);
@@ -106,31 +146,86 @@ function CustomizerContent() {
       setActiveTab("Review");
       setIsPreviewMode(false);
     } else {
+      if (isUploadingAssets) {
+        showToast("Please wait for your assets to finish uploading.");
+        return;
+      }
       if (!customizerState || totalQuantity === 0) {
         showToast("Please add at least one garment size to proceed.");
         return;
       }
-      // Just send the base price to the cart. 
-      // The cart will handle the customization fee and GST for a cleaner breakdown.
-      const priceMatch = selectedProduct?.price.match(/\d+/);
-      const basePrice = priceMatch ? priceMatch[0] : "85";
+      
+      setIsSaving(true);
+      try {
+        // Capture Mockup
+        let mockupUrl = "";
+        let mockupUrlBack = "";
+        
+        try {
+          const html2canvas = (await import("html2canvas")).default;
+          
+          const captureId = async (id: string, fileName: string) => {
+            const element = document.getElementById(id);
+            if (!element) return "";
+            
+            // Ensure any images in the mockup area are loaded
+            const images = element.getElementsByTagName("img");
+            await Promise.all(Array.from(images).map(img => {
+              if (img.complete) return Promise.resolve();
+              return new Promise(resolve => { img.onload = resolve; img.onerror = resolve; });
+            }));
 
-      // Add to cart
-      addToCart({
-        id: `custom-${Date.now()}`,
-        code: "CUSTOM-DESIGN",
-        name: selectedProduct ? `Custom ${selectedProduct.name}` : `Custom ${customizerState.garmentType.replace(/-/g, ' ')}`,
-        price: basePrice, 
-        quantity: totalQuantity,
-        image: selectedProduct?.image,
-        customDesign: customizerState,
-        uploadedAssets: productionFiles.map(f => f.name),
-      });
-      router.push('/cart');
+            const canvas = await html2canvas(element, {
+              useCORS: true,
+              backgroundColor: null,
+              scale: 2,
+              logging: false,
+              allowTaint: true
+            });
+            const blob = await new Promise<Blob>((resolve) => canvas.toBlob(b => resolve(b!), "image/png"));
+            const mockupFile = new File([blob], fileName, { type: "image/png" });
+            const uploadRes = await uploadFile(mockupFile);
+            return uploadRes.url;
+          };
+
+          // Capture front from review preview
+          mockupUrl = await captureId("review-mockup-front", "mockup_front.png");
+          
+          // Capture back from review preview if it has elements
+          if (customizerState.backElements.length > 0) {
+            mockupUrlBack = await captureId("review-mockup-back", "mockup_back.png");
+          }
+
+        } catch (err) {
+          console.error("Failed to capture mockup:", err);
+        }
+
+        const priceMatch = dbProduct?.price?.match(/\d+/);
+        const basePrice = priceMatch ? priceMatch[0] : (dbProduct?.basePrice?.toString() || "85");
+
+        // Add to cart
+        addToCart({
+          id: `custom-${Date.now()}`,
+          productId: dbProduct?.id || "",
+          code: "CUSTOM-DESIGN",
+          name: dbProduct ? `Custom ${dbProduct.name}` : `Custom ${customizerState.garmentType.replace(/-/g, ' ')}`,
+          price: basePrice, 
+          quantity: totalQuantity,
+          image: mockupUrl || dbProduct?.images?.[0] || dbProduct?.image,
+          mockupUrlBack: mockupUrlBack, // Save the back mockup
+          customDesign: customizerState,
+          uploadedAssets: productionFiles.map(f => f.url),
+        });
+        router.push('/cart');
+      } catch (err) {
+        showToast("Failed to process order assets. Please try again.");
+      } finally {
+        setIsSaving(false);
+      }
     }
   };
 
-  const nextText = activeTab === "Design" ? "Next: Options" : activeTab === "Options" ? "Next: Review" : "Add to Cart";
+  const nextText = activeTab === "Design" ? "Next: Options" : activeTab === "Options" ? "Next: Review" : (isSaving || isUploadingAssets) ? "Processing..." : "Add to Cart";
 
   const handleSizeChange = (size: string, qty: number) => {
     if (!customizerState) return;
@@ -145,13 +240,25 @@ function CustomizerContent() {
 
   const MOQ = 10;
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      const newFiles = Array.from(e.target.files).map(f => ({
-        name: f.name,
-        size: f.size
-      }));
-      setProductionFiles(prev => [...prev, ...newFiles]);
+      const files = Array.from(e.target.files);
+      setIsUploadingAssets(true);
+      showToast("Uploading production assets...");
+      
+      for (const file of files) {
+        try {
+          const res = await uploadFile(file);
+          setProductionFiles(prev => [...prev, {
+            name: file.name,
+            size: file.size,
+            url: res.url
+          }]);
+        } catch (err) {
+          showToast(`Failed to upload ${file.name}`);
+        }
+      }
+      setIsUploadingAssets(false);
     }
   };
 
@@ -181,7 +288,7 @@ function CustomizerContent() {
         body: JSON.stringify({
           name: `Custom ${customizerState.garmentType.replace(/-/g, ' ')}`,
           stateJson: customizerState,
-          sourceProductId: productId || null,
+          sourceProductId: dbProduct?.id || null,
         })
       });
 
@@ -205,19 +312,19 @@ function CustomizerContent() {
           <button 
             className={styles.exitBtn} 
             onClick={() => {
-              const dest = selectedProduct ? `/products/${selectedProduct.id}` : '/';
+              const dest = dbProduct ? `/products/${dbProduct.id}` : '/';
               window.location.href = dest;
             }}
           >
-            <X size={18} /> {selectedProduct ? 'Back to Product' : 'Exit'}
+            <X size={18} /> {dbProduct ? 'Back to Product' : 'Exit'}
           </button>
           <div className={styles.productName}>
-            {selectedProduct ? selectedProduct.name : 'Custom Design'}
+            {dbProduct ? dbProduct.name : 'Custom Design'}
           </div>
-          {selectedProduct && (
+          {dbProduct && (
             <div style={{ fontSize: '0.75rem', color: '#888', fontFamily: 'var(--font-sans)', background: '#f5f5f5', padding: '4px 10px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--tth-olive-dark)', display: 'inline-block' }} />
-              {selectedProduct.type}
+              {dbProduct.type || dbProduct.category?.name}
             </div>
           )}
           <button 
@@ -315,6 +422,8 @@ function CustomizerContent() {
             initialState={customizerState}
             onChange={(s) => setCustomizerState({ ...customizerState, ...s } as CustomizerState)} 
             isPreviewMode={isPreviewMode}
+            activeSide={activeSide}
+            onSideChange={(s) => setActiveSide(s as "front" | "back")}
           />
         )}
         
@@ -411,26 +520,40 @@ function CustomizerContent() {
         {activeTab === "Review" && (
           <div className={styles.tabContent} style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: '40px', padding: '40px', maxWidth: '1400px', margin: '0 auto', height: '100%' }}>
             
-            <div style={{ background: '#F9FAFB', borderRadius: '12px', overflow: 'hidden', border: '1px solid #E5E7EB', position: 'relative' }}>
-              <PoloCustomizer 
-                initialState={customizerState}
-                isPreviewMode={true}
-              />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div style={{ background: '#F9FAFB', borderRadius: '12px', overflow: 'hidden', border: '1px solid #E5E7EB', position: 'relative', flex: 1 }}>
+                <div style={{ padding: '12px', fontSize: '10px', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em', borderBottom: '1px solid #eee' }}>Front View</div>
+                <PoloCustomizer 
+                  initialState={customizerState}
+                  isPreviewMode={true}
+                  activeSide="front"
+                  mockupId="review-mockup-front"
+                />
+              </div>
+              <div style={{ background: '#F9FAFB', borderRadius: '12px', overflow: 'hidden', border: '1px solid #E5E7EB', position: 'relative', flex: 1 }}>
+                <div style={{ padding: '12px', fontSize: '10px', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em', borderBottom: '1px solid #eee' }}>Back View</div>
+                <PoloCustomizer 
+                  initialState={customizerState}
+                  isPreviewMode={true}
+                  activeSide="back"
+                  mockupId="review-mockup-back"
+                />
+              </div>
             </div>
 
             <div style={{ background: 'white', padding: '32px', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', height: 'fit-content' }}>
               <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '24px', color: '#111' }}>Order Summary</h2>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
-                {selectedProduct && (
+                {dbProduct && (
                   <div style={{ display: 'flex', gap: '16px', alignItems: 'center', padding: '16px', background: '#f9f9f7', border: '1px solid #e5e2da', borderRadius: '8px', marginBottom: '8px' }}>
                     <div style={{ position: 'relative', width: '64px', height: '64px', borderRadius: '4px', overflow: 'hidden', flexShrink: 0 }}>
-                      <Image src={selectedProduct.image} alt={selectedProduct.name} fill style={{ objectFit: 'cover' }} />
+                      <Image src={dbProduct.images?.[0] || dbProduct.image} alt={dbProduct.name} fill style={{ objectFit: 'cover' }} />
                     </div>
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#111' }}>{selectedProduct.name}</div>
-                      <div style={{ fontSize: '0.8rem', color: '#888', marginTop: '2px' }}>{selectedProduct.type}</div>
-                      <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--tth-olive-dark)', marginTop: '4px' }}>{selectedProduct.price} / unit</div>
+                      <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#111' }}>{dbProduct.name}</div>
+                      <div style={{ fontSize: '0.8rem', color: '#888', marginTop: '2px' }}>{dbProduct.type || dbProduct.category?.name}</div>
+                      <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--tth-olive-dark)', marginTop: '4px' }}>{dbProduct.price} / unit</div>
                     </div>
                   </div>
                 )}
@@ -478,8 +601,8 @@ function CustomizerContent() {
               <div style={{ borderTop: '2px solid #E5E7EB', paddingTop: '24px', marginBottom: '32px' }}>
                 {/* Calculations */}
                 {(() => {
-                  const priceMatch = selectedProduct?.price.match(/\d+/);
-                  const basePrice = priceMatch ? parseInt(priceMatch[0], 10) : 85;
+                  const priceMatch = dbProduct?.price?.match(/\d+/);
+                  const basePrice = priceMatch ? parseInt(priceMatch[0], 10) : (dbProduct?.basePrice || 85);
                   const subtotal = totalQuantity * basePrice;
                   const hasCustomization = (customizerState?.frontElements.length || 0) > 0 || (customizerState?.backElements.length || 0) > 0;
                   const customCharge = hasCustomization ? 300 : 0;

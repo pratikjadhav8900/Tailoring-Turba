@@ -5,11 +5,13 @@ import { CustomizerState } from "@/types/customizer";
 
 export type CartItem = {
   id: string;
+  productId: string;
   code: string;
   name: string;
   price: string;
   quantity: number;
   image?: string;
+  mockupUrlBack?: string;
   customDesign?: CustomizerState;
   uploadedAssets?: string[];
 };
@@ -32,7 +34,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const savedCart = localStorage.getItem("tailoring_turba_cart");
     if (savedCart) {
       try {
-        setCart(JSON.parse(savedCart));
+        const parsed = JSON.parse(savedCart);
+        // Heal cart: if productId is missing, try to restore it
+        const healed = parsed.map((item: any) => {
+          if (!item.productId) {
+            // For older items, sometimes 'id' was the productId
+            // or we just need a placeholder to prevent API crashes
+            return { ...item, productId: item.productId || item.id };
+          }
+          return item;
+        });
+        setCart(healed);
       } catch (e) {
         console.error("Failed to parse cart", e);
       }

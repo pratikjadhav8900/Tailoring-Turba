@@ -63,8 +63,8 @@ export default function AdminOrdersClient({ initialOrders }: { initialOrders: Or
               return (
                 <tr key={order.id}>
                   <td>
-                    <span className={styles.mono} style={{ fontFamily: "monospace", fontSize: "0.8rem" }}>
-                      #{order.id.slice(-8).toUpperCase()}
+                    <span className={styles.mono} style={{ fontFamily: "monospace", fontSize: "0.85rem", fontWeight: "bold" }}>
+                      #{order.orderNumber || order.id.slice(-8).toUpperCase()}
                     </span>
                   </td>
                   <td>
@@ -76,38 +76,59 @@ export default function AdminOrdersClient({ initialOrders }: { initialOrders: Or
                   </td>
                   <td className={styles.amount}>₹{order.totalAmount.toLocaleString()}</td>
                   <td>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <span style={{
-                        display: "inline-block",
-                        width: "8px",
-                        height: "8px",
-                        borderRadius: "50%",
-                        background: cfg.color,
-                        flexShrink: 0,
-                      }} />
-                      <select
-                        value={order.status}
-                        onChange={(e) => updateStatus(order.id, e.target.value)}
-                        disabled={isUpdating === order.id}
-                        style={{
-                          padding: "5px 10px",
-                          borderRadius: "6px",
-                          border: `1px solid ${cfg.color}40`,
-                          fontSize: "0.8rem",
-                          fontWeight: 700,
-                          backgroundColor: cfg.bg,
-                          color: cfg.color,
-                          cursor: "pointer",
-                          outline: "none",
-                        }}
-                      >
-                        <option value="PENDING">Pending</option>
-                        <option value="PROCESSING">Processing</option>
-                        <option value="SHIPPED">Shipped</option>
-                        <option value="DELIVERED">Delivered</option>
-                        <option value="CANCELLED">Cancelled</option>
-                      </select>
-                      {isUpdating === order.id && <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} />}
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                      <span style={{ 
+                        fontSize: "0.7rem", 
+                        fontWeight: 800, 
+                        padding: "4px 10px", 
+                        borderRadius: "20px", 
+                        background: cfg.bg, 
+                        color: cfg.color,
+                        width: "fit-content",
+                        letterSpacing: "0.05em"
+                      }}>
+                        {order.status}
+                      </span>
+                      
+                      <div style={{ display: "flex", gap: "4px" }}>
+                        {order.status === "PENDING" && (
+                          <button
+                            onClick={() => updateStatus(order.id, "PROCESSING")}
+                            disabled={isUpdating === order.id}
+                            style={{ padding: "4px 8px", background: "#eff6ff", color: "#2563eb", border: "1px solid #2563eb40", borderRadius: "4px", fontSize: "0.7rem", fontWeight: 700, cursor: "pointer" }}
+                          >
+                            Process
+                          </button>
+                        )}
+                        {order.status === "PROCESSING" && (
+                          <button
+                            onClick={() => updateStatus(order.id, "SHIPPED")}
+                            disabled={isUpdating === order.id}
+                            style={{ padding: "4px 8px", background: "#f5f3ff", color: "#7c3aed", border: "1px solid #7c3aed40", borderRadius: "4px", fontSize: "0.7rem", fontWeight: 700, cursor: "pointer" }}
+                          >
+                            Ship
+                          </button>
+                        )}
+                        {order.status === "SHIPPED" && (
+                          <button
+                            onClick={() => updateStatus(order.id, "DELIVERED")}
+                            disabled={isUpdating === order.id}
+                            style={{ padding: "4px 8px", background: "#f0fdf4", color: "#16a34a", border: "1px solid #16a34a40", borderRadius: "4px", fontSize: "0.7rem", fontWeight: 700, cursor: "pointer" }}
+                          >
+                            Deliver
+                          </button>
+                        )}
+                        {(order.status === "PENDING" || order.status === "PROCESSING") && (
+                          <button
+                            onClick={() => updateStatus(order.id, "CANCELLED")}
+                            disabled={isUpdating === order.id}
+                            style={{ padding: "4px 8px", background: "#fef2f2", color: "#dc2626", border: "1px solid #dc262640", borderRadius: "4px", fontSize: "0.7rem", fontWeight: 700, cursor: "pointer" }}
+                          >
+                            Cancel
+                          </button>
+                        )}
+                        {isUpdating === order.id && <Loader2 size={12} className="animate-spin" />}
+                      </div>
                     </div>
                   </td>
                   <td className={styles.date}>{new Date(order.createdAt).toLocaleDateString("en-IN")}</td>

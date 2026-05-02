@@ -1,36 +1,50 @@
-import { NextRequest, NextResponse } from "next/server";
-import { cloudinary } from "@/lib/cloudinary";
-import { auth } from "@/lib/auth";
+import { v2 as cloudinary } from "cloudinary";
+import { NextResponse } from "next/server";
 
-export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
-  const formData = await req.formData();
-  const file = formData.get("file") as File;
-  const isRaw = formData.get("isRaw") === "true";
+export async function POST(request: Request) {
+  try {
+    const formData = await request.formData();
+    const file = formData.get("file") as File;
 
-  if (!file) return NextResponse.json({ error: "No file provided." }, { status: 400 });
+    if (!file) {
+      return NextResponse.json({ error: "No file provided" }, { status: 400 });
+    }
 
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const ext = file.name.split(".").pop()?.toLowerCase();
-  const rawTypes = ["cdr", "ai", "eps", "psd", "pdf"];
-  const useRaw = isRaw || rawTypes.includes(ext ?? "");
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
 
-  return new Promise((resolve) => {
-    const uploadStream = cloudinary.uploader.upload_stream(
-      {
-        public_id: `tailoringturba/uploads/${session.user!.id}/${Date.now()}_${file.name}`,
-        resource_type: useRaw ? "raw" : "auto",
-      },
-      (error, result) => {
-        if (error || !result) {
-          resolve(NextResponse.json({ error: "Upload failed." }, { status: 500 }));
-        } else {
-          resolve(NextResponse.json({ url: result.secure_url, publicId: result.public_id }));
+    // Upload to Cloudinary
+    const result: any = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder: "kraftx_customizations",
+          resource_type: "auto",
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
         }
-      }
-    );
-    uploadStream.end(buffer);
-  });
+      );
+      uploadStream.end(buffer);
+    });
+
+    return NextResponse.json({ 
+      url: result.secure_url,
+      public_id: result.public_id 
+    });
+
+  } catch (error: any) {
+    console.error("Cloudinary Upload Error Details:", {
+      message: error.message,
+      http_code: error.http_code,
+      name: error.name
+    });
+    return NextResponse.json({ error: "Upload failed", details: error.message }, { status: 500 });
+  }
 }

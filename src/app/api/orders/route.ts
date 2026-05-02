@@ -9,15 +9,43 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { items, orderSheetData, addressId } = body;
+    const { items, orderSheetData, addressId, shippingAddress } = body;
     // items: [{ productId, quantity, price, designId? }]
+
+    let finalAddressId = addressId;
+
+    if (shippingAddress && !finalAddressId) {
+      try {
+        const newAddress = await prisma.address.create({
+          data: {
+            id: `addr_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+            userId: session.user.id,
+            name: shippingAddress.name,
+            street: shippingAddress.street,
+            city: shippingAddress.city,
+            state: shippingAddress.state,
+            postalCode: shippingAddress.postalCode,
+            country: shippingAddress.country || "India",
+            updatedAt: new Date(),
+          }
+        });
+        finalAddressId = newAddress.id;
+      } catch (addrErr: any) {
+        console.error("[ADDRESS_CREATE_ERROR]", addrErr);
+        return NextResponse.json({ error: `Failed to save shipping address: ${addrErr.message}` }, { status: 500 });
+      }
+    }
 
     if (!items?.length) return NextResponse.json({ error: "Cart is empty." }, { status: 400 });
 
-    // MOQ Check
+    // MOQ & Product Presence Check
     for (const item of items) {
+      if (!item.productId) {
+        return NextResponse.json({ error: "Missing product ID for an item in your cart. Please try removing and re-adding it." }, { status: 400 });
+      }
       const product = await prisma.product.findUnique({ where: { id: item.productId } });
-      if (!product) return NextResponse.json({ error: `Product not found.` }, { status: 404 });
+      if (!product) return NextResponse.json({ error: `Product with ID ${item.productId} not found.` }, { status: 404 });
+      
       if (item.quantity < product.minOrderQuantity) {
         return NextResponse.json(
           { error: `Minimum order for "${product.name}" is ${product.minOrderQuantity} pcs. You have ${item.quantity}.` },
@@ -28,25 +56,45 @@ export async function POST(req: NextRequest) {
 
     const totalAmount = items.reduce((s: number, i: { price: number; quantity: number }) => s + i.price * i.quantity, 0);
 
-    const order = await prisma.order.create({
-      data: {
-        userId: session.user.id,
-        totalAmount,
-        ...(addressId && { shippingAddressId: addressId }),
-        items: {
-          create: items.map((i: { productId: string; quantity: number; price: number; designId?: string }) => ({
-            productId: i.productId,
-            quantity: i.quantity,
-            price: i.price,
-            ...(i.designId && { designId: i.designId })
-          })),
+
+    let order;
+    try {
+      order = await prisma.order.create({
+        data: {
+          userId: session.user.id,
+          totalAmount,
+          ...(finalAddressId && { shippingAddressId: finalAddressId }),
+          items: {
+            create: items.map((i: { 
+              productId: string; 
+              quantity: number; 
+              price: number; 
+              designId?: string;
+              customStateJson?: string;
+              printFiles?: string[];
+              mockupUrl?: string;
+              mockupUrlBack?: string;
+            }) => ({
+              productId: i.productId,
+              quantity: i.quantity,
+              price: i.price,
+              ...(i.designId && { designId: i.designId }),
+              ...(i.customStateJson && { customStateJson: i.customStateJson }),
+              ...(i.printFiles && { printFiles: i.printFiles }),
+              ...(i.mockupUrl && { mockupUrl: i.mockupUrl }),
+              ...(i.mockupUrlBack && { mockupUrlBack: i.mockupUrlBack })
+            })),
+          },
+          ...(orderSheetData && {
+            orderSheet: { create: { sheetData: orderSheetData } },
+          }),
         },
-        ...(orderSheetData && {
-          orderSheet: { create: { sheetData: orderSheetData } },
-        }),
-      },
-      include: { items: true, orderSheet: true },
-    });
+        include: { items: true, orderSheet: true },
+      });
+    } catch (createErr: any) {
+      console.error("[PRISMA_ORDER_CREATE_ERROR]", createErr);
+      return NextResponse.json({ error: `Database error: ${createErr.message || "Failed to create order record."}` }, { status: 500 });
+    }
 
     // Notify Operations
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";

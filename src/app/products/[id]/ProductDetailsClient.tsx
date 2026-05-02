@@ -46,6 +46,10 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
   const storageKey = `reviews_product_${product.id}`;
 
   useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [product.id]);
+
+  useEffect(() => {
     const saved = localStorage.getItem(storageKey);
     if (saved) setReviews(JSON.parse(saved));
   }, [storageKey]);
@@ -53,8 +57,9 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
   const handleAddToCart = () => {
     const finalQty = Math.max(10, parseInt(qty as string) || 10);
     addToCart({
-      id: Date.now().toString(),
-      code: product.name,
+      id: product.id,
+      productId: product.id,
+      code: product.code || product.name,
       name: product.name,
       price: product.price,
       quantity: finalQty,

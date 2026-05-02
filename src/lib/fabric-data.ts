@@ -2,18 +2,18 @@
 export const GARMENTS = {
   "round-neck": {
     label: "Round Neck",
-    front: "/mockups/round.png",
-    back: "/mockups/round_back.png",
+    front: "/mockups/round.png?v=2",
+    back: "/mockups/round_back.png?v=2",
   },
   "v-neck": {
     label: "V-Neck",
-    front: "/mockups/vneck.png",
-    back: "/mockups/vneck_back.png",
+    front: "/mockups/vneck.png?v=2",
+    back: "/mockups/vneck_back.png?v=2",
   },
   polo: {
     label: "Polo Shirt",
-    front: "/mockups/polo.png",
-    back: "/mockups/polo_back.png",
+    front: "/mockups/polo.png?v=2",
+    back: "/mockups/polo_back.png?v=2",
   },
 };
 

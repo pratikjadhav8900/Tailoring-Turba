@@ -1,7 +1,13 @@
-import { Suspense } from "react";
+import { Metadata } from "next";
 import { prisma, withRetry } from "@/lib/prisma";
 import { allProducts } from "@/lib/products-data";
 import ProductsClient from "./ProductsClient";
+
+export const metadata: Metadata = {
+  title: "Premium Corporate Apparel Catalog | Bulk Manufacturing India",
+  description: "Browse our catalog of high-quality corporate apparel, including polo shirts, t-shirts, and custom uniforms. B2B bulk manufacturing with global export from India.",
+  keywords: ["corporate apparel catalog", "bulk t-shirts manufacturer", "wholesale polo shirts India", "custom uniforms catalog"],
+};
 
 export const revalidate = 60;
 
@@ -37,9 +43,5 @@ export default async function ProductsPage() {
     }));
   }
 
-  return (
-    <Suspense fallback={<div style={{height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>Loading catalog...</div>}>
-      <ProductsClient products={formattedProducts} />
-    </Suspense>
-  );
+  return <ProductsClient products={formattedProducts} />;
 }

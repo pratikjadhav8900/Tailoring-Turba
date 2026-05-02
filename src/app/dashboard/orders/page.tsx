@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import styles from "./page.module.css";
 import { Package, Plus, FileText } from "lucide-react";
+import EmptyState from "@/components/EmptyState";
+import OrderTracking from "@/components/OrderTracking";
 
 import Image from "next/image";
 
@@ -43,16 +45,13 @@ export default async function OrdersPage() {
 
       <div className={styles.mainContent}>
         {orders.length === 0 ? (
-          <div className={styles.emptyGlass}>
-            <div className={styles.emptyIconBox}>
-              <Package size={32} />
-            </div>
-            <h2>No orders yet</h2>
-            <p>Start by customizing a product and placing your first order.</p>
-            <Link href="/customizer" className={styles.primaryBtn} style={{ marginTop: '16px' }}>
-              Start Designing
-            </Link>
-          </div>
+          <EmptyState 
+            illustration="/illustrations/empty_orders.png"
+            title="No orders yet"
+            description="Your order ledger is empty. Start by customizing a product and placing your first order."
+            ctaText="Start Designing"
+            ctaHref="/products"
+          />
         ) : (
         <div className={styles.orderList}>
           {orders.map(order => (
@@ -70,11 +69,25 @@ export default async function OrdersPage() {
                 </div>
               </div>
 
+              {/* Visual Order Progress */}
+              <OrderTracking status={order.status} />
+
               {/* Order Items */}
               <div className={styles.items}>
                 {order.items.map(item => (
                   <div key={item.id} className={styles.item}>
-                    <span className={styles.itemName}>{item.product.name}</span>
+                    <Link href={`/products/${item.product.id}`} className={styles.itemImage}>
+                      <Image 
+                        src={item.product.images?.[0] || "/placeholder.png"} 
+                        alt={item.product.name} 
+                        width={48} 
+                        height={48} 
+                        className={styles.thumbnail}
+                      />
+                    </Link>
+                    <Link href={`/products/${item.product.id}`} className={styles.itemName}>
+                      {item.product.name}
+                    </Link>
                     <span className={styles.itemQty}>× {item.quantity}</span>
                     <span className={styles.itemPrice}>₹{(item.price * item.quantity).toLocaleString()}</span>
                   </div>

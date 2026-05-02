@@ -5,6 +5,7 @@ import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import styles from "./page.module.css";
 import { useCart } from "@/context/CartContext";
+import Skeleton from "@/components/Skeleton";
 
 type Product = {
   id: string;
@@ -45,9 +46,42 @@ export default function CategoryDetailPage({ params }: { params: { slug: string 
   }, [params.slug]);
 
   if (isLoading) return (
-    <div className={styles.loadingState}>
-      <div className={styles.loadingBar}></div>
-      <p>Loading collection…</p>
+    <div className={styles.pageWrapper}>
+      <Navbar />
+      <main className={styles.main}>
+        <div className={styles.heroHeader} style={{ background: '#f8fafc' }}>
+          <div className={styles.heroContent}>
+            <Skeleton width="200px" height="1rem" style={{ marginBottom: '16px' }} />
+            <Skeleton width="100px" height="0.8rem" style={{ marginBottom: '12px' }} />
+            <Skeleton width="60%" height="2.5rem" style={{ marginBottom: '20px' }} />
+            <Skeleton width="40%" height="1rem" />
+          </div>
+        </div>
+        <div className={styles.mainContent}>
+          <div className={styles.productGrid}>
+            {[1, 2, 3, 4, 5, 6].map(i => (
+              <div key={i} className={styles.card} style={{ pointerEvents: 'none' }}>
+                <div className={styles.cardVisual}>
+                  <Skeleton height="100%" borderRadius="0" />
+                </div>
+                <div className={styles.cardBody}>
+                  <Skeleton width="30%" height="0.7rem" style={{ marginBottom: "12px" }} />
+                  <Skeleton width="80%" height="1.2rem" style={{ marginBottom: "12px" }} />
+                  <Skeleton width="100%" height="0.8rem" style={{ marginBottom: "20px" }} />
+                  <div style={{ marginBottom: '20px' }}>
+                    <Skeleton width="40%" height="0.7rem" style={{ marginBottom: '8px' }} />
+                    <Skeleton width="60%" height="1.5rem" />
+                  </div>
+                  <div className={styles.cardActions}>
+                    <Skeleton width="100%" height="2.5rem" borderRadius="8px" />
+                    <Skeleton width="100%" height="2.5rem" borderRadius="8px" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </main>
     </div>
   );
   if (!data) return <div className={styles.loadingState}>Collection not found.</div>;
@@ -127,6 +161,7 @@ export default function CategoryDetailPage({ params }: { params: { slug: string 
                         className={styles.addToCartBtn}
                         onClick={() => addToCart({
                           id: product.id,
+                          productId: product.id,
                           code: product.code,
                           name: product.name,
                           price: product.price || "1,499",
