@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 
 export default function WhatsAppButton() {
   const [isVisible, setIsVisible] = useState(false);
-  const phone = "917942669612"; // Tailoring Turba WhatsApp
+  const phone = "919022553346"; // Tailoring Turba WhatsApp
   const message = encodeURIComponent("Hi Tailoring Turba! I'm interested in placing a bulk order. Could you share your latest catalogue and pricing?");
   const url = `https://wa.me/${phone}?text=${message}`;
 

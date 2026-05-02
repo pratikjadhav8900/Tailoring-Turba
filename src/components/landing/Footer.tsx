@@ -37,7 +37,7 @@ export default function Footer() {
           <div className={styles.col}>
             <h4>Contact</h4>
             <p>📍 321/1 Pandit Jawaharlal Nehru Marg Pune 411042, Sanjay Departments, Pune, Maharashtra 411042, IN</p>
-            <p>📞 07942669612</p>
+            <p>📞 9022553346</p>
             <p>📧 tailoringturba@gmail.com</p>
             <p>🕐 Mon–Sat, 10AM–7PM</p>
           </div>

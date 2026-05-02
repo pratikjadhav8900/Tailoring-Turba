@@ -83,7 +83,7 @@ function ContactForm() {
             </div>
             <div className={styles.contactItem}>
               <Phone size={14} strokeWidth={1.5} className={styles.contactIcon} />
-              <span className={styles.contactValue}>07942669612</span>
+              <span className={styles.contactValue}>9022553346</span>
             </div>
             <div className={styles.contactItem}>
               <MapPin size={14} strokeWidth={1.5} className={styles.contactIcon} />

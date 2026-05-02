@@ -103,7 +103,7 @@ export default function Footer() {
             </h4>
             <div style={{ display: "flex", flexDirection: "column", gap: "12px", color: "#94a3b8", fontSize: "0.9rem", lineHeight: 1.6 }}>
               <span>📧 tailoringturba@gmail.com</span>
-              <span>📞 07942669612</span>
+              <span>📞 9022553346</span>
               <span>📍 321/1 Pandit Jawaharlal Nehru Marg Pune 411042, Sanjay Departments, Pune, Maharashtra 411042, IN</span>
             </div>
             <Link href="/contact" style={{

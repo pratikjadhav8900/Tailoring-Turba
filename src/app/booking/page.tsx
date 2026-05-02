@@ -74,7 +74,7 @@ export default function BookingPage() {
                   <div className={styles.detailIcon}><Phone size={24} /></div>
                   <div>
                     <strong>Direct Call</strong>
-                    <p>07942669612</p>
+                    <p>9022553346</p>
                   </div>
                 </div>
               </div>
