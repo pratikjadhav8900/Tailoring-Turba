@@ -8,27 +8,39 @@ import styles from "./HeroSlider.module.css";
 const SLIDES = [
   {
     id: 1,
-    image: "https://images.unsplash.com/photo-1618354691438-25bc04584c23?auto=format&fit=crop&q=80&w=2000",
+    image: "https://images.unsplash.com/photo-1618354691438-25bc04584c23?auto=format&fit=crop&q=100&w=2560",
     subtitle: "SUSTAINABLE AND LONG LASTING",
     title: "science meets fabric innovation",
   },
   {
     id: 2,
-    image: "https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?auto=format&fit=crop&q=80&w=2000",
+    image: "https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?auto=format&fit=crop&q=100&w=2560",
     subtitle: "RETAIL APPAREL STORES",
     title: "curated premium collections",
   },
   {
     id: 3,
-    image: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=2000",
+    image: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=100&w=2560",
     subtitle: "PRECISION TAILORING",
     title: "built from the ground up",
   },
   {
     id: 4,
-    image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&q=80&w=2000",
+    image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&q=100&w=2560",
     subtitle: "PREMIUM BLANKS",
     title: "elevate your brand identity",
+  },
+  {
+    id: 5,
+    image: "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&q=100&w=2560",
+    subtitle: "STREETWEAR READY",
+    title: "the perfect drop shoulder",
+  },
+  {
+    id: 6,
+    image: "https://images.unsplash.com/photo-1612423284934-2850a4ea6b0f?auto=format&fit=crop&q=100&w=2560",
+    subtitle: "UNCOMPROMISED QUALITY",
+    title: "threads that tell a story",
   }
 ];
 

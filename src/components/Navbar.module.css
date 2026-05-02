@@ -288,10 +288,26 @@
 }
 
 @media (max-width: 480px) {
+  .nav {
+    padding: 0 12px;
+  }
   .logo img {
-    width: 140px !important;
+    width: 100px !important;
+    height: auto !important;
   }
   .actions {
-    gap: 8px;
+    gap: 4px;
+  }
+  .iconBtn {
+    width: 26px;
+    height: 26px;
+  }
+  .iconBtn svg {
+    width: 18px;
+    height: 18px;
+  }
+  .mobileMenuToggle {
+    padding: 6px;
+    flex: 0 0 30px;
   }
 }
