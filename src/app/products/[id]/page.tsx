@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { Metadata } from "next";
 import { prisma, withRetry } from "@/lib/prisma";
 import { allProducts } from "@/lib/products-data";
