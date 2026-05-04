@@ -22,7 +22,7 @@ export default function B2BUseCaseGrid() {
               branding, and resale. Perfect for businesses, events, schools, and online stores.
             </p>
             <ul className={styles.list}>
-              <li>Starting from just 5 pieces</li>
+              <li>Starting from just 10 pieces</li>
               <li>Custom branding & logo printing</li>
               <li>Fast 5–10 day delivery PAN India</li>
               <li>Competitive B2B pricing with tiered discounts</li>

@@ -10,8 +10,8 @@ export default function AppShowcase() {
         <div className={styles.leftPanel}>
           <div className={styles.imageWrapper}>
             <Image
-              src="https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=1000"
-              alt="Tailoring and Garment Manufacturing"
+              src="/images/platform.png"
+              alt="Tailoring Turba Platform"
               fill
               className={styles.featureImage}
             />

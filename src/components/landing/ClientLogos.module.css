@@ -1,24 +1,25 @@
 .section {
-  padding: 64px 0;
-  background: white;
+  padding: 40px 0;
+  background: #fff;
   border-bottom: 1px solid #f1f5f9;
   overflow: hidden;
 }
 
 .label {
   text-align: center;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   text-transform: uppercase;
-  letter-spacing: 0.15em;
+  letter-spacing: 0.2em;
   color: #94a3b8;
-  margin-bottom: 40px;
-  font-weight: 700;
+  margin-bottom: 24px;
+  font-weight: 800;
 }
 
 .wrapper {
   display: flex;
   position: relative;
   width: 100%;
+  mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
 }
 
 .track {
@@ -30,7 +31,7 @@
 
 .logo {
   font-family: var(--font-serif);
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   color: #cbd5e1;
   font-weight: 400;
   letter-spacing: 0.05em;
@@ -49,4 +50,26 @@
 @keyframes scroll {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
+}
+
+@media (max-width: 768px) {
+  .section {
+    padding: 40px 20px;
+  }
+  .track {
+    animation: scroll 25s linear infinite; /* Faster scroll for mobile */
+    gap: 48px;
+  }
+  .logo {
+    font-size: 0.85rem;
+    padding: 0;
+    width: auto !important;
+  }
+  .label {
+    margin-bottom: 24px;
+    font-size: 0.65rem;
+  }
+  .desktopOnly {
+    display: flex !important; /* Enable clones for infinite scroll on mobile too */
+  }
 }

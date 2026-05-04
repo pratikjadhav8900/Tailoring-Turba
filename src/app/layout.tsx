@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import "@/app/globals.css";
 import { Providers } from "./providers";
 import LayoutWrapper from "./LayoutWrapper";
+import NextTopLoader from 'nextjs-toploader';
+import { Toaster } from "react-hot-toast";
 
 export const metadata: Metadata = {
   title: {
@@ -32,6 +34,7 @@ export default function RootLayout({
   return (
     <html lang="en" translate="no" suppressHydrationWarning>
       <body suppressHydrationWarning>
+        <Toaster position="bottom-center" toastOptions={{ style: { background: '#333', color: '#fff', borderRadius: '8px' } }} />
         <Providers>
           <LayoutWrapper>
             <main>

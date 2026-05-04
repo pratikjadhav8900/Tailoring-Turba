@@ -172,35 +172,89 @@
   color: var(--color-coral-600);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .sidebar {
     width: 100%;
-    height: auto;
+    height: 65px;
     min-height: unset;
-    position: relative;
+    position: fixed;
+    bottom: 0;
+    top: auto;
+    left: 0;
     flex-direction: row;
-    flex-wrap: wrap;
-    padding: 16px;
-    gap: 16px;
+    padding: 0;
+    gap: 0;
     border-right: none;
-    border-bottom: 1px solid var(--color-neutral-200);
+    border-top: 1px solid rgba(0,0,0,0.08);
+    z-index: 2000;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(25px) saturate(200%);
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.08);
+    padding-bottom: env(safe-area-inset-bottom);
+    height: calc(65px + env(safe-area-inset-bottom));
   }
+
+  .logo {
+    display: none;
+  }
+
   .nav {
     flex-direction: row;
-    flex-wrap: wrap;
-    padding: 0;
-    gap: 8px;
-  }
-  .logo {
-    margin-bottom: 0;
-    padding: 0;
+    flex-wrap: nowrap;
+    overflow: visible;
+    padding: 0 4px;
+    gap: 0;
     width: 100%;
+    height: 100%;
+    justify-content: space-between;
+    align-items: center;
   }
+
+  .item {
+    flex: 1;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 2px;
+    padding: 10px 0;
+    font-size: 0.6rem;
+    border-radius: 0;
+    background: transparent !important;
+    color: #94a3b8;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .item span:not(.icon) {
+    font-weight: 600;
+  }
+
+  .active {
+    color: #0f172a !important;
+  }
+
+  .active .icon {
+    color: #0f172a;
+    transform: translateY(-2px);
+  }
+
+  .active::after {
+    content: '';
+    position: absolute;
+    bottom: 12px;
+    width: 4px;
+    height: 4px;
+    background: var(--tth-olive);
+    border-radius: 50%;
+    display: block;
+  }
+
+  .indicator {
+    display: none;
+  }
+
   .bottom {
-    flex-direction: row;
-    border-top: none;
-    margin-top: 0;
-    padding-top: 0;
-    width: 100%;
+    display: none; 
   }
 }

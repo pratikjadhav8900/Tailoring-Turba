@@ -10,6 +10,7 @@
   background: var(--color-neutral-100);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .shell { flex-direction: column; }
+  .main { padding-bottom: 90px; }
 }

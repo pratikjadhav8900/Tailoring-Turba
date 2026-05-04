@@ -1,11 +1,10 @@
 .pageWrapper {
-  min-height: 100vh;
   background-color: var(--tth-offwhite);
   padding-top: 80px;
 }
 
 .main {
-  padding: 80px 24px 100px;
+  padding: 80px 24px 0;
   max-width: 1200px;
   margin: 0 auto;
 }

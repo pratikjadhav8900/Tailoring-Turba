@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import styles from "./page.module.css";
 import { CheckCircle2, Mail, Phone, MapPin } from "lucide-react";
+import toast from "react-hot-toast";
 
 function ContactForm() {
   const searchParams = useSearchParams();
@@ -38,9 +39,11 @@ function ContactForm() {
 
       if (res.ok) {
         setIsSubmitted(true);
+        toast.success("Message sent successfully ✓");
       } else {
         const data = await res.json();
         setError(data.error || "Something went wrong. Please try again.");
+        toast.error("Failed to send message");
       }
     } catch {
       setError("Network error. Please check your connection and try again.");
@@ -152,6 +155,7 @@ function ContactForm() {
                       className={styles.input}
                       type="tel"
                       required
+                      pattern="[0-9]{10}"
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                       placeholder="9022553346"

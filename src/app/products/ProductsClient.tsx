@@ -1,11 +1,10 @@
 "use client";
 import Navbar from "@/components/Navbar";
 import Image from "next/image";
-import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import styles from "./page.module.css";
-import { useState, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
-import { Plus, Minus, ArrowRightLeft, Check, Heart } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Plus, Minus, ArrowRightLeft, Check, Heart, Search } from "lucide-react";
 import { useCompare } from "@/context/CompareContext";
 import { useWishlist } from "@/context/WishlistContext";
 
@@ -26,6 +25,7 @@ const seoBlocks = [
 ];
 
 export default function ProductsClient({ products }: { products: any[] }) {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const { addToCompare, removeFromCompare, isInCompare } = useCompare();
   const { wishlistItems, toggleWishlist, isInWishlist } = useWishlist();
@@ -40,27 +40,65 @@ export default function ProductsClient({ products }: { products: any[] }) {
     }
   }, [urlCategory]);
 
-  const categories = ["All", ...Array.from(new Set(products.map(p => p.category)))];
+  const categories = [
+    "All",
+    "T-Shirts",
+    "Shirts",
+    "Trousers",
+    "Polos",
+    "Crewnecks",
+    "Hoodies",
+    "Jackets",
+    "Crop Tops",
+    "Oversized",
+    "Uniforms"
+  ];
 
-  const normalizedSearch = activeCategory.toLowerCase().replace(/s$/, '');
-  
-  const filtered = activeCategory === "All" 
-    ? products 
-    : products.filter(p => 
-        p.category === activeCategory || 
-        (p.type && p.type.toLowerCase().includes(normalizedSearch)) ||
-        (p.name && p.name.toLowerCase().includes(normalizedSearch)) ||
-        (p.type && p.type.toLowerCase().includes(activeCategory.toLowerCase())) ||
-        (p.name && p.name.toLowerCase().includes(activeCategory.toLowerCase()))
-      );
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
 
-  // Mock colors for swatches
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [searchTerm]);
+
+  const normalizedCategory = activeCategory.toLowerCase().replace(/s$/, '');
+
+  const filtered = products.filter(p => {
+    const isTshirtUmbrella = activeCategory === "T-Shirts" && 
+      (p.type?.toLowerCase().includes("polo") || 
+       p.type?.toLowerCase().includes("crewneck") || 
+       p.type?.toLowerCase().includes("v-neck") ||
+       p.name?.toLowerCase().includes("polo") ||
+       p.name?.toLowerCase().includes("crewneck"));
+
+    const matchesCategory = activeCategory === "All" || 
+      p.category === activeCategory ||
+      isTshirtUmbrella ||
+      (p.category && p.category.toLowerCase().includes(normalizedCategory)) ||
+      (p.type && p.type.toLowerCase().includes(normalizedCategory)) ||
+      (p.name && p.name.toLowerCase().includes(normalizedCategory)) ||
+      (p.category && p.category.toLowerCase().includes(activeCategory.toLowerCase())) ||
+      (p.type && p.type.toLowerCase().includes(activeCategory.toLowerCase())) ||
+      (p.name && p.name.toLowerCase().includes(activeCategory.toLowerCase()));
+      
+    const searchLower = debouncedSearch.toLowerCase().trim();
+    const matchesSearch = searchLower === "" || 
+      (p.name && p.name.toLowerCase().includes(searchLower)) ||
+      (p.type && p.type.toLowerCase().includes(searchLower)) ||
+      (p.description && p.description.toLowerCase().includes(searchLower)) ||
+      (p.category && p.category.toLowerCase().includes(searchLower));
+
+    return matchesCategory && matchesSearch;
+  });
+
   const mockColors = ["#1a1a1a", "#ffffff", "#1e3a8a", "#6b7d60", "#7f1d1d"];
 
   return (
     <>
       <main className={styles.main}>
-        {/* Editorial Hero Banner */}
         <section className={styles.hero}>
           <div className={styles.heroOverlay} />
           <div className={styles.heroContent}>
@@ -68,10 +106,19 @@ export default function ProductsClient({ products }: { products: any[] }) {
           </div>
         </section>
 
-        {/* Layout */}
         <section className={`container ${styles.layout}`}>
-          {/* Sidebar */}
           <aside className={styles.sidebar}>
+            <div className={styles.searchWrapper}>
+              <Search className={styles.searchIcon} size={18} />
+              <input
+                type="text"
+                placeholder="Search catalog..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className={styles.searchInput}
+              />
+            </div>
+            
             {categories.map(c => (
               <button 
                 key={c} 
@@ -83,11 +130,18 @@ export default function ProductsClient({ products }: { products: any[] }) {
             ))}
           </aside>
 
-          {/* Product Grid */}
           <div className={styles.grid}>
-            {filtered.map(p => (
-              <Link href={`/products/${p.id}`} key={p.id} className={styles.productCard}>
-                <div className={styles.imageWrapper}>
+            {filtered.map(p => {
+              const sizes = p.features?.find((f: string) => 
+                f.match(/^[XSML\d]+[–-][XSML\d]+$/i) || 
+                f.toLowerCase().includes('size') || 
+                f.toLowerCase().includes('xs') || 
+                f.toLowerCase().includes('xl')
+              ) || "S – 3XL";
+
+              return (
+                <div key={p.id} onClick={() => router.push(`/products/${p.id}`)} className={styles.productCard} style={{ cursor: "pointer" }}>
+                  <div className={styles.imageWrapper}>
                   {p.image ? (
                     <Image 
                       src={p.image} 
@@ -166,28 +220,58 @@ export default function ProductsClient({ products }: { products: any[] }) {
                 </div>
                 
                 {/* Mock Swatches based on exact color count from spreadsheet */}
-                <div className={styles.swatches} style={{ alignItems: 'center' }}>
+                <div className={styles.swatches}>
                   {mockColors.slice(0, Math.min(p.colors || 0, 5)).map((color, i) => (
                     <div key={i} className={styles.swatch} style={{ backgroundColor: color }} />
                   ))}
                   {(p.colors || 0) > 5 && (
-                    <span style={{ fontSize: '0.75rem', color: 'var(--tth-text-muted)', marginLeft: '4px', fontWeight: 600 }}>
+                    <span style={{ 
+                      fontSize: '0.75rem', 
+                      color: 'var(--tth-text-muted)', 
+                      marginLeft: '4px', 
+                      fontWeight: 600,
+                      whiteSpace: 'nowrap',
+                      flexShrink: 0
+                    }}>
                       +{(p.colors || 0) - 5}
                     </span>
                   )}
                 </div>
 
-                <div className={styles.productInfo}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
-                    <h3 className={styles.productTitle}>{p.name}</h3>
-                    <span style={{ fontWeight: 600, color: '#435b43', fontSize: '1.05rem', whiteSpace: 'nowrap' }}>{p.price}</span>
+                  <div className={styles.productInfo}>
+                    <div className={styles.productTitleRow}>
+                      <h3 className={styles.productTitle}>{p.name}</h3>
+                      {p.price && (
+                        <span className={styles.productPrice}>
+                          ₹{typeof p.price === 'number' ? p.price.toLocaleString('en-IN') : p.price}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <p className={styles.productSub}>
                     {p.type}
                   </p>
+                  <div className={styles.productMeta}>
+                    <span className={styles.sizeTag}>Sizes: {sizes}</span>
+                    <span className={styles.colorCount}>{p.colors || 1} Colors</span>
+                  </div>
                 </div>
-              </Link>
-            ))}
+              );
+            })}
+            
+            {filtered.length === 0 && (
+              <div style={{ gridColumn: "1 / -1", padding: "60px 20px", textAlign: "center", background: "#f8fafc", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
+                <div style={{ fontSize: "2.5rem", marginBottom: "16px", opacity: 0.8 }}>🔍</div>
+                <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "#1e293b", marginBottom: "8px" }}>No products found</h3>
+                <p style={{ color: "#64748b" }}>We couldn't find anything matching "{debouncedSearch}" in {activeCategory}.</p>
+                <button 
+                  onClick={() => {setSearchTerm(""); setActiveCategory("All");}}
+                  style={{ marginTop: "20px", padding: "10px 24px", background: "white", border: "1px solid #cbd5e1", borderRadius: "8px", fontWeight: 600, cursor: "pointer" }}
+                >
+                  Clear Filters
+                </button>
+              </div>
+            )}
           </div>
         </section>
 

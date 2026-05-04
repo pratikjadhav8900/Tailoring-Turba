@@ -30,10 +30,10 @@ export default async function DashboardPage() {
   const totalSpent = orders.reduce((s, o) => s + o.totalAmount, 0);
 
   const stats = [
-    { label: "Total Orders", value: orders.length, icon: <Package size={24} />, color: "var(--tth-olive)" },
-    { label: "Designs Made", value: designs.length, icon: <Paintbrush size={24} />, color: "var(--tth-olive)" },
-    { label: "Total Spent", value: `₹${totalSpent.toLocaleString()}`, icon: <CreditCard size={24} />, color: "var(--tth-olive)" },
-    { label: "Appointments", value: bookings.length, icon: <CalendarCheck size={24} />, color: "var(--tth-olive)" },
+    { label: "Total Orders", value: orders.length, icon: <Package size={24} strokeWidth={1.5} />, color: "var(--tth-olive)" },
+    { label: "Designs Made", value: designs.length, icon: <Paintbrush size={24} strokeWidth={1.5} />, color: "var(--tth-olive)" },
+    { label: "Total Spent", value: `₹${totalSpent.toLocaleString()}`, icon: <CreditCard size={24} strokeWidth={1.5} />, color: "var(--tth-olive)" },
+    { label: "Appointments", value: bookings.length, icon: <CalendarCheck size={24} strokeWidth={1.5} />, color: "var(--tth-olive)" },
   ];
 
   return (
@@ -43,7 +43,7 @@ export default async function DashboardPage() {
       <div className={styles.heroHeader}>
         <div className={styles.heroBg}>
           <Image 
-            src="https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=2000"
+            src="/dashboard_overview_bg.png"
             alt="Tailoring Background"
             fill
             priority
@@ -51,7 +51,8 @@ export default async function DashboardPage() {
         </div>
         <div className={styles.heroOverlay}></div>
         <div className={styles.heroContent}>
-          <div>
+          <div className={styles.heroLabel}>STUDIO OVERVIEW 2024</div>
+          <div className={styles.heroMain}>
             <h1 className={styles.title}>Good {getGreeting()}, {session?.user?.name?.split(" ")[0]}</h1>
             <p className={styles.sub}>Here is your Tailoring Turba ledger and activity overview.</p>
           </div>

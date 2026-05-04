@@ -5,7 +5,6 @@ import FeaturesGrid from "@/components/landing/FeaturesGrid";
 import TargetAudienceGrid from "@/components/landing/TargetAudienceGrid";
 import AppShowcase from "@/components/landing/AppShowcase";
 import ClientLogos from "@/components/landing/ClientLogos";
-import HowItWorks from "@/components/landing/HowItWorks";
 
 export default function Home() {
   const stats = [
@@ -13,7 +12,7 @@ export default function Home() {
     { value: "48 hrs", label: "Sample Dispatch" },
     { value: "3 Brands", label: "Magic · Folkswear · Tailoring Turba" },
     { value: "50+", label: "Colors Available" },
-    { value: "5 pcs", label: "Minimum Order" },
+    { value: "10 pcs", label: "Minimum Order" },
   ];
 
   return (
@@ -23,7 +22,6 @@ export default function Home() {
       <ClientLogos />
       <CategoryCarousel />
       <FeaturesGrid />
-      <HowItWorks />
       <TargetAudienceGrid />
       <AppShowcase />
 

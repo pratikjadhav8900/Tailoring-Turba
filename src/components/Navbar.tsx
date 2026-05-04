@@ -12,6 +12,7 @@ import { useSession } from "next-auth/react";
 // but we will ignore it in the CSS to make the navbar solid as agreed.
 export default function Navbar({ transparent = false }: { transparent?: boolean }) {
   const [scrolled, setScrolled] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const { cartCount } = useCart();
   const { wishlistItems } = useWishlist();
   const { data: session, status } = useSession();
@@ -20,8 +21,14 @@ export default function Navbar({ transparent = false }: { transparent?: boolean 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    setIsAdmin(session?.user?.role === "ADMIN");
-  }, [session]);
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (mounted) {
+      setIsAdmin(session?.user?.role === "ADMIN");
+    }
+  }, [session, mounted]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -101,25 +108,37 @@ export default function Navbar({ transparent = false }: { transparent?: boolean 
             <Search size={22} />
           </button>
 
-          {isAdmin && (
+          {mounted && isAdmin && (
             <Link href="/admin" className={styles.iconBtn} aria-label="Admin Panel" title="Admin Panel">
               <ShieldCheck size={22} color="var(--tth-olive-dark)" />
             </Link>
           )}
 
-          <Link href={session ? "/dashboard" : "/login"} className={styles.iconBtn} aria-label={session ? "Dashboard" : "Sign In"}>
-            <User size={22} />
-          </Link>
+          {mounted && (
+            <>
+              <Link href={session ? "/dashboard" : "/login"} className={styles.iconBtn} aria-label={session ? "Dashboard" : "Sign In"}>
+                <User size={22} />
+              </Link>
 
-          <Link href="/wishlist" className={styles.iconBtn} aria-label="Shortlist">
-            <Heart size={22} fill={wishlistCount > 0 ? "#ef4444" : "none"} color={wishlistCount > 0 ? "#ef4444" : "currentColor"} />
-            {wishlistCount > 0 && <span className={styles.badge}>{wishlistCount}</span>}
-          </Link>
+              <Link href="/wishlist" className={styles.iconBtn} aria-label="Shortlist">
+                <Heart size={22} fill={wishlistCount > 0 ? "#ef4444" : "none"} color={wishlistCount > 0 ? "#ef4444" : "currentColor"} />
+                {wishlistCount > 0 && <span className={styles.badge}>{wishlistCount}</span>}
+              </Link>
 
-          <Link href="/cart" className={styles.iconBtn} aria-label="Cart">
-            <ShoppingCart size={22} />
-            {cartCount > 0 && <span className={styles.badge}>{cartCount}</span>}
-          </Link>
+              <Link href="/cart" className={styles.iconBtn} aria-label="Cart">
+                <ShoppingCart size={22} />
+                {cartCount > 0 && <span className={styles.badge}>{cartCount}</span>}
+              </Link>
+            </>
+          )}
+
+          {!mounted && (
+            <>
+              <div className={styles.iconBtn}><User size={22} /></div>
+              <div className={styles.iconBtn}><Heart size={22} /></div>
+              <div className={styles.iconBtn}><ShoppingCart size={22} /></div>
+            </>
+          )}
         </div>
       </div>
     </header>

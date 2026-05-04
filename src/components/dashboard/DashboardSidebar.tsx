@@ -5,6 +5,7 @@ import { signOut } from "next-auth/react";
 import styles from "./DashboardSidebar.module.css";
 
 import { 
+  Home,
   LayoutDashboard, 
   Paintbrush, 
   Package, 
@@ -14,6 +15,7 @@ import {
 } from "lucide-react";
 
 const navItems = [
+  { icon: <Home size={20} />, label: "Home", href: "/" },
   { icon: <LayoutDashboard size={20} />, label: "Overview", href: "/dashboard" },
   { icon: <Paintbrush size={20} />, label: "My Designs", href: "/dashboard/designs" },
   { icon: <Package size={20} />, label: "My Orders", href: "/dashboard/orders" },

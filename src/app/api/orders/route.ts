@@ -10,8 +10,12 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { items, orderSheetData, addressId, shippingAddress } = body;
-    // items: [{ productId, quantity, price, designId? }]
+    const { items, orderSheetData, addressId, shippingAddress, paymentId, razorpayOrderId } = body;
+
+    // Security: Only allow order creation if payment is provided (for retail orders)
+    if (!paymentId || !razorpayOrderId) {
+      return NextResponse.json({ error: "Payment verification required." }, { status: 400 });
+    }
 
     let finalAddressId = addressId;
 
@@ -64,6 +68,8 @@ export async function POST(req: NextRequest) {
         data: {
           userId: session.user.id,
           totalAmount,
+          status: "PROCESSING",
+          paymentId: paymentId,
           ...(finalAddressId && { shippingAddressId: finalAddressId }),
           items: {
             create: items.map((i: { 

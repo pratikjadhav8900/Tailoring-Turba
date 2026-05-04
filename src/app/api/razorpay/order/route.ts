@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create Razorpay order
-    const order = await razorpay.orders.create({
+    const order: any = await razorpay.orders.create({
       amount: amount * 100, // Convert to paise (Razorpay expects amount in smallest currency unit)
       currency,
       receipt: receipt || `receipt_${Date.now()}`,
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
         ...notes,
         timestamp: new Date().toISOString(),
       },
-      payment_capture: 1, // Auto-capture payment
+      payment_capture: true, // Auto-capture payment
     });
 
     // Return order details to frontend

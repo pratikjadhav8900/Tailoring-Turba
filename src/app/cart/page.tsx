@@ -28,9 +28,7 @@ export default function CartPage() {
   
   // Logic to calculate subtotal, customization fees (per item), and GST
   const subtotal = cart.reduce((total, item) => {
-    const cleanPrice = item.price.replace(/[^\d.]/g, '');
-    const numericPrice = parseFloat(cleanPrice) || 0;
-    return total + (numericPrice * item.quantity);
+    return total + (item.price * item.quantity);
   }, 0);
 
   // Design charge should be ₹300 for EACH unique customized product in the cart
@@ -72,6 +70,7 @@ export default function CartPage() {
             description="Explore our curated collections of premium corporate apparel and start building your custom range today."
             ctaText="Explore Collection"
             ctaHref="/products"
+            onCtaClick={() => console.log("Analytics Event: [Empty Cart] -> [Explore Collection Clicked]")}
           />
         ) : (
           <div className={styles.cartLayout}>
@@ -96,7 +95,7 @@ export default function CartPage() {
                       {item.customDesign && <span className={styles.metaBadge}>Personalized</span>}
                     </div>
                     
-                    <div className={styles.itemPrice}>₹{item.price}</div>
+                    <div className={styles.itemPrice}>₹{item.price.toLocaleString('en-IN')}</div>
 
                     <div className={styles.itemActions}>
                       <div className={styles.quantityDisplay}>

@@ -67,7 +67,7 @@ export default function ComparePage() {
                           </button>
                         </div>
                         <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "#1e293b", marginBottom: "8px", textAlign: "left", lineHeight: 1.4, height: "2.8em", overflow: "hidden" }}>{item.name}</h3>
-                        <div style={{ fontSize: "1.2rem", fontWeight: 800, color: "var(--tth-olive-dark)", textAlign: "left" }}>{item.price}</div>
+                        <div style={{ fontSize: "1.2rem", fontWeight: 800, color: "var(--tth-olive-dark)", textAlign: "left" }}>₹{typeof item.price === 'number' ? item.price.toLocaleString('en-IN') : item.price}</div>
                       </th>
                     ))}
                     {Array.from({ length: 4 - compareItems.length }).map((_, i) => (

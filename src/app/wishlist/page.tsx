@@ -56,7 +56,7 @@ export default function WishlistPage() {
                     <Trash2 size={20} color="#ef4444" />
                   </button>
                   <div className={styles.cardPriceOverlay}>
-                    <div className={styles.cardPrice}>{item.price}</div>
+                    <div className={styles.cardPrice}>₹{typeof item.price === 'number' ? item.price.toLocaleString('en-IN') : item.price}</div>
                   </div>
                 </div>
                 <div className={styles.cardBody}>

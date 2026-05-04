@@ -27,10 +27,11 @@ export default function PoloCustomizer({ onChange, initialState, isPreviewMode, 
   const setActiveSide = onSideChange || setInternalSide;
 
   const [bodyColor, setBodyColor] = useState(initialState?.bodyColor || "#111111");
-  const [activeTool, setActiveTool] = useState<ActiveTool>("Text");
+  const [activeTool, setActiveTool] = useState<ActiveTool>(null);
   const [frontElements, setFrontElements] = useState<DesignElement[]>(initialState?.frontElements || []);
   const [backElements, setBackElements] = useState<DesignElement[]>(initialState?.backElements || []);
   const [activeElementId, setActiveElementId] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   // Keep a stable ref to activeSide so upload handler never has stale closure
@@ -142,6 +143,7 @@ export default function PoloCustomizer({ onChange, initialState, isPreviewMode, 
       fontFamily: "Inter", fontWeight: "bold", textAlign: "center", rotation: 0
     }]);
     setActiveElementId(id);
+    setActiveTool(null); // Close the side panel
   };
 
   const [isUploading, setIsUploading] = useState(false);
@@ -174,6 +176,7 @@ export default function PoloCustomizer({ onChange, initialState, isPreviewMode, 
       } else {
         setBackElements(prev => [...prev, newEl]);
       }
+      setActiveTool(null); // Close the side panel
     } catch (err: any) {
       console.error("Logo upload failed:", err);
       const errorMsg = err.message || "Failed to upload logo.";
@@ -331,11 +334,11 @@ export default function PoloCustomizer({ onChange, initialState, isPreviewMode, 
           {!isPreviewMode && <div className={styles.printableArea}></div>}
 
           {/* Floating Formatting Toolbar */}
-          {activeEl && !isPreviewMode && (
+          {activeEl && activeEl.type === "text" && !isPreviewMode && !isDragging && (
             <div 
               className={styles.formattingToolbarFloating}
               style={{
-                top: Math.max(10, activeEl.y - 65),
+                top: Math.max(10, activeEl.y - 80),
                 left: activeEl.x + (activeEl.width / 2),
               }}
               onPointerDown={(e) => e.stopPropagation()}
@@ -445,7 +448,11 @@ export default function PoloCustomizer({ onChange, initialState, isPreviewMode, 
               dragHandleClassName="customizer-drag-handle"
               position={{ x: el.x, y: el.y }}
               size={{ width: el.width, height: el.height }}
-              onDragStop={(_, d) => updateElement(el.id, { x: d.x, y: d.y })}
+              onDragStart={() => setIsDragging(true)}
+              onDragStop={(_, d) => {
+                setIsDragging(false);
+                updateElement(el.id, { x: d.x, y: d.y });
+              }}
               onResizeStop={(_, __, ref, ___, pos) => updateElement(el.id, { width: parseInt(ref.style.width), height: parseInt(ref.style.height), ...pos })}
               disableDragging={!isActive || isPreviewMode}
               enableResizing={isActive && !isPreviewMode}
@@ -491,10 +498,11 @@ export default function PoloCustomizer({ onChange, initialState, isPreviewMode, 
               </div>
               
               {/* Canva floating buttons below active element */}
-              {isActive && (
+              {isActive && !isDragging && (
                 <div className={styles.floatingActionBtns}>
                   <div className={styles.circleActionBtn} onClick={(e) => { e.stopPropagation(); updateElement(el.id, { rotation: ((el.rotation || 0) + 90) % 360 }); }} title="Rotate 90°"><RotateCw size={14} /></div>
                   <div className={`${styles.circleActionBtn} customizer-drag-handle`} title="Move"><Move size={14} /></div>
+                  <div className={`${styles.circleActionBtn} ${styles.circleActionBtnDanger}`} onClick={(e) => removeElement(el.id, e)} title="Delete"><Trash2 size={14} /></div>
                 </div>
               )}
             </Rnd>

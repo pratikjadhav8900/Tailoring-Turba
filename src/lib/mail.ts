@@ -121,6 +121,11 @@ export const sendCustomerBookingConfirmation = async (
           <p style="margin: 6px 0;"><strong>⏰ Time:</strong> ${timeSlot}</p>
           ${notes ? `<p style="margin: 6px 0;"><strong>📝 Notes:</strong> ${notes}</p>` : ""}
         </div>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=Tailoring+Turba+Visit&details=Tailoring+consultation+appointment+for+${encodeURIComponent(customerName)}.&location=Tailoring+Turba+Showroom" style="display: inline-block; padding: 12px 24px; font-size: 15px; font-weight: bold; background-color: #4285F4; color: #ffffff; text-decoration: none; border-radius: 6px;">
+            Add to Google Calendar
+          </a>
+        </div>
         <p>If you need to reschedule or have any questions, please reply to this email or reach us on WhatsApp.</p>
         <div style="margin-top: 32px; padding-top: 20px; border-top: 1px solid #e0e0e0; font-size: 13px; color: #6b6b65; text-align: center;">
           <p>Tailoring Turba | Custom B2B Apparel Manufacturer</p>

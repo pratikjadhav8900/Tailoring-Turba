@@ -6,6 +6,11 @@ import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import type { NextAuthConfig } from "next-auth";
 
+// Polyfill AUTH_SECRET for NextAuth v5 using the existing NEXTAUTH_SECRET
+if (!process.env.AUTH_SECRET && process.env.NEXTAUTH_SECRET) {
+  process.env.AUTH_SECRET = process.env.NEXTAUTH_SECRET;
+}
+
 export const config: NextAuthConfig = {
   adapter: PrismaAdapter(prisma),
   providers: [

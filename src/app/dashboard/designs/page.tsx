@@ -23,7 +23,7 @@ export default async function DesignsPage() {
       <div className={styles.heroHeader}>
         <div className={styles.heroBg}>
           <Image 
-            src="https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=2000"
+            src="/studio_designs_bg.png"
             alt="Tailoring Background"
             fill
             priority
@@ -31,12 +31,13 @@ export default async function DesignsPage() {
         </div>
         <div className={styles.heroOverlay}></div>
         <div className={styles.heroContent}>
-          <div>
+          <div className={styles.heroLabel}>STUDIO COLLECTION 2024</div>
+          <div className={styles.heroMain}>
             <h1 className={styles.title}>My Designs</h1>
             <p className={styles.sub}>Manage and order from your custom apparel portfolio.</p>
           </div>
           <Link href="/customizer" className={styles.primaryBtn}>
-            <Paintbrush size={18} /> Create New
+            <Paintbrush size={18} strokeWidth={1.5} /> Create New
           </Link>
         </div>
       </div>

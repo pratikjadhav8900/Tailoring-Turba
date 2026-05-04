@@ -246,6 +246,25 @@
     height: 32px;
   }
 
+  .leftLinks {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    height: auto;
+    background: white;
+    flex-direction: column;
+    padding: 32px 0;
+    gap: 24px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1000;
+    border-bottom: 1px solid #f1f5f9;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+  }
+
   .leftLinks.mobileOpen {
     opacity: 1;
     visibility: visible;
@@ -253,37 +272,13 @@
   }
 
   .navLink {
-    font-size: 1.5rem;
+    font-size: 1.1rem;
+    width: 100%;
+    justify-content: center;
   }
 
   .dropdownMenu {
-    position: static;
-    opacity: 1;
-    visibility: visible;
-    transform: none;
-    box-shadow: none;
-    border: none;
-    padding: 0;
-    width: auto;
-    text-align: center;
-    display: none; 
-  }
-
-  .leftLinks {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100vh;
-    background: white;
-    flex-direction: column;
-    justify-content: center;
-    gap: 40px;
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-20px);
-    transition: all 0.3s ease;
-    z-index: 1000;
+    display: none;
   }
 }
 

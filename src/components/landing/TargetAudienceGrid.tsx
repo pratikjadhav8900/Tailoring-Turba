@@ -5,32 +5,32 @@ import styles from "./TargetAudienceGrid.module.css";
 const targets = [
   {
     title: "College / NGO Merch",
-    image: "https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=600&q=80",
+    image: "/images/targets/college.png",
     gridArea: "a"
   },
   {
     title: "Event Merchandise",
-    image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600&q=80",
+    image: "/images/targets/events.png",
     gridArea: "b"
   },
   {
     title: "Retail Apparel Stores",
-    image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=600&q=80",
+    image: "/images/targets/retail.png",
     gridArea: "c"
   },
   {
     title: "Market Place",
-    image: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&q=80",
+    image: "/images/targets/marketplace.png",
     gridArea: "d"
   },
   {
     title: "Instagram",
-    image: "https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?w=600&q=80",
+    image: "/images/targets/instagram.png",
     gridArea: "e"
   },
   {
     title: "Local Clothing",
-    image: "https://images.unsplash.com/photo-1528698827591-e19ccd7bc23d?w=600&q=80",
+    image: "/images/targets/clothing.png",
     gridArea: "f"
   }
 ];

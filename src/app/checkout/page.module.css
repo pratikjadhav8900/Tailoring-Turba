@@ -159,56 +159,137 @@
 .form {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 32px;
 }
 
 .formRow {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 24px;
+  gap: 20px;
 }
 
 .formRow3 {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
-  gap: 24px;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 20px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 640px) {
   .formRow, .formRow3 {
     grid-template-columns: 1fr;
+    gap: 24px;
   }
 }
 
 .inputGroup {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 .label {
   font-family: var(--font-sans);
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 0.7rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--tth-text-muted);
+  letter-spacing: 0.1em;
+  color: #444;
 }
 
 .input {
-  padding: 14px;
-  border-radius: 2px;
-  border: 1px solid var(--tth-beige-light);
-  background: var(--tth-white);
+  padding: 16px 18px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: #fcfcfb;
   font-family: var(--font-sans);
   font-size: 1rem;
   color: var(--tth-black);
-  transition: border-color 0.2s;
+  transition: all 0.2s ease;
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
 }
 
 .input:focus {
   outline: none;
-  border-color: var(--tth-olive-dark);
+  border-color: var(--tth-black);
+  background: white;
+  box-shadow: 0 0 0 4px rgba(0,0,0,0.03);
+}
+
+.customDropdownContainer {
+  position: relative;
+  width: 100%;
+}
+
+.dropdownToggle {
+  width: 100%;
+  padding: 16px 18px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: #fcfcfb;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  color: var(--tth-black);
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dropdownToggle::after {
+  content: "";
+  width: 12px;
+  height: 12px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='%23444' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+.dropdownToggle:focus {
+  outline: none;
+  border-color: var(--tth-black);
+  background: white;
+  box-shadow: 0 0 0 4px rgba(0,0,0,0.03);
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  width: 100%;
+  max-height: 200px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  z-index: 100;
+}
+
+.dropdownItem {
+  padding: 12px 18px;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  color: #444;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.dropdownItem:hover {
+  background: #f9f9f7;
+  color: var(--tth-black);
+}
+
+.dropdownItem:not(:last-child) {
+  border-bottom: 1px solid #f1f1f1;
+}
+
+.input::placeholder {
+  color: #9ca3af;
+  font-weight: 400;
 }
 
 .paymentMethod {
@@ -258,40 +339,43 @@
 }
 
 .totalRow {
-  border-top: 1px solid var(--tth-beige-light);
+  border-top: 1px solid rgba(255,255,255,0.2);
   padding-top: 24px;
   display: flex;
   justify-content: space-between;
   align-items: baseline;
   font-family: var(--font-sans);
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   font-weight: 700;
-  color: var(--tth-black);
+  color: white;
   margin-bottom: 32px;
 }
 
 .payBtn {
   width: 100%;
-  padding: 18px;
-  border-radius: 0;
-  background: var(--tth-olive-dark);
-  color: white;
-  font-weight: 500;
+  padding: 20px;
+  border-radius: 12px;
+  background: white;
+  color: var(--tth-olive-dark);
+  font-weight: 700;
   font-size: 1rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   border: none;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
 .payBtn:hover:not(:disabled) {
-  background: var(--tth-black);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+  background: #fdfdfd;
 }
 
 .payBtn:disabled {
-  background: var(--tth-beige-light);
-  color: var(--tth-text-muted);
+  background: rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.5);
   cursor: not-allowed;
 }
 

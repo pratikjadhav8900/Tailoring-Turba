@@ -135,7 +135,7 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
               </div>
               <div className={styles.inputGroup}>
                 <label>Price *</label>
-                <input required type="text" name="price" value={formData.price} onChange={handleChange} placeholder="e.g. ₹195" />
+                <input required type="number" step="0.01" min="0" name="price" value={formData.price} onChange={handleChange} placeholder="e.g. 195" />
               </div>
             </div>
 

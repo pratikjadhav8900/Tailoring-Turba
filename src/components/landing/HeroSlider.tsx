@@ -20,21 +20,21 @@ const SLIDES = [
   },
   {
     id: 3,
-    image: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=100&w=2560",
+    image: "/hero_sewing.png",
     subtitle: "PRECISION TAILORING",
     title: "built from the ground up",
   },
   {
     id: 4,
-    image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&q=100&w=2560",
-    subtitle: "PREMIUM BLANKS",
-    title: "elevate your brand identity",
+    image: "/hero_knitting.png",
+    subtitle: "TEXTILE INNOVATION",
+    title: "the art of premium knitting",
   },
   {
     id: 5,
-    image: "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&q=100&w=2560",
-    subtitle: "STREETWEAR READY",
-    title: "the perfect drop shoulder",
+    image: "/hero_indian_studio.png",
+    subtitle: "STUDIO STANDARDS",
+    title: "world-class manufacturing",
   },
   {
     id: 6,
@@ -55,6 +55,27 @@ export default function HeroSlider() {
     setCurrentSlide((prev) => (prev - 1 + SLIDES.length) % SLIDES.length);
   };
 
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => setTouchEnd(e.targetTouches[0].clientX);
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+    if (isLeftSwipe) nextSlide();
+    if (isRightSwipe) prevSlide();
+  };
+
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % SLIDES.length);
@@ -62,8 +83,42 @@ export default function HeroSlider() {
     return () => clearInterval(timer);
   }, []);
 
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <section className={styles.heroSection}>
+        <div className={styles.slide} style={{ opacity: 1, visibility: 'visible' }}>
+          <Image
+            src={SLIDES[0].image}
+            alt={SLIDES[0].title}
+            fill
+            priority
+            className={styles.backgroundImage}
+          />
+          <div className={styles.overlay}></div>
+          <div className={styles.contentContainer}>
+            <div className={styles.textContent}>
+              <h3 className={styles.subtitle}>{SLIDES[0].subtitle}</h3>
+              <h1 className={styles.title}>{SLIDES[0].title}</h1>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
-    <section className={styles.heroSection}>
+    <section 
+      className={styles.heroSection}
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+    >
       {SLIDES.map((slide, index) => (
         <div
           key={slide.id}

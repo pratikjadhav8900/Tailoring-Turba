@@ -377,6 +377,15 @@
   background: #F3F4F6;
 }
 
+.circleActionBtnDanger {
+  color: #EF4444;
+}
+
+.circleActionBtnDanger:hover {
+  background: #FEE2E2;
+  border-color: #FEE2E2;
+}
+
 .divider {
   width: 1px;
   height: 24px;
@@ -466,11 +475,19 @@
 
   .formattingToolbarFloating {
     width: 95vw;
-    bottom: 20px;
-    top: auto !important;
     left: 50% !important;
     padding: 8px;
     border-radius: 12px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* Firefox */
+    z-index: 200;
+  }
+  .formattingToolbarFloating::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
+  .formattingToolbarFloating > * {
+    flex-shrink: 0;
   }
 }
 

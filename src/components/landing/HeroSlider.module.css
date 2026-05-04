@@ -168,18 +168,41 @@
 
 @media (max-width: 768px) {
   .contentContainer {
-    align-items: center;
-    text-align: center;
-    padding: 0 5%;
+    align-items: flex-end;
+    text-align: right;
+    padding: 0 8%;
+  }
+  .subtitle {
+    font-size: 0.85rem;
+    margin-bottom: 12px;
   }
   .title {
-    font-size: 3rem;
+    font-size: 2.2rem;
+    line-height: 1.2;
   }
   .ctaGroup {
-    right: 50%;
-    transform: translateX(50%);
+    right: 8%;
+    transform: none;
     bottom: 60px;
+    flex-direction: column;
+    align-items: flex-end;
+    width: auto;
+  }
+  .primaryBtn, .secondaryBtn {
+    padding: 12px 24px;
+    font-size: 0.8rem;
     width: 100%;
-    justify-content: center;
+    text-align: center;
+  }
+  .navBtn {
+    width: 36px;
+    height: 36px;
+    opacity: 0.5;
+  }
+  .prevBtn {
+    left: 12px;
+  }
+  .nextBtn {
+    right: 12px;
   }
 }

@@ -11,6 +11,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Name, email, phone and message are required." }, { status: 400 });
     }
 
+    const phoneRegex = /^[0-9]{10}$/;
+    if (!phoneRegex.test(phone)) {
+      return NextResponse.json({ error: "Please enter a valid 10-digit phone number." }, { status: 400 });
+    }
+
+
     // 0. Save to Database
     await prisma.inquiry.create({
       data: {

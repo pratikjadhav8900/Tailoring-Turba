@@ -27,10 +27,17 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
   const { toggleWishlist, isInWishlist } = useWishlist();
 
   const [activeImage, setActiveImage] = useState(product.gallery?.[0] || product.image);
-  const [qty, setQty] = useState<number | string>(10);
+  const minQty = product.minOrderQuantity || 10;
+  const [qty, setQty] = useState<number | string>(minQty);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [lightboxImg, setLightboxImg] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+  const [openAccordion, setOpenAccordion] = useState<string | null>('details');
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Form state
   const [formName, setFormName] = useState("");
@@ -55,13 +62,13 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
   }, [storageKey]);
 
   const handleAddToCart = () => {
-    const finalQty = Math.max(10, parseInt(qty as string) || 10);
+    const finalQty = Math.max(minQty, parseInt(qty as string) || minQty);
     addToCart({
       id: product.id,
       productId: product.id,
       code: product.code || product.name,
       name: product.name,
-      price: product.price,
+      price: typeof product.price === 'number' ? product.price : parseFloat(String(product.price).replace(/[^\d.]/g, '')) || 0,
       quantity: finalQty,
       image: product.image
     });
@@ -162,7 +169,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
           <div className={styles.leftColumn}>
             <div className={styles.mainImageContainer}>
               {activeImage ? (
-                <Image src={activeImage} alt={product.name} fill style={{ objectFit: "cover" }} priority />
+                <Image src={activeImage} alt={product.name} fill style={{ objectFit: "cover" }} priority sizes="(max-width: 768px) 100vw, 50vw" />
               ) : (
                 <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#e5e7eb', color: '#9ca3af' }}>No Image</div>
               )}
@@ -177,33 +184,13 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
               <div className={styles.thumbnailStrip}>
                 {product.gallery.map((img: string, i: number) => (
                   <button key={i} className={`${styles.thumbnailBtn} ${activeImage === img ? styles.active : ""}`} onClick={() => setActiveImage(img)} title={`View ${i + 1}`}>
-                    <Image src={img} alt={`${product.name} view ${i + 1}`} fill style={{ objectFit: "cover", padding: "4px" }} />
+                    <Image src={img} alt={`${product.name} view ${i + 1}`} fill style={{ objectFit: "cover", padding: "4px" }} sizes="80px" />
                   </button>
                 ))}
               </div>
             )}
 
-            {product.description && (
-              <div className={styles.aboutSection}>
-                <p className={styles.sectionEyebrow}>About this product</p>
-                <p className={styles.description}>{product.description}</p>
-              </div>
-            )}
-
-            {product.features && product.features.length > 0 && (
-              <div className={styles.sectionBlock}>
-                <p className={styles.sectionEyebrow}>What makes it special</p>
-                <ul className={styles.featureList}>
-                  {product.features.map((f: string, i: number) => (
-                    <li key={i} className={styles.featureItem}>
-                      <span className={styles.bullet}>—</span>
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
+            </div>
 
           {/* RIGHT COLUMN */}
           <div className={styles.detailsContainer}>
@@ -212,7 +199,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
               <h1 className={styles.title}>{product.name}</h1>
               <p className={styles.typeLabel}>{product.type}</p>
               <div className={styles.ratingRow}>
-                <div className={styles.stars}>{renderStars(averageRating)}</div>
+                <div className={styles.stars}>{mounted ? renderStars(averageRating) : renderStars(0)}</div>
                 <span className={styles.ratingText}>
                   {reviews.length > 0 ? `${averageRating.toFixed(1)} (${reviews.length} reviews)` : "No reviews yet"}
                 </span>
@@ -220,23 +207,19 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
             </div>
 
             <div style={{ borderTop: "1px solid #f1f5f9", paddingTop: "20px" }}>
-              <div className={styles.price}>{product.price}</div>
-              <div style={{ fontSize: "0.78rem", color: "#10b981", fontWeight: 700, marginTop: "6px", letterSpacing: "0.04em" }}>✓ Wholesale / Bulk Eligible</div>
-            </div>
-
-            <div style={{ padding: "14px 16px", background: "#f8fafc", border: "1px solid #e2e8f0", fontSize: "0.85rem", color: "#475569", display: "flex", gap: "10px", alignItems: "flex-start" }}>
-              <Package size={16} strokeWidth={1.5} style={{ color: "var(--tth-olive-dark)", flexShrink: 0, marginTop: "2px" }} />
-              <div>
-                <strong style={{ color: "#1e293b", fontSize: "0.88rem" }}>Bulk orders available</strong>
-                <div style={{ marginTop: "3px", fontSize: "0.78rem" }}>Dispatches based on customization timeline. Branding available.</div>
+              <div className={styles.price}>₹{typeof product.price === 'number' ? product.price.toLocaleString('en-IN') : product.price}</div>
+              <div className={styles.stockBadge} style={{ marginTop: "12px" }}>
+                <div className={styles.stockPulse} />
+                <span>500+ Units Ready for Dispatch</span>
               </div>
             </div>
+
 
             <div className={styles.actions}>
               <div className={styles.qtyRow} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                   <span style={{ fontWeight: 600, fontSize: "0.85rem", color: "#1e293b", letterSpacing: "0.04em" }}>Qty:</span>
-                  <input type="number" value={qty} onChange={(e) => setQty(e.target.value === '' ? '' : parseInt(e.target.value) || '')} onBlur={() => setQty(Math.max(10, parseInt(qty as string) || 10))} min={10} className={styles.qtyInput} />
+                  <input type="number" value={qty} onChange={(e) => setQty(e.target.value === '' ? '' : parseInt(e.target.value) || '')} onBlur={() => setQty(Math.max(minQty, parseInt(qty as string) || minQty))} min={minQty} className={styles.qtyInput} />
                 </div>
                 <button 
                   onClick={() => toggleWishlist(product)}
@@ -259,11 +242,16 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
                 </button>
               </div>
               <button className={styles.btnCart} onClick={handleAddToCart}>Add to Cart</button>
-              {isTShirt && (
-                <Link href={`/customizer?id=${product.id}`} className={styles.btnCart} style={{ textDecoration: 'none', textAlign: 'center' }}>
-                  Customize in Studio
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                <Link href={`/contact?product=${product.name}&subject=Sample Request`} className={styles.btnSample} style={{ textDecoration: 'none', textAlign: 'center' }}>
+                  Request Sample
                 </Link>
-              )}
+                {isTShirt && (
+                  <Link href={`/customizer?id=${product.id}`} className={styles.btnStudio} style={{ textDecoration: 'none', textAlign: 'center' }}>
+                    Design Studio
+                  </Link>
+                )}
+              </div>
               <button 
                 onClick={() => isInCompare(product.id) ? removeFromCompare(product.id) : addToCompare(product)}
                 style={{
@@ -291,74 +279,131 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
               </button>
               <Link href={`/contact?product=${product.name}`} className={styles.btnInquire}>Request Bulk Quote</Link>
             </div>
-
-            {!isTShirt && (
-              <div className={styles.customPromoCard}>
-                <h4 className={styles.promoTitle}>Custom Requirements & Uniforms</h4>
-                <p className={styles.promoText}>
-                  For corporate uniforms, workwear, and custom branding needs, our experts need to understand your project.
-                </p>
-                <div className={styles.promoActions}>
-                  <Link href="/booking" className={styles.promoBtn}>
-                    Book Appointment
-                  </Link>
-                  <a href={`https://wa.me/919022553346?text=Hi, I am interested in custom uniforms for ${product.name}`} target="_blank" rel="noreferrer" className={styles.promoBtnWhatsapp}>
-                    WhatsApp Us
-                  </a>
-                </div>
-              </div>
-            )}
-
-            {/* Trust Badges Strip */}
-            <div className={styles.badgeGrid}>
-              {[
-                { icon: <Receipt size={16} />, title: "GST Invoice", sub: "Guaranteed" },
-                { icon: <ShieldCheck size={16} />, title: "Made in India", sub: "Pure Quality" },
-                { icon: <Lock size={16} />, title: "Secure Pay", sub: "100% Safe" },
-                { icon: <Award size={16} />, title: "Certified", sub: "B2B Expert" },
-              ].map((badge, i) => (
-                <div key={i} className={styles.badgeItem}>
-                  <div className={styles.badgeIconWrapper}>{badge.icon}</div>
-                  <div>
-                    <div className={styles.badgeTitle}>{badge.title}</div>
-                    <div className={styles.badgeSub}>{badge.sub}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Sampling Policy Card */}
-            <div className={styles.samplingCard}>
-              <div className={styles.samplingIcon}>
-                <Package size={20} />
-              </div>
-              <div>
-                <h4 className={styles.samplingTitle}>Test Before You Bulk Order</h4>
-                <p className={styles.samplingText}>
-                  Order a single sample to check fit and fabric. 
-                  <strong> 100% sample cost refund </strong> when you place a bulk order of 50+ units.
-                </p>
-                <Link href={`/contact?product=${product.name}&subject=Sample Request`} className={styles.samplingLink}>
-                  Request Sample Pack →
-                </Link>
-              </div>
-            </div>
-
-            <div className={styles.policyStrip}>
-              {[
-                { icon: <Receipt size={14} />, text: "Full GST tax invoice provided" },
-                { icon: <RotateCcw size={14} />, text: "Hassle-free returns within 7 days" },
-                { icon: <Brush size={14} />, text: "Custom branding available" },
-                { icon: <Truck size={14} />, text: "Pan-India delivery" },
-              ].map((ft, i) => (
-                <div key={i} className={styles.policyItem}>
-                  <span className={styles.policyIcon}>{ft.icon}</span>
-                  {ft.text}
-                </div>
-              ))}
-            </div>
           </div>
         </div>
+
+        {/* Editorial Content Section - Accordion Design */}
+        <section className={styles.editorialSection}>
+          <div className="container">
+            <div className={styles.accordionContainer}>
+              
+              {/* 1. Product Details */}
+              <div className={styles.accordionItem}>
+                <button className={styles.accordionHeader} onClick={() => setOpenAccordion(openAccordion === 'details' ? null : 'details')}>
+                  <div className={styles.headerLabelGroup}>
+                    <span className={styles.headerNumber}>01</span>
+                    <span className={styles.headerLabel}>PRODUCT DETAILS & CRAFTSMANSHIP</span>
+                  </div>
+                  <span className={styles.accordionIcon}>{openAccordion === 'details' ? '—' : '+'}</span>
+                </button>
+                {openAccordion === 'details' && (
+                  <div className={styles.accordionContent}>
+                    <div className={styles.detailsGrid}>
+                      <div className={styles.detailsStory}>
+                        <p className={styles.description}>{product.description}</p>
+                        <div className={styles.policyStripCompact}>
+                          <div className={styles.policyItem}><RotateCcw size={14} /> 7-Day Inspection Period</div>
+                          <div className={styles.policyItem}><Brush size={14} /> Custom Branding Available</div>
+                        </div>
+                      </div>
+                      <div className={styles.detailsSpecs}>
+                        <h4 className={styles.specTitle}>TECHNICAL SPECIFICATIONS</h4>
+                        <ul className={styles.featureList}>
+                          {product.features?.map((f: string, i: number) => (
+                            <li key={i} className={styles.featureItem}>
+                              <span className={styles.bullet}>—</span> {f}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* 2. Wholesale & Pricing */}
+              <div className={styles.accordionItem}>
+                <button className={styles.accordionHeader} onClick={() => setOpenAccordion(openAccordion === 'wholesale' ? null : 'wholesale')}>
+                  <div className={styles.headerLabelGroup}>
+                    <span className={styles.headerNumber}>02</span>
+                    <span className={styles.headerLabel}>WHOLESALE PRICING & MOQS</span>
+                  </div>
+                  <span className={styles.accordionIcon}>{openAccordion === 'wholesale' ? '—' : '+'}</span>
+                </button>
+                {openAccordion === 'wholesale' && (
+                  <div className={styles.accordionContent}>
+                    <div className={styles.wholesaleGrid}>
+                      <div className={styles.pricingTableCard}>
+                        <div className={styles.pricingTable}>
+                          <div className={styles.tableRow} style={{ borderBottom: "1px solid #f1f5f9", paddingBottom: "12px", marginBottom: "12px", fontWeight: 700, color: "#94a3b8", fontSize: "0.75rem", letterSpacing: "0.05em" }}>
+                            <span>VOLUME QUANTITY</span>
+                            <span>UNIT PRICE (INR)</span>
+                          </div>
+                          <div className={styles.tableRow}>
+                            <span>{minQty}+ units (MOQ)</span>
+                            <span className={styles.priceHighlight}>₹{typeof product.price === 'number' ? product.price : product.price}</span>
+                          </div>
+                          <div className={styles.tableRow}>
+                            <span>100+ units</span>
+                            <span className={styles.priceHighlight}>₹{typeof product.price === 'number' ? Math.round(product.price * 0.8) : Math.round(parseFloat(String(product.price).replace(/[^\d.]/g, '')) * 0.8)}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className={styles.samplingPromo}>
+                        <h4 className={styles.samplingTitle}>QUALITY ASSURANCE</h4>
+                        <p className={styles.samplingText}>Request a production-grade sample to verify fit and finish. Sample cost is fully credited against your subsequent bulk order.</p>
+                        <Link href={`/contact?product=${product.name}&subject=Sample Request`} className={styles.btnSampleMinimal}>Request Sample Pack →</Link>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* 3. Logistics & Compliance */}
+              <div className={styles.accordionItem}>
+                <button className={styles.accordionHeader} onClick={() => setOpenAccordion(openAccordion === 'logistics' ? null : 'logistics')}>
+                  <div className={styles.headerLabelGroup}>
+                    <span className={styles.headerNumber}>03</span>
+                    <span className={styles.headerLabel}>LOGISTICS & COMPLIANCE</span>
+                  </div>
+                  <span className={styles.accordionIcon}>{openAccordion === 'logistics' ? '—' : '+'}</span>
+                </button>
+                {openAccordion === 'logistics' && (
+                  <div className={styles.accordionContent}>
+                    <div className={styles.logisticsGrid}>
+                      <div className={styles.logisticsInfo}>
+                        <div className={styles.infoBlock}>
+                          <h5 className={styles.infoTitle}>TAXATION</h5>
+                          <p className={styles.infoText}>All orders include a formal GST tax invoice, enabling full input tax credit for registered businesses.</p>
+                        </div>
+                        <div className={styles.infoBlock}>
+                          <h5 className={styles.infoTitle}>PRODUCTION TIMELINE</h5>
+                          <p className={styles.infoText}>Standard dispatch within 3-5 business days for blank inventory. Custom branding requires an additional 7-10 days.</p>
+                        </div>
+                      </div>
+                      <div className={styles.trustStripCompact}>
+                        {[
+                          { icon: <ShieldCheck size={18} />, title: "Made in India", sub: "Premium Sourcing" },
+                          { icon: <Lock size={18} />, title: "Secure B2B Pay", sub: "100% Protection" },
+                          { icon: <Award size={18} />, title: "Export Quality", sub: "Global Standards" },
+                        ].map((item, i) => (
+                          <div key={i} className={styles.trustItemCompact}>
+                            <div className={styles.trustIcon}>{item.icon}</div>
+                            <div>
+                              <div className={styles.trustTitle}>{item.title}</div>
+                              <div className={styles.trustSub}>{item.sub}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+            </div>
+          </div>
+        </section>
 
         {/* Related Products */}
         {relatedProducts.length > 0 && (
@@ -373,14 +418,17 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "24px" }}>
                 {relatedProducts.map(rp => (
-                  <Link key={rp.id} href={`/products/${rp.id}`} style={{ textDecoration: "none" }}>
-                    <div className="glass-card" style={{ padding: 0, overflow: "hidden", transition: "transform 0.2s, box-shadow 0.2s" }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(-4px)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 12px 32px rgba(0,0,0,0.1)"; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ""; (e.currentTarget as HTMLElement).style.boxShadow = ""; }}
-                    >
+                  <div 
+                    key={rp.id} 
+                    onClick={() => router.push(`/products/${rp.id}`)}
+                    className="glass-card" 
+                    style={{ padding: 0, overflow: "hidden", transition: "transform 0.2s, box-shadow 0.2s", cursor: "pointer", border: "1px solid #e2e8f0", borderRadius: "12px" }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(-4px)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 12px 32px rgba(0,0,0,0.1)"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ""; (e.currentTarget as HTMLElement).style.boxShadow = ""; }}
+                  >
                       <div style={{ height: "200px", position: "relative", background: "#f1f5f9" }}>
                         {rp.image ? (
-                           <Image src={rp.image} alt={rp.name} fill style={{ objectFit: "cover" }} />
+                           <Image src={rp.image} alt={rp.name} fill style={{ objectFit: "cover" }} sizes="(max-width: 768px) 100vw, 240px" />
                         ) : (
                            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af' }}>No Image</div>
                         )}
@@ -389,10 +437,9 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
                       <div style={{ padding: "16px" }}>
                         <div style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "4px" }}>{rp.type}</div>
                         <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "#1e293b", marginBottom: "8px" }}>{rp.name}</h3>
-                        <div style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--tth-olive-dark)" }}>{rp.price}</div>
+                        <div style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--tth-olive-dark)" }}>₹{typeof rp.price === 'number' ? rp.price.toLocaleString('en-IN') : rp.price}</div>
                       </div>
                     </div>
-                  </Link>
                 ))}
               </div>
             </div>

@@ -28,7 +28,7 @@ export default async function ProductsPage() {
       type: p.type || "",
       image: p.images && p.images.length > 0 ? p.images[0] : "",
       gallery: p.images || [],
-      price: `₹${p.basePrice}`,
+      price: p.basePrice,
       colors: p.colors || 0,
       badge: p.badge || "",
       description: p.description,

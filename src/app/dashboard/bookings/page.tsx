@@ -23,7 +23,7 @@ export default async function BookingsPage() {
       <div className={styles.heroHeader}>
         <div className={styles.heroBg}>
           <Image 
-            src="https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=2000"
+            src="/dashboard_bookings_bg.png"
             alt="Tailoring Background"
             fill
             priority
@@ -31,12 +31,13 @@ export default async function BookingsPage() {
         </div>
         <div className={styles.heroOverlay}></div>
         <div className={styles.heroContent}>
-          <div>
+          <div className={styles.heroLabel}>STUDIO VISITS 2024</div>
+          <div className={styles.heroMain}>
             <h1 className={styles.title}>Bookings</h1>
             <p className={styles.sub}>Manage your showroom appointments and consultations.</p>
           </div>
           <Link href="/booking" className={styles.primaryBtn}>
-            <CalendarCheck size={18} /> Schedule Visit
+            <CalendarCheck size={18} strokeWidth={1.5} /> Schedule Visit
           </Link>
         </div>
       </div>

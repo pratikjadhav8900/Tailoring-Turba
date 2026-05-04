@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import styles from "./ClientLogos.module.css";
 
 const CLIENTS = [
@@ -7,14 +7,46 @@ const CLIENTS = [
 ];
 
 export default function ClientLogos() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <section className={styles.section}>
+        <div className="container">
+          <p className={styles.label}>Trusted by established brands across India</p>
+          <div className={styles.wrapper}>
+            <div className={styles.track}>
+              {CLIENTS.map((client, i) => (
+                <div key={`logo-${i}`} className={styles.logo}>
+                  {client}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className={styles.section}>
       <div className="container">
         <p className={styles.label}>Trusted by established brands across India</p>
         <div className={styles.wrapper}>
           <div className={styles.track}>
-            {[...CLIENTS, ...CLIENTS].map((client, i) => (
-              <div key={i} className={styles.logo}>
+            {/* Desktop: Animated track, Mobile: Static Grid */}
+            {CLIENTS.map((client, i) => (
+              <div key={`logo-${i}`} className={styles.logo}>
+                {client}
+              </div>
+            ))}
+            {/* Clone for desktop infinite loop */}
+            {CLIENTS.map((client, i) => (
+              <div key={`clone-${i}`} className={`${styles.logo} ${styles.desktopOnly}`}>
                 {client}
               </div>
             ))}

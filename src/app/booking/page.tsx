@@ -3,6 +3,7 @@ import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import styles from "./page.module.css";
 import { Calendar, MapPin, Clock, Phone, CheckCircle2 } from "lucide-react";
+import toast from "react-hot-toast";
 
 const timeSlots = [
   "10:00 AM", "11:00 AM", "12:00 PM",
@@ -32,8 +33,10 @@ export default function BookingPage() {
     setLoading(false);
     if (res.ok) {
       setSubmitted(true);
+      toast.success("Booking confirmed ✓");
     } else {
       setError("Booking failed. Please try again or call us directly.");
+      toast.error("Failed to book appointment");
     }
   }
 

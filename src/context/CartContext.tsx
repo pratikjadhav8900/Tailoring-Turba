@@ -1,5 +1,6 @@
 "use client";
 import React, { createContext, useContext, useState, useEffect } from "react";
+import toast from "react-hot-toast";
 
 import { CustomizerState } from "@/types/customizer";
 
@@ -8,7 +9,7 @@ export type CartItem = {
   productId: string;
   code: string;
   name: string;
-  price: string;
+  price: number;
   quantity: number;
   image?: string;
   mockupUrlBack?: string;
@@ -68,6 +69,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       }
       return [...prev, newItem];
     });
+    toast.success("Added to cart ✓", { duration: 2500 });
   };
 
   const removeFromCart = (id: string) => {

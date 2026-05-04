@@ -39,7 +39,7 @@ export default async function ProfilePage() {
       <div className={styles.heroHeader}>
         <div className={styles.heroBg}>
           <Image 
-            src="https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=2000"
+            src="/dashboard_overview_bg.png"
             alt="Tailoring Background"
             fill
             priority
@@ -47,7 +47,8 @@ export default async function ProfilePage() {
         </div>
         <div className={styles.heroOverlay}></div>
         <div className={styles.heroContent}>
-          <div>
+          <div className={styles.heroLabel}>ACCOUNT SETTINGS</div>
+          <div className={styles.heroMain}>
             <h1 className={styles.title}>Profile Settings</h1>
             <p className={styles.sub}>Manage your personal information and B2B details.</p>
           </div>

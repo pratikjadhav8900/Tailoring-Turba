@@ -9,6 +9,7 @@ interface EmptyStateProps {
   description: string;
   ctaText?: string;
   ctaHref?: string;
+  onCtaClick?: () => void;
 }
 
 const EmptyState: React.FC<EmptyStateProps> = ({
@@ -16,7 +17,8 @@ const EmptyState: React.FC<EmptyStateProps> = ({
   title,
   description,
   ctaText = "Start Shopping",
-  ctaHref = "/products"
+  ctaHref = "/products",
+  onCtaClick
 }) => {
   return (
     <div className={styles.container}>
@@ -33,7 +35,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({
       <h2 className={styles.title}>{title}</h2>
       <p className={styles.description}>{description}</p>
       {ctaText && ctaHref && (
-        <Link href={ctaHref} className={styles.cta}>
+        <Link href={ctaHref} className={styles.cta} onClick={onCtaClick}>
           {ctaText}
         </Link>
       )}

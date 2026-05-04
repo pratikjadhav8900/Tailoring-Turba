@@ -11,7 +11,7 @@ type Product = {
   code: string;
   name: string;
   spec: string | null;
-  price?: string;
+  price?: number;
 };
 
 type CategoryData = {
@@ -149,7 +149,7 @@ export default function CategoryDetailPage({ params }: { params: { slug: string 
 
                     <div className={styles.pricingBlock}>
                       <div className={styles.priceLabel}>Starting from</div>
-                      <div className={styles.priceValue}>₹{product.price || "1,499"}</div>
+                      <div className={styles.priceValue}>₹{product.price ? product.price.toLocaleString('en-IN') : 'On Request'}</div>
                       <div className={styles.gstNote}>Inc. {data.gst || "18%"} GST</div>
                     </div>
 
@@ -161,7 +161,7 @@ export default function CategoryDetailPage({ params }: { params: { slug: string 
                           productId: product.id,
                           code: product.code,
                           name: product.name,
-                          price: product.price || "1,499",
+                          price: product.price || 0,
                           quantity: 1
                         })}
                       >

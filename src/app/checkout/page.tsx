@@ -20,6 +20,46 @@ export default function CheckoutPage() {
     state: "",
     postalCode: ""
   });
+  const [isStateDropdownOpen, setIsStateDropdownOpen] = useState(false);
+
+  const states = [
+    { name: "Andaman and Nicobar Islands", code: "AN" },
+    { name: "Andhra Pradesh", code: "AP" },
+    { name: "Arunachal Pradesh", code: "AR" },
+    { name: "Assam", code: "AS" },
+    { name: "Bihar", code: "BR" },
+    { name: "Chandigarh", code: "CH" },
+    { name: "Chhattisgarh", code: "CT" },
+    { name: "Dadra and Nagar Haveli and Daman and Diu", code: "DN" },
+    { name: "Delhi", code: "DL" },
+    { name: "Goa", code: "GA" },
+    { name: "Gujarat", code: "GJ" },
+    { name: "Haryana", code: "HR" },
+    { name: "Himachal Pradesh", code: "HP" },
+    { name: "Jammu and Kashmir", code: "JK" },
+    { name: "Jharkhand", code: "JH" },
+    { name: "Karnataka", code: "KA" },
+    { name: "Kerala", code: "KL" },
+    { name: "Ladakh", code: "LA" },
+    { name: "Lakshadweep", code: "LD" },
+    { name: "Madhya Pradesh", code: "MP" },
+    { name: "Maharashtra", code: "MH" },
+    { name: "Manipur", code: "MN" },
+    { name: "Meghalaya", code: "ML" },
+    { name: "Mizoram", code: "MZ" },
+    { name: "Nagaland", code: "NL" },
+    { name: "Odisha", code: "OR" },
+    { name: "Puducherry", code: "PY" },
+    { name: "Punjab", code: "PB" },
+    { name: "Rajasthan", code: "RJ" },
+    { name: "Sikkim", code: "SK" },
+    { name: "Tamil Nadu", code: "TN" },
+    { name: "Telangana", code: "TG" },
+    { name: "Tripura", code: "TR" },
+    { name: "Uttar Pradesh", code: "UP" },
+    { name: "Uttarakhand", code: "UT" },
+    { name: "West Bengal", code: "WB" }
+  ];
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -32,9 +72,7 @@ export default function CheckoutPage() {
 
   const calculateTotal = () => {
     return cart.reduce((total, item) => {
-      const cleanPrice = item.price.replace(/[^\d.]/g, '');
-      const numericPrice = parseFloat(cleanPrice) || 0;
-      return total + (numericPrice * item.quantity);
+      return total + (item.price * item.quantity);
     }, 0);
   };
 
@@ -45,32 +83,117 @@ export default function CheckoutPage() {
 
   const [error, setError] = useState<string | null>(null);
 
+  const loadRazorpay = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
   const handleCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsProcessing(true);
     setError(null);
     
     try {
-      // Prepare items for API
-      const orderItems = cart.map(item => {
-        const cleanPrice = item.price.replace(/[^\d.]/g, '');
-        const numericPrice = parseFloat(cleanPrice) || 0;
-        return {
-          productId: item.productId,
-          quantity: item.quantity,
-          price: numericPrice,
-          customStateJson: item.customDesign ? JSON.stringify(item.customDesign) : undefined,
-          printFiles: item.uploadedAssets || undefined,
-          mockupUrl: item.customDesign ? item.image : undefined,
-          mockupUrlBack: item.mockupUrlBack
-        };
+      // 1. Load Razorpay SDK
+      const isLoaded = await loadRazorpay();
+      if (!isLoaded) {
+        throw new Error("Razorpay SDK failed to load. Check your internet connection.");
+      }
+
+      // 2. Create Razorpay Order via our API
+      const orderRes = await fetch("/api/razorpay/order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: estimatedTotal,
+          currency: "INR",
+          notes: {
+            customerName: `${formData.firstName} ${formData.lastName}`,
+            email: formData.email
+          }
+        }),
       });
+
+      const orderData = await orderRes.json();
+      if (!orderRes.ok) throw new Error(orderData.error || "Failed to initiate payment.");
+
+      // 3. Open Razorpay Modal
+      const options = {
+        key: orderData.key_id,
+        amount: orderData.order.amount,
+        currency: orderData.order.currency,
+        name: "Tailoring Turba",
+        description: "Premium Custom Apparel Order",
+        order_id: orderData.order.id,
+        handler: async function (response: any) {
+          // 4. Verify Payment Signature
+          const verifyRes = await fetch("/api/razorpay/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            }),
+          });
+
+          const verifyData = await verifyRes.json();
+          if (!verifyRes.ok) {
+            setError(verifyData.error || "Payment verification failed.");
+            setIsProcessing(false);
+            return;
+          }
+
+          // 5. Finalize Order in our Database
+          await finalizeOrder(response.razorpay_payment_id, response.razorpay_order_id);
+        },
+        prefill: {
+          name: `${formData.firstName} ${formData.lastName}`,
+          email: formData.email,
+        },
+        theme: {
+          color: "#4a5e3a",
+        },
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.on("payment.failed", function (response: any) {
+        setError(response.error.description || "Payment failed.");
+        setIsProcessing(false);
+      });
+      rzp.open();
+
+    } catch (err: any) {
+      console.error("[CHECKOUT_ERROR]", err);
+      setError(err.message || "An unexpected error occurred.");
+      setIsProcessing(false);
+    }
+  };
+
+  const finalizeOrder = async (paymentId: string, razorpayOrderId: string) => {
+    try {
+      const orderItems = cart.map(item => ({
+        productId: item.productId,
+        quantity: item.quantity,
+        price: item.price,
+        customStateJson: item.customDesign ? JSON.stringify(item.customDesign) : undefined,
+        printFiles: item.uploadedAssets || undefined,
+        mockupUrl: item.customDesign ? item.image : undefined,
+        mockupUrlBack: item.mockupUrlBack
+      }));
 
       const response = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           items: orderItems,
+          paymentId,
+          razorpayOrderId,
           shippingAddress: {
             name: `${formData.firstName} ${formData.lastName}`,
             street: formData.street,
@@ -82,24 +205,16 @@ export default function CheckoutPage() {
         }),
       });
 
-      let result;
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.includes("application/json")) {
-        result = await response.json();
-      } else {
-        const text = await response.text();
-        throw new Error(text || `Error: ${response.status}`);
-      }
-
       if (!response.ok) {
-        throw new Error(result.error || "Failed to place order.");
+        const result = await response.json();
+        throw new Error(result.error || "Failed to save order record after payment.");
       }
 
       setIsSuccess(true);
       clearCart();
     } catch (err: any) {
-      console.error("[CHECKOUT_ERROR]", err);
-      setError(err.message || "An unexpected error occurred.");
+      console.error("[FINALIZE_ORDER_ERROR]", err);
+      setError(err.message || "Order paid but failed to save in our system. Please contact support.");
     } finally {
       setIsProcessing(false);
     }
@@ -198,12 +313,32 @@ export default function CheckoutPage() {
                 </div>
                 <div className={styles.inputGroup}>
                   <label className={styles.label}>State</label>
-                  <select name="state" value={formData.state} onChange={handleInputChange} required className={styles.input}>
-                    <option value="">Select</option>
-                    <option value="MH">Maharashtra</option>
-                    <option value="DL">Delhi</option>
-                    <option value="KA">Karnataka</option>
-                  </select>
+                  <div className={styles.customDropdownContainer}>
+                    <button 
+                      type="button"
+                      className={styles.dropdownToggle}
+                      onClick={() => setIsStateDropdownOpen(!isStateDropdownOpen)}
+                    >
+                      {states.find(s => s.code === formData.state)?.name || "Select State"}
+                    </button>
+                    
+                    {isStateDropdownOpen && (
+                      <div className={styles.dropdownMenu}>
+                        {states.map((s) => (
+                          <div 
+                            key={s.code} 
+                            className={styles.dropdownItem}
+                            onClick={() => {
+                              setFormData(prev => ({ ...prev, state: s.code }));
+                              setIsStateDropdownOpen(false);
+                            }}
+                          >
+                            {s.name}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className={styles.inputGroup}>
                   <label className={styles.label}>PIN Code</label>
@@ -245,7 +380,7 @@ export default function CheckoutPage() {
                 {cart.map(item => (
                   <div key={item.id} className={styles.cartItem}>
                     <span className={styles.itemName}>{item.quantity}x {item.name}</span>
-                    <span className={styles.itemPrice}>{item.price}</span>
+                    <span className={styles.itemPrice}>₹{item.price.toLocaleString('en-IN')}</span>
                   </div>
                 ))}
               </div>

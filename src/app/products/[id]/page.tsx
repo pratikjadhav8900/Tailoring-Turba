@@ -82,10 +82,11 @@ export default async function ProductDetailsPage({ params }: { params: { id: str
       type: dbProduct.type || "",
       image: dbProduct.images && dbProduct.images.length > 0 ? dbProduct.images[0] : "",
       gallery: dbProduct.images || [],
-      price: `₹${dbProduct.basePrice}`,
+      price: dbProduct.basePrice,
       badge: dbProduct.badge || "",
       description: dbProduct.description,
       features: dbProduct.features,
+      minOrderQuantity: dbProduct.minOrderQuantity || 10,
     };
 
     formattedRelated = relatedDbProducts.map(p => ({
@@ -94,7 +95,7 @@ export default async function ProductDetailsPage({ params }: { params: { id: str
       category: p.category?.name || "Uncategorized",
       type: p.type || "",
       image: p.images && p.images.length > 0 ? p.images[0] : "",
-      price: `₹${p.basePrice}`,
+      price: p.basePrice,
       badge: p.badge || "",
     }));
 
@@ -109,6 +110,7 @@ export default async function ProductDetailsPage({ params }: { params: { id: str
       ...staticProduct,
       id: String(staticProduct.id),
       gallery: staticProduct.gallery || [staticProduct.image],
+      minOrderQuantity: 10,
     };
 
     formattedRelated = allProducts

@@ -29,6 +29,8 @@ export async function withRetry<T>(
     } catch (err: any) {
       const isConnErr =
         err?.message?.includes("Can't reach database") ||
+        err?.message?.includes("Closed") ||
+        err?.message?.includes("socket") ||
         err?.code === "P1001";
       if (isConnErr && attempt < retries) {
         console.warn(`[DB] Connection failed, retrying (${attempt}/${retries})...`);

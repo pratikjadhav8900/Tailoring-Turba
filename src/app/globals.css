@@ -140,7 +140,7 @@ html, body {
 /* Base Clean Classes */
 .container {
   width: 100%;
-  max-width: 1536px;
+  max-width: 1720px;
   margin: 0 auto;
   padding: 0 4%;
 }

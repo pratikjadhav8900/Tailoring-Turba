@@ -40,10 +40,7 @@ function CustomizerContent() {
         const res = await fetch(`/api/products/${productId}`);
         if (!res.ok) throw new Error("Product not found");
         const data = await res.json();
-        setDbProduct({
-          ...data,
-          price: `₹${data.basePrice}` // Format for consistency
-        });
+        setDbProduct(data);
       } catch (err) {
         console.error("Failed to fetch product for customizer:", err);
         // Fallback to static data if available
@@ -200,8 +197,7 @@ function CustomizerContent() {
           console.error("Failed to capture mockup:", err);
         }
 
-        const priceMatch = dbProduct?.price?.match(/\d+/);
-        const basePrice = priceMatch ? priceMatch[0] : (dbProduct?.basePrice?.toString() || "85");
+        const basePrice = dbProduct?.basePrice || 85;
 
         // Add to cart
         addToCart({
@@ -238,7 +234,7 @@ function CustomizerContent() {
     });
   };
 
-  const MOQ = 10;
+  const MOQ = dbProduct?.minOrderQuantity || 10;
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -552,7 +548,7 @@ function CustomizerContent() {
                       <div>
                         <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#111' }}>{dbProduct.name}</div>
                         <div style={{ fontSize: '0.8rem', color: '#888', marginTop: '2px' }}>{dbProduct.type || dbProduct.category?.name}</div>
-                        <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--tth-olive-dark)', marginTop: '4px' }}>{dbProduct.price} / unit</div>
+                        <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--tth-olive-dark)', marginTop: '4px' }}>₹{(dbProduct.basePrice as number).toLocaleString('en-IN')} / unit</div>
                       </div>
                     </div>
                   )}
@@ -600,8 +596,7 @@ function CustomizerContent() {
                 <div style={{ borderTop: '2px solid #E5E7EB', paddingTop: '24px', marginBottom: '32px' }}>
                   {/* Calculations */}
                   {(() => {
-                    const priceMatch = dbProduct?.price?.match(/\d+/);
-                    const basePrice = priceMatch ? parseInt(priceMatch[0], 10) : (dbProduct?.basePrice || 85);
+                    const basePrice: number = dbProduct?.basePrice || 85;
                     const subtotal = totalQuantity * basePrice;
                     const hasCustomization = (customizerState?.frontElements.length || 0) > 0 || (customizerState?.backElements.length || 0) > 0;
                     const customCharge = hasCustomization ? 300 : 0;
