@@ -43,7 +43,6 @@ export default function CataloguePage() {
 
   return (
     <>
-      <Navbar />
       <main className={styles.main} suppressHydrationWarning>
 
         {/* Premium Hero Header */}

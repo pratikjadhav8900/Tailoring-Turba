@@ -520,17 +520,27 @@
 /* ===========================
    Responsive
    =========================== */
+@media (max-width: 1280px) {
+  .productGrid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+}
+
 @media (max-width: 1024px) {
   .heroContent { padding: 0 32px 56px; }
   .mainContent { padding: 48px 32px 0; }
   .title { font-size: 3rem; }
+  .productGrid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
 }
 
 @media (max-width: 768px) {
   .heroHeader { height: 380px; }
   .title { font-size: 2.4rem; }
   .heroContent { padding: 0 24px 36px; }
-  .mainContent { padding: 36px 20px 0; }
-  .productGrid { grid-template-columns: 1fr; gap: 16px; }
+  .mainContent { padding: 36px 16px 0; }
+  .productGrid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .cardBody { padding: 14px; }
+  .cardName { font-size: 1rem; }
+  .cardSpec { font-size: 0.75rem; margin-bottom: 12px; }
+  .priceValue { font-size: 1.3rem; }
+  .cardActions { grid-template-columns: 1fr; gap: 8px; }
   .pagesGrid { grid-template-columns: repeat(2, 1fr); }
 }

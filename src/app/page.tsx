@@ -8,7 +8,7 @@ import ClientLogos from "@/components/landing/ClientLogos";
 
 export default function Home() {
   const stats = [
-    { value: "10,000+", label: "Garments Delivered" },
+    { value: "5M+", label: "Garments Delivered" },
     { value: "48 hrs", label: "Sample Dispatch" },
     { value: "3 Brands", label: "Magic · Folkswear · Tailoring Turba" },
     { value: "50+", label: "Colors Available" },

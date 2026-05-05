@@ -149,7 +149,13 @@ export default function CategoryDetailPage({ params }: { params: { slug: string 
 
                     <div className={styles.pricingBlock}>
                       <div className={styles.priceLabel}>Starting from</div>
-                      <div className={styles.priceValue}>₹{product.price ? product.price.toLocaleString('en-IN') : 'On Request'}</div>
+                      <div className={styles.priceValue}>
+                        ₹{product.price 
+                          ? (typeof product.price === 'number' 
+                              ? product.price.toLocaleString('en-IN') 
+                              : parseInt(product.price).toLocaleString('en-IN')) 
+                          : 'On Request'}
+                      </div>
                       <div className={styles.gstNote}>Inc. {data.gst || "18%"} GST</div>
                     </div>
 

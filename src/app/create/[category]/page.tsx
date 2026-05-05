@@ -71,7 +71,6 @@ export default function CategoryPage({ params }: { params: { category: string } 
   if (!config) {
     return (
       <>
-        <Navbar />
         <main className={styles.main}>
           <div className="container">
             <div className={styles.error}>
@@ -97,7 +96,6 @@ export default function CategoryPage({ params }: { params: { category: string } 
 
   return (
     <>
-      <Navbar />
       <main className={styles.main}>
         <div className="container">
           {/* Header */}

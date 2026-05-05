@@ -31,7 +31,6 @@ const categories = [
 export default function CreatePage() {
   return (
     <>
-      <Navbar />
       <main className={styles.main}>
         <div className="container">
           {/* Header Section */}

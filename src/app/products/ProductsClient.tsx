@@ -102,7 +102,7 @@ export default function ProductsClient({ products }: { products: any[] }) {
         <section className={styles.hero}>
           <div className={styles.heroOverlay} />
           <div className={styles.heroContent}>
-            <h1 className={styles.heroTitle}>{activeCategory === "All" ? "The Catalog" : activeCategory}</h1>
+            <h1 className={styles.heroTitle}>{activeCategory === "All" ? "Catalogue" : activeCategory}</h1>
           </div>
         </section>
 

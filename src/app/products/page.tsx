@@ -5,9 +5,9 @@ import { allProducts } from "@/lib/products-data";
 import ProductsClient from "./ProductsClient";
 
 export const metadata: Metadata = {
-  title: "Premium Corporate Apparel Catalog | Bulk Manufacturing India",
-  description: "Browse our catalog of high-quality corporate apparel, including polo shirts, t-shirts, and custom uniforms. B2B bulk manufacturing with global export from India.",
-  keywords: ["corporate apparel catalog", "bulk t-shirts manufacturer", "wholesale polo shirts India", "custom uniforms catalog"],
+  title: "Premium Corporate Apparel Catalogue | Bulk Manufacturing India",
+  description: "Browse our catalogue of high-quality corporate apparel, including polo shirts, t-shirts, and custom uniforms. B2B bulk manufacturing with global export from India.",
+  keywords: ["corporate apparel catalogue", "bulk t-shirts manufacturer", "wholesale polo shirts India", "custom uniforms catalogue"],
 };
 
 export const revalidate = 60;
