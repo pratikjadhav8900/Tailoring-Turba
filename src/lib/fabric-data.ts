@@ -12,8 +12,8 @@ export const GARMENTS = {
   },
   polo: {
     label: "Polo Shirt",
-    front: "/mockups/polo.png?v=2",
-    back: "/mockups/polo_back.png?v=2",
+    front: "/mockups/polo.png?v=5",
+    back: "/mockups/polo_back.png?v=5",
   },
 };
 

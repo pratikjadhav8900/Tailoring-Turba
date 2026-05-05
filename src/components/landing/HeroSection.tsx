@@ -89,7 +89,7 @@ export default function HeroSection() {
             <Link href="/products" className={styles.btnSecondary}>EXPLORE CATALOGUE</Link>
           </div>
           <div className={styles.stats}>
-            <div className={styles.stat}><strong>10k+</strong><span>Garments Delivered</span></div>
+            <div className={styles.stat}><strong>5M+</strong><span>Garments Delivered</span></div>
             <div className={styles.stat}><strong>48hr</strong><span>Sample Dispatch</span></div>
             <div className={styles.stat}><strong>100%</strong><span>In-House Printing</span></div>
           </div>

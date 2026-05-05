@@ -1,12 +1,14 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { useCart } from "@/context/CartContext";
 import styles from "./page.module.css";
 
 export default function CheckoutPage() {
+  const router = useRouter();
   const { cart, cartCount, clearCart } = useCart();
   const [mounted, setMounted] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -70,15 +72,25 @@ export default function CheckoutPage() {
     setMounted(true);
   }, []);
 
-  const calculateTotal = () => {
-    return cart.reduce((total, item) => {
-      return total + (item.price * item.quantity);
-    }, 0);
-  };
+  useEffect(() => {
+    if (mounted && cartCount >= 50) {
+      router.push("/contact?mode=inquiry");
+    }
+  }, [mounted, cartCount, router]);
 
-  const subtotal = calculateTotal();
-  const designCharge = cartCount > 0 ? 250 : 0;
-  const gst = cartCount > 0 ? Math.round((subtotal + designCharge) * 0.05) : 0;
+  const subtotal = cart.reduce((total, item) => {
+    const itemPrice = typeof item.price === 'number' ? item.price : parseFloat(String(item.price)) || 0;
+    return total + (itemPrice * (item.quantity || 0));
+  }, 0);
+  const designCharge = cart.filter(item => {
+    if (!item.customDesign) return false;
+    const hasFrontElements = (item.customDesign.frontElements?.length || 0) > 0;
+    const hasBackElements = (item.customDesign.backElements?.length || 0) > 0;
+    const hasAssets = (item.uploadedAssets?.length || 0) > 0;
+    return hasFrontElements || hasBackElements || hasAssets;
+  }).length * 300;
+  
+  const gst = Math.round((subtotal + designCharge) * 0.05);
   const estimatedTotal = subtotal + designCharge + gst;
 
   const [error, setError] = useState<string | null>(null);
@@ -220,11 +232,11 @@ export default function CheckoutPage() {
     }
   };
 
-  if (!mounted) return null;
+  if (!mounted || cartCount >= 50) return null;
 
   if (isSuccess) {
     return (
-      <div key="success-screen" className={styles.pageWrapper}>
+      <div className={styles.pageWrapper}>
         <main className={styles.successMain}>
           {/* Background Collage Elements */}
           <img 
@@ -258,16 +270,8 @@ export default function CheckoutPage() {
     );
   }
 
-  // Security check: Route them to contact if somehow they accessed this directly with > 50 items
-  if (cartCount >= 50) {
-    if (typeof window !== 'undefined') {
-      window.location.href = "/contact?mode=inquiry";
-    }
-    return null;
-  }
-
   return (
-    <div key="checkout-form-screen" className={styles.pageWrapper}>
+    <div className={styles.pageWrapper}>
       <form onSubmit={handleCheckout} className={styles.form}>
         <div className={styles.layout}>
           {/* Form Side (Left) */}
@@ -388,21 +392,23 @@ export default function CheckoutPage() {
               <div className={styles.summaryBreakdown}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span>Subtotal</span>
-                  <span>₹{subtotal}</span>
+                  <span>₹{subtotal.toLocaleString('en-IN')}</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span>Design & Setup</span>
-                  <span>₹{designCharge}</span>
-                </div>
+                {designCharge > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Design & Setup</span>
+                    <span>₹{designCharge.toLocaleString('en-IN')}</span>
+                  </div>
+                )}
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span>GST (5%)</span>
-                  <span>₹{gst}</span>
+                  <span>₹{gst.toLocaleString('en-IN')}</span>
                 </div>
               </div>
 
               <div className={styles.totalRow}>
                 <span>Total</span>
-                <span>₹{estimatedTotal}</span>
+                <span>₹{estimatedTotal.toLocaleString('en-IN')}</span>
               </div>
 
               {error && (

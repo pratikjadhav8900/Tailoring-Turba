@@ -89,11 +89,25 @@
     padding: 40px 0;
   }
   .header {
-    margin-bottom: 32px;
-    justify-content: center;
+    margin-bottom: 24px;
+    justify-content: flex-start;
+    overflow-x: auto;
+    padding-bottom: 12px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .header::-webkit-scrollbar {
+    display: none;
+  }
+  .tabsContainer {
+    flex: 0 0 auto;
   }
   .tabs {
-    margin: 0 auto;
+    margin: 0;
+    flex-wrap: nowrap;
+  }
+  .controls {
+    display: none !important;
   }
   .grid {
     overflow-x: auto;

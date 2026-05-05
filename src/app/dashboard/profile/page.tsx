@@ -6,6 +6,8 @@ import styles from "./page.module.css";
 import { User, Building2, Phone, Mail } from "lucide-react";
 import { revalidatePath } from "next/cache";
 
+import SignOutButton from "@/components/dashboard/SignOutButton";
+
 export default async function ProfilePage() {
   const session = await auth();
   const userId = session?.user?.id as string;
@@ -33,99 +35,117 @@ export default async function ProfilePage() {
   }
 
   return (
-    <form action={updateProfile} className={styles.page}>
-      
-      {/* Premium Hero Header */}
-      <div className={styles.heroHeader}>
-        <div className={styles.heroBg}>
-          <Image 
-            src="/dashboard_overview_bg.png"
-            alt="Tailoring Background"
-            fill
-            priority
-          />
-        </div>
-        <div className={styles.heroOverlay}></div>
-        <div className={styles.heroContent}>
-          <div className={styles.heroLabel}>ACCOUNT SETTINGS</div>
-          <div className={styles.heroMain}>
-            <h1 className={styles.title}>Profile Settings</h1>
-            <p className={styles.sub}>Manage your personal information and B2B details.</p>
-          </div>
-          <button type="submit" className={styles.primaryBtn}>Save Changes</button>
-        </div>
-      </div>
-
-      <div className={styles.mainContent}>
+    <div className={styles.page}>
+      <form action={updateProfile}>
         
-        {/* Split Layout: Personal Info */}
-        <div className={styles.splitLayout}>
-          <div className={styles.splitLeft}>
-            <h2>Personal Information</h2>
-            <p>Update your name, phone number, and email address. This information will be used for your tailoring appointments and orders.</p>
+        {/* Premium Hero Header */}
+        <div className={styles.heroHeader}>
+          <div className={styles.heroBg}>
+            <Image 
+              src="/dashboard_overview_bg.png"
+              alt="Tailoring Background"
+              fill
+              priority
+            />
           </div>
-          <div className={styles.splitRight}>
-            <div className={styles.card}>
-              <div className={styles.formGrid}>
-                <div className={styles.formGroup}>
-                  <label>Full Name</label>
-                  <input type="text" name="name" defaultValue={user?.name || ""} placeholder="John Doe" className={styles.input} />
-                </div>
-                <div className={styles.formGroup}>
-                  <label>Email Address</label>
-                  <div className={styles.inputWrapper}>
-                    <Mail size={16} className={styles.inputIcon} />
-                    <input type="email" name="email" defaultValue={user?.email || session?.user?.email || ""} className={styles.input} />
+          <div className={styles.heroOverlay}></div>
+          <div className={styles.heroContent}>
+            <div className={styles.heroLabel}>ACCOUNT SETTINGS</div>
+            <div className={styles.heroMain}>
+              <h1 className={styles.title}>Profile Settings</h1>
+              <p className={styles.sub}>Manage your personal information and B2B details.</p>
+            </div>
+            <button type="submit" className={styles.primaryBtn}>Save Changes</button>
+          </div>
+        </div>
+
+        <div className={styles.mainContent}>
+          
+          {/* Split Layout: Personal Info */}
+          <div className={styles.splitLayout}>
+            <div className={styles.splitLeft}>
+              <h2>Personal Information</h2>
+              <p>Update your name, phone number, and email address. This information will be used for your tailoring appointments and orders.</p>
+            </div>
+            <div className={styles.splitRight}>
+              <div className={styles.card}>
+                <div className={styles.formGrid}>
+                  <div className={styles.formGroup}>
+                    <label>Full Name</label>
+                    <input type="text" name="name" defaultValue={user?.name || ""} placeholder="John Doe" className={styles.input} />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label>Email Address</label>
+                    <div className={styles.inputWrapper}>
+                      <Mail size={16} className={styles.inputIcon} />
+                      <input type="email" name="email" defaultValue={user?.email || session?.user?.email || ""} className={styles.input} />
+                    </div>
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label>Phone Number</label>
+                    <div className={styles.inputWrapper}>
+                      <Phone size={16} className={styles.inputIcon} />
+                      <input type="tel" name="phone" defaultValue={user?.phone || ""} placeholder="+91 00000 00000" className={styles.input} />
+                    </div>
                   </div>
                 </div>
-                <div className={styles.formGroup}>
-                  <label>Phone Number</label>
-                  <div className={styles.inputWrapper}>
-                    <Phone size={16} className={styles.inputIcon} />
-                    <input type="tel" name="phone" defaultValue={user?.phone || ""} placeholder="+91 00000 00000" className={styles.input} />
+              </div>
+            </div>
+          </div>
+
+          <div className={styles.divider}></div>
+
+          {/* Split Layout: B2B Info */}
+          <div className={styles.splitLayout}>
+            <div className={styles.splitLeft}>
+              <h2>Company Details (B2B)</h2>
+              <p>Manage your business credentials for wholesale manufacturing. A valid GST number is required for B2B pricing.</p>
+              
+              {user?.isB2BApproved ? (
+                <div className={styles.statusBannerSuccess}>
+                  Your B2B account is approved. You have access to wholesale pricing.
+                </div>
+              ) : (
+                <div className={styles.statusBannerPending}>
+                  Your B2B status is pending approval. Our team will verify your GST details.
+                </div>
+              )}
+            </div>
+            <div className={styles.splitRight}>
+              <div className={styles.card}>
+                <div className={styles.formGrid}>
+                  <div className={styles.formGroup}>
+                    <label>Company Name</label>
+                    <input type="text" name="companyName" defaultValue={user?.companyName || ""} placeholder="Your Company Ltd." className={styles.input} />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label>GST Number</label>
+                    <input type="text" name="gstNumber" defaultValue={user?.gstNumber || ""} placeholder="22AAAAA0000A1Z5" className={styles.input} />
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
+      </form>
 
+      <div className={styles.mainContent} style={{ marginTop: '0', paddingTop: '0' }}>
         <div className={styles.divider}></div>
 
-        {/* Split Layout: B2B Info */}
+        {/* Split Layout: Danger Zone */}
         <div className={styles.splitLayout}>
           <div className={styles.splitLeft}>
-            <h2>Company Details (B2B)</h2>
-            <p>Manage your business credentials for wholesale manufacturing. A valid GST number is required for B2B pricing.</p>
-            
-            {user?.isB2BApproved ? (
-              <div className={styles.statusBannerSuccess}>
-                Your B2B account is approved. You have access to wholesale pricing.
-              </div>
-            ) : (
-              <div className={styles.statusBannerPending}>
-                Your B2B status is pending approval. Our team will verify your GST details.
-              </div>
-            )}
+            <h2>Account Management</h2>
+            <p>Sign out of your session securely. To delete your account or change your password, please contact support.</p>
           </div>
           <div className={styles.splitRight}>
-            <div className={styles.card}>
-              <div className={styles.formGrid}>
-                <div className={styles.formGroup}>
-                  <label>Company Name</label>
-                  <input type="text" name="companyName" defaultValue={user?.companyName || ""} placeholder="Your Company Ltd." className={styles.input} />
-                </div>
-                <div className={styles.formGroup}>
-                  <label>GST Number</label>
-                  <input type="text" name="gstNumber" defaultValue={user?.gstNumber || ""} placeholder="22AAAAA0000A1Z5" className={styles.input} />
-                </div>
-              </div>
+            <div className={styles.card} style={{ border: '1px solid #fee2e2' }}>
+              <SignOutButton />
             </div>
           </div>
         </div>
-
       </div>
-    </form>
+    </div>
   );
 }
 

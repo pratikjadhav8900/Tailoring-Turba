@@ -9,7 +9,7 @@ const features = [
   },
   {
     title: "Start Your Brand",
-    description: "Use blank tees to launch your label without manufacturing costs.",
+    description: "Launch your label with bespoke customized apparel designed for your brand.",
     image: "/images/features/brand.png"
   },
   {

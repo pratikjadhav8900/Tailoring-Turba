@@ -26,17 +26,26 @@ export default function CartPage() {
 
   const isWholesale = cartCount >= 50;
   
-  // Logic to calculate subtotal, customization fees (per item), and GST
   const subtotal = cart.reduce((total, item) => {
-    return total + (item.price * item.quantity);
+    const itemPrice = typeof item.price === 'number' ? item.price : parseFloat(String(item.price)) || 0;
+    return total + (itemPrice * (item.quantity || 0));
   }, 0);
 
   // Design charge should be ₹300 for EACH unique customized product in the cart
-  const customItemsCount = cart.filter(item => item.customDesign).length;
+  // A product is truly customized if it has front/back elements OR uploaded assets
+  const customItemsCount = cart.filter(item => {
+    if (!item.customDesign) return false;
+    const hasFrontElements = (item.customDesign.frontElements?.length || 0) > 0;
+    const hasBackElements = (item.customDesign.backElements?.length || 0) > 0;
+    const hasAssets = (item.uploadedAssets?.length || 0) > 0;
+    return hasFrontElements || hasBackElements || hasAssets;
+  }).length;
+  
   const designCharge = customItemsCount * 300; 
   
-  const gst = Math.round((subtotal + designCharge) * 0.05);
-  const estimatedTotal = subtotal + designCharge + gst;
+  const subtotalVal = isNaN(subtotal) ? 0 : subtotal;
+  const gst = Math.round((subtotalVal + designCharge) * 0.05);
+  const estimatedTotal = subtotalVal + designCharge + gst;
 
   const handleCheckoutClick = () => {
     if (!session) {
@@ -118,19 +127,19 @@ export default function CartPage() {
               
               <div className={styles.summaryRow}>
                 <span>Subtotal</span>
-                <b>₹{subtotal.toLocaleString('en-IN')}</b>
+                <b>₹{subtotalVal.toLocaleString('en-IN')}</b>
               </div>
               
               {designCharge > 0 && (
                 <div className={styles.summaryRow}>
                   <span>Customization Fee</span>
-                  <b>₹{designCharge}</b>
+                  <b>₹{designCharge.toLocaleString('en-IN')}</b>
                 </div>
               )}
               
               <div className={styles.summaryRow}>
                 <span>Tax (GST 5%)</span>
-                <b>₹{gst.toLocaleString('en-IN')}</b>
+                <b>₹{(isNaN(gst) ? 0 : gst).toLocaleString('en-IN')}</b>
               </div>
 
               <div className={styles.divider} />
@@ -140,7 +149,7 @@ export default function CartPage() {
                   {isWholesale ? "Est. Quote" : "Total Estimate"}
                 </span>
                 <span className={styles.totalValue}>
-                  ₹{estimatedTotal.toLocaleString('en-IN')}
+                  ₹{(isNaN(estimatedTotal) ? 0 : estimatedTotal).toLocaleString('en-IN')}
                 </span>
               </div>
 

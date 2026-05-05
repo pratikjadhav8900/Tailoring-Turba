@@ -39,7 +39,7 @@ export default function AboutPage() {
             transition={{ duration: 0.8 }}
             className="text-[#c49d32] font-semibold tracking-[0.2em] uppercase text-sm mb-6"
           >
-            Since 2021 • Pune, India
+            Since 2022 • Pune, India
           </motion.p>
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
@@ -126,7 +126,7 @@ export default function AboutPage() {
               viewport={{ once: true }}
               className="absolute -bottom-10 -left-10 bg-white p-8 shadow-xl rounded-lg hidden md:block max-w-xs"
             >
-              <p className="text-[#c49d32] font-serif text-3xl mb-2">10k+</p>
+              <p className="text-[#c49d32] font-serif text-3xl mb-2">5M+</p>
               <p className="text-[#6b6b65] text-sm uppercase tracking-wider">Garments delivered with a purpose.</p>
             </motion.div>
           </div>

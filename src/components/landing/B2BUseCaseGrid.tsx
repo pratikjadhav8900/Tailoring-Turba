@@ -16,9 +16,9 @@ export default function B2BUseCaseGrid() {
         <div className={styles.layout}>
           <div className={styles.content}>
             <span className={styles.tag}>WHO WE SERVE</span>
-            <h2 className={styles.headline}>Bulk Blank Tees<br/>for All</h2>
+            <h2 className={styles.headline}>Bulk Customized Tees<br/>for All</h2>
             <p className={styles.desc}>
-              Premium blank t-shirts and polos in bulk, ready for printing,
+              Premium customized t-shirts and polos in bulk, ready for printing,
               branding, and resale. Perfect for businesses, events, schools, and online stores.
             </p>
             <ul className={styles.list}>

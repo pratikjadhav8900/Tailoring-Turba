@@ -17,10 +17,11 @@ interface Props {
   activeSide?: Side;
   onSideChange?: (side: Side) => void;
   mockupId?: string;
+  garmentType?: GarmentKey;
 }
 
-export default function PoloCustomizer({ onChange, initialState, isPreviewMode, activeSide: propSide, onSideChange, mockupId = "customizer-mockup-area" }: Props) {
-  const [garmentType] = useState<GarmentKey>((initialState?.garmentType as GarmentKey) || "round-neck");
+export default function PoloCustomizer({ onChange, initialState, isPreviewMode, activeSide: propSide, onSideChange, mockupId = "customizer-mockup-area", garmentType: propGarmentType }: Props) {
+  const garmentType = propGarmentType || (initialState?.garmentType as GarmentKey) || "round-neck";
   const [internalSide, setInternalSide] = useState<Side>("front");
   
   const activeSide = propSide || internalSide;
@@ -322,11 +323,11 @@ export default function PoloCustomizer({ onChange, initialState, isPreviewMode, 
 
         <div id={mockupId} className={styles.garmentContainer}>
           <Image
+            key={`${garmentType}-${activeSide}`}
             src={currentImg}
             alt="Garment"
             fill
             className={styles.garmentImage}
-            style={{ mixBlendMode: 'darken' }}
             priority
           />
 

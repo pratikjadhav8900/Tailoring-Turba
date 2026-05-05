@@ -19,8 +19,8 @@ export default function WhatsAppButton() {
     <>
       <div className="whatsapp-btn-wrapper" style={{
         position: "fixed",
-        bottom: "32px",
-        right: "32px",
+        bottom: "calc(env(safe-area-inset-bottom, 0px) + 90px)",
+        right: "24px",
         zIndex: 9999,
         display: "flex",
         alignItems: "center",
@@ -74,55 +74,6 @@ export default function WhatsAppButton() {
         </div>
       </div>
 
-      <style>{`
-        .whatsapp-btn-container:hover {
-          transform: scale(1.1);
-        }
-        .whatsapp-btn-container:hover + .whatsapp-label {
-          opacity: 1;
-          transform: translateX(0);
-        }
-        .whatsapp-pulse {
-          position: absolute;
-          inset: 0;
-          border-radius: 50%;
-          border: 2px solid #25D366;
-          animation: whatsapp-pulse 2s ease-out infinite;
-          pointer-events: none;
-        }
-        @keyframes whatsapp-pulse {
-          0%   { transform: scale(1);   opacity: 0.8; }
-          100% { transform: scale(1.6); opacity: 0; }
-        }
-        @keyframes periodic-wiggle {
-          0%, 90%, 100% { transform: rotate(0deg) scale(1); }
-          92% { transform: rotate(-10deg) scale(1.1); }
-          95% { transform: rotate(10deg) scale(1.1); }
-          98% { transform: rotate(-5deg) scale(1.1); }
-        }
-        .whatsapp-btn-container {
-          animation: periodic-wiggle 8s infinite;
-        }
-
-        @media (max-width: 768px) {
-          .whatsapp-btn-wrapper {
-            bottom: 24px !important;
-            right: 20px !important;
-            left: auto !important;
-          }
-          .whatsapp-btn-container {
-            width: 44px !important;
-            height: 44px !important;
-          }
-          .whatsapp-btn-container svg {
-            width: 26px !important;
-            height: 26px !important;
-          }
-          .whatsapp-label {
-            display: none !important;
-          }
-        }
-      `}</style>
     </>
   );
 }

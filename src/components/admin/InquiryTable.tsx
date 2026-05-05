@@ -103,19 +103,19 @@ export default function InquiryTable({ initialInquiries }: { initialInquiries: I
             <Calendar size={16} color="#64748b" />
             <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#475569" }}>Filter Period:</span>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
             <input 
               type="date" 
               value={startDate} 
               onChange={(e) => setStartDate(e.target.value)}
-              style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #e2e8f0", fontSize: "0.85rem", outline: "none" }}
+              style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #e2e8f0", fontSize: "0.85rem", outline: "none", minWidth: "130px" }}
             />
             <span style={{ color: "#94a3b8" }}>to</span>
             <input 
               type="date" 
               value={endDate} 
               onChange={(e) => setEndDate(e.target.value)}
-              style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #e2e8f0", fontSize: "0.85rem", outline: "none" }}
+              style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #e2e8f0", fontSize: "0.85rem", outline: "none", minWidth: "130px" }}
             />
             {(startDate || endDate) && (
               <button 
@@ -153,15 +153,15 @@ export default function InquiryTable({ initialInquiries }: { initialInquiries: I
         </button>
       </div>
 
-      <div style={{ background: "white", borderRadius: "16px", border: "1px solid #e2e8f0", overflow: "hidden" }}>
+      <div style={{ background: "white", borderRadius: "16px", border: "1px solid #e2e8f0", overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
           <thead>
             <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>
-              <th style={{ padding: "16px 24px", fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", color: "#64748b" }}>Customer</th>
-              <th style={{ padding: "16px 24px", fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", color: "#64748b" }}>Requirements</th>
-              <th style={{ padding: "16px 24px", fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", color: "#64748b" }}>Date</th>
-              <th style={{ padding: "16px 24px", fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", color: "#64748b" }}>Status</th>
-              <th style={{ padding: "16px 24px", fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", color: "#64748b" }}>Action</th>
+              <th style={{ padding: "16px 24px", fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", color: "#64748b", verticalAlign: "top" }}>Customer</th>
+              <th style={{ padding: "16px 24px", fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", color: "#64748b", verticalAlign: "top" }}>Requirements</th>
+              <th style={{ padding: "16px 24px", fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", color: "#64748b", verticalAlign: "top" }}>Date</th>
+              <th style={{ padding: "16px 24px", fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", color: "#64748b", verticalAlign: "top" }}>Status</th>
+              <th style={{ padding: "16px 24px", fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", color: "#64748b", verticalAlign: "top" }}>Action</th>
             </tr>
           </thead>
           <tbody>
@@ -174,32 +174,30 @@ export default function InquiryTable({ initialInquiries }: { initialInquiries: I
             ) : (
               filteredInquiries.map(iq => (
                 <tr key={iq.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                  <td style={{ padding: "20px 24px" }}>
+                  <td style={{ padding: "20px 24px", verticalAlign: "top" }}>
                     <div style={{ fontWeight: 600, color: "#1e293b" }}>{iq.name}</div>
                     <div style={{ fontSize: "0.85rem", color: "#64748b", display: "flex", alignItems: "center", gap: "4px", marginTop: "2px" }}>
                       <Mail size={12} /> {iq.email}
                     </div>
-                    <div style={{ fontSize: "0.85rem", color: "#64748b", display: "flex", alignItems: "center", gap: "4px", marginTop: "2px", fontWeight: 600 }}>
-                      📞 {iq.phone}
+                    <div style={{ fontSize: "0.85rem", color: "#64748b", display: "flex", alignItems: "center", gap: "4px", marginTop: "4px", fontWeight: 600 }}>
+                      📞 {iq.phone || <span style={{ color: "#cbd5e1", fontWeight: 400, fontStyle: "italic" }}>Not provided</span>}
                     </div>
-                    {iq.companyName && (
-                      <div style={{ fontSize: "0.85rem", color: "#64748b", display: "flex", alignItems: "center", gap: "4px", marginTop: "2px" }}>
-                        <Building2 size={12} /> {iq.companyName}
-                      </div>
-                    )}
+                    <div style={{ fontSize: "0.85rem", color: "#64748b", display: "flex", alignItems: "center", gap: "4px", marginTop: "4px" }}>
+                      <Building2 size={12} /> {iq.companyName || <span style={{ color: "#cbd5e1", fontStyle: "italic" }}>N/A</span>}
+                    </div>
                   </td>
-                  <td style={{ padding: "20px 24px", maxWidth: "300px" }}>
+                  <td style={{ padding: "20px 24px", maxWidth: "400px", verticalAlign: "top" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.85rem", color: "var(--tth-olive-dark)", fontWeight: 700, marginBottom: "4px" }}>
                       <Package size={14} /> {iq.quantity} units
                     </div>
-                    <div style={{ fontSize: "0.85rem", color: "#475569", lineHeight: 1.5, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
+                    <div style={{ fontSize: "0.85rem", color: "#475569", lineHeight: 1.5 }}>
                       {iq.requirements}
                     </div>
                   </td>
-                  <td style={{ padding: "20px 24px", fontSize: "0.85rem", color: "#64748b" }}>
+                  <td style={{ padding: "20px 24px", fontSize: "0.85rem", color: "#64748b", verticalAlign: "top" }}>
                     {format(new Date(iq.createdAt), "MMM d, yyyy")}
                   </td>
-                  <td style={{ padding: "20px 24px" }}>
+                  <td style={{ padding: "20px 24px", verticalAlign: "top" }}>
                     <span style={{ 
                       padding: "4px 10px", 
                       borderRadius: "999px", 
@@ -211,7 +209,7 @@ export default function InquiryTable({ initialInquiries }: { initialInquiries: I
                       {iq.status}
                     </span>
                   </td>
-                  <td style={{ padding: "20px 24px" }}>
+                  <td style={{ padding: "20px 24px", verticalAlign: "top" }}>
                     <select 
                       value={iq.status} 
                       disabled={updatingId === iq.id}

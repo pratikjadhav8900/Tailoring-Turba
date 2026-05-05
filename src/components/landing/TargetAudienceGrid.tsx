@@ -41,9 +41,9 @@ export default function TargetAudienceGrid() {
       <div className="container">
         <div className={styles.grid}>
           <div className={styles.intro}>
-            <h2 className={styles.heading}>Bulk Blank Tees for All</h2>
+            <h2 className={styles.heading}>Bulk Customized Tees for All</h2>
             <p className={styles.subtext}>
-              Premium blank t-shirts in bulk, ready for printing, branding, and resale. Perfect for businesses, events, and online stores.
+              Premium customized t-shirts in bulk, designed for printing, branding, and resale. Perfect for businesses, events, and online stores.
             </p>
             <Link href="/contact" className={styles.button}>
               Get a Quote Now

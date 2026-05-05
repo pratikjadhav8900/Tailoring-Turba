@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import styles from "./ClientLogos.module.css";
 
 const CLIENTS = [
-  "APEX CORP", "LUMINA TECH", "VANTAGE", "NEXA RETAIL", "ORION GLOBAL", "ZENITH GROUP"
+  "ADIDAS", "MONTE CARLO", "US POLO", "SKECHERS", "PUMA", "REEBOK", "LEVIS", "JACK & JONES"
 ];
 
 export default function ClientLogos() {

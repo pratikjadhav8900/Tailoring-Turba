@@ -6,7 +6,7 @@ const STEPS = [
   {
     icon: Search,
     title: "Browse & Select",
-    desc: "Explore our premium catalogue of over 100+ blank apparel styles, each optimized for B2B branding."
+    desc: "Explore our premium catalogue of over 100+ apparel styles, each ready for bespoke customization and branding."
   },
   {
     icon: PenTool,

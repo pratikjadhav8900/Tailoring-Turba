@@ -137,6 +137,12 @@ html, body {
   padding: 0;
 }
 
+@media (max-width: 991px) {
+  body {
+    padding-bottom: 80px !important;
+  }
+}
+
 /* Base Clean Classes */
 .container {
   width: 100%;
@@ -344,4 +350,105 @@ html, body {
 }
 @keyframes shimmer {
   100% { left: 100%; }
+}
+
+/* WhatsApp Button Stability */
+.whatsapp-btn-container:hover {
+  transform: scale(1.1);
+}
+.whatsapp-btn-container:hover + .whatsapp-label {
+  opacity: 1;
+  transform: translateX(0);
+}
+.whatsapp-pulse {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid #25D366;
+  animation: whatsapp-pulse 2s ease-out infinite;
+  pointer-events: none;
+}
+@keyframes whatsapp-pulse {
+  0%   { transform: scale(1);   opacity: 0.8; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+@keyframes periodic-wiggle {
+  0%, 90%, 100% { transform: rotate(0deg) scale(1); }
+  92% { transform: rotate(-10deg) scale(1.1); }
+  95% { transform: rotate(10deg) scale(1.1); }
+  98% { transform: rotate(-5deg) scale(1.1); }
+}
+.whatsapp-btn-container {
+  animation: periodic-wiggle 8s infinite;
+}
+
+/* Footer Stability */
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr;
+  gap: 48px;
+  padding-bottom: 56px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.footer-bottom {
+  padding-top: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  color: #475569;
+  font-size: 0.8rem;
+}
+.footer-bottom-links {
+  display: flex;
+  gap: 24px;
+}
+
+@media (max-width: 1024px) {
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+  }
+}
+
+@media (max-width: 768px) {
+  .whatsapp-btn-wrapper {
+    right: 20px !important;
+    left: auto !important;
+  }
+  .whatsapp-btn-container {
+    width: 44px !important;
+    height: 44px !important;
+  }
+  .whatsapp-btn-container svg {
+    width: 26px !important;
+    height: 26px !important;
+  }
+  .whatsapp-label {
+    display: none !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .footer-grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  .footer-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .footer-bottom-links {
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+
+/* Responsive Utilities */
+@media (max-width: 768px) {
+  .hide-mobile {
+    display: none !important;
+  }
 }

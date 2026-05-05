@@ -138,15 +138,18 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
     pct: reviews.length > 0 ? Math.round((reviews.filter(r => r.rating === star).length / reviews.length) * 100) : 0
   }));
 
-  const isTShirt = Boolean(
+  const isCustomizable = Boolean(
     product.type?.toLowerCase().includes("polo") || 
     product.type?.toLowerCase().includes("round neck") || 
     product.type?.toLowerCase().includes("t-shirt") ||
     product.type?.toLowerCase().includes("crewneck") ||
     product.type?.toLowerCase().includes("oversize") ||
+    product.type?.toLowerCase().includes("hoodie") ||
+    product.type?.toLowerCase().includes("jacket") ||
     product.name?.toLowerCase().includes("t-shirt") ||
     product.name?.toLowerCase().includes("polo") ||
-    product.name?.toLowerCase().includes("crewneck")
+    product.name?.toLowerCase().includes("crewneck") ||
+    product.name?.toLowerCase().includes("hoodie")
   );
 
   return (
@@ -242,11 +245,11 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
                 </button>
               </div>
               <button className={styles.btnCart} onClick={handleAddToCart}>Add to Cart</button>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: isCustomizable ? "1fr 1fr" : "1fr", gap: "12px" }}>
                 <Link href={`/contact?product=${product.name}&subject=Sample Request`} className={styles.btnSample} style={{ textDecoration: 'none', textAlign: 'center' }}>
                   Request Sample
                 </Link>
-                {isTShirt && (
+                {isCustomizable && (
                   <Link href={`/customizer?id=${product.id}`} className={styles.btnStudio} style={{ textDecoration: 'none', textAlign: 'center' }}>
                     Design Studio
                   </Link>

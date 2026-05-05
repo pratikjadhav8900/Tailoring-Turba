@@ -28,6 +28,9 @@
 .leftContent {
   width: 100%;
   max-width: 700px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
 }
 
 .rightColumn {
@@ -174,17 +177,17 @@
   gap: 20px;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 480px) {
   .formRow, .formRow3 {
     grid-template-columns: 1fr;
-    gap: 24px;
+    gap: 20px;
   }
 }
 
 .inputGroup {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .label {
@@ -197,7 +200,8 @@
 }
 
 .input {
-  padding: 16px 18px;
+  height: 56px;
+  padding: 0 18px;
   border-radius: 8px;
   border: 1px solid #e5e7eb;
   background: #fcfcfb;
@@ -208,6 +212,7 @@
   width: 100%;
   appearance: none;
   -webkit-appearance: none;
+  box-sizing: border-box;
 }
 
 .input:focus {
@@ -224,7 +229,8 @@
 
 .dropdownToggle {
   width: 100%;
-  padding: 16px 18px;
+  height: 56px;
+  padding: 0 18px;
   border-radius: 8px;
   border: 1px solid #e5e7eb;
   background: #fcfcfb;
@@ -237,6 +243,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  box-sizing: border-box;
 }
 
 .dropdownToggle::after {

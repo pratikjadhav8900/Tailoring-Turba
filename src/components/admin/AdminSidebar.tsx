@@ -47,7 +47,9 @@ export default function AdminSidebar({ role }: { role: string }) {
           const isActive = Item.href === "/admin" ? pathname === "/admin" : pathname.startsWith(Item.href);
           return (
             <Link key={Item.href} href={Item.href} className={`${styles.item} ${isActive ? styles.active : ""}`}>
-              <Item.icon size={18} strokeWidth={isActive ? 2.5 : 2} />
+              <div className={styles.iconWrapper}>
+                <Item.icon size={20} strokeWidth={isActive ? 2.5 : 2} />
+              </div>
               <span>{Item.label}</span>
               {isActive && <div className={styles.indicator} />}
             </Link>

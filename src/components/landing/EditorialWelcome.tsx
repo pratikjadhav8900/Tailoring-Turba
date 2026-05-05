@@ -47,13 +47,13 @@ export default function EditorialWelcome() {
                   sizes="(max-width: 960px) 100vw, 50vw"
                 />
                 <div className={styles.imageOverlay} />
-                <div className={styles.badge}>Est. 2024</div>
+                <div className={styles.badge}>Est. 2022</div>
               </div>
             </div>
             <div className={styles.narrativeColumn}>
               <span className={styles.eyebrow}>Pune&apos;s Premier B2B Manufacturer</span>
               <h2 className={styles.headline}>
-                Built for innovators like you. We create blank apparel on which you express your individuality.
+                Built for innovators like you. We create customized apparel on which you express your individuality.
               </h2>
             </div>
           </div>
@@ -83,7 +83,7 @@ export default function EditorialWelcome() {
                 sizes="(max-width: 960px) 100vw, 50vw"
               />
               <div className={styles.imageOverlay} />
-              <div className={styles.badge}>Est. 2024</div>
+              <div className={styles.badge}>Est. 2022</div>
             </div>
           </motion.div>
 
@@ -100,7 +100,7 @@ export default function EditorialWelcome() {
             </motion.span>
             
             <motion.h2 variants={itemVariants} className={styles.headline}>
-              Built for <i>innovators like you</i>. We create blank
+              Built for <i>innovators like you</i>. We create customized
               apparel on which you express your individuality.
             </motion.h2>
 
@@ -129,8 +129,9 @@ export default function EditorialWelcome() {
             </motion.div>
 
             <motion.p variants={itemVariants} className={styles.body}>
-              From a 10-piece sample run to a 50,000-piece corporate rollout —
-              Tailoring Turba covers every fabric weight, silhouette, and price point across our in-house brands.
+              With over 5 Million+ products delivered since 2022, Tailoring Turba
+              covers everything from 10-piece boutique runs to 50,000-piece corporate rollouts
+              across our state-of-the-art Pune manufacturing facility.
             </motion.p>
 
             <motion.div variants={itemVariants}>

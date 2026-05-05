@@ -55,7 +55,12 @@ function CustomizerContent() {
   }, [productId]);
 
   // Map product category to garment type
-  const categoryToGarment = (category: string): string => {
+  const categoryToGarment = (category: string, name?: string): string => {
+    const lowerName = (name || '').toLowerCase();
+    if (lowerName.includes('polo')) return 'polo';
+    if (lowerName.includes('hoodie')) return 'hoodie';
+    if (lowerName.includes('jacket')) return 'hoodie';
+    
     const map: Record<string, string> = {
       'Crewnecks': 'round-neck',
       'Hoodies': 'hoodie',
@@ -74,7 +79,7 @@ function CustomizerContent() {
     const garment = searchParams.get('garment');
     const fabricId = searchParams.get('fabricId');
     const derivedGarment = dbProduct 
-      ? categoryToGarment(dbProduct.category?.name || dbProduct.category) 
+      ? categoryToGarment(dbProduct.category?.name || dbProduct.category, dbProduct.name) 
       : (garment || 'round-neck');
     
     // Only set initial state once
@@ -197,7 +202,8 @@ function CustomizerContent() {
           console.error("Failed to capture mockup:", err);
         }
 
-        const basePrice = dbProduct?.basePrice || 85;
+        const rawPrice = dbProduct?.basePrice || dbProduct?.price || 85;
+        const basePrice = typeof rawPrice === 'number' ? rawPrice : parseFloat(String(rawPrice).replace(/[^\d.]/g, '')) || 85;
 
         // Add to cart
         addToCart({
@@ -413,13 +419,16 @@ function CustomizerContent() {
 
       {/* Main Workspace Area */}
       <div className={styles.mainContent}>
-        {activeTab === "Design" && (
+        {isLoadingProduct ? (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontFamily: 'var(--font-sans)', color: '#94a3b8' }}>Loading product assets...</div>
+        ) : activeTab === "Design" && (
           <PoloCustomizer 
             initialState={customizerState}
             onChange={(s) => setCustomizerState({ ...customizerState, ...s } as CustomizerState)} 
             isPreviewMode={isPreviewMode}
             activeSide={activeSide}
             onSideChange={(s) => setActiveSide(s as "front" | "back")}
+            garmentType={customizerState?.garmentType as any}
           />
         )}
         
@@ -523,6 +532,7 @@ function CustomizerContent() {
                     isPreviewMode={true}
                     activeSide="front"
                     mockupId="review-mockup-front"
+                    garmentType={customizerState?.garmentType as any}
                   />
                 </div>
                 <div style={{ background: '#F9FAFB', borderRadius: '12px', overflow: 'hidden', border: '1px solid #E5E7EB', position: 'relative', flex: 1 }}>
@@ -532,6 +542,7 @@ function CustomizerContent() {
                     isPreviewMode={true}
                     activeSide="back"
                     mockupId="review-mockup-back"
+                    garmentType={customizerState?.garmentType as any}
                   />
                 </div>
               </div>
