@@ -89,7 +89,7 @@ export default function InquiryTable({ initialInquiries }: { initialInquiries: I
       {/* Filters & Export Bar */}
       <div style={{ 
         background: "white", 
-        padding: "20px 24px", 
+        padding: "clamp(12px, 3vw, 20px) clamp(16px, 4vw, 24px)", 
         borderRadius: "16px", 
         border: "1px solid #e2e8f0",
         display: "flex",
@@ -108,14 +108,36 @@ export default function InquiryTable({ initialInquiries }: { initialInquiries: I
               type="date" 
               value={startDate} 
               onChange={(e) => setStartDate(e.target.value)}
-              style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #e2e8f0", fontSize: "0.85rem", outline: "none", minWidth: "130px" }}
+              style={{ 
+                padding: "8px 12px", 
+                borderRadius: "8px", 
+                border: "1px solid #e2e8f0", 
+                fontSize: "0.85rem", 
+                outline: "none", 
+                minWidth: "130px",
+                color: "#0f172a",
+                backgroundColor: "white",
+                appearance: "none",
+                WebkitAppearance: "none"
+              }}
             />
             <span style={{ color: "#94a3b8" }}>to</span>
             <input 
               type="date" 
               value={endDate} 
               onChange={(e) => setEndDate(e.target.value)}
-              style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #e2e8f0", fontSize: "0.85rem", outline: "none", minWidth: "130px" }}
+              style={{ 
+                padding: "8px 12px", 
+                borderRadius: "8px", 
+                border: "1px solid #e2e8f0", 
+                fontSize: "0.85rem", 
+                outline: "none", 
+                minWidth: "130px",
+                color: "#0f172a",
+                backgroundColor: "white",
+                appearance: "none",
+                WebkitAppearance: "none"
+              }}
             />
             {(startDate || endDate) && (
               <button 
