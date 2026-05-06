@@ -3,11 +3,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
 
-// Initialize Razorpay instance
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID!,
-  key_secret: process.env.RAZORPAY_KEY_SECRET!,
-});
+// Helper to get Razorpay instance
+function getRazorpay() {
+  const key_id = process.env.RAZORPAY_KEY_ID;
+  const key_secret = process.env.RAZORPAY_KEY_SECRET;
+
+  if (!key_id || !key_secret) {
+    throw new Error('Razorpay credentials are missing in environment variables');
+  }
+
+  return new Razorpay({ key_id, key_secret });
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,6 +28,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create Razorpay order
+    const razorpay = getRazorpay();
     const order: any = await razorpay.orders.create({
       amount: amount * 100, // Convert to paise (Razorpay expects amount in smallest currency unit)
       currency,
