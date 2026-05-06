@@ -211,6 +211,28 @@
   border-color: var(--tth-black);
 }
 
+.googleBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: white;
+  border: 1px solid var(--tth-beige);
+  color: var(--tth-black);
+  padding: 14px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+  margin-top: -12px;
+}
+
+.googleBtn:hover {
+  background: var(--tth-offwhite);
+  border-color: var(--tth-black);
+}
+
 .registerContent {
   text-align: center;
   display: flex;
