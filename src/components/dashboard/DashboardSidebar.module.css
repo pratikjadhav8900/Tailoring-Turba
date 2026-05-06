@@ -215,9 +215,9 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    gap: 2px;
-    padding: 12px 0;
-    font-size: 0.55rem;
+    gap: 4px;
+    padding: 8px 0;
+    font-size: 0.6rem;
     border-radius: 0;
     background: transparent !important;
     color: #94a3b8;
@@ -244,26 +244,30 @@
   }
 
   .icon {
+    width: 24px;
     height: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
+    transition: transform 0.2s ease;
   }
 
   .active .icon {
     color: #0f172a;
-    transform: translateY(-2px);
+    transform: scale(1.1);
   }
 
   .active::after {
     content: '';
     position: absolute;
-    bottom: 12px;
-    width: 4px;
-    height: 4px;
+    bottom: 6px;
+    width: 3px;
+    height: 3px;
     background: var(--tth-olive);
     border-radius: 50%;
     display: block;
+    box-shadow: 0 0 8px rgba(107, 125, 96, 0.4);
   }
 
   .indicator {

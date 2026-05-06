@@ -14,10 +14,12 @@ import {
   CreditCard, 
   LogOut,
   ArrowLeft,
-  Mail
+  Mail,
+  Home
 } from "lucide-react";
 
 const navItems = [
+  { icon: Home, label: "Home", href: "/" },
   { icon: LayoutDashboard, label: "Dashboard", href: "/admin" },
   { icon: Package, label: "Orders", href: "/admin/orders" },
   { icon: Users, label: "Users", href: "/admin/users" },
@@ -44,7 +46,11 @@ export default function AdminSidebar({ role }: { role: string }) {
 
       <nav className={styles.nav}>
         {navItems.map(Item => {
-          const isActive = Item.href === "/admin" ? pathname === "/admin" : pathname.startsWith(Item.href);
+          const isActive = Item.href === "/" 
+            ? pathname === "/" 
+            : Item.href === "/admin" 
+              ? pathname === "/admin" 
+              : pathname.startsWith(Item.href);
           return (
             <Link key={Item.href} href={Item.href} className={`${styles.item} ${isActive ? styles.active : ""}`}>
               <div className={styles.iconWrapper}>
