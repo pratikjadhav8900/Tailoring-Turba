@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { sanitize } from "@/lib/sanitize";
 import { sendOperationsBookingAlert, sendCustomerBookingConfirmation } from "@/lib/mail";
 
 export async function POST(req: NextRequest) {
@@ -12,15 +13,20 @@ export async function POST(req: NextRequest) {
 
   const userId = session?.user?.id;
 
+  const sNotes = notes ? sanitize(notes) : null;
+  const sName = name ? sanitize(name) : null;
+  const sEmail = email ? sanitize(email) : null;
+  const sPhone = phone ? sanitize(phone) : null;
+
   const booking = await prisma.booking.create({
     data: { 
       userId: userId || null, 
-      guestName: !userId ? name : null,
-      guestEmail: !userId ? email : null,
-      guestPhone: !userId ? phone : null,
+      guestName: !userId ? sName : null,
+      guestEmail: !userId ? sEmail : null,
+      guestPhone: !userId ? sPhone : null,
       date: new Date(date), 
       timeSlot, 
-      notes: notes || null 
+      notes: sNotes 
     },
     include: { user: true }
   });

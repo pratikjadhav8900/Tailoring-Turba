@@ -201,7 +201,8 @@ export default function PoloCustomizer({ onChange, initialState, isPreviewMode, 
     setElements((prev) => prev.map((e) => (e.id === id ? { ...e, ...updates } : e)));
   };
 
-  const currentImg = GARMENTS[garmentType][activeSide];
+  const currentGarment = GARMENTS[garmentType] || GARMENTS["round-neck"];
+  const currentImg = currentGarment[activeSide] || currentGarment["front"];
   const activeEl = elements.find((e) => e.id === activeElementId) as DesignElement | undefined;
 
   return (
@@ -306,7 +307,7 @@ export default function PoloCustomizer({ onChange, initialState, isPreviewMode, 
             onClick={(e) => { e.stopPropagation(); setActiveSide("front"); }}
           >
             <div className={styles.thumbnailImgWrap}>
-              <Image src={GARMENTS[garmentType].front} alt="Front" fill style={{objectFit: 'contain'}} />
+              <Image src={GARMENTS[garmentType]?.front || GARMENTS["round-neck"].front} alt="Front" fill style={{objectFit: 'contain'}} />
             </div>
             <span className={styles.thumbnailLabel}>Front</span>
           </button>
@@ -315,7 +316,7 @@ export default function PoloCustomizer({ onChange, initialState, isPreviewMode, 
             onClick={(e) => { e.stopPropagation(); setActiveSide("back"); }}
           >
             <div className={styles.thumbnailImgWrap}>
-              <Image src={GARMENTS[garmentType].back} alt="Back" fill style={{objectFit: 'contain'}} />
+              <Image src={GARMENTS[garmentType]?.back || GARMENTS["round-neck"].back} alt="Back" fill style={{objectFit: 'contain'}} />
             </div>
             <span className={styles.thumbnailLabel}>Back</span>
           </button>
@@ -332,7 +333,17 @@ export default function PoloCustomizer({ onChange, initialState, isPreviewMode, 
           />
 
           {/* Printable Area Bounding Box */}
-          {!isPreviewMode && <div className={styles.printableArea}></div>}
+          {!isPreviewMode && (
+            <div 
+              className={styles.printableArea}
+              style={{
+                top: currentGarment.printableArea?.top || "18%",
+                left: currentGarment.printableArea?.left || "28%",
+                width: currentGarment.printableArea?.width || "44%",
+                height: currentGarment.printableArea?.height || "60%",
+              }}
+            ></div>
+          )}
 
           {/* Floating Formatting Toolbar */}
           {activeEl && activeEl.type === "text" && !isPreviewMode && !isDragging && (

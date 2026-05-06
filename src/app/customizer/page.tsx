@@ -419,9 +419,21 @@ function CustomizerContent() {
 
       {/* Main Workspace Area */}
       <div className={styles.mainContent}>
-        {isLoadingProduct ? (
+        {isLoadingProduct && (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontFamily: 'var(--font-sans)', color: '#94a3b8' }}>Loading product assets...</div>
-        ) : activeTab === "Design" && (
+        )}
+
+        {customizerState?.garmentType === 'hoodie' && !isLoadingProduct && activeTab === "Design" && (
+          <div className={styles.premiumGarmentNotice}>
+            <div className={styles.noticeIcon}>✧</div>
+            <div className={styles.noticeContent}>
+              <strong>Premium Hoodie Customizer:</strong> Front & Back professional views enabled. 
+              <span className={styles.noticeTip}> Tip: Position front designs above the pocket area for optimal results.</span>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "Design" && !isLoadingProduct && (
           <PoloCustomizer 
             initialState={customizerState}
             onChange={(s) => setCustomizerState({ ...customizerState, ...s } as CustomizerState)} 

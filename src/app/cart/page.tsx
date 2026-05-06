@@ -86,15 +86,25 @@ export default function CartPage() {
             <div className={styles.cartItems}>
               {cart.map((item) => (
                 <div key={item.id} className={styles.cartItem}>
-                  <div className={styles.itemImage}>
+                  <div className={styles.itemImageContainer}>
                     {item.customDesign && <span className={styles.customBadge}>Custom</span>}
-                    {item.image ? (
-                      <Image src={item.image} alt={item.name} fill style={{ objectFit: 'contain', padding: '10%' }} />
-                    ) : (
-                      <div style={{ opacity: 0.15, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
-                        <ShoppingBag size={48} strokeWidth={1} />
-                      </div>
-                    )}
+                    <div className={styles.itemImageInner}>
+                      {item.image ? (
+                        <div className={styles.imageMainView}>
+                          <Image src={item.image} alt={item.name} fill style={{ objectFit: 'contain' }} />
+                        </div>
+                      ) : (
+                        <div style={{ opacity: 0.15, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+                          <ShoppingBag size={48} strokeWidth={1} />
+                        </div>
+                      )}
+                      
+                      {item.mockupUrlBack && (
+                        <div className={styles.imageBackView}>
+                          <Image src={item.mockupUrlBack} alt={`${item.name} Back`} fill style={{ objectFit: 'contain' }} />
+                        </div>
+                      )}
+                    </div>
                   </div>
                   
                   <div className={styles.itemDetails}>

@@ -59,8 +59,8 @@ export default function Navbar({ transparent = false }: { transparent?: boolean 
           <Image 
             src="/logo.svg" 
             alt="Tailoring Turba" 
-            width={180} 
-            height={50} 
+            width={200} 
+            height={70} 
             style={{ objectFit: "contain" }} 
             priority 
           />

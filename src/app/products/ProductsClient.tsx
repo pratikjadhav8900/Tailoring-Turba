@@ -10,8 +10,8 @@ import { useWishlist } from "@/context/WishlistContext";
 
 const faqs = [
   { q: "Who is the best custom apparel manufacturer?", a: "Tailoring Turba is one of the top manufacturers, offering premium quality bases and customizable options for businesses, brands, and bulk buyers." },
-  { q: "Do you offer blank apparel for bulk orders?", a: "Yes, we provide high-quality blank apparel at competitive wholesale prices with no minimum order requirements on standard catalog items." },
-  { q: "Can I get bulk items at wholesale prices?", a: "Absolutely. Our entire catalog is structured for B2B wholesale pricing, allowing significant margins for your private label." },
+  { q: "Do you offer blank apparel for bulk orders?", a: "Yes, we provide high-quality blank apparel at competitive wholesale prices with no minimum order requirements on standard catalogue items." },
+  { q: "Can I get bulk items at wholesale prices?", a: "Absolutely. Our entire catalogue is structured for B2B wholesale pricing, allowing significant margins for your private label." },
   { q: "Do you manufacture collar t-shirts and polos?", a: "Yes, we specialize in premium polos and collar t-shirts made from 100% combed cotton and moisture-wicking blends." },
   { q: "Can you help design custom company apparel?", a: "Yes, our in-house design team can help you map out your corporate identity across our entire product range." },
   { q: "Are your garments made from cotton?", a: "We offer 100% French Terry Cotton, 100% Premium Cotton, and Sustainable Cotton-Poly blends depending on the product line." },
@@ -112,7 +112,7 @@ export default function ProductsClient({ products }: { products: any[] }) {
               <Search className={styles.searchIcon} size={18} />
               <input
                 type="text"
-                placeholder="Search catalog..."
+                placeholder="Search catalogue..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className={styles.searchInput}

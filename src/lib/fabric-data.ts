@@ -4,16 +4,25 @@ export const GARMENTS = {
     label: "Round Neck",
     front: "/mockups/round.png?v=2",
     back: "/mockups/round_back.png?v=2",
+    printableArea: { top: "18%", left: "28%", width: "44%", height: "60%" }
   },
   "v-neck": {
     label: "V-Neck",
     front: "/mockups/vneck.png?v=2",
     back: "/mockups/vneck_back.png?v=2",
+    printableArea: { top: "20%", left: "28%", width: "44%", height: "58%" }
   },
   polo: {
     label: "Polo Shirt",
     front: "/mockups/polo.png?v=5",
     back: "/mockups/polo_back.png?v=5",
+    printableArea: { top: "22%", left: "30%", width: "40%", height: "55%" }
+  },
+  hoodie: {
+    label: "Hoodie",
+    front: "/mockups/hoodie_front.png",
+    back: "/mockups/hoodie_back.png",
+    printableArea: { top: "22%", left: "28%", width: "44%", height: "45%" } // Shorter height to avoid pocket
   },
 };
 
@@ -59,8 +68,8 @@ export const FABRICS: Fabric[] = [
   { id: "rufty-cn",       brand: "Rufty Crewneck",   fabric: "Combed Cotton Biowash",      gsm: 200, category: "cotton",     priceRange: "₹307–₹406/pc", sizes: "S–XXXL",  garments: ["round-neck"],                                       images: { base: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&q=80" } },
   { id: "scott-basic",    brand: "Scott Basic",      fabric: "Super Combed Cotton",        gsm: 170, category: "cotton",     priceRange: "₹180–₹200/pc", sizes: "S–5XL",   garments: ["round-neck","v-neck"],                              images: { base: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&q=80" } },
   { id: "folkswear-bio",  brand: "Folkswear Bio",    fabric: "Pure Cotton Biowash",        gsm: 180, category: "cotton",     priceRange: "₹195–₹230/pc", sizes: "XS–3XL",  garments: ["round-neck","v-neck"],                              images: { base: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&q=80" } },
-  { id: "fling-solid",    brand: "Fling Solid",      fabric: "Combed Cotton",              gsm: 250, category: "cotton",     priceRange: "₹380–₹460/pc", sizes: "S–3XL",   garments: ["round-neck","v-neck","polo"],                         images: { base: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&q=80" } },
-  { id: "rufty-solid",    brand: "Rufty Solid",      fabric: "Pure Cotton Biowash",        gsm: 260, category: "cotton",     priceRange: "₹486–₹652/pc", sizes: "S–5XL",   garments: ["polo"],                         tag: "Premium",     images: { base: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=600&q=80" } },
+  { id: "fling-solid",    brand: "Fling Solid",      fabric: "Combed Cotton",              gsm: 250, category: "cotton",     priceRange: "₹380–₹460/pc", sizes: "S–3XL",   garments: ["round-neck","v-neck","polo","hoodie"],         images: { base: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&q=80" } },
+  { id: "rufty-solid",    brand: "Rufty Solid",      fabric: "Pure Cotton Biowash",        gsm: 260, category: "cotton",     priceRange: "₹486–₹652/pc", sizes: "S–5XL",   garments: ["polo","hoodie"],                tag: "Premium",     images: { base: "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=600&q=80" } },
   { id: "seeker",         brand: "Seeker",           fabric: "Nirmal Knit",                gsm: 180, category: "cotton",     priceRange: "₹180–₹225/pc", sizes: "S–3XL",   garments: ["round-neck","v-neck"],                              images: { base: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&q=80" } },
   { id: "mexmy",          brand: "Mexmy",            fabric: "Pure Cotton",                gsm: 220, category: "cotton",     priceRange: "₹280–₹340/pc", sizes: "S–3XL",   garments: ["round-neck","v-neck"],                              images: { base: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&q=80" } },
   

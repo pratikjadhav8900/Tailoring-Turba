@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { pushContactToHubSpot } from "@/lib/hubspot";
+import { sanitize } from "@/lib/sanitize";
 import bcrypt from "bcryptjs";
 
 export async function POST(req: NextRequest) {
@@ -17,7 +18,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Password must be at least 8 characters." }, { status: 400 });
     }
 
-    const existing = await prisma.user.findUnique({ where: { email } });
+    const sName = sanitize(name);
+    const sEmail = sanitize(email);
+    const sPhone = phone ? sanitize(phone) : null;
+    const sCompanyName = companyName ? sanitize(companyName) : null;
+    const sGstNumber = gstNumber ? sanitize(gstNumber) : null;
+
+    const existing = await prisma.user.findUnique({ where: { email: sEmail } });
     if (existing) {
       return NextResponse.json({ error: "An account with this email already exists." }, { status: 409 });
     }
@@ -26,25 +33,25 @@ export async function POST(req: NextRequest) {
 
     const user = await prisma.user.create({
       data: {
-        name,
-        email,
-        phone: phone || null,
+        name: sName,
+        email: sEmail,
+        phone: sPhone,
         password: hashed,
-        companyName: isB2B ? companyName : null,
-        gstNumber: isB2B ? gstNumber : null,
+        companyName: isB2B ? sCompanyName : null,
+        gstNumber: isB2B ? sGstNumber : null,
         isB2BApproved: false,
       },
     });
 
     // Push B2B leads to HubSpot CRM
     if (isB2B) {
-      const nameParts = name.trim().split(" ");
+      const nameParts = sName.trim().split(" ");
       await pushContactToHubSpot({
-        email,
+        email: sEmail,
         firstname: nameParts[0],
         lastname: nameParts.slice(1).join(" ") || undefined,
-        phone: phone || undefined,
-        company: companyName || undefined,
+        phone: sPhone || undefined,
+        company: sCompanyName || undefined,
         hs_lead_status: "NEW",
       });
     }

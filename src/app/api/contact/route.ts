@@ -2,10 +2,11 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from "next/server";
 import { sendMail } from "@/lib/mail";
 import { prisma } from "@/lib/prisma";
+import { sanitize } from "@/lib/sanitize";
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, phone, company, quantity, message } = await req.json();
+    let { name, email, phone, company, quantity, message } = await req.json();
 
     if (!name || !email || !phone || !message) {
       return NextResponse.json({ error: "Name, email, phone and message are required." }, { status: 400 });
@@ -15,6 +16,13 @@ export async function POST(req: NextRequest) {
     if (!phoneRegex.test(phone)) {
       return NextResponse.json({ error: "Please enter a valid 10-digit phone number." }, { status: 400 });
     }
+
+    // Sanitize all inputs
+    name = sanitize(name);
+    email = sanitize(email);
+    phone = sanitize(phone);
+    company = sanitize(company);
+    message = sanitize(message);
 
 
     // 0. Save to Database

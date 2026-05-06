@@ -25,7 +25,7 @@ export default function Footer() {
           {/* Brand Column */}
           <div>
             <div style={{ marginBottom: "24px" }}>
-              <Image src="/logo.svg" alt="Tailoring Turba" width={160} height={32} style={{ filter: "brightness(0) invert(1)", objectFit: "contain" }} />
+              <Image src="/logo.svg" alt="Tailoring Turba" width={180} height={40} style={{ filter: "brightness(0) invert(1)", objectFit: "contain" }} />
             </div>
             <p style={{ color: "#94a3b8", fontSize: "0.9rem", lineHeight: 1.7, maxWidth: "280px" }}>
               India's premium corporate gifting & custom apparel platform. From bulk gift sets to bespoke teamwear — we have it all.

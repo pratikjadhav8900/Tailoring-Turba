@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { sanitize } from "@/lib/sanitize";
 
 export async function POST(req: Request) {
   try {
@@ -17,10 +18,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
+    const sanitizedName = sanitize(name);
+
     const design = await prisma.design.create({
       data: {
         userId: session.user.id,
-        name,
+        name: sanitizedName,
         stateJson: typeof stateJson === 'string' ? stateJson : JSON.stringify(stateJson),
         sourceProductId: sourceProductId?.toString() || null,
         imageUrl: imageUrl || null,

@@ -17,8 +17,8 @@ import {
 const navItems = [
   { icon: <Home size={20} />, label: "Home", href: "/" },
   { icon: <LayoutDashboard size={20} />, label: "Overview", href: "/dashboard" },
-  { icon: <Paintbrush size={20} />, label: "My Designs", href: "/dashboard/designs" },
-  { icon: <Package size={20} />, label: "My Orders", href: "/dashboard/orders" },
+  { icon: <Paintbrush size={20} />, label: "Designs", href: "/dashboard/designs" },
+  { icon: <Package size={20} />, label: "Orders", href: "/dashboard/orders" },
   { icon: <CalendarCheck size={20} />, label: "Bookings", href: "/dashboard/bookings" },
   { icon: <User size={20} />, label: "Profile", href: "/dashboard/profile" },
 ];
@@ -38,9 +38,11 @@ export default function DashboardSidebar({ user }: Props) {
 
       <nav className={styles.nav}>
         {navItems.map((item) => {
-          const isActive = item.href === "/dashboard"
-            ? pathname === "/dashboard"
-            : pathname.startsWith(item.href);
+          const isActive = item.href === "/"
+            ? pathname === "/"
+            : item.href === "/dashboard"
+              ? pathname === "/dashboard"
+              : pathname.startsWith(item.href);
           return (
             <Link
               key={item.href}
