@@ -70,6 +70,15 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     setMounted(true);
+    // Load Razorpay Script
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    document.body.appendChild(script);
+    
+    return () => {
+      document.body.removeChild(script);
+    };
   }, []);
 
   useEffect(() => {
@@ -94,29 +103,11 @@ export default function CheckoutPage() {
   const estimatedTotal = subtotal + designCharge + gst;
 
   const [error, setError] = useState<string | null>(null);
-
-  const loadRazorpay = () => {
-    return new Promise((resolve) => {
-      const script = document.createElement("script");
-      script.src = "https://checkout.razorpay.com/v1/checkout.js";
-      script.onload = () => resolve(true);
-      script.onerror = () => resolve(false);
-      document.body.appendChild(script);
-    });
-  };
-
-  const handleCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsProcessing(true);
     setError(null);
     
     try {
-      // 1. Load Razorpay SDK
-      const isLoaded = await loadRazorpay();
-      if (!isLoaded) {
-        throw new Error("Razorpay SDK failed to load. Check your internet connection.");
-      }
-
       // 2. Create Razorpay Order via our API
       const orderRes = await fetch("/api/razorpay/order", {
         method: "POST",

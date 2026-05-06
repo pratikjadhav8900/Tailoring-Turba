@@ -3,15 +3,21 @@ import { NextRequest, NextResponse } from 'next/server';
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
 
-// Initialize Razorpay instance
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID!,
-  key_secret: process.env.RAZORPAY_KEY_SECRET!,
-});
+// Helper to get Razorpay instance
+function getRazorpay() {
+  const key_id = process.env.RAZORPAY_KEY_ID;
+  const key_secret = process.env.RAZORPAY_KEY_SECRET;
+
+  if (!key_id || !key_secret) {
+    throw new Error('Razorpay credentials are missing in environment variables');
+  }
+
+  return new Razorpay({ key_id, key_secret });
+}
 
 export async function POST(request: NextRequest) {
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, order_details } = await request.json();
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = await request.json();
 
     // Validate required fields
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
@@ -21,24 +27,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const key_secret = process.env.RAZORPAY_KEY_SECRET;
+    if (!key_secret) {
+      throw new Error("RAZORPAY_KEY_SECRET is not defined");
+    }
+
     // Create the expected signature
     const generated_signature = crypto
-      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET!)
+      .createHmac('sha256', key_secret)
       .update(`${razorpay_order_id}|${razorpay_payment_id}`)
       .digest('hex');
 
     // Verify signature
     if (generated_signature !== razorpay_signature) {
       return NextResponse.json(
-        { error: 'Invalid payment signature' },
+        { error: 'Invalid payment signature. Potential tampering detected.' },
         { status: 400 }
       );
     }
 
-    // Fetch payment details from Razorpay
+    // Fetch payment details from Razorpay to double-confirm
+    const razorpay = getRazorpay();
     const payment = await razorpay.payments.fetch(razorpay_payment_id);
     
-    if (payment.status !== 'captured') {
+    if (payment.status !== 'captured' && payment.status !== 'authorized') {
       return NextResponse.json(
         { error: 'Payment not successful', status: payment.status },
         { status: 400 }
