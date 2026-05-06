@@ -86,7 +86,7 @@ export default async function ProductDetailsPage({ params }: { params: { id: str
       badge: dbProduct.badge || "",
       description: dbProduct.description,
       features: dbProduct.features,
-      minOrderQuantity: dbProduct.minOrderQuantity || 10,
+      minOrderQuantity: Math.max(dbProduct.minOrderQuantity || 0, 10),
     };
 
     formattedRelated = relatedDbProducts.map(p => ({

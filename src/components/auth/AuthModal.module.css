@@ -4,33 +4,34 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
-  backdrop-filter: blur(4px);
+  z-index: 2000;
+  backdrop-filter: blur(12px);
+  padding: 20px;
 }
 
 .modal {
-  background: white;
-  border-radius: 16px;
-  padding: 32px;
+  background: var(--tth-white);
+  padding: 48px;
   width: 100%;
-  max-width: 420px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 440px;
   position: relative;
-  animation: slideUp 0.3s ease-out;
+  animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid var(--tth-beige-light);
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.12);
 }
 
 @keyframes slideUp {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(30px) scale(0.98);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -38,47 +39,55 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 24px;
+  margin-bottom: 32px;
 }
 
 .modalTitle {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--color-neutral-800);
+  font-family: var(--font-serif);
+  font-size: 2.2rem;
+  font-weight: 400;
+  color: var(--tth-black);
   margin: 0;
+  letter-spacing: -0.02em;
 }
 
 .closeBtn {
+  position: absolute;
+  top: 24px;
+  right: 24px;
   background: none;
   border: none;
-  color: var(--color-neutral-500);
+  color: var(--tth-text-muted);
   cursor: pointer;
   padding: 8px;
-  border-radius: 8px;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  z-index: 10;
 }
 
 .closeBtn:hover {
-  background: var(--color-neutral-100);
-  color: var(--color-neutral-700);
+  color: var(--tth-black);
+  transform: rotate(90deg);
 }
 
 .form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
 }
 
 .formGroup {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .label {
-  font-weight: 600;
-  color: var(--color-neutral-700);
-  font-size: 0.9rem;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  color: var(--tth-text);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
 }
 
 .inputWrapper {
@@ -89,71 +98,75 @@
 
 .inputIcon {
   position: absolute;
-  left: 12px;
-  color: var(--color-neutral-400);
+  left: 0;
+  color: var(--tth-tan);
   pointer-events: none;
 }
 
 .input {
   width: 100%;
-  padding: 12px 12px 12px 40px;
-  border: 2px solid var(--color-neutral-200);
-  border-radius: 8px;
-  font-size: 0.95rem;
-  transition: all 0.2s ease;
-  background: var(--color-neutral-0);
+  padding: 12px 0 12px 28px;
+  border: none;
+  border-bottom: 1px solid var(--tth-beige-light);
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: transparent;
+  color: var(--tth-black);
+  border-radius: 0;
 }
 
 .input:focus {
   outline: none;
-  border-color: var(--color-primary-500);
-  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+  border-bottom-color: var(--tth-olive-dark);
 }
 
 .input::placeholder {
-  color: var(--color-neutral-400);
+  color: var(--tth-tan);
+  opacity: 0.6;
 }
 
 .error {
-  background: var(--color-red-50);
-  color: var(--color-red-600);
-  padding: 12px;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  border: 1px solid var(--color-red-200);
+  background: #fff5f5;
+  color: #c53030;
+  padding: 14px;
+  font-size: 0.85rem;
+  border-left: 3px solid #c53030;
+  font-weight: 500;
 }
 
 .submitBtn {
-  background: linear-gradient(135deg, var(--color-primary-500) 0%, var(--color-primary-600) 100%);
-  color: white;
+  background: var(--tth-olive-dark);
+  color: var(--tth-white);
   border: none;
-  padding: 14px 24px;
-  border-radius: 12px;
-  font-weight: 600;
-  font-size: 1rem;
+  padding: 18px 24px;
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  margin-top: 8px;
 }
 
 .submitBtn:hover:not(:disabled) {
-  background: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-primary-700) 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(245, 158, 11, 0.35);
+  background: var(--tth-black);
+  letter-spacing: 0.2em;
+  padding-left: 30px;
 }
 
 .submitBtn:disabled {
-  opacity: 0.7;
+  opacity: 0.6;
   cursor: not-allowed;
-  transform: none;
 }
 
 .divider {
   display: flex;
   align-items: center;
-  margin: 24px 0;
-  color: var(--color-neutral-400);
-  font-size: 0.9rem;
+  margin: 32px 0;
+  color: var(--tth-tan);
+  font-size: 0.75rem;
+  font-style: italic;
+  font-family: var(--font-serif);
 }
 
 .divider::before,
@@ -161,11 +174,11 @@
   content: '';
   flex: 1;
   height: 1px;
-  background: var(--color-neutral-200);
+  background: var(--tth-beige-light);
 }
 
 .divider span {
-  padding: 0 16px;
+  padding: 0 20px;
 }
 
 .registerPrompt {
@@ -173,103 +186,111 @@
 }
 
 .registerPrompt p {
-  color: var(--color-neutral-600);
-  margin-bottom: 16px;
-  font-size: 0.95rem;
-}
-
-.registerBtn {
-  background: none;
-  border: 2px solid var(--color-primary-500);
-  color: var(--color-primary-600);
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  font-family: var(--font-sans);
+  color: var(--tth-text-muted);
+  margin-bottom: 20px;
   font-size: 0.9rem;
 }
 
+.registerBtn {
+  background: transparent;
+  border: 1px solid var(--tth-beige);
+  color: var(--tth-black);
+  padding: 14px 28px;
+  font-weight: 700;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
 .registerBtn:hover {
-  background: var(--color-primary-50);
-  transform: translateY(-1px);
+  background: var(--tth-offwhite);
+  border-color: var(--tth-black);
 }
 
 .registerContent {
   text-align: center;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 32px;
 }
 
 .registerInfo {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 20px;
 }
 
 .registerIcon {
-  color: var(--color-primary-500);
-  padding: 16px;
-  background: var(--color-primary-50);
+  color: var(--tth-olive);
+  padding: 24px;
+  background: var(--tth-offwhite);
   border-radius: 50%;
 }
 
 .registerInfo h3 {
-  color: var(--color-neutral-800);
+  font-family: var(--font-serif);
+  color: var(--tth-black);
   margin: 0;
-  font-size: 1.25rem;
+  font-size: 1.8rem;
+  font-weight: 400;
 }
 
 .registerInfo p {
-  color: var(--color-neutral-600);
+  color: var(--tth-text-muted);
   margin: 0;
-  line-height: 1.5;
+  line-height: 1.6;
+  font-size: 0.95rem;
 }
 
 .registerLinkBtn {
-  background: linear-gradient(135deg, var(--color-accent-500) 0%, var(--color-accent-600) 100%);
-  color: white;
+  background: var(--tth-black);
+  color: var(--tth-white);
   text-decoration: none;
-  padding: 14px 24px;
-  border-radius: 12px;
-  font-weight: 600;
-  font-size: 1rem;
+  padding: 18px 24px;
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
   text-align: center;
 }
 
 .registerLinkBtn:hover {
-  background: linear-gradient(135deg, var(--color-accent-600) 0%, var(--color-accent-700) 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.35);
+  background: var(--tth-olive-dark);
 }
 
 .backToLogin {
   background: none;
   border: none;
-  color: var(--color-neutral-600);
+  color: var(--tth-text-muted);
   cursor: pointer;
-  font-size: 0.9rem;
-  text-decoration: underline;
-  transition: color 0.2s ease;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: color 0.3s ease;
 }
 
 .backToLogin:hover {
-  color: var(--color-primary-600);
+  color: var(--tth-black);
+  text-decoration: underline;
 }
 
 @media (max-width: 480px) {
   .modal {
-    margin: 16px;
-    padding: 24px;
-    max-width: none;
+    padding: 32px 24px;
   }
   
   .modalTitle {
-    font-size: 1.25rem;
+    font-size: 1.8rem;
+  }
+
+  .submitBtn, .registerLinkBtn {
+    padding: 16px 20px;
   }
 }

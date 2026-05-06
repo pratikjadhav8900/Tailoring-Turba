@@ -59,7 +59,7 @@ model Product {
   name             String
   description      String
   basePrice        Float
-  minOrderQuantity Int         @default(1)
+  minOrderQuantity Int         @default(10)
   categoryId       String
   images           String[]
   createdAt        DateTime    @default(now())

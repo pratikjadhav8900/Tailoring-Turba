@@ -103,6 +103,8 @@ export default function CheckoutPage() {
   const estimatedTotal = subtotal + designCharge + gst;
 
   const [error, setError] = useState<string | null>(null);
+  
+  const handleCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsProcessing(true);
     setError(null);

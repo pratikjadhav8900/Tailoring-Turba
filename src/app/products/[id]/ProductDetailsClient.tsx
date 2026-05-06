@@ -27,7 +27,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
   const { toggleWishlist, isInWishlist } = useWishlist();
 
   const [activeImage, setActiveImage] = useState(product.gallery?.[0] || product.image);
-  const minQty = product.minOrderQuantity || 10;
+  const minQty = Math.max(product.minOrderQuantity || 0, 10);
   const [qty, setQty] = useState<number | string>(minQty);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [showForm, setShowForm] = useState(false);

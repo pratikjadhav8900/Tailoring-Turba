@@ -240,7 +240,7 @@ function CustomizerContent() {
     });
   };
 
-  const MOQ = dbProduct?.minOrderQuantity || 10;
+  const MOQ = Math.max(dbProduct?.minOrderQuantity || 0, 10);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {

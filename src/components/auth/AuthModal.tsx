@@ -50,10 +50,10 @@ export default function AuthModal({ isOpen, onClose, onSuccess, redirectTo = "/d
       <div className={styles.modal}>
         <div className={styles.modalHeader}>
           <h2 className={styles.modalTitle}>
-            {showRegister ? "Create Account" : "Sign In"}
+            {showRegister ? "Join Us" : "Welcome Back"}
           </h2>
-          <button onClick={onClose} className={styles.closeBtn}>
-            <X size={20} />
+          <button onClick={onClose} className={styles.closeBtn} aria-label="Close modal">
+            <X size={24} strokeWidth={1.5} />
           </button>
         </div>
 
@@ -61,15 +61,15 @@ export default function AuthModal({ isOpen, onClose, onSuccess, redirectTo = "/d
           <>
             <form onSubmit={handleSubmit} className={styles.form}>
               <div className={styles.formGroup}>
-                <label className={styles.label}>Email</label>
+                <label className={styles.label}>Email Address</label>
                 <div className={styles.inputWrapper}>
-                  <Mail size={18} className={styles.inputIcon} />
+                  <Mail size={18} strokeWidth={1.5} className={styles.inputIcon} />
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className={styles.input}
-                    placeholder="Enter your email"
+                    placeholder="e.g. name@example.com"
                     required
                   />
                 </div>
@@ -78,13 +78,13 @@ export default function AuthModal({ isOpen, onClose, onSuccess, redirectTo = "/d
               <div className={styles.formGroup}>
                 <label className={styles.label}>Password</label>
                 <div className={styles.inputWrapper}>
-                  <Lock size={18} className={styles.inputIcon} />
+                  <Lock size={18} strokeWidth={1.5} className={styles.inputIcon} />
                   <input
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className={styles.input}
-                    placeholder="Enter your password"
+                    placeholder="••••••••"
                     required
                   />
                 </div>
@@ -97,7 +97,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, redirectTo = "/d
                 disabled={loading}
                 className={styles.submitBtn}
               >
-                {loading ? "Signing in..." : "Sign In"}
+                {loading ? "Verifying..." : "Sign In to Continue"}
               </button>
             </form>
 
@@ -106,7 +106,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, redirectTo = "/d
             </div>
 
             <div className={styles.registerPrompt}>
-              <p>New to Tailoring Turba?</p>
+              <p>Experience the craft of Tailoring Turba</p>
               <button
                 onClick={() => setShowRegister(true)}
                 className={styles.registerBtn}
@@ -118,20 +118,20 @@ export default function AuthModal({ isOpen, onClose, onSuccess, redirectTo = "/d
         ) : (
           <div className={styles.registerContent}>
             <div className={styles.registerInfo}>
-              <User size={48} className={styles.registerIcon} />
-              <h3>Create Your Account</h3>
-              <p>Join Tailoring Turba to design custom garments and track your orders.</p>
+              <User size={56} strokeWidth={1} className={styles.registerIcon} />
+              <h3>Start Your Journey</h3>
+              <p>Create an account to design custom apparel, save your measurements, and track orders with ease.</p>
             </div>
             
             <Link href="/register" className={styles.registerLinkBtn}>
-              Create New Account
+              Register New Account
             </Link>
             
             <button
               onClick={() => setShowRegister(false)}
               className={styles.backToLogin}
             >
-              Back to Sign In
+              Already have an account? Sign In
             </button>
           </div>
         )}
