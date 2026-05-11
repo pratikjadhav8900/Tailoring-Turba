@@ -4,8 +4,7 @@
     Synthesis: High-Resolution Pixel-Perfect Vector
     Color: Navy Blue (#003145)
   -->
-  <rect width="800" height="280" fill="white" />
-  
+
   <defs>
     <style>
       .logo-fill { fill: #003145; }

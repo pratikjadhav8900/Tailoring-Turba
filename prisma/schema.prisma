@@ -95,6 +95,7 @@ model Order {
   totalAmount       Float
   status            OrderStatus @default(PENDING)
   paymentId         String?
+  razorpayOrderId   String?     @unique
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
   shippingAddressId String?
@@ -103,6 +104,14 @@ model Order {
   user              User        @relation(fields: [userId], references: [id])
   items             OrderItem[]
   orderSheet        OrderSheet?
+  
+  // BigShip Logistics
+  shippingCharge    Float?
+  bigshipOrderId    String?
+  bigshipTrackingId String?
+  bigshipLabelUrl   String?
+  bigshipManifestUrl String?
+  bigshipCourierName String?
 }
 
 model OrderItem {

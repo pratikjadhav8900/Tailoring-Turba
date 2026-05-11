@@ -1,7 +1,9 @@
-export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
+import { prisma } from '@/lib/prisma';
+import { auth } from '@/lib/auth';
+import { sendOperationsOrderAlert } from '@/lib/mail';
 
 // Helper to get Razorpay instance
 function getRazorpay() {
@@ -19,7 +21,7 @@ export async function POST(request: NextRequest) {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = await request.json();
 
-    // Validate required fields
+    // 1. Validate required fields
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
       return NextResponse.json(
         { error: 'Missing required payment verification fields' },
@@ -32,13 +34,12 @@ export async function POST(request: NextRequest) {
       throw new Error("RAZORPAY_KEY_SECRET is not defined");
     }
 
-    // Create the expected signature
+    // 2. Verify signature
     const generated_signature = crypto
       .createHmac('sha256', key_secret)
       .update(`${razorpay_order_id}|${razorpay_payment_id}`)
       .digest('hex');
 
-    // Verify signature
     if (generated_signature !== razorpay_signature) {
       return NextResponse.json(
         { error: 'Invalid payment signature. Potential tampering detected.' },
@@ -46,7 +47,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Fetch payment details from Razorpay to double-confirm
+    // 3. Fetch payment details from Razorpay
     const razorpay = getRazorpay();
     const payment = await razorpay.payments.fetch(razorpay_payment_id);
     
@@ -57,31 +58,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Here you would typically:
-    // 1. Save order details to your database
-    // 2. Update inventory
-    // 3. Send confirmation emails
-    // 4. Create shipping records
-    
-    const paymentRecord = {
-      payment_id: razorpay_payment_id,
-      order_id: razorpay_order_id,
-      amount: payment.amount,
-      currency: payment.currency,
-      status: payment.status,
-      method: payment.method,
-      email: payment.email,
-      contact: payment.contact,
-      created_at: payment.created_at,
-      order_details: order_details,
-    };
+    // 4. Update the order in our database from PENDING to PROCESSING
+    let order;
+    try {
+      order = await prisma.order.update({
+        where: { razorpayOrderId: razorpay_order_id },
+        data: {
+          status: "PROCESSING",
+          paymentId: razorpay_payment_id,
+        },
+      });
+      console.log('Order finalized successfully:', order.id);
+    } catch (dbErr) {
+      console.error("[DB_UPDATE_ERROR] Failed to update order status:", dbErr);
+      // Even if DB update fails, the payment was successful, so we return 200 but log error
+    }
 
-    console.log('Payment verified successfully:', paymentRecord);
+    // 5. Notify Operations
+    if (order) {
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+      const orderDetailsUrl = `${baseUrl}/admin/orders/${order.id}`;
+      
+      sendOperationsOrderAlert(order.id, orderDetailsUrl).catch(err => {
+        console.error("[MAIL_ERROR] Failed to send operations alert:", err);
+      });
+    }
 
     return NextResponse.json({
       success: true,
       message: 'Payment verified successfully',
-      payment: paymentRecord,
+      orderId: order?.id,
     });
 
   } catch (error: any) {

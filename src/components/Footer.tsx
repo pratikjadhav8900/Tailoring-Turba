@@ -2,6 +2,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import * as Lucide from "lucide-react";
 
 export default function Footer() {
   const pathname = usePathname();
@@ -31,17 +32,35 @@ export default function Footer() {
               India's premium corporate gifting & custom apparel platform. From bulk gift sets to bespoke teamwear — we have it all.
             </p>
             <div style={{ display: "flex", gap: "12px", marginTop: "24px" }}>
-              {["twitter", "linkedin", "instagram"].map(platform => (
-                <a key={platform} href="#" style={{
-                  width: "36px", height: "36px", borderRadius: "8px",
-                  background: "rgba(255,255,255,0.08)", display: "flex",
-                  alignItems: "center", justifyContent: "center",
-                  textDecoration: "none", fontSize: "0.75rem",
-                  color: "#94a3b8", transition: "background 0.2s"
-                }}>
-                  {platform[0].toUpperCase()}
-                </a>
-              ))}
+              {[
+                { platform: "twitter", iconName: "Twitter", fallbackIcon: "X" },
+                { platform: "linkedin", iconName: "Linkedin", fallbackIcon: "LinkedIn" },
+                { platform: "instagram", iconName: "Instagram" }
+              ].map(({ platform, iconName, fallbackIcon }) => {
+                // Safely get the icon component
+                const IconComponent = (Lucide as any)[iconName] || (Lucide as any)[fallbackIcon || ""] || (Lucide as any)["Share2"];
+                
+                return (
+                  <a key={platform} href="#" style={{
+                    width: "36px", height: "36px", borderRadius: "8px",
+                    background: "rgba(255,255,255,0.08)", display: "flex",
+                    alignItems: "center", justifyContent: "center",
+                    textDecoration: "none",
+                    color: "#94a3b8", transition: "all 0.2s ease"
+                  }}
+                    onMouseEnter={e => {
+                      e.currentTarget.style.background = "rgba(255,255,255,0.15)";
+                      e.currentTarget.style.color = "white";
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.background = "rgba(255,255,255,0.08)";
+                      e.currentTarget.style.color = "#94a3b8";
+                    }}
+                  >
+                    {IconComponent ? <IconComponent size={18} strokeWidth={1.5} /> : platform[0].toUpperCase()}
+                  </a>
+                );
+              })}
             </div>
           </div>
 

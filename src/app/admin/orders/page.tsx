@@ -16,6 +16,7 @@ export default async function AdminOrdersPage() {
         select: {
           name: true,
           email: true,
+          phone: true,
         }
       },
       items: {

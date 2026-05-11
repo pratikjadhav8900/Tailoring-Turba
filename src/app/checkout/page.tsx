@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { useCart } from "@/context/CartContext";
+import { INDIAN_STATES } from "@/lib/logistics";
 import styles from "./page.module.css";
 
 export default function CheckoutPage() {
@@ -23,45 +24,9 @@ export default function CheckoutPage() {
     postalCode: ""
   });
   const [isStateDropdownOpen, setIsStateDropdownOpen] = useState(false);
+  const [isFetchingAddress, setIsFetchingAddress] = useState(false);
 
-  const states = [
-    { name: "Andaman and Nicobar Islands", code: "AN" },
-    { name: "Andhra Pradesh", code: "AP" },
-    { name: "Arunachal Pradesh", code: "AR" },
-    { name: "Assam", code: "AS" },
-    { name: "Bihar", code: "BR" },
-    { name: "Chandigarh", code: "CH" },
-    { name: "Chhattisgarh", code: "CT" },
-    { name: "Dadra and Nagar Haveli and Daman and Diu", code: "DN" },
-    { name: "Delhi", code: "DL" },
-    { name: "Goa", code: "GA" },
-    { name: "Gujarat", code: "GJ" },
-    { name: "Haryana", code: "HR" },
-    { name: "Himachal Pradesh", code: "HP" },
-    { name: "Jammu and Kashmir", code: "JK" },
-    { name: "Jharkhand", code: "JH" },
-    { name: "Karnataka", code: "KA" },
-    { name: "Kerala", code: "KL" },
-    { name: "Ladakh", code: "LA" },
-    { name: "Lakshadweep", code: "LD" },
-    { name: "Madhya Pradesh", code: "MP" },
-    { name: "Maharashtra", code: "MH" },
-    { name: "Manipur", code: "MN" },
-    { name: "Meghalaya", code: "ML" },
-    { name: "Mizoram", code: "MZ" },
-    { name: "Nagaland", code: "NL" },
-    { name: "Odisha", code: "OR" },
-    { name: "Puducherry", code: "PY" },
-    { name: "Punjab", code: "PB" },
-    { name: "Rajasthan", code: "RJ" },
-    { name: "Sikkim", code: "SK" },
-    { name: "Tamil Nadu", code: "TN" },
-    { name: "Telangana", code: "TG" },
-    { name: "Tripura", code: "TR" },
-    { name: "Uttar Pradesh", code: "UP" },
-    { name: "Uttarakhand", code: "UT" },
-    { name: "West Bengal", code: "WB" }
-  ];
+  const states = INDIAN_STATES;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -86,6 +51,42 @@ export default function CheckoutPage() {
       router.push("/contact?mode=inquiry");
     }
   }, [mounted, cartCount, router]);
+
+  // Pincode Lookup
+  useEffect(() => {
+    const fetchAddress = async () => {
+      const code = formData.postalCode.replace(/\s/g, '');
+      if (code.length === 6 && /^\d+$/.test(code)) {
+        setIsFetchingAddress(true);
+        try {
+          const res = await fetch(`/api/pincode/${code}`);
+          const data = await res.json();
+          
+          if (res.ok) {
+            const { city, state: stateName } = data;
+            
+            // Find state code
+            const state = states.find(s => 
+              s.name.toLowerCase().includes(stateName.toLowerCase()) || 
+              stateName.toLowerCase().includes(s.name.toLowerCase())
+            );
+            
+            setFormData(prev => ({
+              ...prev,
+              city: city,
+              state: state ? state.code : prev.state
+            }));
+          }
+        } catch (err) {
+          console.error("Pincode fetch error:", err);
+        } finally {
+          setIsFetchingAddress(false);
+        }
+      }
+    };
+
+    fetchAddress();
+  }, [formData.postalCode]);
 
   const subtotal = cart.reduce((total, item) => {
     const itemPrice = typeof item.price === 'number' ? item.price : parseFloat(String(item.price)) || 0;
@@ -117,6 +118,23 @@ export default function CheckoutPage() {
         body: JSON.stringify({
           amount: estimatedTotal,
           currency: "INR",
+          items: cart.map(item => ({
+            productId: item.productId,
+            quantity: item.quantity,
+            price: item.price,
+            customStateJson: item.customDesign ? JSON.stringify(item.customDesign) : undefined,
+            printFiles: item.uploadedAssets || undefined,
+            mockupUrl: item.customDesign ? item.image : undefined,
+            mockupUrlBack: item.mockupUrlBack
+          })),
+          shippingAddress: {
+            name: `${formData.firstName} ${formData.lastName}`,
+            street: formData.street,
+            city: formData.city,
+            state: formData.state,
+            postalCode: formData.postalCode,
+            country: "India"
+          },
           notes: {
             customerName: `${formData.firstName} ${formData.lastName}`,
             email: formData.email
@@ -154,8 +172,10 @@ export default function CheckoutPage() {
             return;
           }
 
-          // 5. Finalize Order in our Database
-          await finalizeOrder(response.razorpay_payment_id, response.razorpay_order_id);
+          // 5. Success! The backend already updated the order.
+          setIsSuccess(true);
+          clearCart();
+          setIsProcessing(false);
         },
         prefill: {
           name: `${formData.firstName} ${formData.lastName}`,
@@ -164,7 +184,16 @@ export default function CheckoutPage() {
         theme: {
           color: "#4a5e3a",
         },
+        modal: {
+          ondismiss: function () {
+            setIsProcessing(false);
+          },
+        },
       };
+
+      if (!(window as any).Razorpay) {
+        throw new Error("Razorpay payment gateway is not available. Please refresh the page.");
+      }
 
       const rzp = new (window as any).Razorpay(options);
       rzp.on("payment.failed", function (response: any) {
@@ -180,50 +209,6 @@ export default function CheckoutPage() {
     }
   };
 
-  const finalizeOrder = async (paymentId: string, razorpayOrderId: string) => {
-    try {
-      const orderItems = cart.map(item => ({
-        productId: item.productId,
-        quantity: item.quantity,
-        price: item.price,
-        customStateJson: item.customDesign ? JSON.stringify(item.customDesign) : undefined,
-        printFiles: item.uploadedAssets || undefined,
-        mockupUrl: item.customDesign ? item.image : undefined,
-        mockupUrlBack: item.mockupUrlBack
-      }));
-
-      const response = await fetch("/api/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          items: orderItems,
-          paymentId,
-          razorpayOrderId,
-          shippingAddress: {
-            name: `${formData.firstName} ${formData.lastName}`,
-            street: formData.street,
-            city: formData.city,
-            state: formData.state,
-            postalCode: formData.postalCode,
-            country: "India"
-          }
-        }),
-      });
-
-      if (!response.ok) {
-        const result = await response.json();
-        throw new Error(result.error || "Failed to save order record after payment.");
-      }
-
-      setIsSuccess(true);
-      clearCart();
-    } catch (err: any) {
-      console.error("[FINALIZE_ORDER_ERROR]", err);
-      setError(err.message || "Order paid but failed to save in our system. Please contact support.");
-    } finally {
-      setIsProcessing(false);
-    }
-  };
 
   if (!mounted || cartCount >= 50) return null;
 
@@ -306,7 +291,15 @@ export default function CheckoutPage() {
               <div className={styles.formRow3}>
                 <div className={styles.inputGroup}>
                   <label className={styles.label}>City</label>
-                  <input type="text" name="city" value={formData.city} onChange={handleInputChange} required className={styles.input} />
+                  <input 
+                    type="text" 
+                    name="city" 
+                    value={formData.city} 
+                    onChange={handleInputChange} 
+                    required 
+                    placeholder={isFetchingAddress ? "Fetching..." : ""}
+                    className={styles.input} 
+                  />
                 </div>
                 <div className={styles.inputGroup}>
                   <label className={styles.label}>State</label>
@@ -338,8 +331,8 @@ export default function CheckoutPage() {
                   </div>
                 </div>
                 <div className={styles.inputGroup}>
-                  <label className={styles.label}>PIN Code</label>
-                  <input type="text" name="postalCode" value={formData.postalCode} onChange={handleInputChange} required className={styles.input} />
+                  <label className={styles.label}>PIN Code {isFetchingAddress && "..."}</label>
+                  <input type="text" name="postalCode" value={formData.postalCode} onChange={handleInputChange} required className={styles.input} maxLength={6} />
                 </div>
               </div>
 

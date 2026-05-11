@@ -1,7 +1,7 @@
-export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import Razorpay from 'razorpay';
-import crypto from 'crypto';
+import { prisma } from '@/lib/prisma';
+import { auth } from '@/lib/auth';
 
 // Helper to get Razorpay instance
 function getRazorpay() {
@@ -16,49 +16,120 @@ function getRazorpay() {
 }
 
 export async function POST(request: NextRequest) {
-  try {
-    const { amount, currency = 'INR', receipt, notes } = await request.json();
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: 'Unauthorized. Please log in to proceed.' }, { status: 401 });
+  }
 
-    // Validate required fields
-    if (!amount || amount <= 0) {
+  try {
+    const { amount, currency = 'INR', items, shippingAddress, notes } = await request.json();
+
+    // 1. Validate required fields
+    if (!amount || amount < 1) {
       return NextResponse.json(
-        { error: 'Valid amount is required' },
+        { error: 'Minimum amount of 1 INR (100 paise) is required' },
         { status: 400 }
       );
     }
 
-    // Create Razorpay order
-    const razorpay = getRazorpay();
-    const order: any = await razorpay.orders.create({
-      amount: amount * 100, // Convert to paise (Razorpay expects amount in smallest currency unit)
-      currency,
-      receipt: receipt || `receipt_${Date.now()}`,
-      notes: {
-        ...notes,
-        timestamp: new Date().toISOString(),
-      },
-      payment_capture: true, // Auto-capture payment
-    });
+    if (!items || !items.length) {
+      return NextResponse.json({ error: 'Cart items are required to initiate payment' }, { status: 400 });
+    }
 
-    // Return order details to frontend
+    // 2. Handle Shipping Address
+    let finalAddressId = null;
+    if (shippingAddress) {
+      try {
+        const newAddress = await prisma.address.create({
+          data: {
+            id: `addr_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+            userId: session.user.id,
+            name: shippingAddress.name,
+            street: shippingAddress.street,
+            city: shippingAddress.city,
+            state: shippingAddress.state,
+            postalCode: shippingAddress.postalCode,
+            country: shippingAddress.country || "India",
+            updatedAt: new Date(),
+          }
+        });
+        finalAddressId = newAddress.id;
+      } catch (addrErr) {
+        console.error("[ADDRESS_CREATE_ERROR]", addrErr);
+        // We continue even if address fails, but ideally we should handle it
+      }
+    }
+
+    // 3. Create the Razorpay order first to get the ID
+    const razorpay = getRazorpay();
+    console.log('[RAZORPAY] Initiating order creation for amount:', amount);
+    
+    let rzpOrder: any;
+    try {
+      rzpOrder = await razorpay.orders.create({
+        amount: Math.round(amount * 100), // Ensure it's an integer
+        currency,
+        receipt: `receipt_${Date.now()}`,
+        notes: {
+          ...notes,
+          userId: session.user.id,
+          timestamp: new Date().toISOString(),
+        },
+        payment_capture: true,
+      });
+      console.log('[RAZORPAY] Order created successfully:', rzpOrder.id);
+    } catch (rzpErr: any) {
+      console.error('[RAZORPAY_ERROR] Failed to create order at Razorpay:', rzpErr);
+      throw new Error(`Razorpay Error: ${rzpErr.message || 'Failed to create order'}`);
+    }
+
+    // 4. Create a "PENDING" order in our database for sales tracking
+    console.log('[DB] Creating pending order in database...');
+    try {
+      const order = await prisma.order.create({
+        data: {
+          userId: session.user.id,
+          totalAmount: amount,
+          status: "PENDING", // Initial status for tracking
+          razorpayOrderId: rzpOrder.id,
+          ...(finalAddressId && { shippingAddressId: finalAddressId }),
+          items: {
+            create: items.map((i: any) => ({
+              productId: i.productId,
+              quantity: i.quantity,
+              price: i.price,
+              ...(i.customStateJson && { customStateJson: i.customStateJson }),
+              ...(i.printFiles && { printFiles: i.printFiles }),
+              ...(i.mockupUrl && { mockupUrl: i.mockupUrl }),
+              ...(i.mockupUrlBack && { mockupUrlBack: i.mockupUrlBack })
+            })),
+          },
+        }
+      });
+      console.log('[DB] Pending order created successfully:', order.id);
+    } catch (dbErr: any) {
+      console.error('[DB_ERROR] Failed to create pending order record:', dbErr);
+      throw new Error(`Database Error: ${dbErr.message || 'Failed to save order'}`);
+    }
+
+    // 5. Return order details to frontend
     return NextResponse.json({
       success: true,
       order: {
-        id: order.id,
-        amount: order.amount,
-        currency: order.currency,
-        receipt: order.receipt,
-        notes: order.notes,
+        id: rzpOrder.id,
+        amount: rzpOrder.amount,
+        currency: rzpOrder.currency,
+        receipt: rzpOrder.receipt,
       },
       key_id: process.env.RAZORPAY_KEY_ID,
     });
 
   } catch (error: any) {
-    console.error('Razorpay order creation error:', error);
+    console.error('Razorpay order initiation error:', error);
     
     return NextResponse.json(
       { 
-        error: 'Failed to create payment order',
+        error: 'Failed to initiate payment',
         details: error.message || 'Unknown error occurred'
       },
       { status: 500 }
