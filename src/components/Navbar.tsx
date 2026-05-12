@@ -57,7 +57,7 @@ export default function Navbar({ transparent = false }: { transparent?: boolean 
         {/* Left: Logo */}
         <Link href="/" className={styles.logo}>
           <Image 
-            src="/logo.png" 
+            src="/brand-logo.png" 
             alt="Tailoring Turba" 
             width={200} 
             height={70} 
