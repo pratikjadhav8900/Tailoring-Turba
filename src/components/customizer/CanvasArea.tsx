@@ -262,23 +262,6 @@ export default function CanvasArea({
                         WebkitUserSelect: "none",
                       }}
                     />
-                    {/* Double-tap hint shown only when active */}
-                    {isActive && (
-                      <div style={{
-                        position: "absolute",
-                        bottom: -22,
-                        left: 0,
-                        right: 0,
-                        textAlign: "center",
-                        fontSize: 11,
-                        color: "#6c3fc8",
-                        fontWeight: 600,
-                        pointerEvents: "none",
-                        whiteSpace: "nowrap",
-                      }}>
-                        Double-tap to edit text
-                      </div>
-                    )}
                   </>
                 ) : (
                   <img src={el.value} alt="logo" draggable={false} className="customizer-drag-handle" style={{ width: "100%", height: "100%", objectFit: "contain" }} />

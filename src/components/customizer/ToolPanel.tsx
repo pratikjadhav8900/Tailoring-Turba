@@ -54,7 +54,6 @@ export default function ToolPanel({
           <span className={styles.sidebarToolLabel}>Colors</span>
         </button>
 
-        <div style={{ flex: 1 }} />
 
 
       </div>

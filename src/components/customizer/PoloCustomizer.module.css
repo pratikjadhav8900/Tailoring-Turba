@@ -438,12 +438,12 @@
     bottom: 0;
     left: 0;
     right: 0;
-    height: 35vh;
+    height: auto;
     border-right: none;
     border-top: 1px solid #eee;
     box-shadow: 0 -8px 24px rgba(0,0,0,0.12);
     border-radius: 20px 20px 0 0;
-    padding: 16px;
+    padding: 24px 24px 40px 24px;
     z-index: 100;
   }
 
