@@ -25,7 +25,7 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
       const staticProd = staticCategory?.products?.find(p => p.code === dbProd.code);
       return {
         ...dbProd,
-        price: dbProd.price || staticProd?.price || null
+        price: (dbProd as any).price || staticProd?.price || null
       };
     });
 

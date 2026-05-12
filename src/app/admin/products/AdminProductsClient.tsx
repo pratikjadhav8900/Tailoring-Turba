@@ -33,13 +33,13 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
     if (!file) return;
 
     setIsUploading(true);
-    const formData = new FormData();
-    formData.append("file", file);
+    const uploadData = new FormData();
+    uploadData.append("file", file);
 
     try {
       const res = await fetch("/api/admin/upload", {
         method: "POST",
-        body: formData,
+        body: uploadData,
       });
 
       if (res.ok) {

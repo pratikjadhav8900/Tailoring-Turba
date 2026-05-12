@@ -22,6 +22,7 @@ export default async function AdminBookingsPage() {
   const serialized = bookings.map(b => ({
     ...b,
     date: b.date.toISOString(),
+    user: b.user ? { name: b.user.name, email: b.user.email || "" } : { name: b.guestName, email: b.guestEmail || "" },
   }));
 
   return <BookingsClient initialBookings={serialized} />;

@@ -50,7 +50,7 @@ export default async function AdminUsersPage() {
                 <tr key={user.id}>
                   <td>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--tth-offwhite)', display: 'flex', alignItems: 'center', justifyCenter: 'center' }}>
+                      <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--tth-offwhite)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <User size={16} color="var(--tth-text-muted)" />
                       </div>
                       <div>

@@ -228,7 +228,7 @@ export default function PoloCustomizer({
         bodyColor={bodyColor}
         elements={elements}
         activeElementId={activeElementId}
-        isPreviewMode={isPreviewMode}
+        isPreviewMode={!!isPreviewMode}
         isDragging={isDragging}
         mockupId={mockupId}
         onElementClick={setActiveElementId}

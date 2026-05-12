@@ -42,10 +42,10 @@ export async function POST(req: NextRequest) {
         // Note: Real implementation would need font loading logic
         // Simplified for this demo:
         const svg = await satori(
-          {
+          ({
             type: "div",
             props: {
-              children: el.value,
+              children: el.value as any,
               style: {
                 display: "flex",
                 color: el.color,
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
                 justifyContent: "center",
               },
             },
-          },
+          } as any),
           {
             width: el.width,
             height: el.height,
@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
     // 4. Composite and output
     const outputBuffer = await image.composite(layers).png().toBuffer();
 
-    return new NextResponse(outputBuffer, {
+    return new NextResponse(new Uint8Array(outputBuffer), {
       headers: {
         "Content-Type": "image/png",
         "Cache-Control": "public, max-age=31536000, immutable",

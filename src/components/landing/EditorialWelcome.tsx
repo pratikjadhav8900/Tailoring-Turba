@@ -15,7 +15,7 @@ export default function EditorialWelcome() {
         staggerChildren: 0.2
       }
     }
-  };
+  } as import("framer-motion").Variants;
 
   const itemVariants = {
     hidden: { y: 20, opacity: 0 },
@@ -24,7 +24,7 @@ export default function EditorialWelcome() {
       opacity: 1,
       transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] }
     }
-  };
+  } as import("framer-motion").Variants;
 
   const [mounted, setMounted] = useState(false);
 

@@ -6,7 +6,7 @@ import Image from "next/image";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import styles from "./AuthForm.module.css";
-import { Chrome, ArrowRight, Check } from "lucide-react";
+import { Globe, ArrowRight, Check } from "lucide-react";
 
 interface AuthFormProps {
   initialMode: 'login' | 'register';

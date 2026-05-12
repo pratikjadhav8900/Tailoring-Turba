@@ -442,7 +442,7 @@ function CustomizerContent() {
         {activeTab === "Options" && (
           <div className={styles.tabContent}>
             <SizeBreakdown 
-              sizes={customizerState?.sizes || {}}
+              sizes={(customizerState?.sizes as any) || {}}
               moq={MOQ}
               totalQuantity={totalQuantity}
               onSizeChange={handleSizeChange}
