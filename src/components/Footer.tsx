@@ -29,38 +29,28 @@ export default function Footer() {
               <Image src="/brand-logo.png" alt="Tailoring Turba" width={180} height={40} style={{ objectFit: "contain" }} />
             </div>
             <p style={{ color: "#94a3b8", fontSize: "0.9rem", lineHeight: 1.7, maxWidth: "280px" }}>
-              India's premium corporate gifting & custom apparel platform. From bulk gift sets to bespoke teamwear — we have it all.
+              Your trusted manufacturing partner for premium bespoke apparel. We specialize in high-quality uniforms, corporate wear, and custom tailoring solutions designed to elevate your brand.
             </p>
             <div style={{ display: "flex", gap: "12px", marginTop: "24px" }}>
-              {[
-                { platform: "twitter", iconName: "Twitter", fallbackIcon: "X" },
-                { platform: "linkedin", iconName: "Linkedin", fallbackIcon: "LinkedIn" },
-                { platform: "instagram", iconName: "Instagram" }
-              ].map(({ platform, iconName, fallbackIcon }) => {
-                // Safely get the icon component
-                const IconComponent = (Lucide as any)[iconName] || (Lucide as any)[fallbackIcon || ""] || (Lucide as any)["Share2"];
-                
-                return (
-                  <a key={platform} href="#" style={{
-                    width: "36px", height: "36px", borderRadius: "8px",
-                    background: "rgba(255,255,255,0.08)", display: "flex",
-                    alignItems: "center", justifyContent: "center",
-                    textDecoration: "none",
-                    color: "#94a3b8", transition: "all 0.2s ease"
-                  }}
-                    onMouseEnter={e => {
-                      e.currentTarget.style.background = "rgba(255,255,255,0.15)";
-                      e.currentTarget.style.color = "white";
-                    }}
-                    onMouseLeave={e => {
-                      e.currentTarget.style.background = "rgba(255,255,255,0.08)";
-                      e.currentTarget.style.color = "#94a3b8";
-                    }}
-                  >
-                    {IconComponent ? <IconComponent size={18} strokeWidth={1.5} /> : platform[0].toUpperCase()}
-                  </a>
-                );
-              })}
+              <a href="#" className="footer-social-link" style={{ width: "36px", height: "36px", borderRadius: "8px", background: "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", color: "#94a3b8", transition: "all 0.2s ease" }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/>
+                </svg>
+              </a>
+              <a href="#" className="footer-social-link" style={{ width: "36px", height: "36px", borderRadius: "8px", background: "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", color: "#94a3b8", transition: "all 0.2s ease" }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/>
+                  <rect width="4" height="12" x="2" y="9"/>
+                  <circle cx="4" cy="4" r="2"/>
+                </svg>
+              </a>
+              <a href="#" className="footer-social-link" style={{ width: "36px", height: "36px", borderRadius: "8px", background: "rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", color: "#94a3b8", transition: "all 0.2s ease" }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
+                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                  <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
+                </svg>
+              </a>
             </div>
           </div>
 
