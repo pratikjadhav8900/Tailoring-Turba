@@ -6,6 +6,7 @@ export type Product = {
   image: string;
   price: number;
   colors?: number;
+  availableColors?: string[]; // Array of hex codes
   description?: string;
   features?: string[];
   badge?: string;
@@ -88,8 +89,8 @@ export const allProducts: Product[] = [
   { id: 54, name: "Mobilitee Round Neck", category: "Tailoring Turba Premium", type: "Round Neck · 100% Polyester · 160 GSM", image: IMG_TSHIRT, gallery: [IMG_TSHIRT, IMG_TSHIRT, IMG_TSHIRT], price: 120, colors: 10, features: ["160 GSM Polyester", "10 Colors", "S–3XL"] },
   { id: 55, name: "Sustainable Crewneck", category: "Tailoring Turba Premium", type: "Round Neck · 60% Cotton 40% Poly · 190 GSM", image: IMG_TSHIRT, gallery: [IMG_TSHIRT, IMG_TSHIRT, IMG_TSHIRT], price: 180, colors: 7, badge: "Sustainable", features: ["190 GSM Sustainable Blend", "7 Colors", "S–3XL"] },
   { id: 56, name: "Kid's Crewneck (PIMA Cotton)", category: "Tailoring Turba Premium", type: "Round Neck · 100% PIMA Cotton · 185 GSM", image: IMG_TSHIRT, gallery: [IMG_TSHIRT, IMG_TSHIRT, IMG_TSHIRT], price: 180, colors: 10, features: ["185 GSM PIMA Cotton", "10 Colors"] },
-  { id: 57, name: "Premium Crewneck (Men)", category: "Tailoring Turba Premium", type: "Round Neck · 100% PIMA Cotton · 185 GSM", image: IMG_TSHIRT, gallery: [IMG_TSHIRT, IMG_TSHIRT, IMG_TSHIRT], price: 250, colors: 10, badge: "PIMA Cotton", features: ["185 GSM PIMA Cotton", "10 Colors", "S–3XL"] },
-  { id: 58, name: "Premium Crewneck (Women)", category: "Tailoring Turba Premium", type: "Round Neck · 100% PIMA Cotton · 185 GSM", image: IMG_TSHIRT, gallery: [IMG_TSHIRT, IMG_TSHIRT, IMG_TSHIRT], price: 250, colors: 10, features: ["185 GSM PIMA Cotton", "10 Colors", "S–3XL"] },
+  { id: 57, name: "Premium Crewneck (Men)", category: "Tailoring Turba Premium", type: "Round Neck · 100% PIMA Cotton · 185 GSM", image: IMG_TSHIRT, gallery: [IMG_TSHIRT, IMG_TSHIRT, IMG_TSHIRT], price: 250, colors: 10, availableColors: ["#111111", "#FFFFFF", "#1E3A5F", "#4D7C0F", "#7F1D1D"], badge: "PIMA Cotton", features: ["185 GSM PIMA Cotton", "10 Colors", "S–3XL"] },
+  { id: 58, name: "Premium Crewneck (Women)", category: "Tailoring Turba Premium", type: "Round Neck · 100% PIMA Cotton · 185 GSM", image: IMG_TSHIRT, gallery: [IMG_TSHIRT, IMG_TSHIRT, IMG_TSHIRT], price: 250, colors: 10, availableColors: ["#111111", "#FFFFFF", "#1E3A5F", "#4D7C0F", "#7F1D1D"], features: ["185 GSM PIMA Cotton", "10 Colors", "S–3XL"] },
   { id: 59, name: "Oversized Originals", category: "Tailoring Turba Premium", type: "Round Neck · French Terry Cotton · 240 GSM", image: IMG_TSHIRT, gallery: [IMG_TSHIRT, IMG_TSHIRT, IMG_TSHIRT], price: 395, colors: 5, badge: "Trending", features: ["240 GSM French Terry Cotton", "Oversized fit", "5 Colors"] },
   { id: 60, name: "Mars200 Polo", category: "Tailoring Turba Premium", type: "Polo · 100% Polyester · 200 GSM", image: IMG_POLO, gallery: [IMG_POLO, IMG_POLO, IMG_POLO], price: 300, colors: 16, features: ["200 GSM Polyester", "16 Colors", "S–3XL"] },
   { id: 61, name: "The Melange Edit Polo", category: "Tailoring Turba Premium", type: "Polo · 100% Polyester · 210 GSM", image: IMG_POLO, gallery: [IMG_POLO, IMG_POLO, IMG_POLO], price: 550, colors: 2, badge: "Exclusive", features: ["210 GSM Polyester", "Melange textures", "S–3XL"] },

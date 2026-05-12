@@ -137,11 +137,22 @@
   justify-content: center;
 }
 
-.garmentImage {
-  object-fit: contain;
-  pointer-events: none;
+.garmentColorLayer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   z-index: 1;
-  mix-blend-mode: multiply;
+}
+
+.garmentBaseImage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  z-index: 2;
+  pointer-events: none;
 }
 
 /* DASHED BOUNDING BOX (PRINTABLE AREA) */

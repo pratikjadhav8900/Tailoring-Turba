@@ -2,6 +2,8 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import styles from "./HeroSection.module.css";
+import MagneticButton from "@/components/ui/MagneticButton";
+import { motion, useMotionValue, useSpring } from "framer-motion";
 
 const slides = [
   {
@@ -33,6 +35,21 @@ const slides = [
 export default function HeroSection() {
   const [current, setCurrent] = useState(0);
   const [animating, setAnimating] = useState(false);
+  
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  const springX = useSpring(mouseX, { stiffness: 50, damping: 20 });
+  const springY = useSpring(mouseY, { stiffness: 50, damping: 20 });
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    const { clientX, clientY } = e;
+    const { innerWidth, innerHeight } = window;
+    const x = (clientX / innerWidth - 0.5) * 40;
+    const y = (clientY / innerHeight - 0.5) * 40;
+    mouseX.set(x);
+    mouseY.set(y);
+  };
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -53,18 +70,21 @@ export default function HeroSection() {
   const slide = slides[current];
 
   return (
-    <section className={styles.hero}>
+    <section className={styles.hero} onMouseMove={handleMouseMove}>
       {/* Background slides */}
       {slides.map((s, i) => (
-        <div
+        <motion.div
           key={i}
           className={styles.slide}
           style={{
             backgroundImage: `url(${s.image})`,
             opacity: i === current ? 1 : 0,
-            transition: "opacity 0.8s ease",
             zIndex: i === current ? 1 : 0,
+            x: springX,
+            y: springY,
+            scale: 1.1, // Zoomed in slightly to allow for parallax overflow
           }}
+          transition={{ opacity: { duration: 0.8 } }}
         />
       ))}
 
@@ -85,7 +105,9 @@ export default function HeroSection() {
             From raw fabrics to custom sublimated jerseys — a complete B2B solution for teams, events and bulk orders, straight from our Pune facility.
           </p>
           <div className={styles.actions}>
-            <Link href="/customizer" className={styles.btnPrimary}>START CUSTOMIZING</Link>
+            <MagneticButton>
+              <Link href="/customizer" className={styles.btnPrimary}>START CUSTOMIZING</Link>
+            </MagneticButton>
             <Link href="/products" className={styles.btnSecondary}>EXPLORE CATALOGUE</Link>
           </div>
           <div className={styles.stats}>

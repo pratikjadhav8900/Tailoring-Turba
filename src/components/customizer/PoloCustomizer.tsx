@@ -1,13 +1,14 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import Image from "next/image";
-import { Rnd } from "react-rnd";
-import { Type, UploadCloud, Image as ImageIcon, Layers, Palette, X, Trash2, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, ScanText, RotateCw, Move } from "lucide-react";
 import styles from "./PoloCustomizer.module.css";
 import { DesignElement, CustomizerState, Side } from "@/types/customizer";
-import { GARMENTS, FABRICS, COLOR_PRESETS } from "@/lib/fabric-data";
+import CanvasArea from "./CanvasArea";
+import ToolPanel from "./ToolPanel";
+import FormattingToolbar from "./FormattingToolbar";
+import ThreeDPreview from "./ThreeDPreviewCanvas";
+import Image from "next/image";
+import { GARMENTS } from "@/lib/fabric-data";
 
-type GarmentKey = keyof typeof GARMENTS;
 type ActiveTool = "Text" | "Uploads" | "Elements" | "Colors" | null;
 
 interface Props {
@@ -17,13 +18,22 @@ interface Props {
   activeSide?: Side;
   onSideChange?: (side: Side) => void;
   mockupId?: string;
-  garmentType?: GarmentKey;
+  garmentType?: any;
+  availableColors?: string[];
 }
 
-export default function PoloCustomizer({ onChange, initialState, isPreviewMode, activeSide: propSide, onSideChange, mockupId = "customizer-mockup-area", garmentType: propGarmentType }: Props) {
-  const garmentType = propGarmentType || (initialState?.garmentType as GarmentKey) || "round-neck";
+export default function PoloCustomizer({ 
+  onChange, 
+  initialState, 
+  isPreviewMode, 
+  activeSide: propSide, 
+  onSideChange, 
+  mockupId = "customizer-mockup-area",
+  garmentType: propGarmentType,
+  availableColors
+}: Props) {
+  const garmentType = propGarmentType || (initialState?.garmentType) || "round-neck";
   const [internalSide, setInternalSide] = useState<Side>("front");
-  
   const activeSide = propSide || internalSide;
   const setActiveSide = onSideChange || setInternalSide;
 
@@ -33,101 +43,97 @@ export default function PoloCustomizer({ onChange, initialState, isPreviewMode, 
   const [backElements, setBackElements] = useState<DesignElement[]>(initialState?.backElements || []);
   const [activeElementId, setActiveElementId] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  // Keep a stable ref to activeSide so upload handler never has stale closure
-  const activeSideRef = useRef<Side>("front");
-  useEffect(() => { activeSideRef.current = activeSide; }, [activeSide]);
-
-  const elements = activeSide === "front" ? frontElements : backElements;
-  const setElements = activeSide === "front" ? setFrontElements : setBackElements;
-
-  // History Stack Logic
-  const [history, setHistory] = useState<{ bodyColor: string, frontElements: DesignElement[], backElements: DesignElement[] }[]>([]);
+  // --- History (Undo/Redo) System ---
+  const [history, setHistory] = useState<DesignElement[][]>([]);
+  const [backHistory, setBackHistory] = useState<DesignElement[][]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
-  const isFirstMount = useRef(true);
-  const isUndoingRef = useRef(false);
-  const saveHistoryRef = useRef<NodeJS.Timeout>();
+  const [backHistoryIndex, setBackHistoryIndex] = useState(-1);
+  const isInternalChange = useRef(false);
 
+  // Push to history
+  const pushToHistory = (newFront: DesignElement[], newBack: DesignElement[]) => {
+    if (isInternalChange.current) return;
+    
+    setHistory(prev => {
+      const next = prev.slice(0, historyIndex + 1);
+      return [...next, JSON.parse(JSON.stringify(newFront))];
+    });
+    setBackHistory(prev => {
+      const next = prev.slice(0, backHistoryIndex + 1);
+      return [...next, JSON.parse(JSON.stringify(newBack))];
+    });
+    setHistoryIndex(prev => prev + 1);
+    setBackHistoryIndex(prev => prev + 1);
+  };
+
+  // Initial history
   useEffect(() => {
-    if (isFirstMount.current) {
-      const initialStateData = { 
-        bodyColor, 
-        frontElements: JSON.parse(JSON.stringify(frontElements)), 
-        backElements: JSON.parse(JSON.stringify(backElements)) 
-      };
-      setHistory([initialStateData]);
+    if (history.length === 0) {
+      setHistory([JSON.parse(JSON.stringify(frontElements))]);
+      setBackHistory([JSON.parse(JSON.stringify(backElements))]);
       setHistoryIndex(0);
-      isFirstMount.current = false;
-      return;
+      setBackHistoryIndex(0);
     }
-    
-    // If we are currently performing an undo/redo, don't record this change as a new history entry
-    if (isUndoingRef.current) {
-      return;
-    }
-    
-    if (saveHistoryRef.current) clearTimeout(saveHistoryRef.current);
-    
-    saveHistoryRef.current = setTimeout(() => {
-      setHistory(prev => {
-        const newHist = prev.slice(0, historyIndex + 1);
-        const newState = { 
-          bodyColor, 
-          frontElements: JSON.parse(JSON.stringify(frontElements)), 
-          backElements: JSON.parse(JSON.stringify(backElements)) 
-        };
-        // Avoid duplicate history entries if nothing actually changed
-        const lastState = newHist[newHist.length - 1];
-        if (lastState && JSON.stringify(lastState) === JSON.stringify(newState)) return prev;
-        
-        return [...newHist, newState];
-      });
-      setHistoryIndex(prev => prev + 1);
-    }, 400); // Slightly faster debounce
-    
-  }, [bodyColor, frontElements, backElements]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
+  // Sync state and notify parent
+  useEffect(() => {
+    const canUndo = historyIndex > 0;
+    const canRedo = historyIndex < history.length - 1;
+    window.dispatchEvent(new CustomEvent('history-bounds', { detail: { canUndo, canRedo } }));
+  }, [historyIndex, history.length]);
+
+  // Handle Global Events
   useEffect(() => {
     const handleUndo = () => {
-      if (historyIndex > 0) {
-        const prevState = history[historyIndex - 1];
-        isUndoingRef.current = true;
-        setBodyColor(prevState.bodyColor);
-        setFrontElements(JSON.parse(JSON.stringify(prevState.frontElements)));
-        setBackElements(JSON.parse(JSON.stringify(prevState.backElements)));
-        setHistoryIndex(historyIndex - 1);
-        // Reset the undoing flag after a short delay to allow effects to run
-        setTimeout(() => { isUndoingRef.current = false; }, 100);
-      }
+      if (historyIndex <= 0) return;
+      isInternalChange.current = true;
+      const prevIdx = historyIndex - 1;
+      setFrontElements(JSON.parse(JSON.stringify(history[prevIdx])));
+      setBackElements(JSON.parse(JSON.stringify(backHistory[prevIdx])));
+      setHistoryIndex(prevIdx);
+      setBackHistoryIndex(prevIdx);
+      setTimeout(() => { isInternalChange.current = false; }, 0);
     };
-    
+
     const handleRedo = () => {
-      if (historyIndex < history.length - 1) {
-        const nextState = history[historyIndex + 1];
-        isUndoingRef.current = true;
-        setBodyColor(nextState.bodyColor);
-        setFrontElements(JSON.parse(JSON.stringify(nextState.frontElements)));
-        setBackElements(JSON.parse(JSON.stringify(nextState.backElements)));
-        setHistoryIndex(historyIndex + 1);
-        // Reset the undoing flag after a short delay to allow effects to run
-        setTimeout(() => { isUndoingRef.current = false; }, 100);
-      }
+      if (historyIndex >= history.length - 1) return;
+      isInternalChange.current = true;
+      const nextIdx = historyIndex + 1;
+      setFrontElements(JSON.parse(JSON.stringify(history[nextIdx])));
+      setBackElements(JSON.parse(JSON.stringify(backHistory[nextIdx])));
+      setHistoryIndex(nextIdx);
+      setBackHistoryIndex(nextIdx);
+      setTimeout(() => { isInternalChange.current = false; }, 0);
     };
 
     window.addEventListener('undo-customizer', handleUndo);
     window.addEventListener('redo-customizer', handleRedo);
-    
-    // Broadcast bounds to parent
-    window.dispatchEvent(new CustomEvent('history-bounds', { 
-      detail: { canUndo: historyIndex > 0, canRedo: historyIndex < history.length - 1 } 
-    }));
-
     return () => {
       window.removeEventListener('undo-customizer', handleUndo);
       window.removeEventListener('redo-customizer', handleRedo);
     };
-  }, [history, historyIndex]);
+  }, [history, backHistory, historyIndex]);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const activeSideRef = useRef<Side>("front");
+  useEffect(() => { activeSideRef.current = activeSide; }, [activeSide]);
+
+  const elements = activeSide === "front" ? frontElements : backElements;
+  
+  // Wrap state updates to trigger history
+  const setElementsWithHistory = (newElements: DesignElement[]) => {
+    const isFront = activeSide === "front";
+    const nextFront = isFront ? newElements : frontElements;
+    const nextBack = isFront ? backElements : newElements;
+    
+    if (isFront) setFrontElements(newElements);
+    else setBackElements(newElements);
+    
+    pushToHistory(nextFront, nextBack);
+  };
 
   useEffect(() => {
     if (onChange) {
@@ -137,30 +143,25 @@ export default function PoloCustomizer({ onChange, initialState, isPreviewMode, 
 
   const addText = () => {
     const id = Date.now().toString();
-    setElements([...elements, {
+    const newElements = [...elements, {
       id, type: "text",
       x: 200, y: 250, width: 200, height: 50,
       value: "Add Text", color: "#000000",
       fontFamily: "Inter", fontWeight: "bold", textAlign: "center", rotation: 0
-    }]);
+    } as DesignElement];
+    setElementsWithHistory(newElements);
     setActiveElementId(id);
-    setActiveTool(null); // Close the side panel
+    setActiveTool(null);
   };
-
-  const [isUploading, setIsUploading] = useState(false);
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
     setIsUploading(true);
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
       if (!res.ok) throw new Error("Upload failed");
       const data = await res.json();
       
@@ -172,16 +173,11 @@ export default function PoloCustomizer({ onChange, initialState, isPreviewMode, 
         color: "",
       };
 
-      if (activeSideRef.current === "front") {
-        setFrontElements(prev => [...prev, newEl]);
-      } else {
-        setBackElements(prev => [...prev, newEl]);
-      }
-      setActiveTool(null); // Close the side panel
-    } catch (err: any) {
-      console.error("Logo upload failed:", err);
-      const errorMsg = err.message || "Failed to upload logo.";
-      alert(`${errorMsg} Please check your Cloudinary credentials.`);
+      const newElements = [...elements, newEl];
+      setElementsWithHistory(newElements);
+      setActiveTool(null);
+    } catch (err) {
+      console.error(err);
     } finally {
       setIsUploading(false);
       e.target.value = "";
@@ -191,337 +187,89 @@ export default function PoloCustomizer({ onChange, initialState, isPreviewMode, 
   const removeElement = (id: string, e?: React.SyntheticEvent) => {
     e?.stopPropagation();
     if (activeElementId === id) setActiveElementId(null);
-    requestAnimationFrame(() => {
-      if (activeSide === "front") setFrontElements((p) => p.filter((el) => el.id !== id));
-      else setBackElements((p) => p.filter((el) => el.id !== id));
-    });
+    const newElements = elements.filter(el => el.id !== id);
+    setElementsWithHistory(newElements);
   };
 
-  const updateElement = (id: string, updates: Partial<DesignElement>) => {
-    setElements((prev) => prev.map((e) => (e.id === id ? { ...e, ...updates } : e)));
+  const updateElement = (id: string, updates: Partial<DesignElement>, skipHistory = false) => {
+    const newElements = elements.map(e => e.id === id ? { ...e, ...updates } : e);
+    if (activeSide === "front") setFrontElements(newElements);
+    else setBackElements(newElements);
+    
+    if (!skipHistory) {
+      const nextFront = activeSide === "front" ? newElements : frontElements;
+      const nextBack = activeSide === "front" ? backElements : newElements;
+      pushToHistory(nextFront, nextBack);
+    }
   };
 
-  const currentGarment = GARMENTS[garmentType] || GARMENTS["round-neck"];
-  const currentImg = currentGarment[activeSide] || currentGarment["front"];
-  const activeEl = elements.find((e) => e.id === activeElementId) as DesignElement | undefined;
+  const activeEl = elements.find(e => e.id === activeElementId);
 
   return (
     <div className={styles.wrapper}>
-      {/* LEFT SIDEBAR */}
       {!isPreviewMode && (
-        <div className={styles.leftSidebar}>
-          <button 
-            className={`${styles.sidebarToolBtn} ${activeTool === "Text" ? styles.sidebarToolActive : ""}`}
-            onClick={() => setActiveTool("Text")}
-          >
-            <Type size={24} className={styles.sidebarToolIcon} />
-            <span className={styles.sidebarToolLabel}>Text</span>
-          </button>
-          
-          <button 
-            className={`${styles.sidebarToolBtn} ${activeTool === "Uploads" ? styles.sidebarToolActive : ""}`}
-            onClick={() => setActiveTool("Uploads")}
-          >
-            <UploadCloud size={24} className={styles.sidebarToolIcon} />
-            <span className={styles.sidebarToolLabel}>Uploads</span>
-          </button>
-
-          <button 
-            className={`${styles.sidebarToolBtn} ${activeTool === "Colors" ? styles.sidebarToolActive : ""}`}
-            onClick={() => setActiveTool("Colors")}
-          >
-            <Palette size={24} className={styles.sidebarToolIcon} />
-            <span className={styles.sidebarToolLabel}>Colors</span>
-          </button>
-        </div>
+        <ToolPanel 
+          activeTool={activeTool}
+          bodyColor={bodyColor}
+          isUploading={isUploading}
+          onToolSelect={setActiveTool}
+          onColorSelect={setBodyColor}
+          onAddText={addText}
+          onUploadClick={() => fileInputRef.current?.click()}
+          availableColors={availableColors}
+        />
       )}
 
-      {/* CONTEXT PANEL */}
-      {activeTool && !isPreviewMode && (
-        <div className={styles.contextPanel}>
-          <div className={styles.contextHeader}>
-            <div className={styles.contextTitle}>
-              {activeTool === "Text" && "Add text to your design"}
-              {activeTool === "Uploads" && "Upload assets"}
-              {activeTool === "Colors" && "Change Garment Color"}
-            </div>
-            <button className={styles.closeContextBtn} onClick={() => setActiveTool(null)}>
-              <X size={20} />
-            </button>
-          </div>
-          
-          <div className={styles.contextBody}>
-            {activeTool === "Text" && (
-              <>
-                <div className={styles.contextHint}>Click the button below to add text to your design</div>
-                <button className={styles.addAssetBtn} onClick={addText}>
-                  <Type size={18} /> Add a text box
-                </button>
-              </>
-            )}
+      <input ref={fileInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleLogoUpload} />
 
-            {activeTool === "Uploads" && (
-              <>
-                <div className={styles.contextHint}>Upload logos, SVGs, or high-res images.</div>
-                <button className={styles.addAssetBtn} onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
-                  {isUploading ? "Uploading..." : <><UploadCloud size={18} /> Upload Image</>}
-                </button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  style={{ display: "none" }}
-                  onChange={handleLogoUpload}
-                />
-              </>
-            )}
-
-            {activeTool === "Colors" && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px' }}>
-                {COLOR_PRESETS.map((p) => (
-                  <button
-                    key={p.hex}
-                    onClick={() => setBodyColor(p.hex)}
-                    title={p.name}
-                    style={{
-                      width: '40px', height: '40px', borderRadius: '50%', background: p.hex,
-                      border: p.hex === "#FFFFFF" ? "1px solid #D1D5DB" : "none",
-                      boxShadow: bodyColor === p.hex ? '0 0 0 2px white, 0 0 0 4px #25338B' : 'none',
-                      cursor: 'pointer'
-                    }}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* CANVAS AREA */}
-      <div className={styles.canvasArea} onClick={() => setActiveElementId(null)}>
-        
-        {/* Right Side Thumbnails */}
-        <div className={styles.rightThumbnails}>
-          <button 
-            className={`${styles.thumbnailBtn} ${activeSide === "front" ? styles.thumbnailBtnActive : ""}`}
-            onClick={(e) => { e.stopPropagation(); setActiveSide("front"); }}
-          >
-            <div className={styles.thumbnailImgWrap}>
-              <Image src={GARMENTS[garmentType]?.front || GARMENTS["round-neck"].front} alt="Front" fill style={{objectFit: 'contain'}} />
-            </div>
-            <span className={styles.thumbnailLabel}>Front</span>
-          </button>
-          <button 
-            className={`${styles.thumbnailBtn} ${activeSide === "back" ? styles.thumbnailBtnActive : ""}`}
-            onClick={(e) => { e.stopPropagation(); setActiveSide("back"); }}
-          >
-            <div className={styles.thumbnailImgWrap}>
-              <Image src={GARMENTS[garmentType]?.back || GARMENTS["round-neck"].back} alt="Back" fill style={{objectFit: 'contain'}} />
-            </div>
-            <span className={styles.thumbnailLabel}>Back</span>
-          </button>
-        </div>
-
-        <div id={mockupId} className={styles.garmentContainer}>
-          <Image
-            key={`${garmentType}-${activeSide}`}
-            src={currentImg}
-            alt="Garment"
-            fill
-            className={styles.garmentImage}
-            priority
+      <CanvasArea 
+        garmentType={garmentType}
+        activeSide={activeSide}
+        bodyColor={bodyColor}
+        elements={elements}
+        activeElementId={activeElementId}
+        isPreviewMode={isPreviewMode}
+        isDragging={isDragging}
+        mockupId={mockupId}
+        onElementClick={setActiveElementId}
+        onUpdateElement={updateElement}
+        onRemoveElement={removeElement}
+        onDragStart={() => setIsDragging(true)}
+        onDragStop={() => setIsDragging(false)}
+      >
+        {activeEl && !isPreviewMode && !isDragging && (
+          <FormattingToolbar 
+            activeEl={activeEl}
+            onUpdate={updateElement}
+            onRemove={removeElement}
           />
-
-          {/* Printable Area Bounding Box */}
-          {!isPreviewMode && (
-            <div 
-              className={styles.printableArea}
-              style={{
-                top: currentGarment.printableArea?.top || "18%",
-                left: currentGarment.printableArea?.left || "28%",
-                width: currentGarment.printableArea?.width || "44%",
-                height: currentGarment.printableArea?.height || "60%",
-              }}
-            ></div>
-          )}
-
-          {/* Floating Formatting Toolbar */}
-          {activeEl && activeEl.type === "text" && !isPreviewMode && !isDragging && (
-            <div 
-              className={styles.formattingToolbarFloating}
-              style={{
-                top: Math.max(10, activeEl.y - 80),
-                left: activeEl.x + (activeEl.width / 2),
-              }}
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {activeEl.type === "text" && (
-                <>
-                  <select 
-                    className={styles.toolSelect}
-                    value={activeEl.fontFamily || "Inter"}
-                    onChange={(e) => updateElement(activeEl.id, { fontFamily: e.target.value })}
-                    style={{ width: '120px', fontWeight: 600 }}
-                  >
-                    <option value="Inter">Canva Sans</option>
-                    <option value="Roboto">Roboto</option>
-                    <option value="Oswald">Oswald</option>
-                    <option value="Montserrat">Montserrat</option>
-                    <option value="Poppins">Poppins</option>
-                    <option value="Bebas Neue">Bebas Neue</option>
-                    <option value="Playfair Display">Playfair Display</option>
-                    <option value="Pacifico">Pacifico</option>
-                    <option value="Lora">Lora</option>
-                    <option value="Anton">Anton</option>
-                    <option value="Caveat">Caveat</option>
-                    <option value="Righteous">Righteous</option>
-                    <option value="Cormorant Garamond">Garamond</option>
-                    <option value="Outfit">Outfit</option>
-                  </select>
-
-                  <div className={styles.toolGroup} style={{ background: 'transparent' }}>
-                    <button className={styles.toolBtn} onClick={(e) => {
-                      e.stopPropagation();
-                      const scale = 0.95;
-                      const newWidth = activeEl.width * scale;
-                      const newHeight = activeEl.height * scale;
-                      updateElement(activeEl.id, { 
-                        width: newWidth, 
-                        height: newHeight,
-                        x: activeEl.x + (activeEl.width - newWidth) / 2,
-                        y: activeEl.y + (activeEl.height - newHeight) / 2
-                      });
-                    }}>-</button>
-                    <span style={{ fontSize: '0.85rem', fontWeight: 600, width: '30px', textAlign: 'center' }}>
-                      {Math.round(Math.min(activeEl.width / (Math.max(1, ...activeEl.value.split('\n').map(l => l.length)) * 0.6 + 1), (activeEl.height / Math.max(1, activeEl.value.split('\n').length)) * 0.8))}
-                    </span>
-                    <button className={styles.toolBtn} onClick={(e) => {
-                      e.stopPropagation();
-                      const scale = 1.05;
-                      const newWidth = activeEl.width * scale;
-                      const newHeight = activeEl.height * scale;
-                      updateElement(activeEl.id, { 
-                        width: newWidth, 
-                        height: newHeight,
-                        x: activeEl.x - (newWidth - activeEl.width) / 2,
-                        y: activeEl.y - (newHeight - activeEl.height) / 2
-                      });
-                    }}>+</button>
-                  </div>
-
-                  <div className={styles.divider}></div>
-
-                  <div className={styles.toolGroup}>
-                    <input type="color" className={styles.toolColor} value={activeEl.color || "#000000"} onChange={(e) => updateElement(activeEl.id, { color: e.target.value })} />
-                  </div>
-                  
-                  <div className={styles.toolGroup}>
-                    <button className={`${styles.toolBtn} ${activeEl.fontWeight === "bold" ? styles.toolBtnActive : ""}`} onClick={() => updateElement(activeEl.id, { fontWeight: activeEl.fontWeight === "bold" ? "normal" : "bold" })}><Bold size={16} /></button>
-                    <button className={`${styles.toolBtn} ${activeEl.fontStyle === "italic" ? styles.toolBtnActive : ""}`} onClick={() => updateElement(activeEl.id, { fontStyle: activeEl.fontStyle === "italic" ? "normal" : "italic" })}><Italic size={16} /></button>
-                    <button className={`${styles.toolBtn} ${activeEl.textDecoration === "underline" ? styles.toolBtnActive : ""}`} onClick={() => updateElement(activeEl.id, { textDecoration: activeEl.textDecoration === "underline" ? "none" : "underline" })}><Underline size={16} /></button>
-                    <button className={`${styles.toolBtn} ${activeEl.uppercase ? styles.toolBtnActive : ""}`} onClick={() => updateElement(activeEl.id, { uppercase: !activeEl.uppercase })}><Type size={16} /></button>
-                  </div>
-
-                  <div className={styles.divider}></div>
-
-                  <div className={styles.toolGroup}>
-                    <button 
-                      className={`${styles.toolBtn} ${activeEl.textAlign ? styles.toolBtnActive : ""}`} 
-                      onClick={() => {
-                        const nextAlign = { "left": "center", "center": "right", "right": "justify", "justify": "left" }[activeEl.textAlign || "center"] as "left" | "center" | "right" | "justify";
-                        updateElement(activeEl.id, { textAlign: nextAlign });
-                      }}
-                      title="Align Text"
-                    >
-                      {activeEl.textAlign === "left" && <AlignLeft size={16} />}
-                      {activeEl.textAlign === "center" && <AlignCenter size={16} />}
-                      {activeEl.textAlign === "right" && <AlignRight size={16} />}
-                      {(activeEl.textAlign === "justify" || !activeEl.textAlign) && <AlignLeft size={16} />}
-                    </button>
-                  </div>
-                  
-                  <div className={styles.divider}></div>
-                </>
-              )}
-              
-              <button className={`${styles.toolBtn} ${styles.toolBtnDanger}`} onClick={(e) => removeElement(activeEl.id, e)} title="Delete Element"><Trash2 size={16} /></button>
-            </div>
-          )}
-
-          {/* Draggable Elements */}
-          {elements.map((el) => {
-            const isActive = el.id === activeElementId && !isPreviewMode;
-            return (
-            <Rnd
-              key={el.id}
-              className={`${styles.rndBox} ${isActive ? styles.rndBoxActive : ""}`}
-              bounds="parent"
-              dragHandleClassName="customizer-drag-handle"
-              position={{ x: el.x, y: el.y }}
-              size={{ width: el.width, height: el.height }}
-              onDragStart={() => setIsDragging(true)}
-              onDragStop={(_, d) => {
-                setIsDragging(false);
-                updateElement(el.id, { x: d.x, y: d.y });
-              }}
-              onResizeStop={(_, __, ref, ___, pos) => updateElement(el.id, { width: parseInt(ref.style.width), height: parseInt(ref.style.height), ...pos })}
-              disableDragging={!isActive || isPreviewMode}
-              enableResizing={isActive && !isPreviewMode}
-              resizeHandleClasses={{
-                top: "react-resizable-handle-n",
-                right: "react-resizable-handle-e",
-                bottom: "react-resizable-handle-s",
-                left: "react-resizable-handle-w",
-                topRight: "react-resizable-handle-ne",
-                bottomRight: "react-resizable-handle-se",
-                bottomLeft: "react-resizable-handle-sw",
-                topLeft: "react-resizable-handle-nw",
-              }}
-            >
-              <div className={styles.rndContent} style={{ transform: `rotate(${el.rotation || 0}deg)`, transition: 'transform 0.2s ease', width: '100%', height: '100%' }} onClick={(e) => { e.stopPropagation(); setActiveElementId(el.id); }}>
-                {el.type === "text" ? (
-                  <textarea
-                    className={`${styles.rndText} customizer-drag-handle`}
-                    value={el.value}
-                    spellCheck={false}
-                    onChange={(e) => updateElement(el.id, { value: e.target.value })}
-                    onBlur={() => {
-                      if (el.value.trim() === "") {
-                        removeElement(el.id);
-                      }
-                    }}
-                    style={{
-                      color: el.color,
-                      fontSize: `${Math.min(el.width / (Math.max(1, ...el.value.split('\n').map(l => l.length)) * 0.6 + 1), (el.height / Math.max(1, el.value.split('\n').length)) * 0.8)}px`,
-                      fontFamily: el.fontFamily || "Inter",
-                      fontWeight: el.fontWeight || "normal",
-                      fontStyle: el.fontStyle || "normal",
-                      textAlign: el.textAlign || "center",
-                      textDecoration: el.textDecoration || "none",
-                      textTransform: el.uppercase ? "uppercase" : "none",
-                      letterSpacing: `${el.letterSpacing || 0}px`,
-                      pointerEvents: isActive ? 'auto' : 'none',
-                    }}
+        )}
+        {/* Side Switcher Thumbnails */}
+        {!isPreviewMode && (
+          <div className={styles.rightThumbnails}>
+            {(["front", "back"] as Side[]).map((side) => (
+              <button
+                key={side}
+                className={`${styles.thumbnailBtn} ${activeSide === side ? styles.thumbnailBtnActive : ""}`}
+                onClick={() => setActiveSide(side)}
+              >
+                <div className={styles.thumbnailImgWrap}>
+                  <Image 
+                    src={(GARMENTS[garmentType as keyof typeof GARMENTS] || GARMENTS["round-neck"])[side]} 
+                    alt={side} 
+                    fill 
+                    className={styles.garmentImage} 
+                    style={{ objectFit: 'contain' }}
                   />
-                ) : (
-                  <img src={el.value} alt="logo" draggable={false} className="customizer-drag-handle" style={{ width: "100%", height: "100%", objectFit: "contain", pointerEvents: isActive ? "auto" : "none" }} />
-                )}
-              </div>
-              
-              {/* Canva floating buttons below active element */}
-              {isActive && !isDragging && (
-                <div className={styles.floatingActionBtns}>
-                  <div className={styles.circleActionBtn} onClick={(e) => { e.stopPropagation(); updateElement(el.id, { rotation: ((el.rotation || 0) + 90) % 360 }); }} title="Rotate 90°"><RotateCw size={14} /></div>
-                  <div className={`${styles.circleActionBtn} customizer-drag-handle`} title="Move"><Move size={14} /></div>
-                  <div className={`${styles.circleActionBtn} ${styles.circleActionBtnDanger}`} onClick={(e) => removeElement(el.id, e)} title="Delete"><Trash2 size={14} /></div>
                 </div>
-              )}
-            </Rnd>
-            );
-          })}
-        </div>
-      </div>
+                <span className={styles.thumbnailLabel}>{side.toUpperCase()}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </CanvasArea>
+
+
     </div>
   );
 }

@@ -39,6 +39,7 @@ export default function MarqueeTicker() {
           <span 
             key={`clone-${i}`} 
             className={styles.marqueeItem}
+            aria-hidden="true"
           >
             {item}
           </span>

@@ -6,6 +6,8 @@ import { CustomizerState } from "@/types/customizer";
 import styles from "./page.module.css";
 import { X, Undo2, Redo2, Eye, EyeOff, UploadCloud, FileText, Trash2 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
+import SizeBreakdown from "@/components/customizer/SizeBreakdown";
+import OrderSummary from "@/components/customizer/OrderSummary";
 import { allProducts } from "@/lib/products-data";
 import Image from "next/image";
 
@@ -423,15 +425,7 @@ function CustomizerContent() {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontFamily: 'var(--font-sans)', color: '#94a3b8' }}>Loading product assets...</div>
         )}
 
-        {customizerState?.garmentType === 'hoodie' && !isLoadingProduct && activeTab === "Design" && (
-          <div className={styles.premiumGarmentNotice}>
-            <div className={styles.noticeIcon}>✧</div>
-            <div className={styles.noticeContent}>
-              <strong>Premium Hoodie Customizer:</strong> Front & Back professional views enabled. 
-              <span className={styles.noticeTip}> Tip: Position front designs above the pocket area for optimal results.</span>
-            </div>
-          </div>
-        )}
+
 
         {activeTab === "Design" && !isLoadingProduct && (
           <PoloCustomizer 
@@ -441,93 +435,29 @@ function CustomizerContent() {
             activeSide={activeSide}
             onSideChange={(s) => setActiveSide(s as "front" | "back")}
             garmentType={customizerState?.garmentType as any}
+            availableColors={dbProduct?.availableColors}
           />
         )}
         
         {activeTab === "Options" && (
           <div className={styles.tabContent}>
-            <div className={styles.tabContentInner}>
+            <SizeBreakdown 
+              sizes={customizerState?.sizes || {}}
+              moq={MOQ}
+              totalQuantity={totalQuantity}
+              onSizeChange={handleSizeChange}
+            />
+            
+            {/* Production Assets Section */}
+            <div className={styles.tabContentInner} style={{ borderTop: '1px solid #e2e8f0', paddingTop: '28px', marginTop: '20px' }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: '6px' }}>Production Assets</h3>
+              <p style={{ color: '#64748b', marginBottom: '16px', fontSize: '0.85rem' }}>Upload high-res vector files for manufacturing.</p>
               
-              {/* Header */}
-              <div style={{ marginBottom: '32px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                  <h2 style={{ fontSize: '1.6rem', fontWeight: 700, color: '#0f172a', fontFamily: 'var(--font-serif)', margin: 0 }}>Size Breakdown</h2>
-                  <span style={{ background: totalQuantity >= MOQ ? '#dcfce7' : '#fef9c3', color: totalQuantity >= MOQ ? '#166534' : '#854d0e', fontSize: '0.75rem', fontWeight: 700, padding: '4px 12px', borderRadius: '20px', letterSpacing: '0.05em' }}>
-                    {totalQuantity >= MOQ ? `✓ MOQ Met` : `MOQ: ${MOQ} pcs min`}
-                  </span>
-                </div>
-                <p style={{ color: '#64748b', fontSize: '0.9rem', margin: 0 }}>Distribute your order across sizes. Minimum {MOQ} pieces total to proceed.</p>
+              <div onClick={() => fileInputRef.current?.click()} className={styles.uploadArea}>
+                <UploadCloud size={28} color="#94a3b8" style={{ margin: '0 auto 10px' }} />
+                <div style={{ fontWeight: 600, color: '#475569', fontSize: '0.9rem' }}>Click to upload production files</div>
               </div>
-
-              {/* Size Grid */}
-              <div className={styles.sizeGrid}>
-                {['S', 'M', 'L', 'XL', 'XXL'].map((size) => {
-                  const qty = customizerState?.sizes?.[size as keyof typeof customizerState.sizes] || 0;
-                  return (
-                    <div key={size} className={`${styles.sizeCard} ${qty > 0 ? styles.sizeCardActive : ""}`}>
-                      <div className={styles.sizeLabel}>{size}</div>
-                      <button
-                        onClick={() => handleSizeChange(size, qty - 1)}
-                        className={styles.qtyBtn}
-                      >−</button>
-                      <div className={`${styles.sizeQty} ${qty > 0 ? styles.sizeQtyActive : ""}`}>{qty}</div>
-                      <button
-                        onClick={() => handleSizeChange(size, qty + 1)}
-                        className={styles.qtyBtn}
-                      >+</button>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* MOQ Progress Bar */}
-              <div className={styles.progressBarContainer}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                  <span style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.95rem' }}>Total Quantity</span>
-                  <span style={{ fontWeight: 800, fontSize: '1.6rem', color: totalQuantity >= MOQ ? '#16a34a' : '#0f172a' }}>{totalQuantity}</span>
-                </div>
-                <div style={{ height: '6px', background: '#e2e8f0', borderRadius: '99px', overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${Math.min(100, (totalQuantity / MOQ) * 100)}%`, background: totalQuantity >= MOQ ? '#16a34a' : '#f59e0b', borderRadius: '99px', transition: 'width 0.3s ease' }} />
-                </div>
-                {totalQuantity < MOQ && (
-                  <div style={{ marginTop: '8px', fontSize: '0.8rem', color: '#92400e' }}>{MOQ - totalQuantity} more piece{MOQ - totalQuantity !== 1 ? 's' : ''} needed to meet minimum order quantity</div>
-                )}
-              </div>
-
-              {/* Production Assets Section */}
-              <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '28px' }}>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: '6px' }}>Production Assets</h3>
-                <p style={{ color: '#64748b', marginBottom: '16px', fontSize: '0.85rem' }}>Upload high-res vector files (.ai, .cdr, .pdf) or images (.png, .jpg) of your logos and artworks for manufacturing.</p>
-                
-                <div 
-                  onClick={() => fileInputRef.current?.click()}
-                  className={styles.uploadArea}
-                >
-                  <UploadCloud size={28} color="#94a3b8" style={{ margin: '0 auto 10px' }} />
-                  <div style={{ fontWeight: 600, color: '#475569', fontSize: '0.9rem' }}>Click to upload production files</div>
-                  <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '4px' }}>Any file type · Up to 50MB</div>
-                </div>
-                <input type="file" multiple ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileUpload} />
-
-                {productionFiles.length > 0 && (
-                  <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {productionFiles.map((file, i) => (
-                      <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <FileText size={18} color="var(--tth-olive-dark)" />
-                          <div>
-                            <div style={{ fontWeight: 600, fontSize: '0.85rem', color: '#1e293b' }}>{file.name}</div>
-                            <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{(file.size / 1024).toFixed(1)} KB</div>
-                          </div>
-                        </div>
-                        <button onClick={() => removeFile(i)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: '4px' }}>
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <input type="file" multiple ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileUpload} />
             </div>
           </div>
         )}
@@ -535,154 +465,36 @@ function CustomizerContent() {
         {activeTab === "Review" && (
           <div className={styles.tabContent} style={{ padding: '0' }}>
             <div className={styles.reviewGrid}>
-              
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                <div style={{ background: '#F9FAFB', borderRadius: '12px', overflow: 'hidden', border: '1px solid #E5E7EB', position: 'relative', flex: 1 }}>
-                  <div style={{ padding: '12px', fontSize: '10px', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em', borderBottom: '1px solid #eee' }}>Front View</div>
+                <div className={styles.reviewMockupWrap}>
+                  <div className={styles.reviewMockupLabel}>Front View</div>
                   <PoloCustomizer 
-                    initialState={customizerState}
-                    isPreviewMode={true}
-                    activeSide="front"
-                    mockupId="review-mockup-front"
-                    garmentType={customizerState?.garmentType as any}
+                    initialState={customizerState} 
+                    isPreviewMode={true} 
+                    activeSide="front" 
+                    mockupId="review-mockup-front" 
+                    availableColors={dbProduct?.availableColors}
                   />
                 </div>
-                <div style={{ background: '#F9FAFB', borderRadius: '12px', overflow: 'hidden', border: '1px solid #E5E7EB', position: 'relative', flex: 1 }}>
-                  <div style={{ padding: '12px', fontSize: '10px', fontWeight: 'bold', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em', borderBottom: '1px solid #eee' }}>Back View</div>
+                <div className={styles.reviewMockupWrap}>
+                  <div className={styles.reviewMockupLabel}>Back View</div>
                   <PoloCustomizer 
-                    initialState={customizerState}
-                    isPreviewMode={true}
-                    activeSide="back"
-                    mockupId="review-mockup-back"
-                    garmentType={customizerState?.garmentType as any}
+                    initialState={customizerState} 
+                    isPreviewMode={true} 
+                    activeSide="back" 
+                    mockupId="review-mockup-back" 
+                    availableColors={dbProduct?.availableColors}
                   />
                 </div>
               </div>
 
-              <div style={{ background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', height: 'fit-content' }}>
-                <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '24px', color: '#111' }}>Order Summary</h2>
-                
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '32px' }}>
-                  {dbProduct && (
-                    <div style={{ display: 'flex', gap: '16px', alignItems: 'center', padding: '16px', background: '#f9f9f7', border: '1px solid #e5e2da', borderRadius: '8px', marginBottom: '8px' }}>
-                      <div style={{ position: 'relative', width: '64px', height: '64px', borderRadius: '4px', overflow: 'hidden', flexShrink: 0 }}>
-                        <Image src={dbProduct.images?.[0] || dbProduct.image} alt={dbProduct.name} fill style={{ objectFit: 'cover' }} />
-                      </div>
-                      <div>
-                        <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#111' }}>{dbProduct.name}</div>
-                        <div style={{ fontSize: '0.8rem', color: '#888', marginTop: '2px' }}>{dbProduct.type || dbProduct.category?.name}</div>
-                        <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--tth-olive-dark)', marginTop: '4px' }}>₹{(dbProduct.basePrice as number).toLocaleString('en-IN')} / unit</div>
-                      </div>
-                    </div>
-                  )}
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#666' }}>Garment Type</span>
-                    <span style={{ fontWeight: 'bold', textTransform: 'capitalize' }}>{customizerState?.garmentType.replace('-', ' ')}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#666' }}>Base Color</span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: customizerState?.bodyColor, border: '1px solid #D1D5DB' }}></div>
-                      <span style={{ fontWeight: 'bold', textTransform: 'uppercase' }}>{customizerState?.bodyColor}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ marginBottom: '32px' }}>
-                  <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', borderBottom: '1px solid #E5E7EB', paddingBottom: '8px' }}>Size Breakdown</h3>
-                  {['S', 'M', 'L', 'XL', 'XXL'].map((size) => {
-                    const qty = customizerState?.sizes?.[size as keyof typeof customizerState.sizes] || 0;
-                    if (qty > 0) {
-                      return (
-                        <div key={size} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                          <span>Size {size}</span>
-                          <span style={{ fontWeight: 'bold' }}>{qty}x</span>
-                        </div>
-                      );
-                    }
-                    return null;
-                  })}
-                </div>
-
-                {productionFiles.length > 0 && (
-                  <div style={{ marginBottom: '32px' }}>
-                    <h3 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '12px', borderBottom: '1px solid #E5E7EB', paddingBottom: '8px' }}>Attached Files</h3>
-                    {productionFiles.map((f, i) => (
-                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', fontSize: '14px' }}>
-                        <FileText size={14} color="#6B7280" />
-                        <span style={{ color: '#374151', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '200px' }}>{f.name}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                <div style={{ borderTop: '2px solid #E5E7EB', paddingTop: '24px', marginBottom: '32px' }}>
-                  {/* Calculations */}
-                  {(() => {
-                    const basePrice: number = dbProduct?.basePrice || 85;
-                    const subtotal = totalQuantity * basePrice;
-                    const hasCustomization = (customizerState?.frontElements.length || 0) > 0 || (customizerState?.backElements.length || 0) > 0;
-                    const customCharge = hasCustomization ? 300 : 0;
-                    const gst = (subtotal + customCharge) * 0.05;
-                    const total = subtotal + customCharge + gst;
-
-                    return (
-                      <>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                          <span style={{ color: '#666' }}>Subtotal ({totalQuantity} units)</span>
-                          <span style={{ fontWeight: 600 }}>₹{subtotal.toLocaleString('en-IN')}</span>
-                        </div>
-                        
-                        {hasCustomization && (
-                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                            <span style={{ color: '#666' }}>Customization Fee</span>
-                            <span style={{ fontWeight: 600 }}>₹{customCharge.toLocaleString('en-IN')}</span>
-                          </div>
-                        )}
-
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
-                          <span style={{ color: '#666' }}>GST (5%)</span>
-                          <span style={{ fontWeight: 600 }}>₹{Math.round(gst).toLocaleString('en-IN')}</span>
-                        </div>
-
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span style={{ fontSize: '18px', fontWeight: 'bold' }}>Total Estimate</span>
-                          <span style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--tth-olive-dark)' }}>
-                            ₹{Math.round(total).toLocaleString('en-IN')}
-                          </span>
-                        </div>
-                      </>
-                    );
-                  })()}
-                  
-                  <p style={{ fontSize: '11px', color: '#888', marginTop: '12px', fontStyle: 'italic' }}>
-                    * Includes 5% GST and flat customization setup fee where applicable.
-                  </p>
-                </div>
-
-                <button 
-                  onClick={handleNext}
-                  style={{ 
-                    width: '100%', 
-                    padding: '16px', 
-                    background: 'var(--tth-olive-dark)', 
-                    color: 'white', 
-                    border: 'none', 
-                    borderRadius: '8px', 
-                    fontSize: '16px', 
-                    fontWeight: 'bold', 
-                    cursor: 'pointer', 
-                    transition: 'all 0.2s',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em'
-                  }}
-                  onMouseOver={(e) => e.currentTarget.style.background = '#3a4d2c'}
-                  onMouseOut={(e) => e.currentTarget.style.background = 'var(--tth-olive-dark)'}
-                >
-                  Add To Cart
-                </button>
-              </div>
-
+              <OrderSummary 
+                product={dbProduct}
+                customizerState={customizerState!}
+                totalQuantity={totalQuantity}
+                productionFiles={productionFiles}
+                onAddtoCart={handleNext}
+              />
             </div>
           </div>
         )}

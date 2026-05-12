@@ -20,7 +20,7 @@
   --tth-text: #1a1a18;
   --tth-text-muted: #6b6b65;
   --font-serif: 'Playfair Display', 'Cormorant Garamond', Georgia, serif;
-  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-sans: 'Outfit', 'Inter', system-ui, sans-serif;
 }
 
 :root {
@@ -128,7 +128,7 @@
 html, body {
   background-color: var(--bg-main);
   color: var(--text-main);
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
   width: 100%;
@@ -141,6 +141,12 @@ html, body {
   body {
     padding-bottom: 80px !important;
   }
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 /* Base Clean Classes */

@@ -226,7 +226,8 @@
   padding: 40px;
   background: white;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
 }
 
 @media (max-width: 768px) {
@@ -336,4 +337,23 @@
 .uploadArea:hover {
   border-color: var(--tth-olive-dark, #4a5e3a);
   background: #f0fdf4;
+}
+
+.reviewMockupWrap {
+  background: #F9FAFB;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #E5E7EB;
+  position: relative;
+  flex: 1;
+}
+
+.reviewMockupLabel {
+  padding: 12px;
+  font-size: 10px;
+  font-weight: bold;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  border-bottom: 1px solid #eee;
 }

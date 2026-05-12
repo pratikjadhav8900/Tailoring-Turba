@@ -1,0 +1,69 @@
+.tabContentInner {
+  max-width: 800px;
+  width: 100%;
+}
+
+.sizeGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+@media (max-width: 600px) {
+  .sizeGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.sizeCard {
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px 12px;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.sizeCardActive {
+  background: #f0fdf4 !important;
+  border-color: #86efac !important;
+}
+
+.sizeLabel {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #94a3b8;
+  margin-bottom: 12px;
+}
+
+.sizeQty {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 8px 0;
+  line-height: 1;
+}
+
+.sizeQtyActive {
+  color: #166534 !important;
+}
+
+.qtyBtn {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  background: white;
+  cursor: pointer;
+  font-size: 1rem;
+  color: #64748b;
+}
+
+.progressBarContainer {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 28px;
+}
