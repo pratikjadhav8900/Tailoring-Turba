@@ -105,9 +105,18 @@ export default function Footer() {
               Contact
             </h4>
             <div style={{ display: "flex", flexDirection: "column", gap: "12px", color: "#94a3b8", fontSize: "0.9rem", lineHeight: 1.6 }}>
-              <span>📧 tailoringturba@gmail.com</span>
-              <span>📞 9022553346</span>
-              <span>📍 321/1 Pandit Jawaharlal Nehru Marg Pune 411042, Sanjay Departments, Pune, Maharashtra 411042, IN</span>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                <Lucide.Mail size={16} style={{ flexShrink: 0, marginTop: "2px", opacity: 0.7 }} />
+                <span>tailoringturba@gmail.com</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                <Lucide.Phone size={16} style={{ flexShrink: 0, marginTop: "2px", opacity: 0.7 }} />
+                <span>+91 90225 53346</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                <Lucide.MapPin size={16} style={{ flexShrink: 0, marginTop: "2px", opacity: 0.7 }} />
+                <span>321/1 Pandit Jawaharlal Nehru Marg Pune 411042, Sanjay Departments, Pune, Maharashtra 411042, IN</span>
+              </div>
             </div>
             <Link href="/contact" style={{
               display: "inline-block", marginTop: "20px",
