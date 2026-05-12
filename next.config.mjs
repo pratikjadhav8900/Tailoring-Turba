@@ -20,6 +20,7 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: "100mb",
     },
+    serverComponentsExternalPackages: ['@resvg/resvg-js'],
   },
   eslint: {
     ignoreDuringBuilds: true,
