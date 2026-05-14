@@ -4,7 +4,7 @@ export const GARMENTS = {
     label: "Round Neck",
     front: "/mockups/round.png?v=2",
     back: "/mockups/round_back.png?v=2",
-    printableArea: { top: "18%", left: "28%", width: "44%", height: "60%" }
+    printableArea: { top: "20%", left: "26%", width: "48%", height: "48%" }
   },
   "v-neck": {
     label: "V-Neck",

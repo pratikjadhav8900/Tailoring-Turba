@@ -1,52 +1,38 @@
 import HeroSlider from "@/components/landing/HeroSlider";
+import StatsStrip from "@/components/landing/StatsStrip";
+import ClientLogos from "@/components/landing/ClientLogos";
 import EditorialWelcome from "@/components/landing/EditorialWelcome";
 import CategoryCarousel from "@/components/landing/CategoryCarousel";
 import FeaturesGrid from "@/components/landing/FeaturesGrid";
 import TargetAudienceGrid from "@/components/landing/TargetAudienceGrid";
 import AppShowcase from "@/components/landing/AppShowcase";
-import ClientLogos from "@/components/landing/ClientLogos";
 
 export default function Home() {
-  const stats = [
-    { value: "5M+", label: "Garments Delivered" },
-    { value: "48 hrs", label: "Sample Dispatch" },
-    { value: "3 Brands", label: "Magic · Folkswear · Tailoring Turba" },
-    { value: "50+", label: "Colors Available" },
-    { value: "10 pcs", label: "Minimum Order" },
-  ];
-
   return (
     <>
+      {/* 1. Full-screen hero slider */}
       <HeroSlider />
-      <EditorialWelcome />
-      <ClientLogos />
-      <CategoryCarousel />
-      <FeaturesGrid />
-      <TargetAudienceGrid />
-      <AppShowcase />
 
-      <div style={{
-        background: "var(--tth-beige-light, #f2ede6)",
-        borderTop: "1px solid var(--tth-beige, #e8e0d4)",
-        padding: "56px 24px",
-        display: "flex",
-        justifyContent: "center",
-        gap: "64px",
-        flexWrap: "wrap",
-        textAlign: "center",
-        margin: 0 // Ensure no stray margins
-      }}>
-        {stats.map((stat) => (
-          <div key={stat.label}>
-            <div style={{ fontSize: "2rem", fontFamily: "var(--font-serif)", color: "var(--tth-black)", marginBottom: 8 }}>
-              {stat.value}
-            </div>
-            <div style={{ fontSize: "0.85rem", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--tth-text-muted)" }}>
-              {stat.label}
-            </div>
-          </div>
-        ))}
-      </div>
+      {/* 2. Animated stats — social proof immediately after the hero */}
+      <StatsStrip />
+
+      {/* 3. Brand wall — trusted partners */}
+      <ClientLogos />
+
+      {/* 4. Editorial welcome / brand story */}
+      <EditorialWelcome />
+
+      {/* 5. Category carousel */}
+      <CategoryCarousel />
+
+      {/* 6. Features / USPs */}
+      <FeaturesGrid />
+
+      {/* 7. Who we serve */}
+      <TargetAudienceGrid />
+
+      {/* 8. App showcase */}
+      <AppShowcase />
     </>
   );
 }

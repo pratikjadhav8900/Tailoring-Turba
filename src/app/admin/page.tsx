@@ -1,5 +1,5 @@
 export const dynamic = 'force-dynamic';
-import { prisma } from "@/lib/prisma";
+import { prisma, withRetry } from "@/lib/prisma";
 import { 
   TrendingUp, 
   Users, 
@@ -12,20 +12,19 @@ import {
 import styles from "./page.module.css";
 
 export default async function AdminDashboard() {
-  const [userCount, orderCount, bookingCount, products] = await Promise.all([
+  const [userCount, orderCount, bookingCount, products, revenue, pendingOrders, recentOrders] = await withRetry(() => Promise.all([
     prisma.user.count(),
     prisma.order.count(),
     prisma.booking.count(),
     prisma.product.findMany({ take: 5, include: { category: true } }),
-  ]);
-
-  const revenue = await prisma.order.aggregate({ _sum: { totalAmount: true } });
-  const pendingOrders = await prisma.order.count({ where: { status: "PENDING" } });
-  const recentOrders = await prisma.order.findMany({
-    take: 8,
-    orderBy: { createdAt: "desc" },
-    include: { user: { select: { name: true, email: true } }, items: true },
-  });
+    prisma.order.aggregate({ _sum: { totalAmount: true } }),
+    prisma.order.count({ where: { status: "PENDING" } }),
+    prisma.order.findMany({
+      take: 8,
+      orderBy: { createdAt: "desc" },
+      include: { user: { select: { name: true, email: true } }, items: true },
+    }),
+  ]));
 
   const stats = [
     { label: "Revenue", value: `₹${(revenue._sum.totalAmount ?? 0).toLocaleString()}`, icon: TrendingUp, color: "var(--tth-black)", change: "+12.5%" },

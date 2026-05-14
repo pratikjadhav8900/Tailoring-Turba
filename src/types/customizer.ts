@@ -20,6 +20,7 @@ export interface DesignElement {
   letterSpacing?: number;
   lineHeight?: number;
   opacity?: number;
+  fontSize?: number;
 }
 
 export interface SizeQuantities {
