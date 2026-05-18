@@ -180,12 +180,6 @@
 }
 
 @media (max-width: 1024px) {
-  .appLayout {
-    height: auto;
-    min-height: 100vh;
-    overflow: visible;
-  }
-  
   .topBar {
     flex-direction: column;
     height: auto;
@@ -212,10 +206,6 @@
   .topBarRight {
     width: 100%;
     justify-content: space-between;
-  }
-
-  .mainContent {
-    overflow: visible;
   }
 }
 
