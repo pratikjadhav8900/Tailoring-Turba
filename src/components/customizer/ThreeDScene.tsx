@@ -9,12 +9,14 @@ function Shirt({ color, textureUrl, garmentType }: { color: string, textureUrl: 
   const texture = textureUrl ? useTexture(textureUrl) : null;
   const isHoodie = garmentType === "hoodie";
 
+  const displayColor = color === "transparent" ? "#ffffff" : color;
+
   return (
     <group>
       {/* Main Body */}
       <mesh ref={meshRef} castShadow receiveShadow position={[0, 0, 0]} scale={2.5}>
         <boxGeometry args={[isHoodie ? 1.1 : 1, 1.2, isHoodie ? 0.3 : 0.2]} />
-        <meshStandardMaterial color={color} roughness={0.5} metalness={0.1} />
+        <meshStandardMaterial color={displayColor} roughness={0.5} metalness={0.1} />
         
         {texture && (
           <Decal
@@ -32,16 +34,16 @@ function Shirt({ color, textureUrl, garmentType }: { color: string, textureUrl: 
           {/* Hood */}
           <mesh position={[0, 0.7, -0.1]} castShadow>
             <boxGeometry args={[0.6, 0.5, 0.4]} />
-            <meshStandardMaterial color={color} roughness={0.5} />
+            <meshStandardMaterial color={displayColor} roughness={0.5} />
           </mesh>
           {/* Sleeves (Simplified) */}
           <mesh position={[0.7, 0.3, 0]} rotation={[0, 0, -0.4]}>
             <boxGeometry args={[0.3, 0.8, 0.25]} />
-            <meshStandardMaterial color={color} roughness={0.5} />
+            <meshStandardMaterial color={displayColor} roughness={0.5} />
           </mesh>
           <mesh position={[-0.7, 0.3, 0]} rotation={[0, 0, 0.4]}>
             <boxGeometry args={[0.3, 0.8, 0.25]} />
-            <meshStandardMaterial color={color} roughness={0.5} />
+            <meshStandardMaterial color={displayColor} roughness={0.5} />
           </mesh>
         </group>
       )}

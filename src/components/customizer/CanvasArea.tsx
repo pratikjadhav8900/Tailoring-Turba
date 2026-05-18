@@ -32,7 +32,9 @@ export default function CanvasArea({
   onElementClick, onUpdateElement, onRemoveElement, onCopyElement, onDragStart, onDragStop, children,
 }: CanvasAreaProps) {
   const currentGarment = GARMENTS[garmentType as keyof typeof GARMENTS] || GARMENTS["round-neck"];
-  const currentImg = currentGarment[activeSide] || currentGarment["front"];
+  const currentImg = (currentGarment as any)[activeSide] || currentGarment["front"];
+  const baseKey = `base${activeSide.charAt(0).toUpperCase() + activeSide.slice(1)}`;
+  const currentBaseImg = (currentGarment as any)[baseKey];
 
   // Inline text editing state
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -40,66 +42,109 @@ export default function CanvasArea({
   const editRef = useRef<HTMLTextAreaElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
 
+  // Advanced gestures (Two-finger pan and pinch zoom)
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isGestureActive, setIsGestureActive] = useState(false);
+
   const zoomRef = useRef(zoom);
   const onZoomChangeRef = useRef(onZoomChange);
+  const panRef = useRef(pan);
   
   React.useEffect(() => {
     zoomRef.current = zoom;
     onZoomChangeRef.current = onZoomChange;
-  }, [zoom, onZoomChange]);
+    panRef.current = pan;
+  }, [zoom, onZoomChange, pan]);
 
   React.useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    let initialDist = 0;
-    let initialZoom = 1;
+    let touchStartDist = 0;
+    let touchStartZoom = 1;
+    let touchStartMid = { x: 0, y: 0 };
+    let touchStartPan = { x: 0, y: 0 };
 
-    const handleWheel = (e: WheelEvent) => {
-      // Trackpad pinch gesture triggers wheel event with ctrlKey=true
-      if (e.ctrlKey) {
-        e.preventDefault();
-        const delta = e.deltaY;
-        const newZoom = zoomRef.current - delta * 0.005;
-        onZoomChangeRef.current(Math.max(0.3, Math.min(2.0, newZoom)));
-      }
+    const getMidpoint = (touches: TouchList) => {
+      return {
+        x: (touches[0].clientX + touches[1].clientX) / 2,
+        y: (touches[0].clientY + touches[1].clientY) / 2
+      };
     };
 
     const getDistance = (touches: TouchList) => {
-      if (touches.length < 2) return 0;
       const dx = touches[0].clientX - touches[1].clientX;
       const dy = touches[0].clientY - touches[1].clientY;
       return Math.sqrt(dx * dx + dy * dy);
     };
 
+    const handleWheel = (e: WheelEvent) => {
+      if (e.ctrlKey) {
+        // Pinch-to-zoom on trackpad
+        e.preventDefault();
+        const delta = e.deltaY;
+        const newZoom = zoomRef.current - delta * 0.005;
+        onZoomChangeRef.current(Math.max(0.3, Math.min(3.0, newZoom)));
+      } else {
+        // Panning with two-finger scroll on trackpad
+        e.preventDefault();
+        setPan(prev => ({
+          x: prev.x - e.deltaX * 0.8,
+          y: prev.y - e.deltaY * 0.8
+        }));
+      }
+    };
+
     const handleTouchStart = (e: TouchEvent) => {
       if (e.touches.length === 2) {
         e.preventDefault();
-        initialDist = getDistance(e.touches);
-        initialZoom = zoomRef.current;
+        setIsGestureActive(true);
+        touchStartDist = getDistance(e.touches);
+        touchStartZoom = zoomRef.current;
+        touchStartMid = getMidpoint(e.touches);
+        touchStartPan = { ...panRef.current };
       }
     };
 
     const handleTouchMove = (e: TouchEvent) => {
       if (e.touches.length === 2) {
         e.preventDefault();
-        if (initialDist > 0) {
+        
+        // 1. Zoom
+        if (touchStartDist > 0) {
           const dist = getDistance(e.touches);
-          const scaleChange = dist / initialDist;
-          const newZoom = initialZoom * scaleChange;
-          onZoomChangeRef.current(Math.max(0.3, Math.min(2.0, newZoom)));
+          const scaleChange = dist / touchStartDist;
+          const newZoom = touchStartZoom * scaleChange;
+          onZoomChangeRef.current(Math.max(0.3, Math.min(3.0, newZoom)));
         }
+
+        // 2. Pan
+        const mid = getMidpoint(e.touches);
+        const dx = mid.x - touchStartMid.x;
+        const dy = mid.y - touchStartMid.y;
+        setPan({
+          x: touchStartPan.x + dx,
+          y: touchStartPan.y + dy
+        });
       }
+    };
+
+    const handleTouchEnd = () => {
+      setIsGestureActive(false);
     };
 
     canvas.addEventListener("wheel", handleWheel, { passive: false });
     canvas.addEventListener("touchstart", handleTouchStart, { passive: false });
     canvas.addEventListener("touchmove", handleTouchMove, { passive: false });
+    canvas.addEventListener("touchend", handleTouchEnd, { passive: true });
+    canvas.addEventListener("touchcancel", handleTouchEnd, { passive: true });
 
     return () => {
       canvas.removeEventListener("wheel", handleWheel);
       canvas.removeEventListener("touchstart", handleTouchStart);
       canvas.removeEventListener("touchmove", handleTouchMove);
+      canvas.removeEventListener("touchend", handleTouchEnd);
+      canvas.removeEventListener("touchcancel", handleTouchEnd);
     };
   }, []);
 
@@ -140,65 +185,93 @@ export default function CanvasArea({
     <div className={styles.canvasWrapper}>
       <div ref={canvasRef} className={styles.canvasArea} onClick={handleCanvasClick}>
         {/* Zoomed garment container */}
-        <div style={{ transform: `scale(${scale})`, transformOrigin: "center center", transition: "transform 0.2s" }}>
+        <div 
+          style={{ 
+            transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})`, 
+            transformOrigin: "center center", 
+            transition: isGestureActive ? "none" : "transform 0.2s" 
+          }}
+        >
           <div id={mockupId} className={styles.garmentContainer}>
-            {/* Color Layer */}
-            <div
-              className={styles.garmentColorLayer}
-              style={{
-                backgroundColor: bodyColor,
-                maskImage: `url(${currentImg})`,
-                WebkitMaskImage: `url(${currentImg})`,
-                maskSize: "contain",
-                WebkitMaskSize: "contain",
-                maskRepeat: "no-repeat",
-                WebkitMaskRepeat: "no-repeat",
-                maskPosition: "center",
-                WebkitMaskPosition: "center",
-              }}
-            />
-            {/* Shadow / Texture Layer */}
-            <img
-              key={`${garmentType}-${activeSide}`}
-              src={currentImg}
-              alt="Garment"
-              className={styles.garmentBaseImage}
-              style={{ mixBlendMode: "multiply", opacity: 0.8 }}
-            />
+            {/* Optional Base Image (e.g., Man wearing the shirt) */}
+            {currentBaseImg && (
+              <img
+                src={currentBaseImg}
+                alt="Base Mockup"
+                className={styles.garmentBaseImage}
+                style={{ zIndex: 0 }}
+              />
+            )}
+            
+            {/* Color & Texture Layers: Only applied if a color is selected */}
+            {bodyColor !== "transparent" && (
+              <>
+                <div
+                  className={styles.garmentColorLayer}
+                  style={{
+                    backgroundColor: bodyColor,
+                    maskImage: `url(${currentImg})`,
+                    WebkitMaskImage: `url(${currentImg})`,
+                    maskSize: "contain",
+                    WebkitMaskSize: "contain",
+                    maskRepeat: "no-repeat",
+                    WebkitMaskRepeat: "no-repeat",
+                    maskPosition: "center",
+                    WebkitMaskPosition: "center",
+                  }}
+                />
+                <img
+                  key={`${garmentType}-${activeSide}`}
+                  src={currentImg}
+                  alt="Garment Texture"
+                  className={styles.garmentBaseImage}
+                  style={{ 
+                    mixBlendMode: "multiply", 
+                    opacity: bodyColor.toLowerCase() === "#ffffff" ? 1 : 0.85,
+                    filter: bodyColor.toLowerCase() === "#111111" ? "brightness(1.2) contrast(1.1)" : "none"
+                  }}
+                />
+              </>
+            )}
 
             {/* Printable + Safety/Bleed zones */}
             {!isPreviewMode && (
               <>
                 {/* Printable area box */}
-                <div
-                  className={styles.printableAreaBox}
-                  style={{
-                    top: currentGarment.printableArea?.top || "18%",
-                    left: currentGarment.printableArea?.left || "28%",
-                    width: currentGarment.printableArea?.width || "44%",
-                    height: currentGarment.printableArea?.height || "60%",
-                  }}
-                >
-                  {/* Pill badges — anchored to top-right of box */}
-                  <div className={styles.areaPills}>
-                    <span className={styles.areaPillSafety}>Safety Area</span>
-                    <span className={styles.areaPillBleed}>Bleed</span>
-                  </div>
+                {(() => {
+                  const sidePrintable = (currentGarment.printableArea as any)?.[activeSide] || currentGarment.printableArea;
+                  return (
+                    <div
+                      className={styles.printableAreaBox}
+                      style={{
+                        top: sidePrintable?.top || "18%",
+                        left: sidePrintable?.left || "28%",
+                        width: sidePrintable?.width || "44%",
+                        height: sidePrintable?.height || "60%",
+                      }}
+                    >
+                      {/* Pill badges — anchored to top-right of box */}
+                      <div className={styles.areaPills}>
+                        <span className={styles.areaPillSafety}>Safety Area</span>
+                        <span className={styles.areaPillBleed}>Bleed</span>
+                      </div>
 
-                  {/* Left Ruler */}
-                  <div className={styles.rulerLeft}>
-                    <div className={styles.rulerLineVertical} />
-                    <span className={styles.rulerTextVertical}>30.48cm</span>
-                    <div className={styles.rulerLineVertical} />
-                  </div>
+                      {/* Left Ruler */}
+                      <div className={styles.rulerLeft}>
+                        <div className={styles.rulerLineVertical} />
+                        <span className={styles.rulerTextVertical}>30.48cm</span>
+                        <div className={styles.rulerLineVertical} />
+                      </div>
 
-                  {/* Bottom Ruler */}
-                  <div className={styles.rulerBottom}>
-                    <div className={styles.rulerLineHorizontal} />
-                    <span className={styles.rulerTextHorizontal}>30.48cm</span>
-                    <div className={styles.rulerLineHorizontal} />
-                  </div>
-                </div>
+                      {/* Bottom Ruler */}
+                      <div className={styles.rulerBottom}>
+                        <div className={styles.rulerLineHorizontal} />
+                        <span className={styles.rulerTextHorizontal}>30.48cm</span>
+                        <div className={styles.rulerLineHorizontal} />
+                      </div>
+                    </div>
+                  );
+                })()}
               </>
             )}
 
@@ -328,9 +401,9 @@ export default function CanvasArea({
               );
             })}
 
-            {children}
           </div>
         </div>
+        {children}
       </div>
 
       {/* Zoom Controls */}
@@ -346,7 +419,7 @@ export default function CanvasArea({
           <span className={styles.zoomPct}>{zoomPct}%</span>
           <button
             className={styles.zoomBtn}
-            onClick={(e) => { e.stopPropagation(); onZoomChange(Math.min(2.0, zoom + 0.1)); }}
+            onClick={(e) => { e.stopPropagation(); onZoomChange(Math.min(3.0, zoom + 0.1)); }}
             title="Zoom in"
           >
             <Plus size={16} strokeWidth={2.5} />
@@ -354,7 +427,7 @@ export default function CanvasArea({
           <div className={styles.zoomDivider} />
           <button
             className={styles.zoomBtn}
-            onClick={(e) => { e.stopPropagation(); onZoomChange(0.71); }}
+            onClick={(e) => { e.stopPropagation(); onZoomChange(1.52); setPan({ x: 0, y: 0 }); }}
             title="Reset zoom"
           >
             <Settings size={15} strokeWidth={2} />

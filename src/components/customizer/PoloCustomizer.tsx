@@ -36,14 +36,14 @@ export default function PoloCustomizer({
   const activeSide = propSide || internalSide;
   const setActiveSide = onSideChange || setInternalSide;
 
-  const [bodyColor, setBodyColor] = useState(initialState?.bodyColor || "#111111");
+  const [bodyColor, setBodyColor] = useState(initialState?.bodyColor || "transparent");
   const [activeTool, setActiveTool] = useState<ActiveTool>(null);
   const [frontElements, setFrontElements] = useState<DesignElement[]>(initialState?.frontElements || []);
   const [backElements, setBackElements] = useState<DesignElement[]>(initialState?.backElements || []);
   const [activeElementId, setActiveElementId] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [zoom, setZoom] = useState(0.71);
+  const [zoom, setZoom] = useState(1.52);
   const [clipboard, setClipboard] = useState<DesignElement | null>(null);
 
 

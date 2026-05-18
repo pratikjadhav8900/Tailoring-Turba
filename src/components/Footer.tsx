@@ -16,7 +16,6 @@ export default function Footer() {
       background: "#0a0a0a",
       color: "#e2e8f0",
       paddingTop: "64px",
-      paddingBottom: "32px",
       marginTop: isNoMargin ? "0" : "80px",
       borderTop: "1px solid rgba(255,255,255,0.06)"
     }}>

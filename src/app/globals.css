@@ -439,16 +439,36 @@ h1, h2, h3, h4, h5, h6 {
 @media (max-width: 640px) {
   .footer-grid {
     grid-template-columns: 1fr;
-    gap: 32px;
+    gap: 40px;
+    text-align: center;
+    padding-bottom: 40px;
+  }
+  .footer-grid > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    padding-bottom: 32px;
+  }
+  .footer-grid > div:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+  .footer-grid p {
+    margin: 0 auto;
   }
   .footer-bottom {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
+    align-items: center;
+    text-align: center;
+    gap: 20px;
+    padding-bottom: 110px; /* Extra space to fully clear the MobileNav */
   }
   .footer-bottom-links {
-    flex-direction: column;
-    gap: 12px;
+    flex-direction: row;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 16px;
   }
 }
 
@@ -458,4 +478,5 @@ h1, h2, h3, h4, h5, h6 {
     display: none !important;
   }
 }
+
 .footer-social-link:hover { background: rgba(255,255,255,0.15) !important; color: white !important; }

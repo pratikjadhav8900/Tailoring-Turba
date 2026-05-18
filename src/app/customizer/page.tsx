@@ -88,7 +88,7 @@ function CustomizerContent() {
     if (!customizerState) {
       setCustomizerState({
         garmentType: derivedGarment,
-        bodyColor: '#111111',
+        bodyColor: 'transparent',
         frontElements: [],
         backElements: [],
         fabricId: fabricId || undefined,

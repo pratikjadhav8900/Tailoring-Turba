@@ -2,9 +2,14 @@
 export const GARMENTS = {
   "round-neck": {
     label: "Round Neck",
-    front: "/mockups/round.png?v=2",
-    back: "/mockups/round_back.png?v=2",
-    printableArea: { top: "20%", left: "26%", width: "48%", height: "48%" }
+    front: "/mockups/man_mask_transparent.png",
+    baseFront: "/mockups/man_base.png",
+    back: "/mockups/round_neck_back_mask_transparent.png",
+    baseBack: "/mockups/round_neck_back_base.png",
+    printableArea: {
+      front: { top: "19%", left: "30%", width: "40%", height: "50%" },
+      back: { top: "18%", left: "33%", width: "38%", height: "55%" }
+    }
   },
   "v-neck": {
     label: "V-Neck",
@@ -14,15 +19,25 @@ export const GARMENTS = {
   },
   polo: {
     label: "Polo Shirt",
-    front: "/mockups/polo.png?v=5",
-    back: "/mockups/polo_back.png?v=5",
-    printableArea: { top: "22%", left: "30%", width: "40%", height: "55%" }
+    front: "/mockups/polo_front_mask_transparent.png",
+    baseFront: "/mockups/polo_front_base.png",
+    back: "/mockups/polo_back_mask_transparent.png",
+    baseBack: "/mockups/polo_back_base.png",
+    printableArea: {
+      front: { top: "22%", left: "30%", width: "40%", height: "55%" },
+      back: { top: "17%", left: "33%", width: "38%", height: "55%" }
+    }
   },
   hoodie: {
     label: "Hoodie",
-    front: "/mockups/hoodie_front.png",
-    back: "/mockups/hoodie_back.png",
-    printableArea: { top: "22%", left: "28%", width: "44%", height: "45%" } // Shorter height to avoid pocket
+    front: "/mockups/Hoodie_front_mask_transparent.png",
+    baseFront: "/mockups/Hoodie_front_base.png",
+    back: "/mockups/Hoodie_back_mask_transparent.png",
+    baseBack: "/mockups/Hoodie_back_base.png",
+    printableArea: {
+      front: { top: "22%", left: "28%", width: "44%", height: "45%" }, // Shorter height to avoid pocket
+      back: { top: "22%", left: "30%", width: "40%", height: "50%" } // Avoid hood hanging down
+    }
   },
 };
 
