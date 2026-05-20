@@ -21,6 +21,10 @@ export interface DesignElement {
   lineHeight?: number;
   opacity?: number;
   fontSize?: number;
+  printType?: "dtf" | "screen" | "embroidery" | "sublimation";
+  embroideryType?: "mono" | "multi";
+  originalWidth?: number;
+  originalHeight?: number;
 }
 
 export interface SizeQuantities {
@@ -38,4 +42,5 @@ export interface CustomizerState {
   sizes?: SizeQuantities;
   frontElements: DesignElement[];
   backElements: DesignElement[];
+  previewSize?: "S" | "M" | "L" | "XL" | "XXL";
 }

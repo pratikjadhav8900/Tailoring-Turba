@@ -4,11 +4,10 @@ import styles from "./PoloCustomizer.module.css";
 import { DesignElement, CustomizerState, Side } from "@/types/customizer";
 import CanvasArea from "./CanvasArea";
 import ToolPanel from "./ToolPanel";
-import FormattingToolbar from "./FormattingToolbar";
 import Image from "next/image";
 import { GARMENTS } from "@/lib/fabric-data";
 
-type ActiveTool = "Text" | "Uploads" | "Colors" | "Names" | null;
+type ActiveTool = "Text" | "Uploads" | "Colors" | "Names" | "Guide" | "Properties" | null;
 
 interface Props {
   onChange?: (state: CustomizerState) => void;
@@ -41,10 +40,19 @@ export default function PoloCustomizer({
   const [frontElements, setFrontElements] = useState<DesignElement[]>(initialState?.frontElements || []);
   const [backElements, setBackElements] = useState<DesignElement[]>(initialState?.backElements || []);
   const [activeElementId, setActiveElementId] = useState<string | null>(null);
+  const [previewSize, setPreviewSize] = useState<"S" | "M" | "L" | "XL" | "XXL">(initialState?.previewSize || "M");
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [zoom, setZoom] = useState(1.52);
   const [clipboard, setClipboard] = useState<DesignElement | null>(null);
+
+  useEffect(() => {
+    if (activeElementId) {
+      setActiveTool("Properties");
+    } else if (activeTool === "Properties") {
+      setActiveTool(null);
+    }
+  }, [activeElementId]);
 
 
 
@@ -130,25 +138,30 @@ export default function PoloCustomizer({
 
   useEffect(() => {
     if (onChange) {
-      onChange({ bodyColor, garmentType, frontElements, backElements });
+      onChange({ bodyColor, garmentType, frontElements, backElements, previewSize });
     }
-  }, [frontElements, backElements, bodyColor, garmentType]);
+  }, [frontElements, backElements, bodyColor, garmentType, previewSize]);
 
   const addText = (text?: string) => {
     const id = Date.now().toString();
     const value = text || "Add Text";
+    const width = 160;
+    const height = 48;
+    const x = Math.round((560 - width) / 2);
     const newEl: DesignElement = {
       id,
       type: "text",
-      x: 160, y: 200,
-      width: 240, height: 64,
+      x,
+      y: 200,
+      width,
+      height,
       value,
       color: "#000000",
       fontFamily: "Inter",
       fontWeight: "bold",
       textAlign: "center",
       rotation: 0,
-      fontSize: 28,
+      fontSize: 24,
     };
     setElementsWithHistory([...elements, newEl]);
     setActiveElementId(id);
@@ -165,18 +178,48 @@ export default function PoloCustomizer({
       const res = await fetch("/api/upload", { method: "POST", body: formData });
       if (!res.ok) throw new Error("Upload failed");
       const data = await res.json();
+
+      // Measure dimensions
+      const img = new window.Image();
+      img.src = data.url;
+      await new Promise((resolve) => {
+        img.onload = resolve;
+        img.onerror = resolve;
+      });
+
+      const originalWidth = img.naturalWidth || 400;
+      const originalHeight = img.naturalHeight || 400;
+      const aspectRatio = originalWidth / originalHeight;
+
+      let width = 160;
+      let height = 160;
+      if (aspectRatio > 1) {
+        height = Math.round(160 / aspectRatio);
+      } else {
+        width = Math.round(160 * aspectRatio);
+      }
+
+      // Center the logo in the 560px canvas
+      const x = Math.round((560 - width) / 2);
+      const y = 180;
+
       const newEl: DesignElement = {
         id: Date.now().toString(),
         type: "logo",
-        x: 175, y: 175,
-        width: 200, height: 200,
+        x,
+        y,
+        width,
+        height,
         value: data.url,
         color: "",
+        printType: "dtf",
+        originalWidth,
+        originalHeight,
       };
       setElementsWithHistory([...elements, newEl]);
       setActiveTool(null);
     } catch (err) {
-      console.error(err);
+      console.error("Logo upload error:", err);
     } finally {
       setIsUploading(false);
       e.target.value = "";
@@ -263,6 +306,14 @@ export default function PoloCustomizer({
           textElements={elements.filter(e => e.type === "text")}
           onUpdateTextElement={(id, val) => updateElement(id, { value: val })}
           onRemoveElement={(id) => removeElement(id)}
+          
+          activeElement={activeEl}
+          onUpdateElement={updateElement}
+          onCopyElement={copyElement}
+          garmentType={garmentType}
+          activeSide={activeSide}
+          previewSize={previewSize}
+          onPreviewSizeChange={setPreviewSize}
         />
       )}
 
@@ -270,15 +321,6 @@ export default function PoloCustomizer({
 
       {/* Canvas column: top formatting bar + canvas + zoom */}
       <div className={styles.canvasColumn}>
-        {/* Fixed top formatting bar — only when text element is active */}
-        {activeEl && !isPreviewMode && (
-          <FormattingToolbar
-            activeEl={activeEl}
-            onUpdate={updateElement}
-            onRemove={removeElement}
-            onCopy={copyElement}
-          />
-        )}
 
         <CanvasArea
           garmentType={garmentType}
@@ -297,8 +339,9 @@ export default function PoloCustomizer({
           onCopyElement={copyElement}
           onDragStart={() => setIsDragging(true)}
           onDragStop={() => setIsDragging(false)}
+          previewSize={previewSize}
         >
-          {/* Side Switcher Thumbnails */}
+          {/* Side Switcher Thumbnails & Preview Size Selector */}
           {!isPreviewMode && (
             <div className={styles.rightThumbnails}>
               {(["front", "back"] as Side[]).map((side) => (
@@ -319,16 +362,26 @@ export default function PoloCustomizer({
                   <span className={styles.thumbnailLabel}>{side.charAt(0).toUpperCase() + side.slice(1)}</span>
                 </button>
               ))}
-              {clipboard && (
-                <button 
-                  className={styles.thumbnailBtn} 
-                  onClick={pasteFromClipboard}
-                  title="Paste copied element"
-                  style={{ marginTop: '12px', background: 'var(--color-primary-50)', color: 'var(--color-primary-700)', fontWeight: 'bold' }}
-                >
-                  <span className={styles.thumbnailLabel} style={{ marginTop: 0 }}>Paste</span>
-                </button>
-              )}
+
+              {/* Garment Preview Size Selector */}
+              <div className={styles.sizeSelectorCard}>
+                <span className={styles.sizeSelectorLabel}>Preview Size</span>
+                {(["S", "M", "L", "XL", "XXL"] as const).map((sz) => {
+                  const chestInches = sz === "S" ? "18\"" : sz === "M" ? "20\"" : sz === "L" ? "22\"" : sz === "XL" ? "24\"" : "26\"";
+                  return (
+                    <button
+                      key={sz}
+                      type="button"
+                      className={`${styles.sizeSelectorBtn} ${previewSize === sz ? styles.sizeSelectorBtnActive : ""}`}
+                      onClick={() => setPreviewSize(sz)}
+                      title={`Chest width: ${chestInches}`}
+                    >
+                      <span className={styles.sizeSelectorText}>{sz}</span>
+                      <span className={styles.sizeSelectorSubtext}>{chestInches}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           )}
         </CanvasArea>

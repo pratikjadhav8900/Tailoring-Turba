@@ -5,6 +5,7 @@ import { Move, RotateCw, Trash2, Minus, Plus, Settings, Copy } from "lucide-reac
 import styles from "./PoloCustomizer.module.css";
 import { DesignElement, Side } from "@/types/customizer";
 import { GARMENTS } from "@/lib/fabric-data";
+import { SIZE_SCALES } from "@/lib/customizer-utils";
 
 interface CanvasAreaProps {
   garmentType: string;
@@ -23,13 +24,16 @@ interface CanvasAreaProps {
   onCopyElement?: (id: string, e?: React.SyntheticEvent) => void;
   onDragStart: () => void;
   onDragStop: () => void;
+  previewSize?: "S" | "M" | "L" | "XL" | "XXL";
   children?: React.ReactNode;
 }
 
 export default function CanvasArea({
   garmentType, activeSide, bodyColor, elements, activeElementId,
   isPreviewMode, isDragging, mockupId, zoom, onZoomChange,
-  onElementClick, onUpdateElement, onRemoveElement, onCopyElement, onDragStart, onDragStop, children,
+  onElementClick, onUpdateElement, onRemoveElement, onCopyElement, onDragStart, onDragStop,
+  previewSize = "M",
+  children,
 }: CanvasAreaProps) {
   const currentGarment = GARMENTS[garmentType as keyof typeof GARMENTS] || GARMENTS["round-neck"];
   const currentImg = (currentGarment as any)[activeSide] || currentGarment["front"];
@@ -41,6 +45,28 @@ export default function CanvasArea({
   const [editDraft, setEditDraft] = useState("");
   const editRef = useRef<HTMLTextAreaElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
+
+  const [deviceScale, setDeviceScale] = useState(1);
+
+  React.useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const handleResize = () => {
+      const w = canvas.clientWidth;
+      const h = canvas.clientHeight;
+      if (w > 0 && h > 0) {
+        const fitWidthScale = (w * 0.85) / 560;
+        const fitHeightScale = (h * 0.85) / 560;
+        setDeviceScale(Math.min(1, fitWidthScale, fitHeightScale));
+      }
+    };
+    
+    handleResize();
+    const observer = new ResizeObserver(handleResize);
+    observer.observe(canvas);
+    return () => observer.disconnect();
+  }, []);
 
   // Advanced gestures (Two-finger pan and pinch zoom)
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -59,6 +85,9 @@ export default function CanvasArea({
   React.useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+
+    // In preview mode (Review tab, Order Summary), disable all zoom/pan gestures
+    if (isPreviewMode) return;
 
     let touchStartDist = 0;
     let touchStartZoom = 1;
@@ -80,13 +109,11 @@ export default function CanvasArea({
 
     const handleWheel = (e: WheelEvent) => {
       if (e.ctrlKey) {
-        // Pinch-to-zoom on trackpad
         e.preventDefault();
         const delta = e.deltaY;
         const newZoom = zoomRef.current - delta * 0.005;
         onZoomChangeRef.current(Math.max(0.3, Math.min(3.0, newZoom)));
       } else {
-        // Panning with two-finger scroll on trackpad
         e.preventDefault();
         setPan(prev => ({
           x: prev.x - e.deltaX * 0.8,
@@ -109,16 +136,12 @@ export default function CanvasArea({
     const handleTouchMove = (e: TouchEvent) => {
       if (e.touches.length === 2) {
         e.preventDefault();
-        
-        // 1. Zoom
         if (touchStartDist > 0) {
           const dist = getDistance(e.touches);
           const scaleChange = dist / touchStartDist;
           const newZoom = touchStartZoom * scaleChange;
           onZoomChangeRef.current(Math.max(0.3, Math.min(3.0, newZoom)));
         }
-
-        // 2. Pan
         const mid = getMidpoint(e.touches);
         const dx = mid.x - touchStartMid.x;
         const dy = mid.y - touchStartMid.y;
@@ -146,7 +169,7 @@ export default function CanvasArea({
       canvas.removeEventListener("touchend", handleTouchEnd);
       canvas.removeEventListener("touchcancel", handleTouchEnd);
     };
-  }, []);
+  }, [isPreviewMode]);
 
   const handleElementClick = useCallback(
     (el: DesignElement, e: React.MouseEvent) => {
@@ -179,7 +202,9 @@ export default function CanvasArea({
   };
 
   const zoomPct = Math.round(zoom * 100);
-  const scale = zoom;
+  const scale = isPreviewMode ? 1.0 : zoom;
+  const currentPan = isPreviewMode ? { x: 0, y: 0 } : pan;
+  const totalScale = scale * deviceScale;
 
   return (
     <div className={styles.canvasWrapper}>
@@ -187,7 +212,7 @@ export default function CanvasArea({
         {/* Zoomed garment container */}
         <div 
           style={{ 
-            transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})`, 
+            transform: `translate(${currentPan.x}px, ${currentPan.y}px) scale(${totalScale})`, 
             transformOrigin: "center center", 
             transition: isGestureActive ? "none" : "transform 0.2s" 
           }}
@@ -204,43 +229,84 @@ export default function CanvasArea({
             )}
             
             {/* Color & Texture Layers: Only applied if a color is selected */}
-            {bodyColor !== "transparent" && (
-              <>
-                <div
-                  className={styles.garmentColorLayer}
-                  style={{
-                    backgroundColor: bodyColor,
-                    maskImage: `url(${currentImg})`,
-                    WebkitMaskImage: `url(${currentImg})`,
-                    maskSize: "contain",
-                    WebkitMaskSize: "contain",
-                    maskRepeat: "no-repeat",
-                    WebkitMaskRepeat: "no-repeat",
-                    maskPosition: "center",
-                    WebkitMaskPosition: "center",
-                  }}
-                />
-                <img
-                  key={`${garmentType}-${activeSide}`}
-                  src={currentImg}
-                  alt="Garment Texture"
-                  className={styles.garmentBaseImage}
-                  style={{ 
-                    mixBlendMode: "multiply", 
-                    opacity: bodyColor.toLowerCase() === "#ffffff" ? 1 : 0.85,
-                    filter: bodyColor.toLowerCase() === "#111111" ? "brightness(1.2) contrast(1.1)" : "none"
-                  }}
-                />
-              </>
-            )}
+            {bodyColor !== "transparent" && (() => {
+              // Determine if the color is very dark (e.g. black) to adjust opacity
+              const hex = bodyColor.replace("#", "");
+              const r = parseInt(hex.substring(0,2), 16) || 0;
+              const g = parseInt(hex.substring(2,4), 16) || 0;
+              const b = parseInt(hex.substring(4,6), 16) || 0;
+              const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+              
+              // For dark colors, use lower opacity so texture/shadows remain visible
+              // For light colors (white etc.), use higher opacity
+              const colorOpacity = luminance < 0.15 ? 0.72 : luminance < 0.35 ? 0.80 : 0.88;
+              
+              // For dark colors, boost the texture brightness so wrinkles show
+              const textureFilter = luminance < 0.15 
+                ? "brightness(2.2) contrast(1.3)" 
+                : luminance < 0.35 
+                  ? "brightness(1.5) contrast(1.15)"
+                  : bodyColor.toLowerCase() === "#ffffff" ? "none" : "brightness(1.1)";
+
+              // Texture opacity: more visible on dark colors  
+              const textureOpacity = luminance < 0.15 ? 0.70 : bodyColor.toLowerCase() === "#ffffff" ? 1 : 0.82;
+
+              return (
+                <>
+                  <div
+                    className={styles.garmentColorLayer}
+                    style={{
+                      backgroundColor: bodyColor,
+                      opacity: colorOpacity,
+                      maskImage: `url(${currentImg})`,
+                      WebkitMaskImage: `url(${currentImg})`,
+                      maskSize: "contain",
+                      WebkitMaskSize: "contain",
+                      maskRepeat: "no-repeat",
+                      WebkitMaskRepeat: "no-repeat",
+                      maskPosition: "center",
+                      WebkitMaskPosition: "center",
+                    }}
+                  />
+                  <img
+                    key={`${garmentType}-${activeSide}`}
+                    src={currentImg}
+                    alt="Garment Texture"
+                    className={styles.garmentBaseImage}
+                    style={{ 
+                      mixBlendMode: "multiply", 
+                      opacity: textureOpacity,
+                      filter: textureFilter,
+                    }}
+                  />
+                </>
+              );
+            })()}
 
             {/* Printable + Safety/Bleed zones */}
-            {!isPreviewMode && (
-              <>
-                {/* Printable area box */}
-                {(() => {
-                  const sidePrintable = (currentGarment.printableArea as any)?.[activeSide] || currentGarment.printableArea;
-                  return (
+            {(() => {
+              const sidePrintable = (currentGarment.printableArea as any)?.[activeSide] || currentGarment.printableArea;
+              const printableWidthPercent = parseFloat(sidePrintable?.width || "40%") / 100;
+              const printableHeightPercent = parseFloat(sidePrintable?.height || "50%") / 100;
+              const printableLeftPercent = parseFloat(sidePrintable?.left || "30%") / 100;
+              const printableTopPercent = parseFloat(sidePrintable?.top || "19%") / 100;
+
+              const printableLeftPx = 560 * printableLeftPercent;
+              const printableTopPx = 560 * printableTopPercent;
+              const printableWidthPx = 560 * printableWidthPercent;
+              const printableHeightPx = 560 * printableHeightPercent;
+
+              const widthPercent = parseFloat(sidePrintable?.width || "40%");
+              const heightPercent = parseFloat(sidePrintable?.height || "50%");
+              const ratio = heightPercent / widthPercent;
+              const heightInches = 12 * ratio;
+              const heightCm = Math.round(heightInches * 2.54 * 10) / 10;
+
+              const sizeScale = 1.0;
+
+              return (
+                <>
+                  {!isPreviewMode && (
                     <div
                       className={styles.printableAreaBox}
                       style={{
@@ -259,7 +325,7 @@ export default function CanvasArea({
                       {/* Left Ruler */}
                       <div className={styles.rulerLeft}>
                         <div className={styles.rulerLineVertical} />
-                        <span className={styles.rulerTextVertical}>30.48cm</span>
+                        <span className={styles.rulerTextVertical}>{heightCm}cm</span>
                         <div className={styles.rulerLineVertical} />
                       </div>
 
@@ -270,42 +336,82 @@ export default function CanvasArea({
                         <div className={styles.rulerLineHorizontal} />
                       </div>
                     </div>
-                  );
-                })()}
-              </>
-            )}
+                  )}
 
-            {/* Design Elements */}
-            {elements.map((el) => {
-              const isActive = el.id === activeElementId && !isPreviewMode;
-              const isEditing = el.id === editingId;
-              const fontSize = el.fontSize
-                ? el.fontSize
-                : Math.min(
-                    el.width / (Math.max(1, ...el.value.split("\n").map(l => l.length)) * 0.6 + 1),
-                    (el.height / Math.max(1, el.value.split("\n").length)) * 0.8
-                  );
+                  {/* Design Elements */}
+                  {elements.map((el) => {
+                    const isActive = el.id === activeElementId && !isPreviewMode;
+                    const isEditing = el.id === editingId;
 
-              return (
-                <Rnd
-                  key={el.id}
-                  className={`${styles.rndBox} ${isActive ? styles.rndBoxActive : ""}`}
-                  bounds="parent"
-                  dragHandleClassName="customizer-drag-handle"
-                  position={{ x: el.x, y: el.y }}
-                  size={{ width: el.width, height: el.height }}
-                  onDragStart={onDragStart}
-                  onDragStop={(_, d) => { onDragStop(); onUpdateElement(el.id, { x: d.x, y: d.y }); }}
-                  onResizeStop={(_, __, ref, ___, pos) =>
-                    onUpdateElement(el.id, {
-                      width: parseInt(ref.style.width),
-                      height: parseInt(ref.style.height),
-                      ...pos,
-                    })
-                  }
-                  disableDragging={!isActive || isPreviewMode || isEditing}
-                  enableResizing={isActive && !isPreviewMode && !isEditing}
-                >
+                    const renderWidth = el.width * sizeScale;
+                    const renderHeight = el.height * sizeScale;
+
+                    const printCenterX = printableLeftPx + printableWidthPx / 2;
+                    const printCenterY = printableTopPx + printableHeightPx / 2;
+
+                    const elCenterX = el.x + el.width / 2;
+                    const elCenterY = el.y + el.height / 2;
+
+                    const renderCenterX = printCenterX + (elCenterX - printCenterX) * sizeScale;
+                    const renderCenterY = printCenterY + (elCenterY - printCenterY) * sizeScale;
+
+                    const renderX = renderCenterX - renderWidth / 2;
+                    const renderY = renderCenterY - renderHeight / 2;
+
+                    const dynamicFont = Math.min(
+                      renderWidth / (Math.max(1, ...el.value.split("\n").map(l => l.length)) * 0.6 + 1),
+                      (renderHeight / Math.max(1, el.value.split("\n").length)) * 0.8
+                    );
+                    const fontSize = el.fontSize ? Math.min(el.fontSize * sizeScale, dynamicFont) : dynamicFont;
+
+                    return (
+                      <Rnd
+                        key={el.id}
+                        className={`${styles.rndBox} ${isActive ? styles.rndBoxActive : ""}`}
+                        bounds="parent"
+                        dragHandleClassName="customizer-drag-handle"
+                        position={{ x: renderX, y: renderY }}
+                        size={{ width: renderWidth, height: renderHeight }}
+                        scale={totalScale}
+                        onDragStart={onDragStart}
+                        onDragStop={(_, d) => {
+                          onDragStop();
+                          const bw = renderWidth / sizeScale;
+                          const bh = renderHeight / sizeScale;
+                          const rcx = d.x + renderWidth / 2;
+                          const rcy = d.y + renderHeight / 2;
+                          const bcx = printCenterX + (rcx - printCenterX) / sizeScale;
+                          const bcy = printCenterY + (rcy - printCenterY) / sizeScale;
+                          const bx = bcx - bw / 2;
+                          const by = bcy - bh / 2;
+                          onUpdateElement(el.id, { x: Math.round(bx), y: Math.round(by) });
+                        }}
+                        onResizeStop={(_, __, ref, ___, pos) => {
+                          const bw = parseInt(ref.style.width) / sizeScale;
+                          const bh = parseInt(ref.style.height) / sizeScale;
+                          const rcx = pos.x + parseInt(ref.style.width) / 2;
+                          const rcy = pos.y + parseInt(ref.style.height) / 2;
+                          const bcx = printCenterX + (rcx - printCenterX) / sizeScale;
+                          const bcy = printCenterY + (rcy - printCenterY) / sizeScale;
+                          const bx = bcx - bw / 2;
+                          const by = bcy - bh / 2;
+
+                          const ratio = bw / el.width;
+                          const updates: Partial<DesignElement> = {
+                            width: Math.round(bw),
+                            height: Math.round(bh),
+                            x: Math.round(bx),
+                            y: Math.round(by),
+                          };
+                          if (el.type === "text" && el.fontSize) {
+                            updates.fontSize = Math.round(el.fontSize * ratio);
+                          }
+
+                          onUpdateElement(el.id, updates);
+                        }}
+                        disableDragging={!isActive || isPreviewMode || isEditing}
+                        enableResizing={isActive && !isPreviewMode && !isEditing}
+                      >
                   <div
                     className={styles.rndContent}
                     style={{ transform: `rotate(${el.rotation || 0}deg)`, width: "100%", height: "100%" }}
@@ -335,13 +441,8 @@ export default function CanvasArea({
                           }}
                         />
                       ) : (
-                        <textarea
+                        <div
                           className={`${styles.rndText} customizer-drag-handle`}
-                          value={el.value}
-                          spellCheck={false}
-                          readOnly
-                          onChange={() => {}}
-                          placeholder="Click to select"
                           style={{
                             color: el.color,
                             fontSize: `${fontSize}px`,
@@ -354,8 +455,17 @@ export default function CanvasArea({
                             cursor: isActive ? "text" : "pointer",
                             userSelect: "none",
                             WebkitUserSelect: "none",
+                            whiteSpace: "pre-wrap",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: el.textAlign === "left" ? "flex-start" : el.textAlign === "right" ? "flex-end" : "center",
+                            height: "100%",
+                            width: "100%",
+                            overflow: "hidden"
                           }}
-                        />
+                        >
+                          {el.value}
+                        </div>
                       )
                     ) : (
                       <img
@@ -400,6 +510,9 @@ export default function CanvasArea({
                 </Rnd>
               );
             })}
+                </>
+              );
+            })()}
 
           </div>
         </div>

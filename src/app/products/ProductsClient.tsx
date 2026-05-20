@@ -153,7 +153,7 @@ export default function ProductsClient({ products }: { products: any[] }) {
     return result;
   }, [products, activeGender, activeCategory, debouncedSearch, sortBy]);
 
-  const mockColors = ["#1a1a1a", "#ffffff", "#1e3a8a", "#6b7d60", "#7f1d1d"];
+  const mockColors = ["#111111", "#FFFFFF", "#1E3A5F", "#4D7C0F", "#7F1D1D", "#2563EB", "#16A34A", "#9CA3AF", "#DC2626", "#D97706"];
 
   return (
     <>

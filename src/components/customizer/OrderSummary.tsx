@@ -3,6 +3,7 @@ import React from "react";
 import Image from "next/image";
 import { FileText } from "lucide-react";
 import { CustomizerState } from "@/types/customizer";
+import { getElementDetails } from "@/lib/customizer-utils";
 
 interface OrderSummaryProps {
   product: any;
@@ -21,8 +22,25 @@ export default function OrderSummary({
 }: OrderSummaryProps) {
   const basePrice = product?.basePrice || 85;
   const subtotal = totalQuantity * basePrice;
-  const hasCustomization = (customizerState.frontElements.length || 0) > 0 || (customizerState.backElements.length || 0) > 0;
-  const customCharge = hasCustomization ? 300 : 0;
+  const garmentType = customizerState.garmentType || "round-neck";
+
+  // Calculate customization breakdown dynamically
+  const frontDetails = (customizerState.frontElements || []).map(el => ({
+    ...el,
+    side: "Front",
+    ...getElementDetails(el, garmentType, "front")
+  }));
+
+  const backDetails = (customizerState.backElements || []).map(el => ({
+    ...el,
+    side: "Back",
+    ...getElementDetails(el, garmentType, "back")
+  }));
+
+  const allCustomElements = [...frontDetails, ...backDetails];
+  const customCharge = allCustomElements.reduce((sum, item) => sum + item.cost, 0);
+  const hasCustomization = allCustomElements.length > 0;
+
   const gst = (subtotal + customCharge) * 0.05;
   const total = subtotal + customCharge + gst;
 
@@ -38,6 +56,32 @@ export default function OrderSummary({
           <div>
             <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#111' }}>{product.name}</div>
             <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--tth-olive-dark)', marginTop: '4px' }}>₹{basePrice.toLocaleString('en-IN')} / unit</div>
+          </div>
+        </div>
+      )}
+
+      {/* Dynamic Customization Breakdown */}
+      {hasCustomization && (
+        <div style={{ marginBottom: '16px', background: '#F8FAFC', padding: '14px', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
+          <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase', marginBottom: '10px', letterSpacing: '0.05em' }}>
+            Customization Details
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {allCustomElements.map((el) => (
+              <div key={el.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                  <span style={{ fontWeight: 600, color: '#334155' }}>
+                    {el.side} {el.type === "text" ? "Text" : "Logo"}
+                  </span>
+                  <span style={{ fontSize: '0.75rem', color: '#64748B' }}>
+                    {el.widthInches}" × {el.heightInches}" | {el.printLabel}
+                  </span>
+                </div>
+                <span style={{ fontWeight: 600, color: '#334155', alignSelf: 'center' }}>
+                  ₹{el.cost}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
       )}

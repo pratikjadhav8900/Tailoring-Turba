@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { Download, Package, MapPin, FileImage } from "lucide-react";
+import { CustomizerState, DesignElement } from "@/types/customizer";
+import { getElementDetails } from "@/lib/customizer-utils";
 
 export default async function OrderDetailsPage({ params }: { params: { id: string } }) {
   const order = await prisma.order.findUnique({
@@ -198,19 +200,98 @@ export default async function OrderDetailsPage({ params }: { params: { id: strin
                      )}
                    </div>
 
-                   <div className="pt-4 border-t border-gray-100">
-                      <h4 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">Item Details</h4>
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div className="bg-gray-50 p-3 rounded-lg">
-                          <span className="block text-gray-500 text-[10px] uppercase font-bold">Product</span>
-                          <span className="font-semibold text-gray-800">{item.product.name}</span>
-                        </div>
-                        <div className="bg-gray-50 p-3 rounded-lg">
-                          <span className="block text-gray-500 text-[10px] uppercase font-bold">Total Qty</span>
-                          <span className="font-semibold text-gray-800">{item.quantity} Units</span>
-                        </div>
-                      </div>
-                   </div>
+                    <div className="pt-4 border-t border-gray-100">
+                       <h4 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">Item Details</h4>
+                       <div className="grid grid-cols-2 gap-4 text-sm">
+                         <div className="bg-gray-50 p-3 rounded-lg">
+                           <span className="block text-gray-500 text-[10px] uppercase font-bold">Product</span>
+                           <span className="font-semibold text-gray-800">{item.product.name}</span>
+                         </div>
+                         <div className="bg-gray-50 p-3 rounded-lg">
+                           <span className="block text-gray-500 text-[10px] uppercase font-bold">Total Qty</span>
+                           <span className="font-semibold text-gray-800">{item.quantity} Units</span>
+                         </div>
+                       </div>
+
+                       {/* Parse Custom State */}
+                       {(() => {
+                         if (!item.customStateJson) return null;
+                         try {
+                           const customState = JSON.parse(item.customStateJson) as CustomizerState;
+                           const garmentType = customState.garmentType || "round-neck";
+                           
+                           const renderElements = (elements: DesignElement[], side: string) => {
+                             if (!elements || elements.length === 0) return null;
+                             return (
+                               <div className="mt-4 space-y-3">
+                                 <h5 className="font-bold text-[11px] text-gray-400 uppercase tracking-wider border-b pb-1">
+                                   {side} Customizations
+                                 </h5>
+                                 <div className="space-y-3">
+                                   {elements.map((el, idx) => {
+                                     const details = getElementDetails(el, garmentType, side.toLowerCase());
+                                     return (
+                                       <div key={el.id || idx} className="p-3 bg-gray-50 rounded-lg border border-gray-100 flex flex-col gap-2">
+                                         <div className="flex items-center justify-between">
+                                           <span className="font-semibold text-sm text-[#435b43]">
+                                             {el.type === "text" ? `Text Layer: "${el.value}"` : `Logo Layer (${el.value ? 'Uploaded File' : 'Generic'})`}
+                                           </span>
+                                           <span className="px-2 py-0.5 text-[9px] font-bold bg-[#f4ebd0] text-[#435b43] rounded uppercase">
+                                             {details.printType}
+                                           </span>
+                                         </div>
+                                         
+                                         <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
+                                           <div>
+                                             <span className="text-[9px] text-gray-400 block uppercase font-bold">Dimensions</span>
+                                             <span className="font-medium text-gray-800">{details.widthInches}" W x {details.heightInches}" H</span>
+                                           </div>
+                                           <div>
+                                             <span className="text-[9px] text-gray-400 block uppercase font-bold">Color Option</span>
+                                             <span className="font-medium text-gray-800">
+                                               {details.printType === "embroidery"
+                                                 ? (details.embroideryType === "mono" ? "Mono Color" : "Multi Color")
+                                                 : (details.embroideryType === "mono" ? "Mono Color" : "Colorful")}
+                                             </span>
+                                           </div>
+                                           {el.type === "text" && (
+                                             <div className="col-span-2">
+                                               <span className="text-[9px] text-gray-400 block uppercase font-bold">Font / Color</span>
+                                               <span className="font-medium text-gray-800">
+                                                 {el.fontFamily || "Default"} / <span className="inline-block w-2.5 h-2.5 rounded-full border align-middle ml-1" style={{ backgroundColor: el.color }} /> {el.color}
+                                               </span>
+                                             </div>
+                                           )}
+                                           {details.dpi && (
+                                             <div className="col-span-2">
+                                               <span className="text-[9px] text-gray-400 block uppercase font-bold">Render Quality</span>
+                                               <span className={`font-semibold ${details.dpiQuality === 'Good' ? 'text-emerald-600' : details.dpiQuality === 'Fair' ? 'text-amber-600' : 'text-rose-600'}`}>
+                                                 {details.dpi} DPI ({details.dpiQuality})
+                                               </span>
+                                             </div>
+                                           )}
+                                         </div>
+                                       </div>
+                                     );
+                                   })}
+                                 </div>
+                               </div>
+                             );
+                           };
+
+                           return (
+                             <div className="mt-4 pt-4 border-t border-dashed border-gray-200">
+                               <h4 className="text-sm font-bold text-gray-700 mb-2 font-semibold">Design Placement & Specs:</h4>
+                               {renderElements(customState.frontElements, "Front")}
+                               {renderElements(customState.backElements, "Back")}
+                             </div>
+                           );
+                         } catch (err) {
+                           console.error("Failed to parse customStateJson", err);
+                           return null;
+                         }
+                       })()}
+                    </div>
                 </div>
 
               </div>

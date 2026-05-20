@@ -9,6 +9,7 @@ import { useCart } from "@/context/CartContext";
 import SizeBreakdown from "@/components/customizer/SizeBreakdown";
 import OrderSummary from "@/components/customizer/OrderSummary";
 import { allProducts } from "@/lib/products-data";
+import { getProductColors } from "@/lib/customizer-utils";
 import Image from "next/image";
 
 function CustomizerContent() {
@@ -28,6 +29,11 @@ function CustomizerContent() {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [dbProduct, setDbProduct] = useState<any>(null);
   const [isLoadingProduct, setIsLoadingProduct] = useState(true);
+
+  const synchronizedColors = useMemo(() => {
+    if (!dbProduct) return undefined;
+    return dbProduct.availableColors || getProductColors(dbProduct.name, dbProduct.description, dbProduct.features || [], dbProduct.colors);
+  }, [dbProduct]);
 
   const productId = searchParams.get('id') || searchParams.get('productId');
 
@@ -435,7 +441,7 @@ function CustomizerContent() {
             activeSide={activeSide}
             onSideChange={(s) => setActiveSide(s as "front" | "back")}
             garmentType={customizerState?.garmentType as any}
-            availableColors={dbProduct?.availableColors}
+            availableColors={synchronizedColors}
           />
         )}
         
@@ -473,7 +479,7 @@ function CustomizerContent() {
                     isPreviewMode={true} 
                     activeSide="front" 
                     mockupId="review-mockup-front" 
-                    availableColors={dbProduct?.availableColors}
+                    availableColors={synchronizedColors}
                   />
                 </div>
                 <div className={styles.reviewMockupWrap}>
@@ -483,7 +489,7 @@ function CustomizerContent() {
                     isPreviewMode={true} 
                     activeSide="back" 
                     mockupId="review-mockup-back" 
-                    availableColors={dbProduct?.availableColors}
+                    availableColors={synchronizedColors}
                   />
                 </div>
               </div>
