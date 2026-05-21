@@ -712,9 +712,29 @@ export default function ToolPanel({
                     {/* Quick Size Presets */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', marginTop: '4px' }}>
                       <span style={{ fontSize: '0.72rem', fontWeight: 600, color: '#64748B' }}>Quick Size & Position Presets:</span>
-                      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
                         {activeSide === "front" ? (
                           <>
+                            <button
+                              type="button"
+                              onClick={() => applyPresetSizeAndPosition(2, "left-chest")}
+                              style={{
+                                padding: '4px 8px',
+                                fontSize: '0.7rem',
+                                fontWeight: 600,
+                                borderRadius: '4px',
+                                border: '1px solid #E2E8F0',
+                                background: '#F8FAFC',
+                                cursor: 'pointer',
+                                color: '#334155',
+                                transition: 'all 0.15s',
+                                textAlign: 'center'
+                              }}
+                              onMouseEnter={(e) => { e.currentTarget.style.background = '#EFF6FF'; e.currentTarget.style.borderColor = '#BFDBFE'; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.borderColor = '#E2E8F0'; }}
+                            >
+                              Small (2")
+                            </button>
                             <button
                               type="button"
                               onClick={() => applyPresetSizeAndPosition(3.5, "left-chest")}
@@ -728,13 +748,32 @@ export default function ToolPanel({
                                 cursor: 'pointer',
                                 color: '#334155',
                                 transition: 'all 0.15s',
-                                flex: '1 1 auto',
                                 textAlign: 'center'
                               }}
                               onMouseEnter={(e) => { e.currentTarget.style.background = '#EFF6FF'; e.currentTarget.style.borderColor = '#BFDBFE'; }}
                               onMouseLeave={(e) => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.borderColor = '#E2E8F0'; }}
                             >
                               Left Chest (3.5")
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => applyPresetSizeAndPosition(4, "left-chest")}
+                              style={{
+                                padding: '4px 8px',
+                                fontSize: '0.7rem',
+                                fontWeight: 600,
+                                borderRadius: '4px',
+                                border: '1px solid #E2E8F0',
+                                background: '#F8FAFC',
+                                cursor: 'pointer',
+                                color: '#334155',
+                                transition: 'all 0.15s',
+                                textAlign: 'center'
+                              }}
+                              onMouseEnter={(e) => { e.currentTarget.style.background = '#EFF6FF'; e.currentTarget.style.borderColor = '#BFDBFE'; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.borderColor = '#E2E8F0'; }}
+                            >
+                              Pocket/Patch (4")
                             </button>
                             <button
                               type="button"
@@ -749,13 +788,32 @@ export default function ToolPanel({
                                 cursor: 'pointer',
                                 color: '#334155',
                                 transition: 'all 0.15s',
-                                flex: '1 1 auto',
                                 textAlign: 'center'
                               }}
                               onMouseEnter={(e) => { e.currentTarget.style.background = '#EFF6FF'; e.currentTarget.style.borderColor = '#BFDBFE'; }}
                               onMouseLeave={(e) => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.borderColor = '#E2E8F0'; }}
                             >
                               Center Chest (8.5")
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => applyPresetSizeAndPosition(10, "center")}
+                              style={{
+                                padding: '4px 8px',
+                                fontSize: '0.7rem',
+                                fontWeight: 600,
+                                borderRadius: '4px',
+                                border: '1px solid #E2E8F0',
+                                background: '#F8FAFC',
+                                cursor: 'pointer',
+                                color: '#334155',
+                                transition: 'all 0.15s',
+                                textAlign: 'center'
+                              }}
+                              onMouseEnter={(e) => { e.currentTarget.style.background = '#EFF6FF'; e.currentTarget.style.borderColor = '#BFDBFE'; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.borderColor = '#E2E8F0'; }}
+                            >
+                              Large Print (10")
                             </button>
                             <button
                               type="button"
@@ -770,7 +828,6 @@ export default function ToolPanel({
                                 cursor: 'pointer',
                                 color: '#334155',
                                 transition: 'all 0.15s',
-                                flex: '1 1 auto',
                                 textAlign: 'center'
                               }}
                               onMouseEnter={(e) => { e.currentTarget.style.background = '#EFF6FF'; e.currentTarget.style.borderColor = '#BFDBFE'; }}
@@ -781,6 +838,26 @@ export default function ToolPanel({
                           </>
                         ) : (
                           <>
+                            <button
+                              type="button"
+                              onClick={() => applyPresetSizeAndPosition(2, "locker-patch")}
+                              style={{
+                                padding: '4px 8px',
+                                fontSize: '0.7rem',
+                                fontWeight: 600,
+                                borderRadius: '4px',
+                                border: '1px solid #E2E8F0',
+                                background: '#F8FAFC',
+                                cursor: 'pointer',
+                                color: '#334155',
+                                transition: 'all 0.15s',
+                                textAlign: 'center'
+                              }}
+                              onMouseEnter={(e) => { e.currentTarget.style.background = '#EFF6FF'; e.currentTarget.style.borderColor = '#BFDBFE'; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.borderColor = '#E2E8F0'; }}
+                            >
+                              Small (2")
+                            </button>
                             <button
                               type="button"
                               onClick={() => applyPresetSizeAndPosition(3.5, "locker-patch")}
@@ -794,13 +871,32 @@ export default function ToolPanel({
                                 cursor: 'pointer',
                                 color: '#334155',
                                 transition: 'all 0.15s',
-                                flex: '1 1 auto',
                                 textAlign: 'center'
                               }}
                               onMouseEnter={(e) => { e.currentTarget.style.background = '#EFF6FF'; e.currentTarget.style.borderColor = '#BFDBFE'; }}
                               onMouseLeave={(e) => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.borderColor = '#E2E8F0'; }}
                             >
                               Locker Patch (3.5")
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => applyPresetSizeAndPosition(4, "locker-patch")}
+                              style={{
+                                padding: '4px 8px',
+                                fontSize: '0.7rem',
+                                fontWeight: 600,
+                                borderRadius: '4px',
+                                border: '1px solid #E2E8F0',
+                                background: '#F8FAFC',
+                                cursor: 'pointer',
+                                color: '#334155',
+                                transition: 'all 0.15s',
+                                textAlign: 'center'
+                              }}
+                              onMouseEnter={(e) => { e.currentTarget.style.background = '#EFF6FF'; e.currentTarget.style.borderColor = '#BFDBFE'; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.borderColor = '#E2E8F0'; }}
+                            >
+                              Pocket Patch (4")
                             </button>
                             <button
                               type="button"
@@ -815,13 +911,32 @@ export default function ToolPanel({
                                 cursor: 'pointer',
                                 color: '#334155',
                                 transition: 'all 0.15s',
-                                flex: '1 1 auto',
                                 textAlign: 'center'
                               }}
                               onMouseEnter={(e) => { e.currentTarget.style.background = '#EFF6FF'; e.currentTarget.style.borderColor = '#BFDBFE'; }}
                               onMouseLeave={(e) => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.borderColor = '#E2E8F0'; }}
                             >
                               Center Back (8.5")
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => applyPresetSizeAndPosition(10, "center")}
+                              style={{
+                                padding: '4px 8px',
+                                fontSize: '0.7rem',
+                                fontWeight: 600,
+                                borderRadius: '4px',
+                                border: '1px solid #E2E8F0',
+                                background: '#F8FAFC',
+                                cursor: 'pointer',
+                                color: '#334155',
+                                transition: 'all 0.15s',
+                                textAlign: 'center'
+                              }}
+                              onMouseEnter={(e) => { e.currentTarget.style.background = '#EFF6FF'; e.currentTarget.style.borderColor = '#BFDBFE'; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.borderColor = '#E2E8F0'; }}
+                            >
+                              Large Print (10")
                             </button>
                             <button
                               type="button"
@@ -836,7 +951,6 @@ export default function ToolPanel({
                                 cursor: 'pointer',
                                 color: '#334155',
                                 transition: 'all 0.15s',
-                                flex: '1 1 auto',
                                 textAlign: 'center'
                               }}
                               onMouseEnter={(e) => { e.currentTarget.style.background = '#EFF6FF'; e.currentTarget.style.borderColor = '#BFDBFE'; }}

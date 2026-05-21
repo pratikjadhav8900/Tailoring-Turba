@@ -22,7 +22,7 @@ function CustomizerContent() {
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
   const [productionFiles, setProductionFiles] = useState<{name: string, size: number, url: string}[]>([]);
-  const [toast, setToast] = useState<{message: string, visible: boolean}>({message: "", visible: false});
+  const [toast, setToast] = useState<{message: string, visible: boolean, type: 'info' | 'error' | 'success'}>({message: "", visible: false, type: 'info'});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { addToCart } = useCart();
   const [isSaving, setIsSaving] = useState(false);
@@ -126,8 +126,8 @@ function CustomizerContent() {
     ? Object.values(customizerState.sizes).reduce((a, b) => a + (b || 0), 0) 
     : 0;
 
-  const showToast = (message: string) => {
-    setToast({ message, visible: true });
+  const showToast = (message: string, type: 'info' | 'error' | 'success' = 'info') => {
+    setToast({ message, visible: true, type });
     setTimeout(() => setToast(prev => ({ ...prev, visible: false })), 3000);
   };
 
@@ -150,18 +150,18 @@ function CustomizerContent() {
       setIsPreviewMode(false);
     } else if (activeTab === "Options") {
       if (totalQuantity < MOQ) {
-        showToast(`Minimum order quantity is ${MOQ} pieces. Please add more sizes.`);
+        showToast(`Minimum order quantity is ${MOQ} pieces. Please add more sizes.`, "error");
         return;
       }
       setActiveTab("Review");
       setIsPreviewMode(false);
     } else {
       if (isUploadingAssets) {
-        showToast("Please wait for your assets to finish uploading.");
+        showToast("Please wait for your assets to finish uploading.", "info");
         return;
       }
       if (!customizerState || totalQuantity === 0) {
-        showToast("Please add at least one garment size to proceed.");
+        showToast("Please add at least one garment size to proceed.", "error");
         return;
       }
       
@@ -228,7 +228,7 @@ function CustomizerContent() {
         });
         router.push('/cart');
       } catch (err) {
-        showToast("Failed to process order assets. Please try again.");
+        showToast("Failed to process order assets. Please try again.", "error");
       } finally {
         setIsSaving(false);
       }
@@ -254,7 +254,7 @@ function CustomizerContent() {
     if (e.target.files) {
       const files = Array.from(e.target.files);
       setIsUploadingAssets(true);
-      showToast("Uploading production assets...");
+      showToast("Uploading production assets...", "info");
       
       for (const file of files) {
         try {
@@ -265,7 +265,7 @@ function CustomizerContent() {
             url: res.url
           }]);
         } catch (err) {
-          showToast(`Failed to upload ${file.name}`);
+          showToast(`Failed to upload ${file.name}`, "error");
         }
       }
       setIsUploadingAssets(false);
@@ -286,7 +286,7 @@ function CustomizerContent() {
       const session = await authRes.json();
       
       if (!session || !Object.keys(session).length || !session.user) {
-        showToast("Please login to save your design to your account.");
+        showToast("Please login to save your design to your account.", "error");
         setIsSaving(false);
         // Could also store in localStorage here for guest users
         return;
@@ -305,10 +305,10 @@ function CustomizerContent() {
       if (!res.ok) throw new Error("Failed to save design");
       
       setHasUnsavedChanges(false);
-      showToast("Design saved to your account!");
+      showToast("Design saved to your account!", "success");
     } catch (err) {
       console.error(err);
-      showToast("An error occurred while saving the design.");
+      showToast("An error occurred while saving the design.", "error");
     } finally {
       setIsSaving(false);
     }
@@ -391,7 +391,7 @@ function CustomizerContent() {
             className={`${styles.tab} ${activeTab === "Review" ? styles.tabActive : ""}`}
             onClick={() => {
               if (totalQuantity === 0 && activeTab !== "Review") {
-                showToast("Please add at least one garment size to proceed.");
+                showToast("Please add at least one garment size to proceed.", "error");
                 setActiveTab("Options");
                 setIsPreviewMode(false);
                 return;
@@ -464,6 +464,58 @@ function CustomizerContent() {
                 <div style={{ fontWeight: 600, color: '#475569', fontSize: '0.9rem' }}>Click to upload production files</div>
               </div>
               <input type="file" multiple ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileUpload} />
+
+              {/* Uploaded Files List */}
+              {productionFiles.length > 0 && (
+                <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {productionFiles.map((file, idx) => (
+                    <div key={idx} style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '12px 16px',
+                      background: '#f8fafc',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: '0.85rem'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', overflow: 'hidden' }}>
+                        <span style={{ color: 'var(--tth-olive-dark)', display: 'flex', alignItems: 'center' }}>
+                          <FileText size={18} />
+                        </span>
+                        <span style={{ fontWeight: 600, color: '#334155', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                          {file.name}
+                        </span>
+                        <span style={{ color: '#64748b', fontSize: '0.75rem' }}>
+                          ({(file.size / 1024).toFixed(1)} KB)
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeFile(idx);
+                        }}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: '#ef4444',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          padding: '4px',
+                          borderRadius: '4px',
+                          transition: 'background 0.2s'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = '#fee2e2'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -513,13 +565,13 @@ function CustomizerContent() {
           bottom: toast.visible ? '32px' : '-100px',
           left: '50%',
           transform: 'translateX(-50%)',
-          background: '#EF4444',
+          background: toast.type === 'error' ? '#EF4444' : toast.type === 'success' ? '#22C55E' : '#1E293B',
           color: 'white',
           padding: '14px 28px',
           borderRadius: '12px',
           fontWeight: '500',
           fontSize: '15px',
-          boxShadow: '0 8px 30px rgba(239, 68, 68, 0.4)',
+          boxShadow: `0 8px 30px ${toast.type === 'error' ? 'rgba(239, 68, 68, 0.4)' : toast.type === 'success' ? 'rgba(34, 197, 94, 0.4)' : 'rgba(30, 41, 59, 0.4)'}`,
           transition: 'bottom 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
           zIndex: 9999,
           display: 'flex',
@@ -538,7 +590,7 @@ function CustomizerContent() {
           borderRadius: '50%',
           fontSize: '14px',
           fontWeight: 'bold'
-        }}>!</span>
+        }}>{toast.type === 'error' ? '!' : toast.type === 'success' ? '✓' : 'i'}</span>
         {toast.message}
       </div>
     </main>

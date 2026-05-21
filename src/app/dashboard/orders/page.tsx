@@ -6,12 +6,21 @@ import styles from "./page.module.css";
 import { Package, Plus, FileText } from "lucide-react";
 import EmptyState from "@/components/EmptyState";
 import OrderTracking from "@/components/OrderTracking";
-
+import CancelOrderButton from "@/components/CancelOrderButton";
 import Image from "next/image";
 
 export default async function OrdersPage() {
   const session = await auth();
   const userId = session?.user?.id as string;
+
+  if (!userId) {
+    return (
+      <div className={styles.page} style={{ padding: "40px", textAlign: "center" }}>
+        <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "2rem" }}>Unauthorized</h2>
+        <p style={{ fontFamily: "var(--font-sans)", color: "var(--tth-text-muted)" }}>Please log in to view your orders.</p>
+      </div>
+    );
+  }
 
   const orders = await prisma.order.findMany({
     where: { userId },
@@ -59,13 +68,13 @@ export default async function OrdersPage() {
             <div key={order.id} className={styles.orderCard}>
               <div className={styles.orderTop}>
                 <div>
-                  <div className={styles.orderId}>Order #{order.id.slice(-8).toUpperCase()}</div>
+                  <div className={styles.orderId}>Order #{order.orderNumber || order.id.slice(-8).toUpperCase()}</div>
                   <div className={styles.orderDate}>
                     {new Date(order.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
                   </div>
                 </div>
                 <div className={styles.orderRight}>
-                  <div className={styles.amount}>₹{order.totalAmount.toLocaleString()}</div>
+                  <div className={styles.amount}>₹{order.totalAmount.toLocaleString('en-IN')}</div>
                   <div className={`${styles.badge} ${styles[`badge-${order.status.toLowerCase()}`]}`}>{order.status}</div>
                 </div>
               </div>
@@ -90,17 +99,95 @@ export default async function OrdersPage() {
                       {item.product.name}
                     </Link>
                     <span className={styles.itemQty}>× {item.quantity}</span>
-                    <span className={styles.itemPrice}>₹{(item.price * item.quantity).toLocaleString()}</span>
+                    <span className={styles.itemPrice}>₹{(item.price * item.quantity).toLocaleString('en-IN')}</span>
                   </div>
                 ))}
               </div>
 
               {/* Roster if available */}
               {order.orderSheet && (
-                <div className={styles.rosterBadge}>
+                <div className={styles.rosterBadge} style={{ marginBottom: "16px" }}>
                   <FileText size={16} /> Roster attached
                 </div>
               )}
+
+              {/* Payment Details & Actions */}
+              <div style={{
+                marginTop: "20px",
+                paddingTop: "20px",
+                borderTop: "1px solid var(--tth-beige-light)",
+                display: "flex",
+                flexWrap: "wrap",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: "16px"
+              }}>
+                {/* Left Side: Payment Info */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                  <div style={{ fontFamily: "var(--font-sans)", fontSize: "0.85rem", color: "var(--tth-text-muted)" }}>
+                    {order.isSplitPayment ? (
+                      <>
+                        Split Payment: <strong>Paid ₹{order.amountPaid.toLocaleString('en-IN')}</strong> of ₹{order.totalAmount.toLocaleString('en-IN')} 
+                        {order.secondPaymentStatus === "PAID" ? (
+                          <span style={{ color: "#16a34a", marginLeft: "6px", fontWeight: 600 }}>• Balance Fully Paid</span>
+                        ) : (
+                          <span style={{ color: "#d97706", marginLeft: "6px", fontWeight: 600 }}>• Balance Due: ₹{order.remainingAmount.toLocaleString('en-IN')}</span>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        Total Amount Paid: <strong>₹{order.amountPaid.toLocaleString('en-IN')}</strong>
+                      </>
+                    )}
+                  </div>
+                  {order.refundedAmount && order.refundedAmount > 0 && (
+                    <div style={{ fontFamily: "var(--font-sans)", fontSize: "0.85rem", color: "#dc2626", fontWeight: 600 }}>
+                      Refunded: ₹{order.refundedAmount.toLocaleString('en-IN')} (Refund ID: {order.refundId})
+                    </div>
+                  )}
+                </div>
+
+                {/* Right Side: Action Buttons */}
+                <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                  {/* Pay Balance Button */}
+                  {order.isSplitPayment && order.remainingAmount > 0 && order.secondPaymentStatus !== "PAID" && order.status !== "CANCELLED" && (
+                    <Link
+                      href={`/checkout/pay-balance?orderId=${order.id}`}
+                      style={{
+                        background: "var(--tth-olive-dark)",
+                        color: "white",
+                        padding: "10px 20px",
+                        borderRadius: "6px",
+                        fontFamily: "var(--font-sans)",
+                        fontSize: "0.85rem",
+                        fontWeight: 600,
+                        textDecoration: "none",
+                        transition: "opacity 0.2s"
+                      }}
+                    >
+                      Pay Balance (₹{order.remainingAmount.toLocaleString('en-IN')})
+                    </Link>
+                  )}
+
+                  {/* Cancel Button (Available for PENDING or PROCESSING, and only within 24 hours of placement) */}
+                  {(order.status === "PENDING" || order.status === "PROCESSING") && (() => {
+                    const now = new Date();
+                    const created = new Date(order.createdAt);
+                    const diffInMs = now.getTime() - created.getTime();
+                    const isWithin24h = diffInMs <= 24 * 60 * 60 * 1000;
+                    
+                    return (
+                      <CancelOrderButton 
+                        orderId={order.id} 
+                        orderNumber={order.orderNumber || ""} 
+                        isPaid={order.amountPaid > 0} 
+                        isWithin24h={isWithin24h} 
+                      />
+                    );
+                  })()}
+                </div>
+              </div>
+
             </div>
           ))}
         </div>
@@ -109,4 +196,3 @@ export default async function OrdersPage() {
     </div>
   );
 }
-

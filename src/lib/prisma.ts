@@ -8,11 +8,6 @@ export const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
     log: process.env.NODE_ENV === "development" ? ["error", "warn"] : [],
-    datasources: {
-      db: {
-        url: process.env.DATABASE_URL,
-      },
-    },
   });
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
@@ -28,10 +23,14 @@ export async function withRetry<T>(
       return await fn();
     } catch (err: any) {
       const isConnErr =
+        err?.code === "P1001" ||
+        err?.code === "P1008" ||
+        err?.code === "P1011" ||
+        err?.code === "P1017" ||
         err?.message?.includes("Can't reach database") ||
         err?.message?.includes("Closed") ||
         err?.message?.includes("socket") ||
-        err?.code === "P1001";
+        err?.message?.includes("Server has closed the connection");
       if (isConnErr && attempt < retries) {
         console.warn(`[DB] Connection failed, retrying (${attempt}/${retries})...`);
         await new Promise((r) => setTimeout(r, delayMs * attempt));

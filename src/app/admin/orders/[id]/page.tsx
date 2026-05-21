@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Download, Package, MapPin, FileImage } from "lucide-react";
 import { CustomizerState, DesignElement } from "@/types/customizer";
 import { getElementDetails } from "@/lib/customizer-utils";
+import DownloadButton from "./DownloadButton";
 
 export default async function OrderDetailsPage({ params }: { params: { id: string } }) {
   const order = await prisma.order.findUnique({
@@ -156,40 +157,36 @@ export default async function OrderDetailsPage({ params }: { params: { id: strin
                      {(item.design?.rawUrl || (item.printFiles && item.printFiles.length > 0)) ? (
                        <div className="flex flex-col gap-3">
                           {item.design?.rawUrl && (
-                            <Link 
-                              href={item.design.rawUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center justify-between p-4 bg-[#435b43] text-white rounded-xl hover:bg-[#2d3d2d] transition-all shadow-sm"
-                            >
-                              <div className="flex items-center gap-3">
-                                <Download size={20} />
-                                <div className="text-left">
-                                  <div className="font-bold text-sm">Download Main Asset</div>
-                                  <div className="text-[10px] opacity-70 text-white/80">Original High-Res Source</div>
-                                </div>
-                              </div>
-                            </Link>
+                            <DownloadButton 
+                               url={item.design.rawUrl}
+                               filename={item.design.rawUrl.split('/').pop() || "main_asset.png"}
+                               className="flex items-center justify-between p-4 bg-[#435b43] text-white rounded-xl hover:bg-[#2d3d2d] transition-all shadow-sm w-full"
+                             >
+                               <div className="flex items-center gap-3">
+                                 <div className="text-left">
+                                   <div className="font-bold text-sm">Download Main Asset</div>
+                                   <div className="text-[10px] opacity-70 text-white/80">Original High-Res Source</div>
+                                 </div>
+                               </div>
+                             </DownloadButton>
                           )}
                           {item.printFiles && item.printFiles.map((url, fi) => {
                             const filename = url.split('/').pop() || `Asset ${fi + 1}`;
                             return (
-                              <Link 
-                                key={fi} 
-                                href={url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center justify-between p-4 bg-white border-2 border-[#435b43] text-[#435b43] rounded-xl hover:bg-[#f0fdf4] transition-all"
-                              >
-                                <div className="flex items-center gap-3">
-                                  <FileImage size={20} />
-                                  <div className="text-left">
-                                    <div className="font-bold text-sm truncate max-w-[200px]">{filename}</div>
-                                    <div className="text-[10px] opacity-70">Customer Uploaded Asset</div>
-                                  </div>
-                                </div>
-                                <Download size={16} />
-                              </Link>
+                              <DownloadButton 
+                                 key={fi} 
+                                 url={url}
+                                 filename={filename}
+                                 className="flex items-center justify-between p-4 bg-white border-2 border-[#435b43] text-[#435b43] rounded-xl hover:bg-[#f0fdf4] transition-all w-full"
+                               >
+                                 <div className="flex items-center gap-3">
+                                   <FileImage size={20} />
+                                   <div className="text-left">
+                                     <div className="font-bold text-sm truncate max-w-[200px]">{filename}</div>
+                                     <div className="text-[10px] opacity-70">Customer Uploaded Asset</div>
+                                   </div>
+                                 </div>
+                               </DownloadButton>
                             );
                           })}
                        </div>

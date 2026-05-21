@@ -90,28 +90,34 @@ model Design {
 }
 
 model Order {
-  id                String      @id @default(cuid())
-  userId            String
-  totalAmount       Float
-  status            OrderStatus @default(PENDING)
-  paymentId         String?
-  razorpayOrderId   String?     @unique
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
-  shippingAddressId String?
-  orderNumber       Int         @unique @default(autoincrement())
-  shippingAddress   Address?    @relation(fields: [shippingAddressId], references: [id])
-  user              User        @relation(fields: [userId], references: [id])
-  items             OrderItem[]
-  orderSheet        OrderSheet?
-  
-  // BigShip Logistics
-  shippingCharge    Float?
-  bigshipOrderId    String?
-  bigshipTrackingId String?
-  bigshipLabelUrl   String?
-  bigshipManifestUrl String?
-  bigshipCourierName String?
+  id                    String      @id @default(cuid())
+  userId                String
+  totalAmount           Float
+  status                OrderStatus @default(PENDING)
+  paymentId             String?
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+  shippingAddressId     String?
+  orderNumber           Int         @unique @default(autoincrement())
+  razorpayOrderId       String?     @unique
+  bigshipCourierName    String?
+  bigshipLabelUrl       String?
+  bigshipManifestUrl    String?
+  bigshipOrderId        String?
+  bigshipTrackingId     String?
+  shippingCharge        Float?
+  amountPaid            Float       @default(0)
+  isSplitPayment        Boolean     @default(false)
+  refundId              String?
+  refundedAmount        Float?
+  remainingAmount       Float       @default(0)
+  secondPaymentId       String?
+  secondPaymentStatus   String?
+  secondRazorpayOrderId String?     @unique
+  shippingAddress       Address?    @relation(fields: [shippingAddressId], references: [id])
+  user                  User        @relation(fields: [userId], references: [id])
+  items                 OrderItem[]
+  orderSheet            OrderSheet?
 }
 
 model OrderItem {
@@ -199,13 +205,13 @@ model Inquiry {
   id           String        @id @default(cuid())
   name         String
   email        String
-  phone        String?
   companyName  String?
   quantity     Int
   requirements String
   status       InquiryStatus @default(NEW)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
+  phone        String?
 }
 
 model PasswordResetToken {

@@ -7,6 +7,7 @@ import Navbar from "@/components/Navbar";
 import { useCart } from "@/context/CartContext";
 import { INDIAN_STATES } from "@/lib/logistics";
 import styles from "./page.module.css";
+import { getElementDetails } from "@/lib/customizer-utils";
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -92,6 +93,17 @@ export default function CheckoutPage() {
     const itemPrice = typeof item.price === 'number' ? item.price : parseFloat(String(item.price)) || 0;
     return total + (itemPrice * (item.quantity || 0));
   }, 0);
+
+  // Calculate dynamic printing/customization fees from design elements
+  const printingCharge = cart.reduce((total, item) => {
+    if (!item.customDesign) return total;
+    const garmentType = item.customDesign.garmentType || "round-neck";
+    const frontDetails = (item.customDesign.frontElements || []).map(el => getElementDetails(el, garmentType, "front"));
+    const backDetails = (item.customDesign.backElements || []).map(el => getElementDetails(el, garmentType, "back"));
+    const itemPrintingCost = [...frontDetails, ...backDetails].reduce((sum, el) => sum + el.cost, 0);
+    return total + (itemPrintingCost * (item.quantity || 0));
+  }, 0);
+
   const designCharge = cart.filter(item => {
     if (!item.customDesign) return false;
     const hasFrontElements = (item.customDesign.frontElements?.length || 0) > 0;
@@ -100,8 +112,14 @@ export default function CheckoutPage() {
     return hasFrontElements || hasBackElements || hasAssets;
   }).length * 300;
   
-  const gst = Math.round((subtotal + designCharge) * 0.05);
-  const estimatedTotal = subtotal + designCharge + gst;
+  const totalCustomCharge = printingCharge + designCharge;
+  const gst = Math.round((subtotal + totalCustomCharge) * 0.05);
+  const estimatedTotal = subtotal + totalCustomCharge + gst;
+
+  const totalQuantity = cart.reduce((sum, item) => sum + (item.quantity || 0), 0);
+  const isSplitPayment = totalQuantity >= 10;
+  const initialPaymentDue = isSplitPayment ? Math.round(estimatedTotal * 0.60) : estimatedTotal;
+  const remainingPaymentDue = isSplitPayment ? (estimatedTotal - initialPaymentDue) : 0;
 
   const [error, setError] = useState<string | null>(null);
   
@@ -356,6 +374,47 @@ export default function CheckoutPage() {
                   Clicking "Pay" will securely redirect you to Razorpay to complete your transaction via UPI, Cards, or Netbanking.
                 </span>
               </div>
+
+              {/* Cancellation & Refund Policy Disclaimer */}
+              <div style={{ 
+                marginTop: '20px',
+                padding: '16px', 
+                background: '#fef2f2', 
+                borderLeft: '4px solid #ef4444',
+                borderRadius: '4px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '6px'
+              }}>
+                <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, color: '#991b1b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  ⚠️ Cancellation & Refund Policy
+                </span>
+                <span style={{ fontFamily: 'var(--font-sans)', color: '#7f1d1d', fontSize: '0.8rem', lineHeight: 1.4 }}>
+                  • Cancel within <strong>24 hours</strong> of placing your order to get a <strong>75% refund</strong> of the paid amount (25% fee deducted).<br/>
+                  • Cancellations after <strong>24 hours</strong> are <strong>completely non-refundable</strong> since customization and fabric cutting starts immediately.
+                </span>
+              </div>
+
+              {isSplitPayment && (
+                <div style={{ 
+                  marginTop: '16px',
+                  padding: '16px', 
+                  background: '#fffbeb', 
+                  borderLeft: '4px solid #d97706',
+                  borderRadius: '4px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px'
+                }}>
+                  <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, color: '#92400e', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    📦 Bulk Order Split Payment Active (10+ Items)
+                  </span>
+                  <span style={{ fontFamily: 'var(--font-sans)', color: '#78350f', fontSize: '0.8rem', lineHeight: 1.4 }}>
+                    • <strong>60% Deposit</strong> is due now to start production.<br/>
+                    • <strong>40% Balance</strong> is due when the order is ready to leave the warehouse (we will email you the payment link).
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -380,9 +439,15 @@ export default function CheckoutPage() {
                   <span>Subtotal</span>
                   <span>₹{subtotal.toLocaleString('en-IN')}</span>
                 </div>
+                {printingCharge > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Customization Fee</span>
+                    <span>₹{printingCharge.toLocaleString('en-IN')}</span>
+                  </div>
+                )}
                 {designCharge > 0 && (
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>Design & Setup</span>
+                    <span>Designing Charge</span>
                     <span>₹{designCharge.toLocaleString('en-IN')}</span>
                   </div>
                 )}
@@ -390,11 +455,33 @@ export default function CheckoutPage() {
                   <span>GST (5%)</span>
                   <span>₹{gst.toLocaleString('en-IN')}</span>
                 </div>
+
+                {isSplitPayment && (
+                  <div style={{ 
+                    marginTop: '12px',
+                    paddingTop: '12px',
+                    borderTop: '1px dashed var(--tth-beige-light)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '6px',
+                    fontSize: '0.9rem',
+                    fontFamily: 'var(--font-sans)'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--tth-black)', fontWeight: 600 }}>
+                      <span>60% Deposit Due Now</span>
+                      <span>₹{initialPaymentDue.toLocaleString('en-IN')}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--tth-text-muted)' }}>
+                      <span>40% Balance Due on Dispatch</span>
+                      <span>₹{remainingPaymentDue.toLocaleString('en-IN')}</span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className={styles.totalRow}>
-                <span>Total</span>
-                <span>₹{estimatedTotal.toLocaleString('en-IN')}</span>
+                <span>{isSplitPayment ? "Deposit Due Now" : "Total"}</span>
+                <span>₹{initialPaymentDue.toLocaleString('en-IN')}</span>
               </div>
 
               {error && (
@@ -416,7 +503,11 @@ export default function CheckoutPage() {
                 disabled={isProcessing}
                 className={styles.payBtn}
               >
-                {isProcessing ? "Processing..." : `Pay ₹${estimatedTotal}`}
+                {isProcessing 
+                  ? "Processing..." 
+                  : isSplitPayment 
+                    ? `Pay 60% Deposit (₹${initialPaymentDue.toLocaleString('en-IN')})` 
+                    : `Pay ₹${estimatedTotal.toLocaleString('en-IN')}`}
               </button>
             </div>
           </div>

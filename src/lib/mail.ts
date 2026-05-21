@@ -4,9 +4,14 @@ interface SendMailOptions {
   to: string;
   subject: string;
   html: string;
+  attachments?: Array<{
+    filename: string;
+    content: Buffer;
+    contentType: string;
+  }>;
 }
 
-export const sendMail = async ({ to, subject, html }: SendMailOptions) => {
+export const sendMail = async ({ to, subject, html, attachments }: SendMailOptions) => {
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST || "smtp.gmail.com",
     port: parseInt(process.env.SMTP_PORT || "587"),
@@ -22,6 +27,7 @@ export const sendMail = async ({ to, subject, html }: SendMailOptions) => {
     to,
     subject,
     html,
+    ...(attachments && { attachments }),
   };
 
   try {
@@ -135,4 +141,143 @@ export const sendCustomerBookingConfirmation = async (
     </div>
   `;
   return sendMail({ to: customerEmail, subject, html });
+};
+
+export const sendOrderConfirmationEmail = async (
+  email: string,
+  name: string,
+  orderId: string,
+  isSplit: boolean,
+  amountPaid: number,
+  pdfBuffer: Buffer,
+  orderNumber?: number
+) => {
+  const displayNo = orderNumber ? String(orderNumber) : orderId.slice(-8).toUpperCase();
+  const subject = `Your Order is Confirmed — Tailoring Turba #${displayNo}`;
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+      <div style="background: #435b43; padding: 24px; border-radius: 6px 6px 0 0; text-align: center;">
+        <h1 style="color: white; margin: 0; font-size: 22px; letter-spacing: 1px;">TAILORING TURBA</h1>
+      </div>
+      <div style="padding: 28px 24px;">
+        <h2 style="color: #435b43; margin-top: 0;">Order Confirmed! ✓</h2>
+        <p>Dear <strong>${name}</strong>,</p>
+        <p>Thank you for your order! We have received your payment of <strong>₹${amountPaid.toLocaleString('en-IN')}</strong> and our workshop is starting production immediately.</p>
+        
+        <div style="background-color: #f9fafb; padding: 20px; border-radius: 8px; margin: 24px 0; border-left: 4px solid #435b43;">
+          <p style="margin: 0 0 10px 0; font-size: 14px; color: #6b6b65; text-transform: uppercase; letter-spacing: 1px;">Order Summary</p>
+          <p style="margin: 6px 0;"><strong>📦 Order ID:</strong> #${orderId.slice(-8).toUpperCase()}</p>
+          <p style="margin: 6px 0;"><strong>💰 Payment Type:</strong> ${isSplit ? "60% Split Payment (Bulk Order)" : "100% Full Payment"}</p>
+          <p style="margin: 6px 0;"><strong>💳 Paid Amount:</strong> ₹${amountPaid.toLocaleString('en-IN')}</p>
+          ${isSplit ? `<p style="margin: 6px 0; color: #d97706;"><strong>⏳ Balance Remaining:</strong> 40% (Due on dispatch)</p>` : ""}
+        </div>
+
+        <p style="font-size: 13px; color: #6b7280; line-height: 1.5; margin: 20px 0;">
+          <strong>Important Cancellation Policy Reminder:</strong><br/>
+          If you cancel this order within <strong>24 hours</strong> of placement, you will receive a <strong>75% refund</strong> of the paid amount (25% fee will be deducted for administrative costs). After 24 hours, no refund will be provided because customization and fabric-cutting will have already begun.
+        </p>
+
+        <p>Your official tax invoice PDF has been attached to this email.</p>
+        <p>Best regards,<br/>The Tailoring Turba Team</p>
+      </div>
+    </div>
+  `;
+
+  return sendMail({
+    to: email,
+    subject,
+    html,
+    attachments: [
+      {
+        filename: `Invoice_Order_${displayNo}.pdf`,
+        content: pdfBuffer,
+        contentType: 'application/pdf',
+      },
+    ],
+  });
+};
+
+export const sendBalancePaymentRequestEmail = async (
+  email: string,
+  name: string,
+  orderId: string,
+  balanceAmount: number,
+  paymentLink: string,
+  orderNumber?: number
+) => {
+  const displayNo = orderNumber ? String(orderNumber) : orderId.slice(-8).toUpperCase();
+  const subject = `Action Required: Pay remaining 40% balance for Order #${displayNo}`;
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+      <div style="background: #435b43; padding: 24px; border-radius: 6px 6px 0 0; text-align: center;">
+        <h1 style="color: white; margin: 0; font-size: 22px; letter-spacing: 1px;">TAILORING TURBA</h1>
+      </div>
+      <div style="padding: 28px 24px;">
+        <h2 style="color: #d97706; margin-top: 0;">Your Order is Ready to Ship! 🚚</h2>
+        <p>Dear <strong>${name}</strong>,</p>
+        <p>Great news! Your custom order <strong>#${orderId.slice(-8).toUpperCase()}</strong> is fully produced and ready to leave the warehouse.</p>
+        <p>As per the bulk split-payment agreement, the remaining 40% balance of <strong>₹${balanceAmount.toLocaleString('en-IN')}</strong> is now due before dispatch.</p>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${paymentLink}" style="display: inline-block; padding: 14px 28px; font-size: 16px; font-weight: bold; background-color: #435b43; color: #ffffff; text-decoration: none; border-radius: 6px; letter-spacing: 0.5px;">
+            Pay Remaining Balance (₹${balanceAmount.toLocaleString('en-IN')})
+          </a>
+        </div>
+
+        <p style="font-size: 13px; color: #6b6b65; line-height: 1.5;">
+          If the button above does not work, please copy and paste the following URL into your browser:<br/>
+          <a href="${paymentLink}" style="color: #2563eb;">${paymentLink}</a>
+        </p>
+
+        <p>Once the payment is completed, we will immediately hand over your package to the shipping courier and send your tracking details.</p>
+        <p>Best regards,<br/>The Tailoring Turba Team</p>
+      </div>
+    </div>
+  `;
+
+  return sendMail({ to: email, subject, html });
+};
+
+export const sendOrderCancellationEmail = async (
+  email: string,
+  name: string,
+  orderId: string,
+  amountPaid: number,
+  refundedAmount: number,
+  feeDeducted: number,
+  within24h: boolean,
+  orderNumber?: number
+) => {
+  const displayNo = orderNumber ? String(orderNumber) : orderId.slice(-8).toUpperCase();
+  const subject = `Order Cancelled — Tailoring Turba #${displayNo}`;
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+      <div style="background: #dc2626; padding: 24px; border-radius: 6px 6px 0 0; text-align: center;">
+        <h1 style="color: white; margin: 0; font-size: 22px; letter-spacing: 1px;">TAILORING TURBA</h1>
+      </div>
+      <div style="padding: 28px 24px;">
+        <h2 style="color: #dc2626; margin-top: 0;">Order Cancellation Confirmation</h2>
+        <p>Dear <strong>${name}</strong>,</p>
+        <p>Your order <strong>#${orderId.slice(-8).toUpperCase()}</strong> has been successfully cancelled.</p>
+        
+        <div style="background-color: #fef2f2; padding: 20px; border-radius: 8px; margin: 24px 0; border-left: 4px solid #dc2626;">
+          <p style="margin: 0 0 10px 0; font-size: 14px; color: #991b1b; text-transform: uppercase; letter-spacing: 1px;">Refund Details</p>
+          <p style="margin: 6px 0;"><strong>💰 Amount Paid:</strong> ₹${amountPaid.toLocaleString('en-IN')}</p>
+          <p style="margin: 6px 0;"><strong>🕒 Cancelled Within 24h:</strong> ${within24h ? "Yes" : "No"}</p>
+          <p style="margin: 6px 0;"><strong>✂️ Cancellation Fee (25%):</strong> ₹${feeDeducted.toLocaleString('en-IN')}</p>
+          <p style="margin: 6px 0; font-weight: bold; color: #16a34a;"><strong>💵 Refund Amount (75%):</strong> ₹${refundedAmount.toLocaleString('en-IN')}</p>
+        </div>
+
+        ${within24h 
+          ? `<p>The refund amount of <strong>₹${refundedAmount.toLocaleString('en-IN')}</strong> will be processed back to your original payment method via Razorpay within 5-7 business days.</p>` 
+          : `<p>As the order was cancelled after 24 hours of placement, fabric customization and cutting had already begun. Therefore, no refund can be issued, and the cancellation fee equals the amount paid.</p>`
+        }
+        
+        <p>If you have any questions, please feel free to reach out to our customer support team.</p>
+        <p>Best regards,<br/>The Tailoring Turba Team</p>
+      </div>
+    </div>
+  `;
+
+  return sendMail({ to: email, subject, html });
 };

@@ -10,6 +10,7 @@ import AuthModal from "@/components/auth/AuthModal";
 import { useCart } from "@/context/CartContext";
 import styles from "./page.module.css";
 import EmptyState from "@/components/EmptyState";
+import { getElementDetails } from "@/lib/customizer-utils";
 
 export default function CartPage() {
   const { cart, removeFromCart, cartCount } = useCart();
@@ -31,6 +32,16 @@ export default function CartPage() {
     return total + (itemPrice * (item.quantity || 0));
   }, 0);
 
+  // Calculate dynamic printing/customization fees from design elements
+  const printingCharge = cart.reduce((total, item) => {
+    if (!item.customDesign) return total;
+    const garmentType = item.customDesign.garmentType || "round-neck";
+    const frontDetails = (item.customDesign.frontElements || []).map(el => getElementDetails(el, garmentType, "front"));
+    const backDetails = (item.customDesign.backElements || []).map(el => getElementDetails(el, garmentType, "back"));
+    const itemPrintingCost = [...frontDetails, ...backDetails].reduce((sum, el) => sum + el.cost, 0);
+    return total + (itemPrintingCost * (item.quantity || 0));
+  }, 0);
+
   // Design charge should be ₹300 for EACH unique customized product in the cart
   // A product is truly customized if it has front/back elements OR uploaded assets
   const customItemsCount = cart.filter(item => {
@@ -42,10 +53,11 @@ export default function CartPage() {
   }).length;
   
   const designCharge = customItemsCount * 300; 
+  const totalCustomCharge = printingCharge + designCharge;
   
   const subtotalVal = isNaN(subtotal) ? 0 : subtotal;
-  const gst = Math.round((subtotalVal + designCharge) * 0.05);
-  const estimatedTotal = subtotalVal + designCharge + gst;
+  const gst = Math.round((subtotalVal + totalCustomCharge) * 0.05);
+  const estimatedTotal = subtotalVal + totalCustomCharge + gst;
 
   const handleCheckoutClick = () => {
     if (!session) {
@@ -140,9 +152,16 @@ export default function CartPage() {
                 <b>₹{subtotalVal.toLocaleString('en-IN')}</b>
               </div>
               
-              {designCharge > 0 && (
+              {printingCharge > 0 && (
                 <div className={styles.summaryRow}>
                   <span>Customization Fee</span>
+                  <b>₹{printingCharge.toLocaleString('en-IN')}</b>
+                </div>
+              )}
+              
+              {designCharge > 0 && (
+                <div className={styles.summaryRow}>
+                  <span>Designing Charge</span>
                   <b>₹{designCharge.toLocaleString('en-IN')}</b>
                 </div>
               )}

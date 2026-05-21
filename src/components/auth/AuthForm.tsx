@@ -32,6 +32,17 @@ export default function AuthForm({ initialMode }: AuthFormProps) {
 
   useEffect(() => {
     setMounted(true);
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const oauthError = params.get("error");
+      if (oauthError === "OAuthAccountNotLinked") {
+        setError("This email is already registered using a password. Please sign in with your email and password instead.");
+      } else if (oauthError === "OAuthSignin" || oauthError === "OAuthCallback" || oauthError === "OAuthCreateAccount") {
+        setError("An error occurred during Google sign-in. Please try again.");
+      } else if (oauthError) {
+        setError(`Authentication failed: ${oauthError}. Please try again.`);
+      }
+    }
   }, []);
 
   // Handle mode sync with URL

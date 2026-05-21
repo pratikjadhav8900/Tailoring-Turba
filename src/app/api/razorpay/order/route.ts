@@ -60,14 +60,20 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Calculate total quantity of items to check for bulk (>= 10) split payment
+    const totalQuantity = items.reduce((sum: number, item: any) => sum + (item.quantity || 0), 0);
+    const isSplitPayment = totalQuantity >= 10;
+    const chargeAmount = isSplitPayment ? amount * 0.60 : amount;
+    const remainingAmount = isSplitPayment ? amount * 0.40 : 0;
+
     // 3. Create the Razorpay order first to get the ID
     const razorpay = getRazorpay();
-    console.log('[RAZORPAY] Initiating order creation for amount:', amount);
+    console.log('[RAZORPAY] Initiating order creation for charge amount:', chargeAmount, 'Total amount:', amount);
     
     let rzpOrder: any;
     try {
       rzpOrder = await razorpay.orders.create({
-        amount: Math.round(amount * 100), // Ensure it's an integer
+        amount: Math.round(chargeAmount * 100), // Ensure it's an integer in paise
         currency,
         receipt: `receipt_${Date.now()}`,
         notes: {
@@ -92,6 +98,9 @@ export async function POST(request: NextRequest) {
           totalAmount: amount,
           status: "PENDING", // Initial status for tracking
           razorpayOrderId: rzpOrder.id,
+          isSplitPayment,
+          amountPaid: 0,
+          remainingAmount,
           ...(finalAddressId && { shippingAddressId: finalAddressId }),
           items: {
             create: items.map((i: any) => ({

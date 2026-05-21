@@ -38,11 +38,14 @@ export default function OrderSummary({
   }));
 
   const allCustomElements = [...frontDetails, ...backDetails];
-  const customCharge = allCustomElements.reduce((sum, item) => sum + item.cost, 0);
+  const unitPrintingCharge = allCustomElements.reduce((sum, item) => sum + item.cost, 0);
+  const printingCharge = unitPrintingCharge * totalQuantity;
   const hasCustomization = allCustomElements.length > 0;
+  const designCharge = hasCustomization ? 300 : 0;
+  const totalCustomCharge = printingCharge + designCharge;
 
-  const gst = (subtotal + customCharge) * 0.05;
-  const total = subtotal + customCharge + gst;
+  const gst = (subtotal + totalCustomCharge) * 0.05;
+  const total = subtotal + totalCustomCharge + gst;
 
   return (
     <div style={{ background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', height: 'fit-content' }}>
@@ -78,7 +81,7 @@ export default function OrderSummary({
                   </span>
                 </div>
                 <span style={{ fontWeight: 600, color: '#334155', alignSelf: 'center' }}>
-                  ₹{el.cost}
+                  ₹{el.cost}/- per unit
                 </span>
               </div>
             ))}
@@ -92,10 +95,17 @@ export default function OrderSummary({
           <span style={{ fontWeight: 600 }}>₹{subtotal.toLocaleString('en-IN')}</span>
         </div>
         
-        {hasCustomization && (
+        {hasCustomization && printingCharge > 0 && (
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
             <span style={{ color: '#666' }}>Customization Fee</span>
-            <span style={{ fontWeight: 600 }}>₹{customCharge.toLocaleString('en-IN')}</span>
+            <span style={{ fontWeight: 600 }}>₹{printingCharge.toLocaleString('en-IN')}</span>
+          </div>
+        )}
+
+        {hasCustomization && designCharge > 0 && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <span style={{ color: '#666' }}>Designing Charge</span>
+            <span style={{ fontWeight: 600 }}>₹{designCharge.toLocaleString('en-IN')}</span>
           </div>
         )}
 

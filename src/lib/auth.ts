@@ -4,14 +4,14 @@ import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import type { NextAuthConfig } from "next-auth";
+import { authConfig } from "@/lib/auth.config";
 
-// Polyfill AUTH_SECRET for NextAuth v5 using the existing NEXTAUTH_SECRET
-if (!process.env.AUTH_SECRET && process.env.NEXTAUTH_SECRET) {
-  process.env.AUTH_SECRET = process.env.NEXTAUTH_SECRET;
-}
-
-export const config: NextAuthConfig = {
+/**
+ * Full auth config — Node.js only (includes Prisma adapter + providers).
+ * Do NOT import this in middleware.ts; use auth.config.ts there instead.
+ */
+export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...authConfig,
   adapter: PrismaAdapter(prisma) as any,
   providers: [
     GoogleProvider({
@@ -50,28 +50,4 @@ export const config: NextAuthConfig = {
       },
     }),
   ],
-  session: { strategy: "jwt" },
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-        token.role = (user as { role?: string }).role;
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      if (token && session.user) {
-        session.user.id = token.id as string;
-        (session.user as { role?: string }).role = token.role as string;
-      }
-      return session;
-    },
-  },
-  pages: {
-    signIn: "/login",
-    error: "/login",
-  },
-  secret: process.env.NEXTAUTH_SECRET,
-};
-
-export const { handlers, auth, signIn, signOut } = NextAuth(config);
+});
