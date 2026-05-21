@@ -135,11 +135,12 @@ html, body {
   position: relative;
   margin: 0;
   padding: 0;
+  overscroll-behavior: none;
 }
 
 @media (max-width: 991px) {
-  body {
-    padding-bottom: 80px !important;
+  .has-mobile-nav {
+    padding-bottom: 80px;
   }
 }
 

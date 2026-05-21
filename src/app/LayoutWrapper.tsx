@@ -24,7 +24,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
   const hideNavigation = isAuthPage || isAdminPage || isDashboardPage || isCustomizer;
 
   return (
-    <div style={{ overflowX: "hidden", width: "100%", position: "relative" }}>
+    <div className={mounted && !hideNavigation ? "has-mobile-nav" : ""} style={{ overflowX: "hidden", width: "100%", position: "relative" }}>
       {mounted && !hideNavigation && (
         <div key="nav-container" className="global-nav-container">
           <div style={{ position: "fixed", top: 0, left: 0, width: "100%", zIndex: 1001, height: "38px", overflow: "hidden" }}>
