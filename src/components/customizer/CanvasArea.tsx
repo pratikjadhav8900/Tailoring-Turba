@@ -242,12 +242,24 @@ export default function CanvasArea({
         {/* Zoomed garment container */}
         <div 
           style={{ 
-            transform: `translate(${currentPan.x}px, ${currentPan.y}px) scale(${totalScale})`, 
-            transformOrigin: "center center", 
-            transition: isGestureActive ? "none" : "transform 0.2s" 
+            width: `${560 * totalScale}px`,
+            height: `${560 * totalScale}px`,
+            position: 'relative',
           }}
         >
-          <div id={mockupId} className={styles.garmentContainer}>
+          <div 
+            style={{ 
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '560px',
+              height: '560px',
+              transform: `translate(${currentPan.x}px, ${currentPan.y}px) scale(${totalScale})`, 
+              transformOrigin: "top left", 
+              transition: isGestureActive ? "none" : "transform 0.2s" 
+            }}
+          >
+            <div id={mockupId} className={styles.garmentContainer}>
             {/* Optional Base Image (e.g., Man wearing the shirt) */}
             {currentBaseImg && (
               <img
@@ -554,6 +566,7 @@ export default function CanvasArea({
             })()}
 
           </div>
+        </div>
         </div>
         {children}
       </div>
