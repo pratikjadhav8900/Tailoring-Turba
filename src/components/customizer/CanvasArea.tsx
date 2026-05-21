@@ -234,7 +234,10 @@ export default function CanvasArea({
   const totalScale = scale * deviceScale;
 
   return (
-    <div className={styles.canvasWrapper}>
+    <div 
+      className={styles.canvasWrapper}
+      style={isPreviewMode ? { minHeight: 'auto', background: 'transparent' } : undefined}
+    >
       <div ref={canvasRef} className={styles.canvasArea} onClick={handleCanvasClick}>
         {/* Zoomed garment container */}
         <div 

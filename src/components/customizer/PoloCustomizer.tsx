@@ -291,7 +291,10 @@ export default function PoloCustomizer({
   const activeEl = elements.find(e => e.id === activeElementId);
 
   return (
-    <div className={styles.wrapper}>
+    <div 
+      className={styles.wrapper} 
+      style={isPreviewMode ? { height: '100%', minHeight: 'auto', background: 'transparent' } : undefined}
+    >
       {/* Left icon sidebar + context panel */}
       {!isPreviewMode && (
         <ToolPanel
