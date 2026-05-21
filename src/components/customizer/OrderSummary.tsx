@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import Image from "next/image";
-import { FileText } from "lucide-react";
+import { ShoppingCart, Palette, Ruler, Package, Shield, ChevronRight } from "lucide-react";
 import { CustomizerState } from "@/types/customizer";
 import { getElementDetails } from "@/lib/customizer-utils";
 
@@ -24,17 +24,11 @@ export default function OrderSummary({
   const subtotal = totalQuantity * basePrice;
   const garmentType = customizerState.garmentType || "round-neck";
 
-  // Calculate customization breakdown dynamically
   const frontDetails = (customizerState.frontElements || []).map(el => ({
-    ...el,
-    side: "Front",
-    ...getElementDetails(el, garmentType, "front")
+    ...el, side: "Front", ...getElementDetails(el, garmentType, "front")
   }));
-
   const backDetails = (customizerState.backElements || []).map(el => ({
-    ...el,
-    side: "Back",
-    ...getElementDetails(el, garmentType, "back")
+    ...el, side: "Back", ...getElementDetails(el, garmentType, "back")
   }));
 
   const allCustomElements = [...frontDetails, ...backDetails];
@@ -43,94 +37,155 @@ export default function OrderSummary({
   const hasCustomization = allCustomElements.length > 0;
   const designCharge = hasCustomization ? 300 : 0;
   const totalCustomCharge = printingCharge + designCharge;
-
   const gst = (subtotal + totalCustomCharge) * 0.05;
   const total = subtotal + totalCustomCharge + gst;
 
+  const sizeBreakdown = Object.entries(customizerState.sizes || {}).filter(([, qty]) => (qty || 0) > 0);
+
   return (
-    <div style={{ background: 'white', padding: '24px', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', height: 'fit-content' }}>
-      <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '24px', color: '#111', fontFamily: 'var(--font-serif)' }}>Order Summary</h2>
-      
-      {product && (
-        <div style={{ display: 'flex', gap: '16px', alignItems: 'center', padding: '16px', background: '#f9f9f7', border: '1px solid #e5e2da', borderRadius: '8px', marginBottom: '16px' }}>
-          <div style={{ position: 'relative', width: '64px', height: '64px', borderRadius: '4px', overflow: 'hidden', flexShrink: 0 }}>
-            <Image src={product.images?.[0] || product.image} alt={product.name} fill style={{ objectFit: 'cover' }} />
-          </div>
-          <div>
-            <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#111' }}>{product.name}</div>
-            <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--tth-olive-dark)', marginTop: '4px' }}>₹{basePrice.toLocaleString('en-IN')} / unit</div>
-          </div>
+    <div style={{
+      background: 'white',
+      borderRadius: '16px',
+      boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
+      overflow: 'hidden',
+      display: 'flex',
+      flexDirection: 'column',
+      height: 'fit-content',
+      border: '1px solid #e8e8e8',
+    }}>
+      {/* Header */}
+      <div style={{ padding: '16px 20px', background: 'linear-gradient(135deg, #1a1a2e 0%, #2d4a22 100%)', color: 'white' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+          <ShoppingCart size={16} />
+          <span style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', opacity: 0.8 }}>Order Summary</span>
         </div>
-      )}
-
-      {/* Dynamic Customization Breakdown */}
-      {hasCustomization && (
-        <div style={{ marginBottom: '16px', background: '#F8FAFC', padding: '14px', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
-          <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase', marginBottom: '10px', letterSpacing: '0.05em' }}>
-            Customization Details
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {allCustomElements.map((el) => (
-              <div key={el.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                  <span style={{ fontWeight: 600, color: '#334155' }}>
-                    {el.side} {el.type === "text" ? "Text" : "Logo"}
-                  </span>
-                  <span style={{ fontSize: '0.75rem', color: '#64748B' }}>
-                    {el.widthInches}" × {el.heightInches}" | {el.printLabel}
-                  </span>
-                </div>
-                <span style={{ fontWeight: 600, color: '#334155', alignSelf: 'center' }}>
-                  ₹{el.cost}/- per unit
-                </span>
-              </div>
-            ))}
-          </div>
+        <div style={{ fontSize: '1.6rem', fontWeight: 800, fontFamily: 'var(--font-serif)' }}>
+          ₹{Math.round(total).toLocaleString('en-IN')}
         </div>
-      )}
-
-      <div style={{ borderTop: '2px solid #E5E7EB', paddingTop: '24px', marginBottom: '32px', fontFamily: 'var(--font-sans)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-          <span style={{ color: '#666' }}>Subtotal ({totalQuantity} units)</span>
-          <span style={{ fontWeight: 600 }}>₹{subtotal.toLocaleString('en-IN')}</span>
-        </div>
-        
-        {hasCustomization && printingCharge > 0 && (
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <span style={{ color: '#666' }}>Customization Fee</span>
-            <span style={{ fontWeight: 600 }}>₹{printingCharge.toLocaleString('en-IN')}</span>
-          </div>
-        )}
-
-        {hasCustomization && designCharge > 0 && (
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <span style={{ color: '#666' }}>Designing Charge</span>
-            <span style={{ fontWeight: 600 }}>₹{designCharge.toLocaleString('en-IN')}</span>
-          </div>
-        )}
-
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
-          <span style={{ color: '#666' }}>GST (5%)</span>
-          <span style={{ fontWeight: 600 }}>₹{Math.round(gst).toLocaleString('en-IN')}</span>
-        </div>
-
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '18px', fontWeight: 'bold' }}>Total Estimate</span>
-          <span style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--tth-olive-dark)' }}>
-            ₹{Math.round(total).toLocaleString('en-IN')}
-          </span>
+        <div style={{ fontSize: '0.75rem', opacity: 0.7, marginTop: '2px' }}>
+          Incl. GST • {totalQuantity} units
         </div>
       </div>
 
-      <button 
-        onClick={onAddtoCart}
-        style={{ 
-          width: '100%', padding: '16px', background: 'var(--tth-olive-dark)', color: 'white', border: 'none', borderRadius: '8px', 
-          fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s', textTransform: 'uppercase', letterSpacing: '0.05em'
-        }}
-      >
-        Add To Cart
-      </button>
+      <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+
+        {/* Product Row — Compact */}
+        {product && (
+          <div style={{
+            display: 'flex', gap: '12px', alignItems: 'center',
+            padding: '12px', background: '#f9f9f7',
+            border: '1px solid #e5e2da', borderRadius: '10px'
+          }}>
+            <div style={{ position: 'relative', width: '52px', height: '52px', borderRadius: '8px', overflow: 'hidden', flexShrink: 0, border: '1px solid #e5e2da' }}>
+              <Image src={product.images?.[0] || product.image} alt={product.name} fill style={{ objectFit: 'cover' }} />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#111', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{product.name}</div>
+              <div style={{ fontSize: '0.75rem', color: '#888', marginTop: '2px' }}>{product.category?.name || garmentType}</div>
+            </div>
+            <div style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--tth-olive-dark)', flexShrink: 0 }}>
+              ₹{basePrice}/u
+            </div>
+          </div>
+        )}
+
+        {/* Size Breakdown — Compact Chips */}
+        {sizeBreakdown.length > 0 && (
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+              <Ruler size={13} color="#888" />
+              <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Size Breakdown</span>
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              {sizeBreakdown.map(([size, qty]) => (
+                <div key={size} style={{
+                  padding: '4px 10px', borderRadius: '20px',
+                  background: '#f0fdf4', border: '1px solid #86efac',
+                  fontSize: '0.75rem', fontWeight: 700, color: '#166534'
+                }}>
+                  {size}: {qty}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Customization Details — Compact */}
+        {hasCustomization && (
+          <div style={{ background: '#f8fafc', borderRadius: '10px', padding: '12px', border: '1px solid #e2e8f0' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+              <Palette size={13} color="#888" />
+              <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Print Details</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {allCustomElements.map((el) => (
+                <div key={el.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.78rem' }}>
+                  <div>
+                    <span style={{ fontWeight: 600, color: '#334155' }}>{el.side} {el.type === "text" ? "Text" : "Logo"}</span>
+                    <span style={{ color: '#94a3b8', marginLeft: '6px' }}>{el.widthInches}″ × {el.heightInches}″</span>
+                  </div>
+                  <span style={{ fontWeight: 700, color: '#0f172a' }}>₹{el.cost}/u</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Price Breakdown */}
+        <div style={{ borderTop: '1px dashed #e2e8f0', paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: '#666' }}>
+            <span>Subtotal ({totalQuantity} units)</span>
+            <span style={{ fontWeight: 600, color: '#111' }}>₹{subtotal.toLocaleString('en-IN')}</span>
+          </div>
+          {hasCustomization && printingCharge > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: '#666' }}>
+              <span>Customization Fee</span>
+              <span style={{ fontWeight: 600, color: '#111' }}>₹{printingCharge.toLocaleString('en-IN')}</span>
+            </div>
+          )}
+          {hasCustomization && designCharge > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: '#666' }}>
+              <span>Designing Charge</span>
+              <span style={{ fontWeight: 600, color: '#111' }}>₹{designCharge.toLocaleString('en-IN')}</span>
+            </div>
+          )}
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', color: '#666' }}>
+            <span>GST (5%)</span>
+            <span style={{ fontWeight: 600, color: '#111' }}>₹{Math.round(gst).toLocaleString('en-IN')}</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px', paddingTop: '10px', borderTop: '2px solid #111' }}>
+            <span style={{ fontWeight: 800, fontSize: '0.95rem', color: '#111' }}>Total Estimate</span>
+            <span style={{ fontWeight: 900, fontSize: '1.35rem', color: 'var(--tth-olive-dark)' }}>₹{Math.round(total).toLocaleString('en-IN')}</span>
+          </div>
+        </div>
+
+        {/* Trust badge */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: '#f0fdf4', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
+          <Shield size={13} color="#16a34a" />
+          <span style={{ fontSize: '0.72rem', color: '#15803d', fontWeight: 600 }}>Secure order · 100% quality guaranteed</span>
+        </div>
+      </div>
+
+      {/* Sticky Add to Cart Button */}
+      <div style={{ padding: '0 20px 20px' }}>
+        <button
+          onClick={onAddtoCart}
+          style={{
+            width: '100%', padding: '14px 20px',
+            background: 'linear-gradient(135deg, #2d4a22 0%, #4a7c35 100%)',
+            color: 'white', border: 'none', borderRadius: '10px',
+            fontSize: '0.9rem', fontWeight: 800, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+            textTransform: 'uppercase', letterSpacing: '0.08em',
+            boxShadow: '0 4px 16px rgba(45,74,34,0.35)',
+            transition: 'all 0.2s',
+          }}
+        >
+          <ShoppingCart size={16} />
+          Add To Cart
+          <ChevronRight size={16} />
+        </button>
+      </div>
     </div>
   );
 }

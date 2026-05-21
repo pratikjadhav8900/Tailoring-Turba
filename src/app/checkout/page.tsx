@@ -375,46 +375,86 @@ export default function CheckoutPage() {
                 </span>
               </div>
 
-              {/* Cancellation & Refund Policy Disclaimer */}
-              <div style={{ 
+              {/* Cancellation & Refund Policy — Visual Card */}
+              <div style={{
                 marginTop: '20px',
-                padding: '16px', 
-                background: '#fef2f2', 
-                borderLeft: '4px solid #ef4444',
-                borderRadius: '4px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '6px'
+                borderRadius: '12px',
+                overflow: 'hidden',
+                border: '1px solid #fecaca',
               }}>
-                <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, color: '#991b1b', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                  ⚠️ Cancellation & Refund Policy
-                </span>
-                <span style={{ fontFamily: 'var(--font-sans)', color: '#7f1d1d', fontSize: '0.8rem', lineHeight: 1.4 }}>
-                  • Cancel within <strong>24 hours</strong> of placing your order to get a <strong>75% refund</strong> of the paid amount (25% fee deducted).<br/>
-                  • Cancellations after <strong>24 hours</strong> are <strong>completely non-refundable</strong> since customization and fabric cutting starts immediately.
-                </span>
+                <div style={{
+                  background: 'linear-gradient(135deg, #991b1b 0%, #dc2626 100%)',
+                  padding: '12px 16px',
+                  display: 'flex', alignItems: 'center', gap: '10px',
+                }}>
+                  <span style={{ fontSize: '1.2rem' }}>🚫</span>
+                  <span style={{ color: 'white', fontWeight: 800, fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                    Cancellation & Refund Policy
+                  </span>
+                </div>
+                <div style={{ background: '#fef2f2', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {/* Timeline */}
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+                      <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#fef9c3', border: '2px solid #fde047', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem' }}>⏰</div>
+                      <div style={{ width: '2px', height: '20px', background: '#fecaca' }} />
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: '0.82rem', color: '#991b1b' }}>Within 24 Hours</div>
+                      <div style={{ fontSize: '0.78rem', color: '#7f1d1d', lineHeight: 1.5 }}>
+                        Cancel & receive a <strong>75% refund</strong> of the paid amount. 25% processing fee applies.
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                    <div style={{ flexShrink: 0, width: '32px', height: '32px', borderRadius: '50%', background: '#fee2e2', border: '2px solid #fca5a5', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.9rem' }}>✂️</div>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: '0.82rem', color: '#991b1b' }}>After 24 Hours</div>
+                      <div style={{ fontSize: '0.78rem', color: '#7f1d1d', lineHeight: 1.5 }}>
+                        <strong>Non-refundable.</strong> Fabric cutting and customization begins immediately after order confirmation.
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {isSplitPayment && (
-                <div style={{ 
+                <div style={{
                   marginTop: '16px',
-                  padding: '16px', 
-                  background: '#fffbeb', 
-                  borderLeft: '4px solid #d97706',
-                  borderRadius: '4px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '6px'
+                  borderRadius: '12px',
+                  overflow: 'hidden',
+                  border: '1px solid #fde68a',
                 }}>
-                  <span style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, color: '#92400e', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                    📦 Bulk Order Split Payment Active (10+ Items)
-                  </span>
-                  <span style={{ fontFamily: 'var(--font-sans)', color: '#78350f', fontSize: '0.8rem', lineHeight: 1.4 }}>
-                    • <strong>60% Deposit</strong> is due now to start production.<br/>
-                    • <strong>40% Balance</strong> is due when the order is ready to leave the warehouse (we will email you the payment link).
-                  </span>
+                  <div style={{
+                    background: 'linear-gradient(135deg, #92400e 0%, #d97706 100%)',
+                    padding: '12px 16px',
+                    display: 'flex', alignItems: 'center', gap: '10px',
+                  }}>
+                    <span style={{ fontSize: '1.2rem' }}>📦</span>
+                    <span style={{ color: 'white', fontWeight: 800, fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                      Bulk Order — Split Payment
+                    </span>
+                  </div>
+                  <div style={{ background: '#fffbeb', padding: '14px 16px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '12px' }}>
+                      <div style={{ background: 'white', border: '1px solid #fde68a', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#92400e' }}>60%</div>
+                        <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#78350f', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pay Now</div>
+                        <div style={{ fontSize: '0.72rem', color: '#92400e', marginTop: '4px' }}>To start production</div>
+                      </div>
+                      <div style={{ background: 'white', border: '1px solid #fde68a', borderRadius: '8px', padding: '12px', textAlign: 'center' }}>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#78350f' }}>40%</div>
+                        <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#78350f', textTransform: 'uppercase', letterSpacing: '0.05em' }}>On Dispatch</div>
+                        <div style={{ fontSize: '0.72rem', color: '#92400e', marginTop: '4px' }}>We'll email the link</div>
+                      </div>
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: '#92400e', textAlign: 'center', fontStyle: 'italic' }}>
+                      ✅ You're ordering 10+ units — split payment automatically applied
+                    </div>
+                  </div>
                 </div>
               )}
+
             </div>
           </div>
 

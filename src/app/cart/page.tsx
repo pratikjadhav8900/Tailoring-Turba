@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Trash2, AlertCircle, ShoppingBag } from "lucide-react";
+import { Trash2, ShoppingBag, ShieldCheck, Truck, RotateCcw, Tag, ChevronRight, Palette, ArrowRight } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import AuthModal from "@/components/auth/AuthModal";
 import { useCart } from "@/context/CartContext";
@@ -32,7 +32,6 @@ export default function CartPage() {
     return total + (itemPrice * (item.quantity || 0));
   }, 0);
 
-  // Calculate dynamic printing/customization fees from design elements
   const printingCharge = cart.reduce((total, item) => {
     if (!item.customDesign) return total;
     const garmentType = item.customDesign.garmentType || "round-neck";
@@ -42,19 +41,15 @@ export default function CartPage() {
     return total + (itemPrintingCost * (item.quantity || 0));
   }, 0);
 
-  // Design charge should be ₹300 for EACH unique customized product in the cart
-  // A product is truly customized if it has front/back elements OR uploaded assets
   const customItemsCount = cart.filter(item => {
     if (!item.customDesign) return false;
-    const hasFrontElements = (item.customDesign.frontElements?.length || 0) > 0;
-    const hasBackElements = (item.customDesign.backElements?.length || 0) > 0;
-    const hasAssets = (item.uploadedAssets?.length || 0) > 0;
-    return hasFrontElements || hasBackElements || hasAssets;
+    return (item.customDesign.frontElements?.length || 0) > 0 ||
+           (item.customDesign.backElements?.length || 0) > 0 ||
+           (item.uploadedAssets?.length || 0) > 0;
   }).length;
   
   const designCharge = customItemsCount * 300; 
   const totalCustomCharge = printingCharge + designCharge;
-  
   const subtotalVal = isNaN(subtotal) ? 0 : subtotal;
   const gst = Math.round((subtotalVal + totalCustomCharge) * 0.05);
   const estimatedTotal = subtotalVal + totalCustomCharge + gst;
@@ -76,10 +71,10 @@ export default function CartPage() {
       <main className={styles.main}>
         {cart.length > 0 && (
           <div className={styles.cartHeader}>
-            <h1 className={styles.title}>Your Selection</h1>
+            <h1 className={styles.title}>Your Cart</h1>
             <div className={styles.guestIndicator}>
               <ShoppingBag size={14} />
-              <span>{cartCount} Items</span>
+              <span>{cartCount} Item{cartCount !== 1 ? 's' : ''}</span>
             </div>
           </div>
         )}
@@ -87,7 +82,7 @@ export default function CartPage() {
         {cart.length === 0 ? (
           <EmptyState 
             illustration="/illustrations/empty_cart.png"
-            title="Your selection is empty"
+            title="Your cart is empty"
             description="Explore our curated collections of premium corporate apparel and start building your custom range today."
             ctaText="Explore Collection"
             ctaHref="/products"
@@ -95,80 +90,119 @@ export default function CartPage() {
           />
         ) : (
           <div className={styles.cartLayout}>
+            {/* LEFT — Cart Items */}
             <div className={styles.cartItems}>
-              {cart.map((item) => (
-                <div key={item.id} className={styles.cartItem}>
-                  <div className={styles.itemImageContainer}>
-                    {item.customDesign && <span className={styles.customBadge}>Custom</span>}
-                    <div className={styles.itemImageInner}>
-                      {item.image ? (
-                        <div className={styles.imageMainView}>
-                          <Image src={item.image} alt={item.name} fill style={{ objectFit: 'contain' }} />
-                        </div>
-                      ) : (
-                        <div style={{ opacity: 0.15, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
-                          <ShoppingBag size={48} strokeWidth={1} />
-                        </div>
-                      )}
-                      
-                      {item.mockupUrlBack && (
-                        <div className={styles.imageBackView}>
-                          <Image src={item.mockupUrlBack} alt={`${item.name} Back`} fill style={{ objectFit: 'contain' }} />
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className={styles.itemDetails}>
-                    <h3 className={styles.itemName}>{item.name}</h3>
-                    <div className={styles.itemMeta}>
-                      <span className={styles.metaBadge}>{item.code}</span>
-                      {item.customDesign && <span className={styles.metaBadge}>Personalized</span>}
-                    </div>
-                    
-                    <div className={styles.itemPrice}>₹{item.price.toLocaleString('en-IN')}</div>
+              {cart.map((item) => {
+                const itemTotal = (item.price * (item.quantity || 0)).toLocaleString('en-IN');
+                const garmentType = item.customDesign?.garmentType || "round-neck";
+                const frontEls = (item.customDesign?.frontElements || []).map(el => getElementDetails(el, garmentType, "front"));
+                const backEls = (item.customDesign?.backElements || []).map(el => getElementDetails(el, garmentType, "back"));
+                const allEls = [...frontEls, ...backEls];
+                const itemPrintCost = allEls.reduce((s, el) => s + el.cost, 0);
 
-                    <div className={styles.itemActions}>
-                      <div className={styles.quantityDisplay}>
-                        Quantity: <b>{item.quantity}</b>
+                return (
+                  <div key={item.id} className={styles.cartItem}>
+                    {/* Image */}
+                    <div className={styles.itemImageContainer}>
+                      {item.customDesign && <span className={styles.customBadge}>Custom</span>}
+                      {item.image ? (
+                        <Image src={item.image} alt={item.name} fill style={{ objectFit: 'contain' }} />
+                      ) : (
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', opacity: 0.15 }}>
+                          <ShoppingBag size={40} strokeWidth={1} />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Details */}
+                    <div className={styles.itemDetails}>
+                      <div className={styles.itemTopRow}>
+                        <div>
+                          <h3 className={styles.itemName}>{item.name}</h3>
+                          <div className={styles.itemMeta}>
+                            {item.code && <span className={styles.metaBadge}>{item.code}</span>}
+                            {item.customDesign && <span className={`${styles.metaBadge} ${styles.metaBadgeCustom}`}><Palette size={10} /> Personalized</span>}
+                          </div>
+                        </div>
+                        <button className={styles.removeBtn} onClick={() => removeFromCart(item.id)} title="Remove">
+                          <Trash2 size={15} />
+                        </button>
                       </div>
-                      <button 
-                        className={styles.removeBtn}
-                        onClick={() => removeFromCart(item.id)}
-                      >
-                        <Trash2 size={14} /> Remove
-                      </button>
+
+                      {/* Unit price */}
+                      <div className={styles.itemPrice}>
+                        ₹{item.price.toLocaleString('en-IN')} <span style={{ fontSize: '0.75rem', fontWeight: 400, color: '#888' }}>/ unit</span>
+                      </div>
+
+                      {/* Custom print summary */}
+                      {allEls.length > 0 && (
+                        <div className={styles.printSummary}>
+                          {allEls.map((el, i) => (
+                            <div key={i} className={styles.printTag}>
+                              🖨️ {el.side || ''} {el.printLabel || 'Print'} — +₹{el.cost}/u
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Qty + Total row */}
+                      <div className={styles.itemFooter}>
+                        <div className={styles.qtyChip}>
+                          <span className={styles.qtyLabel}>QTY</span>
+                          <span className={styles.qtyValue}>{item.quantity}</span>
+                        </div>
+                        <div className={styles.itemTotalBadge}>
+                          ₹{itemTotal}
+                        </div>
+                      </div>
                     </div>
                   </div>
+                );
+              })}
+
+              {/* Trust Signals */}
+              <div className={styles.trustBar}>
+                <div className={styles.trustItem}>
+                  <ShieldCheck size={18} color="#16a34a" />
+                  <span>Secure Checkout</span>
                 </div>
-              ))}
+                <div className={styles.trustItem}>
+                  <Truck size={18} color="#2563eb" />
+                  <span>Pan-India Delivery</span>
+                </div>
+                <div className={styles.trustItem}>
+                  <RotateCcw size={18} color="#9333ea" />
+                  <span>Quality Guarantee</span>
+                </div>
+              </div>
             </div>
 
+            {/* RIGHT — Order Summary */}
             <div className={styles.summary}>
               <h2 className={styles.summaryTitle}>Order Summary</h2>
-              
-              <div className={styles.summaryRow}>
-                <span>Subtotal</span>
-                <b>₹{subtotalVal.toLocaleString('en-IN')}</b>
-              </div>
-              
-              {printingCharge > 0 && (
+
+              {/* Breakdown */}
+              <div className={styles.breakdownList}>
                 <div className={styles.summaryRow}>
-                  <span>Customization Fee</span>
-                  <b>₹{printingCharge.toLocaleString('en-IN')}</b>
+                  <span>Subtotal ({cartCount} units)</span>
+                  <b>₹{subtotalVal.toLocaleString('en-IN')}</b>
                 </div>
-              )}
-              
-              {designCharge > 0 && (
+                {printingCharge > 0 && (
+                  <div className={styles.summaryRow}>
+                    <span>Customization Fee</span>
+                    <b>₹{printingCharge.toLocaleString('en-IN')}</b>
+                  </div>
+                )}
+                {designCharge > 0 && (
+                  <div className={styles.summaryRow}>
+                    <span>Designing Charge</span>
+                    <b>₹{designCharge.toLocaleString('en-IN')}</b>
+                  </div>
+                )}
                 <div className={styles.summaryRow}>
-                  <span>Designing Charge</span>
-                  <b>₹{designCharge.toLocaleString('en-IN')}</b>
+                  <span>Tax (GST 5%)</span>
+                  <b>₹{(isNaN(gst) ? 0 : gst).toLocaleString('en-IN')}</b>
                 </div>
-              )}
-              
-              <div className={styles.summaryRow}>
-                <span>Tax (GST 5%)</span>
-                <b>₹{(isNaN(gst) ? 0 : gst).toLocaleString('en-IN')}</b>
               </div>
 
               <div className={styles.divider} />
@@ -183,17 +217,27 @@ export default function CartPage() {
               </div>
 
               <button onClick={handleCheckoutClick} className={styles.checkoutBtn}>
-                {isWholesale ? "Request Bulk Quote" : "Secure Checkout"}
+                {isWholesale ? "Request Bulk Quote" : "Proceed to Checkout"}
+                <ArrowRight size={16} />
               </button>
 
-              <div className={styles.checkoutInfo}>
-                <AlertCircle size={16} style={{ flexShrink: 0, marginTop: 2, color: 'var(--tth-olive-dark)' }} />
+              {/* Promo / info strip */}
+              <div className={styles.promoStrip}>
+                <Tag size={13} color="#9333ea" />
                 <span>
                   {isWholesale 
-                    ? "As a B2B order (50+ units), this qualifies for bulk pricing. Our team will contact you with a final pro-forma invoice."
-                    : "Standard pricing applies. Complete your order to proceed to payment."
+                    ? "B2B order (50+ units) — our team will send a pro-forma invoice."
+                    : cartCount >= 10
+                    ? "Bulk order (10+ units) — 60/40 split payment available at checkout."
+                    : "Free design consultation on orders above ₹5,000."
                   }
                 </span>
+              </div>
+
+              {/* Mini trust badges */}
+              <div className={styles.miniTrust}>
+                <div className={styles.miniTrustItem}><ShieldCheck size={14} color="#16a34a" /> Razorpay Secured</div>
+                <div className={styles.miniTrustItem}><Truck size={14} color="#2563eb" /> Fast Dispatch</div>
               </div>
             </div>
           </div>

@@ -523,26 +523,52 @@ function CustomizerContent() {
         {activeTab === "Review" && (
           <div className={styles.tabContent} style={{ padding: '0' }}>
             <div className={styles.reviewGrid}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                <div className={styles.reviewMockupWrap}>
-                  <div className={styles.reviewMockupLabel}>Front View</div>
-                  <PoloCustomizer 
-                    initialState={customizerState} 
-                    isPreviewMode={true} 
-                    activeSide="front" 
-                    mockupId="review-mockup-front" 
-                    availableColors={synchronizedColors}
-                  />
+              {/* LEFT: Compact Mockup Thumbnails */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {/* Side-by-side mockup thumbnails */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div style={{ background: '#f9f9f7', border: '1px solid #e5e2da', borderRadius: '12px', overflow: 'hidden' }}>
+                    <div style={{ padding: '8px 12px', borderBottom: '1px solid #eee', fontSize: '0.65rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Front View</div>
+                    <div style={{ height: '200px', position: 'relative' }}>
+                      <PoloCustomizer 
+                        initialState={customizerState} 
+                        isPreviewMode={true} 
+                        activeSide="front" 
+                        mockupId="review-mockup-front" 
+                        availableColors={synchronizedColors}
+                      />
+                    </div>
+                  </div>
+                  <div style={{ background: '#f9f9f7', border: '1px solid #e5e2da', borderRadius: '12px', overflow: 'hidden' }}>
+                    <div style={{ padding: '8px 12px', borderBottom: '1px solid #eee', fontSize: '0.65rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Back View</div>
+                    <div style={{ height: '200px', position: 'relative' }}>
+                      <PoloCustomizer 
+                        initialState={customizerState} 
+                        isPreviewMode={true} 
+                        activeSide="back" 
+                        mockupId="review-mockup-back" 
+                        availableColors={synchronizedColors}
+                      />
+                    </div>
+                  </div>
                 </div>
-                <div className={styles.reviewMockupWrap}>
-                  <div className={styles.reviewMockupLabel}>Back View</div>
-                  <PoloCustomizer 
-                    initialState={customizerState} 
-                    isPreviewMode={true} 
-                    activeSide="back" 
-                    mockupId="review-mockup-back" 
-                    availableColors={synchronizedColors}
-                  />
+
+                {/* What's included checklist */}
+                <div style={{ background: '#f8fafc', borderRadius: '12px', padding: '16px', border: '1px solid #e2e8f0' }}>
+                  <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '12px' }}>What's Included</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {[
+                      { icon: '🎨', text: 'Custom print on garment as designed' },
+                      { icon: '📐', text: 'Industry-standard print placement' },
+                      { icon: '🏭', text: 'Quality checked before dispatch' },
+                      { icon: '📦', text: 'Pan-India delivery included' },
+                    ].map((item, i) => (
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.82rem', color: '#374151' }}>
+                        <span style={{ fontSize: '1rem' }}>{item.icon}</span>
+                        {item.text}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
 
@@ -556,6 +582,7 @@ function CustomizerContent() {
             </div>
           </div>
         )}
+
       </div>
 
       {/* Sleek Custom Toast Notification */}
