@@ -26,7 +26,7 @@
   position: relative;
   background: #f8fafc;
   overflow: hidden;
-  height: 600px;
+  height: 460px;
   width: 100%;
   border-radius: 12px;
 }
@@ -210,7 +210,7 @@
   .mainImageContainer {
     height: auto;
     aspect-ratio: 1/1;
-    max-height: 500px;
+    max-height: 380px;
   }
 
   .title {

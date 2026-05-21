@@ -58,18 +58,24 @@ export default function CanvasArea({
     const handleResize = () => {
       const w = canvas.clientWidth;
       const h = canvas.clientHeight;
-      if (w > 0 && h > 0) {
-        const fitWidthScale = (w * 0.85) / 560;
-        const fitHeightScale = (h * 0.85) / 560;
-        setDeviceScale(Math.min(1, fitWidthScale, fitHeightScale));
-      }
+      
+      // Compute scale with dynamic height fallbacks for grid mounts
+      const targetW = w > 0 ? w : (isPreviewMode ? 200 : 560);
+      const targetH = h > 0 ? h : (isPreviewMode ? 200 : 560);
+      
+      const fitWidthScale = (targetW * 0.85) / 560;
+      const fitHeightScale = (targetH * 0.85) / 560;
+      const computedScale = Math.min(1, fitWidthScale, fitHeightScale);
+      
+      console.log(`[CanvasArea] Resize: w=${w}, h=${h}, isPreviewMode=${isPreviewMode}, targetW=${targetW}, targetH=${targetH}, computedScale=${computedScale}`);
+      setDeviceScale(computedScale);
     };
     
     handleResize();
     const observer = new ResizeObserver(handleResize);
     observer.observe(canvas);
     return () => observer.disconnect();
-  }, []);
+  }, [isPreviewMode]);
 
   // Advanced gestures (Two-finger pan and pinch zoom)
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -116,12 +122,6 @@ export default function CanvasArea({
         const delta = e.deltaY;
         const newZoom = zoomRef.current - delta * 0.005;
         onZoomChangeRef.current(Math.max(0.3, Math.min(3.0, newZoom)));
-      } else {
-        e.preventDefault();
-        setPan(prev => ({
-          x: prev.x - e.deltaX * 0.8,
-          y: prev.y - e.deltaY * 0.8
-        }));
       }
     };
 
@@ -255,10 +255,13 @@ export default function CanvasArea({
               />
             )}
             
-            {/* Color & Texture Layers: Only applied if a color is selected */}
-            {bodyColor !== "transparent" && (() => {
+            {/* Color & Texture Layers: Rendered for all states, using white as fallback if transparent */}
+            {(() => {
+              const isTransparent = bodyColor === "transparent";
+              const effectiveColor = isTransparent ? "#ffffff" : bodyColor;
+              
               // Determine if the color is very dark (e.g. black) to adjust opacity
-              const hex = bodyColor.replace("#", "");
+              const hex = effectiveColor.replace("#", "");
               const r = parseInt(hex.substring(0,2), 16) || 0;
               const g = parseInt(hex.substring(2,4), 16) || 0;
               const b = parseInt(hex.substring(4,6), 16) || 0;
@@ -273,17 +276,17 @@ export default function CanvasArea({
                 ? "brightness(2.2) contrast(1.3)" 
                 : luminance < 0.35 
                   ? "brightness(1.5) contrast(1.15)"
-                  : bodyColor.toLowerCase() === "#ffffff" ? "none" : "brightness(1.1)";
+                  : effectiveColor.toLowerCase() === "#ffffff" ? "none" : "brightness(1.1)";
 
               // Texture opacity: more visible on dark colors  
-              const textureOpacity = luminance < 0.15 ? 0.70 : bodyColor.toLowerCase() === "#ffffff" ? 1 : 0.82;
+              const textureOpacity = luminance < 0.15 ? 0.70 : effectiveColor.toLowerCase() === "#ffffff" ? 1 : 0.82;
 
               return (
                 <>
                   <div
                     className={styles.garmentColorLayer}
                     style={{
-                      backgroundColor: bodyColor,
+                      backgroundColor: effectiveColor,
                       opacity: colorOpacity,
                       maskImage: `url(${currentImg})`,
                       WebkitMaskImage: `url(${currentImg})`,
