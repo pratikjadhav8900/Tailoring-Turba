@@ -915,16 +915,17 @@
 /* ─── FLOATING ACTION BTNS (rotate/move/delete) ───────────────────── */
 .floatingActionBtns {
   position: absolute;
-  bottom: -40px;
+  bottom: -44px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   gap: 10px;
   pointer-events: auto;
   z-index: 20;
+  white-space: nowrap;
 }
 .circleActionBtn {
-  width: 30px; height: 30px;
+  width: 34px; height: 34px;
   background: white;
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
@@ -933,6 +934,10 @@
   color: #4B5563;
   border: 1px solid #E5E7EB;
   transition: all 0.15s;
+  /* Critical: allow touch events to pass through for drag handle */
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 .circleActionBtn:hover { background: #F3F4F6; }
 .circleActionBtnDanger { color: #EF4444; }
@@ -1045,10 +1050,22 @@
     border-top: 1px solid #eee;
     box-shadow: 0 -8px 24px rgba(0,0,0,0.12);
     border-radius: 20px 20px 0 0;
-    padding: 24px 24px 40px;
+    padding: 20px 20px env(safe-area-inset-bottom, 24px);
+    padding-bottom: max(env(safe-area-inset-bottom), 24px);
     z-index: 100;
-    max-height: 60vh;
+    max-height: 65vh;
     overflow-y: auto;
+    /* Smooth drag indicator */
+  }
+  /* Drag handle pill at top of bottom sheet */
+  .contextPanel::before {
+    content: '';
+    display: block;
+    width: 36px;
+    height: 4px;
+    background: #D1D5DB;
+    border-radius: 2px;
+    margin: 0 auto 16px;
   }
 
   .canvasColumn {
@@ -1056,15 +1073,25 @@
     min-height: 0;
   }
 
+  .canvasWrapper {
+    flex: 1;
+    min-height: 0;
+    /* When context panel is open, add padding so canvas isn't hidden behind it */
+    padding-bottom: 0;
+  }
+
   .canvasArea {
     flex: 1;
     min-height: 0;
     padding: 0;
     background: #ECEEF2;
+    /* Prevent browser scroll from stealing touch events */
+    touch-action: none;
+    overscroll-behavior: none;
   }
 
   .garmentContainer {
-    margin-top: -20px;
+    margin-top: 0;
   }
 
   .rightThumbnails { right: 10px; top: 10px; gap: 8px; }
@@ -1079,7 +1106,17 @@
     gap: 6px;
   }
 
-  .zoomBar { bottom: 12px; }
+  .zoomBar { bottom: 16px; }
+
+  /* Larger floating action buttons for touch */
+  .floatingActionBtns {
+    bottom: -48px;
+    gap: 14px;
+  }
+  .circleActionBtn {
+    width: 40px;
+    height: 40px;
+  }
 }
 
 /* Help Button */

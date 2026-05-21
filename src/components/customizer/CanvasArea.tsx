@@ -46,6 +46,9 @@ export default function CanvasArea({
   const editRef = useRef<HTMLTextAreaElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
 
+  // Double-tap detection for mobile text editing
+  const lastTapRef = useRef<{ id: string; time: number } | null>(null);
+
   const [deviceScale, setDeviceScale] = useState(1);
 
   React.useEffect(() => {
@@ -184,6 +187,30 @@ export default function CanvasArea({
       }
     },
     [activeElementId, editingId, isPreviewMode, onElementClick]
+  );
+
+  // Double-tap handler for mobile touch devices
+  const handleElementTouchEnd = useCallback(
+    (el: DesignElement, e: React.TouchEvent) => {
+      if (isPreviewMode || el.type !== "text") return;
+      e.stopPropagation();
+
+      const now = Date.now();
+      const last = lastTapRef.current;
+
+      if (last && last.id === el.id && now - last.time < 350) {
+        // Double-tap detected — enter edit mode
+        lastTapRef.current = null;
+        onElementClick(el.id);
+        setEditDraft(el.value);
+        setEditingId(el.id);
+        setTimeout(() => editRef.current?.focus(), 50);
+      } else {
+        lastTapRef.current = { id: el.id, time: now };
+        onElementClick(el.id);
+      }
+    },
+    [isPreviewMode, onElementClick]
   );
 
   const commitEdit = useCallback(() => {
@@ -416,6 +443,7 @@ export default function CanvasArea({
                     className={styles.rndContent}
                     style={{ transform: `rotate(${el.rotation || 0}deg)`, width: "100%", height: "100%" }}
                     onClick={(e) => handleElementClick(el, e)}
+                    onTouchEnd={(e) => handleElementTouchEnd(el, e)}
                   >
                     {el.type === "text" ? (
                       isEditing ? (
@@ -461,7 +489,8 @@ export default function CanvasArea({
                             justifyContent: el.textAlign === "left" ? "flex-start" : el.textAlign === "right" ? "flex-end" : "center",
                             height: "100%",
                             width: "100%",
-                            overflow: "hidden"
+                            overflow: "hidden",
+                            touchAction: "none",
                           }}
                         >
                           {el.value}
@@ -473,7 +502,7 @@ export default function CanvasArea({
                         alt="logo"
                         draggable={false}
                         className="customizer-drag-handle"
-                        style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                        style={{ width: "100%", height: "100%", objectFit: "contain", touchAction: "none" }}
                       />
                     )}
                   </div>
@@ -495,7 +524,11 @@ export default function CanvasArea({
                       >
                         <Copy size={13} />
                       </div>
-                      <div className={`${styles.circleActionBtn} customizer-drag-handle`} title="Move">
+                      <div 
+                        className={`${styles.circleActionBtn} customizer-drag-handle`} 
+                        title="Move"
+                        style={{ touchAction: 'none', cursor: 'grab' }}
+                      >
                         <Move size={13} />
                       </div>
                       <div

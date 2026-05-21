@@ -513,13 +513,39 @@ export default function ToolPanel({
                       <input
                         type="text"
                         className={styles.textElementInput}
-                        style={{ width: '100%', padding: '8px 12px' }}
+                        style={{ 
+                          width: '100%', 
+                          padding: '10px 12px',
+                          border: '2px solid #007aff',
+                          borderRadius: '8px',
+                          fontSize: '1rem',
+                          fontWeight: 600,
+                          background: '#f0f7ff',
+                          outline: 'none',
+                        }}
                         value={activeElement.value}
                         onChange={(e) => onUpdateElement?.(activeElement.id, { value: e.target.value })}
-                        placeholder="Text Content"
+                        placeholder="Type your text here..."
+                        autoFocus
                       />
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        background: '#FFF7ED',
+                        border: '1px solid #FED7AA',
+                        borderRadius: '6px',
+                        padding: '7px 10px',
+                        fontSize: '0.75rem',
+                        color: '#9A3412',
+                        fontWeight: 500,
+                      }}>
+                        <span style={{ fontSize: '0.9rem' }}>✏️</span>
+                        Tap the field above to change your text
+                      </div>
                     </div>
                   )}
+
 
                   {/* Font Family (Text Only) */}
                   {activeElement.type === "text" && (
