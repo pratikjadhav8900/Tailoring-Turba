@@ -363,25 +363,7 @@ export default function PoloCustomizer({
                 </button>
               ))}
 
-              {/* Garment Preview Size Selector */}
-              <div className={styles.sizeSelectorCard}>
-                <span className={styles.sizeSelectorLabel}>Preview Size</span>
-                {(["S", "M", "L", "XL", "XXL"] as const).map((sz) => {
-                  const chestInches = sz === "S" ? "18\"" : sz === "M" ? "20\"" : sz === "L" ? "22\"" : sz === "XL" ? "24\"" : "26\"";
-                  return (
-                    <button
-                      key={sz}
-                      type="button"
-                      className={`${styles.sizeSelectorBtn} ${previewSize === sz ? styles.sizeSelectorBtnActive : ""}`}
-                      onClick={() => setPreviewSize(sz)}
-                      title={`Chest width: ${chestInches}`}
-                    >
-                      <span className={styles.sizeSelectorText}>{sz}</span>
-                      <span className={styles.sizeSelectorSubtext}>{chestInches}</span>
-                    </button>
-                  );
-                })}
-              </div>
+
             </div>
           )}
         </CanvasArea>
