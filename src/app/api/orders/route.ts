@@ -2,7 +2,8 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { sendOperationsOrderAlert } from "@/lib/mail";
+import { sendOperationsOrderAlert, sendOrderConfirmationEmail } from "@/lib/mail";
+import { generateInvoicePdf } from "@/lib/pdf";
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -106,11 +107,62 @@ export async function POST(req: NextRequest) {
     // Notify Operations
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
     const orderDetailsUrl = `${baseUrl}/admin/orders/${order.id}`;
-    
-    // We trigger the email without awaiting to prevent blocking the response
     sendOperationsOrderAlert(order.id, orderDetailsUrl).catch(err => {
       console.error("[MAIL_ERROR] Failed to send operations alert:", err);
     });
+
+    // Fetch full order with user + address for PDF
+    const fullOrder = await prisma.order.findUnique({
+      where: { id: order.id },
+      include: {
+        items: { include: { product: true } },
+        user: { select: { name: true, email: true, phone: true } },
+        shippingAddress: true,
+      },
+    });
+
+    // Generate Pro Forma Invoice PDF and email to customer
+    if (fullOrder?.user?.email) {
+      const isSplit = fullOrder.isSplitPayment ?? false;
+      const pdfOrder = {
+        id: fullOrder.id,
+        orderNumber: fullOrder.orderNumber,
+        createdAt: fullOrder.createdAt,
+        totalAmount: fullOrder.totalAmount,
+        isSplitPayment: isSplit,
+        amountPaid: fullOrder.amountPaid ?? 0,
+        remainingAmount: fullOrder.remainingAmount ?? 0,
+        user: {
+          name: fullOrder.user.name,
+          email: fullOrder.user.email,
+          phone: fullOrder.user.phone,
+        },
+        shippingAddress: fullOrder.shippingAddress ? {
+          name: fullOrder.shippingAddress.name,
+          street: fullOrder.shippingAddress.street,
+          city: fullOrder.shippingAddress.city,
+          state: fullOrder.shippingAddress.state,
+          postalCode: fullOrder.shippingAddress.postalCode,
+          country: fullOrder.shippingAddress.country,
+        } : null,
+        items: fullOrder.items.map(i => ({ product: { name: i.product.name }, quantity: i.quantity, price: i.price })),
+        type: 'PRO FORMA INVOICE' as const,
+      };
+
+      generateInvoicePdf(pdfOrder).then(pdfBuffer => {
+        return sendOrderConfirmationEmail(
+          fullOrder.user!.email!,
+          fullOrder.user!.name || 'Customer',
+          fullOrder.id,
+          isSplit,
+          fullOrder.amountPaid ?? 0,
+          pdfBuffer,
+          fullOrder.orderNumber ?? undefined
+        );
+      }).catch(err => {
+        console.error("[MAIL_ERROR] Failed to send Pro Forma Invoice email:", err);
+      });
+    }
 
     return NextResponse.json({ orderId: order.id, totalAmount: order.totalAmount }, { status: 201 });
   } catch (err) {

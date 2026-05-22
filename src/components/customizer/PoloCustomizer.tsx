@@ -6,6 +6,7 @@ import CanvasArea from "./CanvasArea";
 import ToolPanel from "./ToolPanel";
 import Image from "next/image";
 import { GARMENTS } from "@/lib/fabric-data";
+import { ALL_PRESETS as TEXT_PRESETS } from "@/lib/presets";
 
 type ActiveTool = "Text" | "Uploads" | "Colors" | "Names" | "Guide" | "Properties" | null;
 
@@ -136,6 +137,30 @@ export default function PoloCustomizer({
     pushToHistory(nextFront, nextBack);
   };
 
+  const handleElementClick = (id: string | null) => {
+    // If we're deselecting the current active element, check if it's empty
+    if (activeElementId && id !== activeElementId) {
+      const activeEl = elements.find(e => e.id === activeElementId);
+      if (activeEl) {
+        if (activeEl.type === "text" && (!activeEl.value || !activeEl.value.trim())) {
+          // Remove from state directly to avoid circular dependencies
+          const newElements = elements.filter(el => el.id !== activeElementId);
+          if (activeSide === "front") setFrontElements(newElements);
+          else setBackElements(newElements);
+        } else if (activeEl.type === "preset") {
+          const isArray = Array.isArray(activeEl.presetText);
+          const lines = isArray ? (activeEl.presetText as string[]) : [(activeEl.presetText as string) || ""];
+          if (!lines.some(line => line && line.trim())) {
+            const newElements = elements.filter(el => el.id !== activeElementId);
+            if (activeSide === "front") setFrontElements(newElements);
+            else setBackElements(newElements);
+          }
+        }
+      }
+    }
+    setActiveElementId(id);
+  };
+
   useEffect(() => {
     if (onChange) {
       onChange({ bodyColor, garmentType, frontElements, backElements, previewSize });
@@ -164,7 +189,45 @@ export default function PoloCustomizer({
       fontSize: 24,
     };
     setElementsWithHistory([...elements, newEl]);
-    setActiveElementId(id);
+    handleElementClick(id);
+    setActiveTool(null);
+  };
+
+  const addPreset = (presetId: string, text: string | string[]) => {
+    const preset = TEXT_PRESETS.find(p => p.id === presetId);
+    if (!preset) return;
+
+    const id = Date.now().toString();
+    
+    let width = preset.width;
+    let height = preset.height;
+    if (width > 200) {
+      const ratio = 200 / width;
+      width = 200;
+      height = height * ratio;
+    }
+    
+    const x = Math.round((560 - width) / 2);
+    const y = Math.round((560 - height) / 2);
+
+    const newEl: DesignElement = {
+      id,
+      type: "preset",
+      x,
+      y,
+      width,
+      height,
+      value: "",
+      color: "",
+      printType: "dtf",
+      originalWidth: preset.width,
+      originalHeight: preset.height,
+      presetId,
+      presetText: text,
+      rotation: 0,
+    };
+    setElementsWithHistory([...elements, newEl]);
+    handleElementClick(id);
     setActiveTool(null);
   };
 
@@ -226,6 +289,58 @@ export default function PoloCustomizer({
     }
   };
 
+  // Called by ToolPanel QR modal once mobile image URL is ready
+  const addLogoFromUrl = async (url: string) => {
+    try {
+      const img = new window.Image();
+      img.src = url;
+      await new Promise((resolve) => {
+        img.onload = resolve;
+        img.onerror = resolve;
+      });
+
+      const originalWidth = img.naturalWidth || 400;
+      const originalHeight = img.naturalHeight || 400;
+      const aspectRatio = originalWidth / originalHeight;
+
+      let width = 160;
+      let height = 160;
+      if (aspectRatio > 1) {
+        height = Math.round(160 / aspectRatio);
+      } else {
+        width = Math.round(160 * aspectRatio);
+      }
+
+      const x = Math.round((560 - width) / 2);
+      const y = 180;
+
+      const currentElements = activeSideRef.current === "front" ? frontElements : backElements;
+      const newEl: DesignElement = {
+        id: Date.now().toString(),
+        type: "logo",
+        x,
+        y,
+        width,
+        height,
+        value: url,
+        color: "",
+        printType: "dtf",
+        originalWidth,
+        originalHeight,
+      };
+      if (activeSideRef.current === "front") {
+        setFrontElements([...currentElements, newEl]);
+        pushToHistory([...currentElements, newEl], backElements);
+      } else {
+        setBackElements([...currentElements, newEl]);
+        pushToHistory(frontElements, [...currentElements, newEl]);
+      }
+      setActiveTool(null);
+    } catch (err) {
+      console.error("Mobile logo add error:", err);
+    }
+  };
+
   const removeElement = (id: string, e?: React.SyntheticEvent) => {
     e?.stopPropagation();
     if (activeElementId === id) setActiveElementId(null);
@@ -253,7 +368,7 @@ export default function PoloCustomizer({
       const newId = Date.now().toString();
       const pastedEl = { ...clipboard, id: newId, x: clipboard.x + 20, y: clipboard.y + 20 };
       setElementsWithHistory([...elements, pastedEl]);
-      setActiveElementId(newId);
+      handleElementClick(newId);
     }
   };
 
@@ -275,7 +390,7 @@ export default function PoloCustomizer({
           const newId = Date.now().toString();
           const pastedEl = { ...clipboard, id: newId, x: clipboard.x + 20, y: clipboard.y + 20 };
           setElementsWithHistory([...elements, pastedEl]);
-          setActiveElementId(newId);
+          handleElementClick(newId);
         }
       } else if (e.key === 'Delete' || e.key === 'Backspace') {
         if (activeElementId) {
@@ -304,7 +419,9 @@ export default function PoloCustomizer({
           onToolSelect={setActiveTool as any}
           onColorSelect={setBodyColor}
           onAddText={addText}
+          onAddPreset={addPreset}
           onUploadClick={() => fileInputRef.current?.click()}
+          onAddLogoUrl={addLogoFromUrl}
           availableColors={availableColors}
           textElements={elements.filter(e => e.type === "text")}
           onUpdateTextElement={(id, val) => updateElement(id, { value: val })}
@@ -336,7 +453,7 @@ export default function PoloCustomizer({
           mockupId={mockupId}
           zoom={zoom}
           onZoomChange={setZoom}
-          onElementClick={setActiveElementId}
+          onElementClick={handleElementClick}
           onUpdateElement={updateElement}
           onRemoveElement={removeElement}
           onCopyElement={copyElement}
@@ -351,7 +468,10 @@ export default function PoloCustomizer({
                 <button
                   key={side}
                   className={`${styles.thumbnailBtn} ${activeSide === side ? styles.thumbnailBtnActive : ""}`}
-                  onClick={() => setActiveSide(side)}
+                  onClick={() => {
+                    handleElementClick(null);
+                    setActiveSide(side);
+                  }}
                 >
                   <div className={styles.thumbnailImgWrap}>
                     <Image

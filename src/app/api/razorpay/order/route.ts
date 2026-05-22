@@ -66,7 +66,33 @@ export async function POST(request: NextRequest) {
     const chargeAmount = isSplitPayment ? amount * 0.60 : amount;
     const remainingAmount = isSplitPayment ? amount * 0.40 : 0;
 
-    // 3. Create the Razorpay order first to get the ID
+    // 3. Ensure all items have a valid productId to prevent DB foreign key errors
+    let defaultCustomProductId: string | null = null;
+    for (const item of items) {
+      if (!item.productId) {
+        if (!defaultCustomProductId) {
+          let customProduct = await prisma.product.findFirst({
+            where: { name: "Custom Design" }
+          });
+          if (!customProduct) {
+            const category = await prisma.category.findFirst();
+            if (!category) throw new Error("Cannot create fallback product: No categories exist.");
+            customProduct = await prisma.product.create({
+              data: {
+                name: "Custom Design",
+                description: "User submitted custom design",
+                basePrice: 0,
+                categoryId: category.id,
+              }
+            });
+          }
+          defaultCustomProductId = customProduct.id;
+        }
+        item.productId = defaultCustomProductId;
+      }
+    }
+
+    // 4. Create the Razorpay order first to get the ID
     const razorpay = getRazorpay();
     console.log('[RAZORPAY] Initiating order creation for charge amount:', chargeAmount, 'Total amount:', amount);
     

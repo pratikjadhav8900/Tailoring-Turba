@@ -258,6 +258,7 @@
     flex-direction: column-reverse;
     padding: 12px;
     gap: 16px;
+    align-items: stretch;
   }
 }
 

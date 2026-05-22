@@ -104,30 +104,33 @@ export default function Footer() {
               Contact
             </h4>
             <div style={{ display: "flex", flexDirection: "column", gap: "12px", color: "#94a3b8", fontSize: "0.9rem", lineHeight: 1.6 }}>
-              <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
-                <Lucide.Mail size={16} style={{ flexShrink: 0, marginTop: "2px", opacity: 0.7 }} />
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <Lucide.Mail size={15} style={{ flexShrink: 0, opacity: 0.7 }} />
                 <span>tailoringturba@gmail.com</span>
               </div>
-              <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
-                <Lucide.Phone size={16} style={{ flexShrink: 0, marginTop: "2px", opacity: 0.7 }} />
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <Lucide.Phone size={15} style={{ flexShrink: 0, opacity: 0.7 }} />
                 <span>+91 90225 53346</span>
               </div>
               <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
-                <Lucide.MapPin size={16} style={{ flexShrink: 0, marginTop: "2px", opacity: 0.7 }} />
-                <span>321/1 Pandit Jawaharlal Nehru Marg Pune 411042, Sanjay Departments, Pune, Maharashtra 411042, IN</span>
+                <Lucide.MapPin size={15} style={{ flexShrink: 0, marginTop: "3px", opacity: 0.7 }} />
+                <span style={{ maxWidth: "240px" }}>321/1 Pandit Jawaharlal Nehru Marg, Sanjay Departments, Pune 411042, Maharashtra, IN</span>
               </div>
             </div>
-            <Link href="/contact" style={{
-              display: "inline-block", marginTop: "20px",
-              padding: "10px 20px", borderRadius: "8px",
-              background: "rgba(255,255,255,0.1)", color: "white",
-              textDecoration: "none", fontSize: "0.85rem",
-              fontWeight: 600, transition: "background 0.2s",
-              border: "1px solid rgba(255,255,255,0.12)"
-            }}>
-              Get In Touch →
-            </Link>
+            <div style={{ marginTop: "20px" }}>
+              <Link href="/contact" style={{
+                display: "inline-flex", alignItems: "center", gap: "6px",
+                padding: "10px 20px", borderRadius: "8px",
+                background: "rgba(255,255,255,0.1)", color: "white",
+                textDecoration: "none", fontSize: "0.85rem",
+                fontWeight: 600, transition: "background 0.2s",
+                border: "1px solid rgba(255,255,255,0.12)"
+              }}>
+                Get In Touch →
+              </Link>
+            </div>
           </div>
+
         </div>
 
         {/* Bottom Row */}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, ExternalLink, Download, Calendar } from "lucide-react";
+import { Loader2, ExternalLink, Download, Calendar, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import styles from "../page.module.css";
 import BigShipShipmentModal from "./BigShipShipmentModal";
@@ -22,6 +22,24 @@ export default function AdminOrdersClient({ initialOrders }: { initialOrders: Or
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [selectedForBigShip, setSelectedForBigShip] = useState<Order | null>(null);
+  const [resendingInvoice, setResendingInvoice] = useState<string | null>(null);
+
+  const resendInvoice = async (orderId: string) => {
+    setResendingInvoice(orderId);
+    try {
+      const res = await fetch(`/api/orders/${orderId}/resend-invoice?type=proforma`, { method: "POST" });
+      const data = await res.json();
+      if (res.ok) {
+        alert(`✅ ${data.message}`);
+      } else {
+        alert(`❌ ${data.error || "Failed to resend invoice"}`);
+      }
+    } catch {
+      alert("Network error. Please try again.");
+    } finally {
+      setResendingInvoice(null);
+    }
+  };
 
   const updateStatus = async (orderId: string, newStatus: string) => {
     setIsUpdating(orderId);
@@ -248,25 +266,53 @@ export default function AdminOrdersClient({ initialOrders }: { initialOrders: Or
                     </td>
                     <td className={styles.date}>{new Date(order.createdAt).toLocaleDateString("en-IN")}</td>
                     <td>
-                      <Link
-                        href={`/admin/orders/${order.id}`}
-                        title="View Full Order & Download Assets"
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "4px",
-                          padding: "5px 10px",
-                          background: "#435b43",
-                          color: "white",
-                          borderRadius: "6px",
-                          fontSize: "0.78rem",
-                          fontWeight: 600,
-                          textDecoration: "none",
-                        }}
-                      >
-                        <ExternalLink size={13} />
-                        Details
-                      </Link>
+                      <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                        <Link
+                          href={`/admin/orders/${order.id}`}
+                          title="View Full Order & Download Assets"
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "4px",
+                            padding: "5px 10px",
+                            background: "#435b43",
+                            color: "white",
+                            borderRadius: "6px",
+                            fontSize: "0.78rem",
+                            fontWeight: 600,
+                            textDecoration: "none",
+                          }}
+                        >
+                          <ExternalLink size={13} />
+                          Details
+                        </Link>
+                        <button
+                          onClick={() => resendInvoice(order.id)}
+                          disabled={resendingInvoice === order.id}
+                          title="Re-generate & resend invoice with new template"
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "4px",
+                            padding: "5px 10px",
+                            background: "#eff6ff",
+                            color: "#2563eb",
+                            border: "1px solid #2563eb40",
+                            borderRadius: "6px",
+                            fontSize: "0.78rem",
+                            fontWeight: 600,
+                            cursor: resendingInvoice === order.id ? "not-allowed" : "pointer",
+                            opacity: resendingInvoice === order.id ? 0.6 : 1,
+                          }}
+                        >
+                          {resendingInvoice === order.id ? (
+                            <Loader2 size={13} className="animate-spin" />
+                          ) : (
+                            <RefreshCw size={13} />
+                          )}
+                          Resend
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );

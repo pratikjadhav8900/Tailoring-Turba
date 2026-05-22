@@ -144,6 +144,9 @@ export async function POST(request: NextRequest) {
     // 6. Generate PDF invoice & Send email notification
     if (order) {
       try {
+        const customerEmail = payment.notes?.email || payment.email || order.user.email;
+        const customerName = payment.notes?.customerName || order.user.name || "Customer";
+
         const pdfBuffer = await generateInvoicePdf({
           id: order.id,
           orderNumber: order.orderNumber,
@@ -153,8 +156,8 @@ export async function POST(request: NextRequest) {
           amountPaid: order.amountPaid,
           remainingAmount: order.remainingAmount,
           user: {
-            name: order.user.name,
-            email: order.user.email,
+            name: customerName as string,
+            email: customerEmail as string,
             phone: order.user.phone,
           },
           shippingAddress: order.shippingAddress ? {
@@ -172,12 +175,13 @@ export async function POST(request: NextRequest) {
             quantity: i.quantity,
             price: i.price,
           })),
+          type: isSecondPayment ? 'INVOICE' : 'PRO FORMA INVOICE',
         });
 
-        if (order.user.email) {
+        if (customerEmail) {
           await sendOrderConfirmationEmail(
-            order.user.email,
-            order.user.name || "Customer",
+            customerEmail as string,
+            customerName as string,
             order.id,
             order.isSplitPayment,
             order.amountPaid,

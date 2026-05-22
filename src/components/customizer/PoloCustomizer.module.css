@@ -1090,6 +1090,13 @@
     overscroll-behavior: none;
   }
 
+  /* Preview mode (Review tab) — allow page scroll to pass through */
+  .canvasAreaPreview {
+    touch-action: auto !important;
+    overscroll-behavior: auto !important;
+    pointer-events: none !important;
+  }
+
   .garmentContainer {
     margin-top: 0;
   }
@@ -1406,4 +1413,16 @@
   opacity: 0.9;
   margin-top: -1px;
 }
+
+/* ─── DESKTOP-ONLY UTILITY ────────────────────────────────────────── */
+/* Hides elements that only make sense on desktop (e.g. "Upload from phone") */
+.desktopOnly {
+  display: flex;
+}
+@media (max-width: 768px) {
+  .desktopOnly {
+    display: none !important;
+  }
+}
+
 

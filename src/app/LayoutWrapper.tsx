@@ -24,13 +24,14 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
   const hideNavigation = isAuthPage || isAdminPage || isDashboardPage || isCustomizer;
 
   return (
-    <div className={mounted && !hideNavigation ? "has-mobile-nav" : ""} style={{ overflowX: "hidden", width: "100%", position: "relative" }}>
+    <div className={mounted && !hideNavigation ? "has-mobile-nav" : ""}>
       {mounted && !hideNavigation && (
         <div key="nav-container" className="global-nav-container">
           <div style={{ position: "fixed", top: 0, left: 0, width: "100%", zIndex: 1001, height: "38px", overflow: "hidden" }}>
             <MarqueeTicker />
           </div>
-          <div style={{ paddingTop: "38px" }}>
+          {/* Acts as a spacer matching the fixed Navbar height to prevent content layout shift */}
+          <div className="h-[70px] lg:h-[80px]" style={{ paddingTop: "38px", boxSizing: "content-box" }}>
             <Navbar />
           </div>
         </div>

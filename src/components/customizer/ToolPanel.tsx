@@ -1,15 +1,23 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
-  Type, UploadCloud, Shirt, Users, X, Plus, ArrowUpRight, Smartphone, Trash2, LogIn, HelpCircle,
-  Sliders, Bold, Underline, AlignLeft, Copy, ChevronUp, ChevronDown, Link2
+  Type, UploadCloud, Shirt, X, Plus, ArrowUpRight, Smartphone, Trash2, LogIn, HelpCircle,
+  Sliders, ArrowLeft, LayoutTemplate, Bold, Underline, AlignLeft, Copy, ChevronUp, ChevronDown, Link2
 } from "lucide-react";
+import { useSession, signIn } from "next-auth/react";
 import styles from "./PoloCustomizer.module.css";
 import { COLOR_PRESETS, GARMENTS } from "@/lib/fabric-data";
+import { ALL_PRESETS as TEXT_PRESETS } from "@/lib/presets";
 import { DesignElement } from "@/types/customizer";
 import { getElementDetails, getPrintableAreaDimensionsPx, SIZE_SCALES } from "@/lib/customizer-utils";
 
-type ActiveTool = "Text" | "Uploads" | "Colors" | "Names" | "Guide" | "Properties" | null;
+type ActiveTool = "Text" | "Uploads" | "Colors" | "Presets" | "Guide" | "Properties" | null;
+
+type UserAsset = {
+  id: string;
+  url: string;
+  createdAt: string;
+};
 
 interface ToolPanelProps {
   activeTool: ActiveTool;
@@ -18,14 +26,13 @@ interface ToolPanelProps {
   onToolSelect: (tool: ActiveTool) => void;
   onColorSelect: (color: string) => void;
   onAddText: (text?: string) => void;
+  onAddPreset?: (presetId: string, text: string | string[]) => void;
   onUploadClick: () => void;
+  onAddLogoUrl?: (url: string) => void;
   availableColors?: string[];
-  // Text elements on canvas so we can list them in the Text panel
   textElements?: DesignElement[];
   onUpdateTextElement?: (id: string, value: string) => void;
   onRemoveElement?: (id: string) => void;
-  
-  // Properties Inspector Props
   activeElement?: DesignElement | null;
   onUpdateElement?: (id: string, updates: Partial<DesignElement>) => void;
   onCopyElement?: (id: string, e?: React.SyntheticEvent) => void;
@@ -38,19 +45,16 @@ interface ToolPanelProps {
 const SIDEBAR_TOOLS = [
   { key: "Colors" as ActiveTool,  icon: Shirt,       label: "Material\ncolor" },
   { key: "Text" as ActiveTool,    icon: Type,        label: "Text" },
-  { key: "Names" as ActiveTool,   icon: Users,       label: "Names" },
+  { key: "Presets" as ActiveTool, icon: LayoutTemplate, label: "Font\ncombos" },
   { key: "Uploads" as ActiveTool, icon: UploadCloud, label: "Uploads" },
   { key: "Properties" as ActiveTool, icon: Sliders,  label: "Edit\nElement", hideWhenNoElement: true },
   { key: "Guide" as ActiveTool,   icon: HelpCircle,  label: "Printing\nGuide" },
 ];
 
 const FONTS = [
-  // Google Fonts
   "Inter", "Outfit", "Oswald", "Montserrat", "Playfair Display", "Bebas Neue",
   "Roboto", "Poppins", "Lato", "Raleway", "Aladin", "Arimo", "Abel",
   "Abril Fatface", "Adamina", "Advent Pro", "Alegreya", "Alex Brush", "Allison",
-
-  // Windows System Fonts (C:\Windows\Fonts)
   "Arial", "Arial Black", "Book Antiqua", "Calibri", "Candara", "Century Gothic",
   "Comic Sans MS", "Consolas", "Courier New", "Franklin Gothic Medium",
   "Garamond", "Georgia", "Impact", "Lucida Console", "Lucida Sans Unicode",
@@ -73,7 +77,6 @@ const TEXT_COLORS = [
   { name: "Teal",       hex: "#0D9488" }
 ];
 
-// Map hex to a readable color name
 const COLOR_NAME_MAP: Record<string, string> = {
   "#FFFFFF": "White",
   "#111111": "Jet Black",
@@ -94,18 +97,66 @@ function getColorName(hex: string): string {
 
 export default function ToolPanel({
   activeTool, bodyColor, isUploading,
-  onToolSelect, onColorSelect, onAddText, onUploadClick,
+  onToolSelect, onColorSelect, onAddText, onAddPreset, onUploadClick, onAddLogoUrl,
   availableColors, textElements = [], onUpdateTextElement, onRemoveElement,
   activeElement, onUpdateElement, onCopyElement, garmentType, activeSide,
   previewSize = "M", onPreviewSizeChange,
 }: ToolPanelProps) {
-  const [newText, setNewText] = useState("Your Text Here");
-  const [names, setNames] = useState("");
-
+  const { data: session } = useSession();
   const [showColorPicker, setShowColorPicker] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
+  const [userAssets, setUserAssets] = useState<UserAsset[]>([]);
+  const [isLoadingAssets, setIsLoadingAssets] = useState(false);
+  const [presetInput, setPresetInput] = useState("");
+  const [activeCategory, setActiveCategory] = useState("All");
 
-  // Close color picker when clicking outside
+  useEffect(() => {
+    if (activeTool !== "Uploads" || !session?.user?.id) return;
+    if (!isUploading) {
+      setIsLoadingAssets(true);
+      fetch('/api/user-assets')
+        .then(res => res.json())
+        .then(data => {
+          if (data.assets) setUserAssets(data.assets);
+        })
+        .finally(() => setIsLoadingAssets(false));
+    }
+  }, [activeTool, session, isUploading]);
+
+  const [showQrModal, setShowQrModal] = useState(false);
+  const [qrSessionId, setQrSessionId] = useState<string | null>(null);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const openQrModal = useCallback(() => {
+    const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    setQrSessionId(id);
+    setShowQrModal(true);
+    fetch(`/api/upload-session?session=${id}`).catch(() => {});
+  }, []);
+
+  const closeQrModal = useCallback(() => {
+    setShowQrModal(false);
+    setQrSessionId(null);
+    if (pollRef.current) clearInterval(pollRef.current);
+  }, []);
+
+  useEffect(() => {
+    if (!showQrModal || !qrSessionId) return;
+    pollRef.current = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/upload-session?session=${qrSessionId}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.url) {
+          if (pollRef.current) clearInterval(pollRef.current);
+          onAddLogoUrl?.(data.url);
+          setTimeout(closeQrModal, 2000);
+        }
+      } catch { }
+    }, 2000);
+    return () => { if (pollRef.current) clearInterval(pollRef.current); };
+  }, [showQrModal, qrSessionId, onAddLogoUrl, closeQrModal]);
+
   useEffect(() => {
     if (!showColorPicker) return;
     const handler = (e: MouseEvent) => {
@@ -261,7 +312,6 @@ export default function ToolPanel({
 
   return (
     <>
-      {/* ── Narrow Icon Sidebar ───────────────────────────────────── */}
       <div className={styles.leftSidebar}>
         {SIDEBAR_TOOLS.map(({ key, icon: Icon, label, hideWhenNoElement }) => {
           if (hideWhenNoElement && !activeElement) return null;
@@ -278,15 +328,13 @@ export default function ToolPanel({
         })}
       </div>
 
-      {/* ── Context Panel Card ────────────────────────────────────── */}
       {activeTool && (
         <div className={styles.contextPanel}>
-          {/* Card header */}
           <div className={styles.contextHeader}>
             <div className={styles.contextTitle}>
               {activeTool === "Colors"  && "Material color"}
               {activeTool === "Text"    && "Text"}
-              {activeTool === "Names"   && "Names & Numbers"}
+              {activeTool === "Presets" && "Font combos"}
               {activeTool === "Uploads" && "Uploads"}
               {activeTool === "Guide"   && "Printing Guide"}
               {activeTool === "Properties" && "Edit Element"}
@@ -296,49 +344,22 @@ export default function ToolPanel({
             </button>
           </div>
 
-          {/* ── MATERIAL COLOR ─────────────────────────────────────── */}
           {activeTool === "Colors" && (
             <div className={styles.contextBody}>
-              {/* Selected color pill */}
               <div className={styles.selectedColorBanner}>
-                <div 
-                  className={styles.selectedColorDot} 
-                  style={{ 
-                    backgroundColor: bodyColor === "transparent" ? "#e5e7eb" : bodyColor,
-                    border: bodyColor.toUpperCase() === "#FFFFFF" ? "1.5px solid #D1D5DB" : "none"
-                  }} 
-                />
+                <div className={styles.selectedColorDot} style={{ backgroundColor: bodyColor === "transparent" ? "#e5e7eb" : bodyColor }} />
                 <div>
                   <div className={styles.selectedColorLabel}>Selected Color</div>
                   <div className={styles.selectedColorName}>{colorName === bodyColor ? "Custom" : colorName}</div>
                 </div>
               </div>
-
-              {/* Color swatches grid */}
               <div className={styles.colorSwatchGrid}>
                 {colorList.map((p) => {
                   const isSelected = bodyColor.toLowerCase() === p.hex.toLowerCase();
                   return (
-                    <button
-                      key={p.hex}
-                      onClick={() => onColorSelect(p.hex)}
-                      title={p.name}
-                      className={`${styles.colorSwatchCard} ${isSelected ? styles.colorSwatchCardActive : ""}`}
-                    >
-                      <div
-                        className={styles.colorSwatchBlock}
-                        style={{
-                          backgroundColor: p.hex,
-                          border: p.hex.toUpperCase() === "#FFFFFF" ? "1px solid #E5E7EB" : "none",
-                        }}
-                      >
-                        {isSelected && (
-                          <div className={styles.colorCheckmark}>
-                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                              <path d="M2.5 7L5.5 10L11.5 4" stroke={p.hex.toUpperCase() === "#FFFFFF" ? "#111" : "white"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
-                          </div>
-                        )}
+                    <button key={p.hex} onClick={() => onColorSelect(p.hex)} className={`${styles.colorSwatchCard} ${isSelected ? styles.colorSwatchCardActive : ""}`}>
+                      <div className={styles.colorSwatchBlock} style={{ backgroundColor: p.hex }}>
+                        {isSelected && <div className={styles.colorCheckmark}><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7L5.5 10L11.5 4" stroke={p.hex.toUpperCase() === "#FFFFFF" ? "#111" : "white"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></div>}
                       </div>
                       <span className={styles.colorSwatchName}>{p.name}</span>
                     </button>
@@ -348,62 +369,22 @@ export default function ToolPanel({
             </div>
           )}
 
-          {/* ── TEXT ───────────────────────────────────────────────── */}
           {activeTool === "Text" && (
             <div className={styles.contextBody}>
-              <p className={styles.ctxHint}>
-                Edit your text below, or click on the field you'd like to edit directly on your design.
-              </p>
-
-              {/* List of existing text elements */}
+              <p className={styles.ctxHint}>Edit your text below, or click on the field you'd like to edit directly on your design.</p>
               {textElements.length > 0 && (
                 <div className={styles.textElementList}>
                   {textElements.map((el) => (
                     <div key={el.id} className={styles.textElementRowWrap}>
                       <label className={styles.textElementLabel}>Text: {el.value || "Text"}</label>
                       <div className={styles.textElementRow}>
-                        <input
-                          className={styles.textElementInput}
-                          value={el.value}
-                          onChange={(e) => onUpdateTextElement?.(el.id, e.target.value)}
-                          placeholder="Text"
-                        />
-                        <button
-                          className={styles.textElementDelete}
-                          onClick={() => onRemoveElement?.(el.id)}
-                          title="Delete"
-                        >
-                          <Trash2 size={18} color="#111" />
-                        </button>
+                        <input className={styles.textElementInput} value={el.value} onChange={(e) => onUpdateTextElement?.(el.id, e.target.value)} placeholder="Text" />
+                        <button className={styles.textElementDelete} onClick={() => onRemoveElement?.(el.id)}><Trash2 size={18} color="#111" /></button>
                       </div>
                     </div>
                   ))}
                 </div>
               )}
-
-              <button
-                className={styles.addAssetBtn}
-                onClick={() => { onAddText("Your Text Here"); }}
-                style={{ marginTop: "12px" }}
-              >
-                New Text Field
-              </button>
-            </div>
-          )}
-
-          {/* ── NAMES ──────────────────────────────────────────────── */}
-          {activeTool === "Names" && (
-            <div className={styles.contextBody}>
-              <p className={styles.ctxHint}>
-                Add player names or numbers, one per line. Each becomes a text element on the design.
-              </p>
-              <textarea
-                className={styles.ctxTextarea}
-                value={names}
-                onChange={(e) => setNames(e.target.value)}
-                rows={7}
-                placeholder={"Alice\nBob\nCharlie"}
-              />
               <button
                 className={styles.addAssetBtn}
                 onClick={() => {
@@ -416,6 +397,145 @@ export default function ToolPanel({
             </div>
           )}
 
+          {/* ── PRESETS (FONT COMBINATIONS) ────────────────────────────────────────────── */}
+          {activeTool === "Presets" && (
+            <div className={styles.contextBody}>
+              <div style={{ padding: "0 16px 12px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                <label style={{ fontSize: "0.78rem", fontWeight: 600, color: "#475569" }}>Categories</label>
+                <div style={{ display: "flex", gap: "8px", overflowX: "auto", paddingBottom: "4px" }}>
+                  {["All", "vintage", "anime", "literature", "brand", "y2k"].map(cat => (
+                    <button
+                      key={cat}
+                      onClick={() => setActiveCategory(cat)}
+                      style={{
+                        padding: "4px 12px",
+                        borderRadius: "16px",
+                        fontSize: "0.8rem",
+                        fontWeight: 600,
+                        textTransform: "capitalize",
+                        whiteSpace: "nowrap",
+                        border: "1px solid",
+                        borderColor: activeCategory === cat ? "#0F172A" : "#CBD5E1",
+                        background: activeCategory === cat ? "#0F172A" : "#FFFFFF",
+                        color: activeCategory === cat ? "#FFFFFF" : "#475569",
+                        cursor: "pointer",
+                        transition: "all 0.2s"
+                      }}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ padding: "0 16px 12px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                <label style={{ fontSize: "0.78rem", fontWeight: 600, color: "#475569" }}>What do you want it to say?</label>
+                <textarea
+                  value={presetInput}
+                  onChange={(e) => setPresetInput(e.target.value)}
+                  placeholder="Type your text here..."
+                  style={{
+                    width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #CBD5E1",
+                    fontSize: "0.9rem", minHeight: "60px", resize: "vertical", background: "#F8FAFC", fontFamily: "inherit"
+                  }}
+                />
+              </div>
+              <div style={{ padding: "0 16px 16px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", overflowY: "auto", maxHeight: "calc(100vh - 280px)" }}>
+                {TEXT_PRESETS.filter(p => activeCategory === "All" || p.category === activeCategory).map((preset) => {
+                  const inputLines = presetInput ? presetInput.split("\n") : [];
+                  
+                  return (
+                    <button
+                      key={preset.id}
+                      onClick={() => onAddPreset?.(preset.id, presetInput ? presetInput.split("\n") : preset.elements.map(e => e.value || ""))}
+                      style={{
+                        background: "#F8FAFC",
+                        border: "1px solid #E2E8F0",
+                        borderRadius: "12px",
+                        paddingBottom: "100%",
+                        width: "100%",
+                        position: "relative",
+                        cursor: "pointer",
+                        overflow: "hidden",
+                        transition: "transform 0.2s, border-color 0.2s",
+                        display: "block",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = "scale(1.02)";
+                        e.currentTarget.style.borderColor = "#94A3B8";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = "scale(1)";
+                        e.currentTarget.style.borderColor = "#E2E8F0";
+                      }}
+                    >
+                      <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <div style={{ position: "absolute", width: preset.width, height: preset.height, transform: `scale(${110 / Math.max(preset.width, preset.height)})`, transformOrigin: "center center", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          {preset.elements.map((el, i) => {
+                            let displayVal = el.value;
+                            if (presetInput) {
+                              if (preset.elements.length === 1) {
+                                displayVal = presetInput;
+                              } else {
+                                displayVal = inputLines[i] || "";
+                              }
+                            }
+                            
+                            // Auto-verticalize if the original preset was perfectly vertical
+                            const origVal = el.value || "";
+                            const origLetters = origVal.replace(/\n/g, '');
+                            const isVertical = origVal.includes('\n') && origVal.length === origLetters.length * 2 - 1;
+                            
+                            if (isVertical && displayVal && !displayVal.includes('\n')) {
+                              displayVal = displayVal.split('').join('\n');
+                            }
+                            
+                            return (
+                              <div
+                                key={i}
+                                style={{
+                                  position: el.y !== undefined ? "absolute" : "relative",
+                                  top: el.y !== undefined ? 0 : "auto",
+                                  left: el.y !== undefined ? 0 : "auto",
+                                  transform: el.y !== undefined ? `translate(${el.x || 0}px, ${el.y}px)` : "none",
+                                  color: el.color || "#000",
+                                  fontSize: `${el.fontSize}px`,
+                                  fontFamily: el.fontFamily || "Inter",
+                                  fontWeight: el.fontWeight || "normal",
+                                  fontStyle: el.fontStyle || "normal",
+                                  textTransform: el.uppercase ? "uppercase" : "none",
+                                  letterSpacing: el.letterSpacing ? `${el.letterSpacing}px` : "normal",
+                                  lineHeight: el.lineHeight || 1.2,
+                                  textShadow: el.textShadow,
+                                  WebkitTextStroke: el.WebkitTextStroke,
+                                  backgroundColor: el.backgroundColor,
+                                  backgroundImage: el.backgroundImage,
+                                  WebkitBackgroundClip: el.WebkitBackgroundClip,
+                                  WebkitTextFillColor: el.WebkitTextFillColor,
+                                  padding: el.padding,
+                                  borderRadius: el.borderRadius,
+                                  border: el.border,
+                                  borderTop: el.borderTop,
+                                  borderBottom: el.borderBottom,
+                                  borderLeft: el.borderLeft,
+                                  borderRight: el.borderRight,
+                                  whiteSpace: "pre-wrap",
+                                  textAlign: el.textAlign || "center",
+                                }}
+                              >
+                                {displayVal}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* ── UPLOADS ────────────────────────────────────────────── */}
           {activeTool === "Uploads" && (
             <div className={styles.contextBody}>
@@ -423,16 +543,51 @@ export default function ToolPanel({
                 <UploadCloud size={16} />
                 {isUploading ? "Uploading…" : "Upload from this device"}
               </button>
-              <button className={styles.addAssetBtnOutline}>
+              <button className={`${styles.addAssetBtnOutline} ${styles.desktopOnly}`} onClick={openQrModal}>
                 <Smartphone size={16} />
                 Upload from phone
               </button>
-              <div className={styles.uploadSignInWrap}>
-                <p className={styles.ctxHint}>Sign in to access previous uploads.</p>
-                <button className={styles.signInBtn}>
-                  <LogIn size={14} /> Sign in
-                </button>
-              </div>
+
+              {session ? (
+                <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569' }}>Your Uploads</label>
+                  {isLoadingAssets ? (
+                    <div style={{ padding: '20px', textAlign: 'center', fontSize: '0.85rem', color: '#94a3b8' }}>Loading...</div>
+                  ) : userAssets.length > 0 ? (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+                      {userAssets.map(asset => (
+                        <button 
+                          key={asset.id} 
+                          onClick={() => onAddLogoUrl?.(asset.url)}
+                          style={{
+                            aspectRatio: '1',
+                            borderRadius: '8px',
+                            border: '1px solid #E2E8F0',
+                            overflow: 'hidden',
+                            position: 'relative',
+                            background: '#F8FAFC',
+                            cursor: 'pointer'
+                          }}
+                          title="Add to design"
+                        >
+                          <img src={asset.url} alt="upload" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div style={{ padding: '20px', textAlign: 'center', fontSize: '0.85rem', color: '#94a3b8', background: '#F8FAFC', borderRadius: '8px', border: '1px dashed #CBD5E1' }}>
+                      No previous uploads found.
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className={styles.uploadSignInWrap}>
+                  <p className={styles.ctxHint}>Sign in to access previous uploads.</p>
+                  <button className={styles.signInBtn} onClick={() => signIn()}>
+                    <LogIn size={14} /> Sign in
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
@@ -485,7 +640,7 @@ export default function ToolPanel({
                   {/* Element Type Indicator */}
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #e2e8f0', paddingBottom: '12px' }}>
                     <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#64748b', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-                      {activeElement.type === "text" ? "Text Layer" : "Logo Layer"}
+                      {activeElement.type === "text" ? "Text Layer" : activeElement.type === "preset" ? "Text Preset Layer" : "Logo Layer"}
                     </span>
                     
                     {/* DPI Badge (Logo Only) */}
@@ -506,39 +661,69 @@ export default function ToolPanel({
                     )}
                   </div>
 
-                  {/* Text Edit Area (Text Only) */}
-                  {activeElement.type === "text" && (
+                  {/* Text Edit Area (Text Only or Preset) */}
+                  {(activeElement.type === "text" || activeElement.type === "preset") && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                       <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569' }}>Text Content</label>
-                      <input
-                        type="text"
-                        className={styles.textElementInput}
-                        style={{ 
-                          width: '100%', 
-                          padding: '10px 12px',
-                          border: '2px solid #007aff',
-                          borderRadius: '8px',
-                          fontSize: '1rem',
-                          fontWeight: 600,
-                          background: '#f0f7ff',
-                          outline: 'none',
-                        }}
-                        value={activeElement.value}
-                        onChange={(e) => onUpdateElement?.(activeElement.id, { value: e.target.value })}
-                        placeholder="Type your text here..."
-                        autoFocus
-                      />
+                      {activeElement.type === "preset" ? (() => {
+                        const presetDef = TEXT_PRESETS.find(p => p.id === activeElement.presetId);
+                        const isArray = Array.isArray(activeElement.presetText);
+                        const lines = isArray ? (activeElement.presetText as string[]) : [(activeElement.presetText as string) || ""];
+                        if (presetDef && presetDef.elements.length > 1) {
+                          return (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                              {presetDef.elements.map((el, i) => (
+                                <input
+                                  key={i}
+                                  type="text"
+                                  className={styles.textElementInput}
+                                  style={{ width: '100%', padding: '8px 12px', border: '2px solid #007aff', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 600, background: '#f0f7ff', outline: 'none' }}
+                                  value={lines[i] !== undefined ? lines[i] : (el.value || "")}
+                                  onChange={(e) => {
+                                    const newLines = [...lines];
+                                    // Ensure array is populated
+                                    while (newLines.length < presetDef.elements.length) {
+                                      newLines.push(presetDef.elements[newLines.length].value || "");
+                                    }
+                                    newLines[i] = e.target.value;
+                                    onUpdateElement?.(activeElement.id, { presetText: newLines });
+                                  }}
+                                  placeholder={`Text ${i + 1}`}
+                                />
+                              ))}
+                            </div>
+                          );
+                        }
+                        
+                        return (
+                          <textarea
+                            className={styles.textElementInput}
+                            style={{ 
+                              width: '100%', padding: '10px 12px', border: '2px solid #007aff', borderRadius: '8px',
+                              fontSize: '1rem', fontWeight: 600, background: '#f0f7ff', outline: 'none', resize: 'vertical', minHeight: '60px'
+                            }}
+                            value={isArray ? lines.join("\n") : (activeElement.presetText as string || "")}
+                            onChange={(e) => onUpdateElement?.(activeElement.id, { presetText: e.target.value })}
+                            placeholder="Type your text here..."
+                          />
+                        );
+                      })() : (
+                        <input
+                          type="text"
+                          className={styles.textElementInput}
+                          style={{ 
+                            width: '100%', padding: '10px 12px', border: '2px solid #007aff', borderRadius: '8px',
+                            fontSize: '1rem', fontWeight: 600, background: '#f0f7ff', outline: 'none',
+                          }}
+                          value={activeElement.value}
+                          onChange={(e) => onUpdateElement?.(activeElement.id, { value: e.target.value })}
+                          placeholder="Type your text here..."
+                          autoFocus
+                        />
+                      )}
                       <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        background: '#FFF7ED',
-                        border: '1px solid #FED7AA',
-                        borderRadius: '6px',
-                        padding: '7px 10px',
-                        fontSize: '0.75rem',
-                        color: '#9A3412',
-                        fontWeight: 500,
+                        display: 'flex', alignItems: 'center', gap: '6px', background: '#FFF7ED', border: '1px solid #FED7AA',
+                        borderRadius: '6px', padding: '7px 10px', fontSize: '0.75rem', color: '#9A3412', fontWeight: 500,
                       }}>
                         <span style={{ fontSize: '0.9rem' }}>✏️</span>
                         Tap the field above to change your text
@@ -1079,6 +1264,150 @@ export default function ToolPanel({
           )}
         </div>
       )}
+
+      {/* ── QR CODE MODAL ──────────────────────────────────────────────── */}
+      {showQrModal && qrSessionId && (
+        <div
+          onClick={closeQrModal}
+          style={{
+            position: "fixed", inset: 0,
+            background: "rgba(10, 16, 32, 0.72)",
+            backdropFilter: "blur(6px)",
+            WebkitBackdropFilter: "blur(6px)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px",
+            animation: "fadeIn 0.2s ease",
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "#fff",
+              borderRadius: "20px",
+              boxShadow: "0 24px 64px rgba(0,0,0,0.28), 0 0 0 1px rgba(0,0,0,0.06)",
+              padding: "28px 28px 24px",
+              width: "100%",
+              maxWidth: "360px",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: "18px",
+              animation: "slideUp 0.25s cubic-bezier(0.34,1.56,0.64,1)",
+            }}
+          >
+            {/* Modal header */}
+            <div style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <div style={{ fontSize: "1rem", fontWeight: 800, color: "#0f172a", letterSpacing: "-0.01em" }}>
+                  {qrStatus === "received" ? "✅ Photo received!" : "Upload from phone"}
+                </div>
+                <div style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "2px" }}>
+                  {qrStatus === "received"
+                    ? "Your image has been added to the canvas."
+                    : "Scan with your phone camera to upload"}
+                </div>
+              </div>
+              <button
+                onClick={closeQrModal}
+                style={{ background: "#f1f5f9", border: "none", borderRadius: "8px", padding: "6px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b", flexShrink: 0, marginLeft: "12px" }}
+                title="Close"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* QR Code or Success */}
+            {qrStatus === "waiting" ? (
+              <>
+                <div style={{
+                  background: "#f8fafc",
+                  border: "1.5px solid #e2e8f0",
+                  borderRadius: "16px",
+                  padding: "12px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "100%",
+                }}>
+                  {/* QR code via api.qrserver.com */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&format=svg&data=${encodeURIComponent(`${typeof window !== "undefined" ? window.location.origin : ""}/customizer/upload-phone?session=${qrSessionId}`)}`}
+                    alt="QR Code"
+                    width={220}
+                    height={220}
+                    style={{ borderRadius: "8px", display: "block" }}
+                  />
+                </div>
+
+                {/* Polling indicator */}
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <div style={{
+                    width: "8px", height: "8px", borderRadius: "50%",
+                    background: "#22c55e",
+                    boxShadow: "0 0 0 0 rgba(34, 197, 94, 0.6)",
+                    animation: "pulseGreen 1.5s ease infinite",
+                    flexShrink: 0,
+                  }} />
+                  <span style={{ fontSize: "0.75rem", color: "#64748b" }}>Waiting for your phone upload…</span>
+                </div>
+
+                {/* Manual link */}
+                <div style={{
+                  width: "100%", background: "#f8fafc", border: "1px solid #e2e8f0",
+                  borderRadius: "10px", padding: "10px 12px",
+                  display: "flex", alignItems: "center", gap: "8px",
+                }}>
+                  <span style={{ fontSize: "0.7rem", color: "#64748b", wordBreak: "break-all", flex: 1, fontFamily: "monospace" }}>
+                    {typeof window !== "undefined" ? window.location.origin : ""}/customizer/upload-phone?session={qrSessionId.slice(0, 20)}…
+                  </span>
+                </div>
+
+                <p style={{ fontSize: "0.72rem", color: "#94a3b8", textAlign: "center", lineHeight: 1.5, margin: 0 }}>
+                  Or type the URL on your phone. Make sure both devices are connected to the same network.
+                </p>
+              </>
+            ) : (
+              <div style={{
+                display: "flex", flexDirection: "column", alignItems: "center", gap: "12px",
+                padding: "20px",
+                background: "#f0fdf4",
+                border: "1.5px solid #bbf7d0",
+                borderRadius: "16px",
+                width: "100%",
+              }}>
+                <div style={{
+                  width: "56px", height: "56px",
+                  background: "linear-gradient(135deg, #22c55e, #15803d)",
+                  borderRadius: "50%",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  boxShadow: "0 4px 14px rgba(34, 197, 94, 0.4)",
+                }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                    fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </div>
+                <div style={{ fontSize: "0.9rem", fontWeight: 700, color: "#15803d" }}>Image added to canvas!</div>
+                <div style={{ fontSize: "0.75rem", color: "#4ade80", textAlign: "center" }}>Closing automatically…</div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes pulseGreen {
+          0%   { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.6); }
+          70%  { box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
+          100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+      `}</style>
     </>
   );
 }

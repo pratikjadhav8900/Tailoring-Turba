@@ -26,6 +26,7 @@ model User {
   bookings      Booking[]
   designs       Design[]
   orders        Order[]
+  assets        UserAsset[]
 }
 
 model Account {
@@ -252,4 +253,12 @@ enum InquiryStatus {
   SAMPLE_SENT
   CONVERTED
   CLOSED
+}
+
+model UserAsset {
+  id        String   @id @default(cuid())
+  userId    String
+  url       String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

@@ -5,10 +5,13 @@ import Navbar from "@/components/Navbar";
 import styles from "./page.module.css";
 import { CheckCircle2, Mail, Phone, MapPin } from "lucide-react";
 import toast from "react-hot-toast";
+import { useCart } from "@/context/CartContext";
+import { getElementDetails } from "@/lib/customizer-utils";
 
 function ContactForm() {
   const searchParams = useSearchParams();
   const productName = searchParams.get("product");
+  const { cart } = useCart();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -31,10 +34,47 @@ function ContactForm() {
     setError("");
 
     try {
+      // Calculate cart items & totals for pro-forma
+      let cartItems = [];
+      let totalAmount = 0;
+      let totalCustomCharge = 0;
+      
+      if (cart.length > 0) {
+        cartItems = cart.map(item => {
+          return {
+            product: { name: item.name },
+            quantity: item.quantity,
+            price: item.price
+          };
+        });
+        const subtotal = cart.reduce((t, i) => t + (Number(i.price) * (i.quantity || 0)), 0);
+        
+        const printingCharge = cart.reduce((t, item) => {
+          if (!item.customDesign) return t;
+          const gType = item.customDesign.garmentType || "round-neck";
+          const fEls = (item.customDesign.frontElements || []).map(el => getElementDetails(el, gType, "front"));
+          const bEls = (item.customDesign.backElements || []).map(el => getElementDetails(el, gType, "back"));
+          const printCost = [...fEls, ...bEls].reduce((s, el) => s + el.cost, 0);
+          return t + (printCost * (item.quantity || 0));
+        }, 0);
+        
+        const customItemsCount = cart.filter(i => i.customDesign).length;
+        const designCharge = customItemsCount * 300;
+        totalCustomCharge = printingCharge + designCharge;
+        
+        const gst = Math.round((subtotal + totalCustomCharge) * 0.05);
+        totalAmount = subtotal + totalCustomCharge + gst;
+      }
+
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          cartItems: cartItems.length > 0 ? cartItems : undefined,
+          totalAmount: totalAmount > 0 ? totalAmount : undefined,
+          customCharge: totalCustomCharge > 0 ? totalCustomCharge : undefined,
+        }),
       });
 
       if (res.ok) {

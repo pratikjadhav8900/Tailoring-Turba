@@ -6,6 +6,7 @@ import styles from "./PoloCustomizer.module.css";
 import { DesignElement, Side } from "@/types/customizer";
 import { GARMENTS } from "@/lib/fabric-data";
 import { SIZE_SCALES } from "@/lib/customizer-utils";
+import { ALL_PRESETS as TEXT_PRESETS } from "@/lib/presets";
 
 interface CanvasAreaProps {
   garmentType: string;
@@ -236,30 +237,28 @@ export default function CanvasArea({
   return (
     <div 
       className={styles.canvasWrapper}
-      style={isPreviewMode ? { minHeight: 'auto', background: 'transparent' } : undefined}
+      style={isPreviewMode ? { minHeight: 'auto', background: 'transparent', pointerEvents: 'none', touchAction: 'auto' } : undefined}
     >
-      <div ref={canvasRef} className={styles.canvasArea} onClick={handleCanvasClick}>
+      <div
+        ref={canvasRef}
+        className={`${styles.canvasArea}${isPreviewMode ? ` ${styles.canvasAreaPreview}` : ''}`}
+        onClick={handleCanvasClick}
+        style={isPreviewMode ? { touchAction: 'auto' } : undefined}
+      >
         {/* Zoomed garment container */}
         <div 
           style={{ 
-            width: `${560 * totalScale}px`,
-            height: `${560 * totalScale}px`,
-            position: 'relative',
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            width: '560px',
+            height: '560px',
+            transform: `translate(calc(-50% + ${currentPan.x}px), calc(-50% + ${currentPan.y}px)) scale(${totalScale})`, 
+            transformOrigin: "center center", 
+            transition: isGestureActive ? "none" : "transform 0.2s" 
           }}
         >
-          <div 
-            style={{ 
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '560px',
-              height: '560px',
-              transform: `translate(${currentPan.x}px, ${currentPan.y}px) scale(${totalScale})`, 
-              transformOrigin: "top left", 
-              transition: isGestureActive ? "none" : "transform 0.2s" 
-            }}
-          >
-            <div id={mockupId} className={styles.garmentContainer}>
+          <div id={mockupId} className={styles.garmentContainer}>
             {/* Optional Base Image (e.g., Man wearing the shirt) */}
             {currentBaseImg && (
               <img
@@ -267,6 +266,7 @@ export default function CanvasArea({
                 alt="Base Mockup"
                 className={styles.garmentBaseImage}
                 style={{ zIndex: 0 }}
+                crossOrigin="anonymous"
               />
             )}
             
@@ -300,6 +300,7 @@ export default function CanvasArea({
                 <>
                   <div
                     className={styles.garmentColorLayer}
+                    data-html2canvas-ignore="true"
                     style={{
                       backgroundColor: effectiveColor,
                       opacity: colorOpacity,
@@ -323,6 +324,7 @@ export default function CanvasArea({
                       opacity: textureOpacity,
                       filter: textureFilter,
                     }}
+                    crossOrigin="anonymous"
                   />
                 </>
               );
@@ -403,13 +405,143 @@ export default function CanvasArea({
                     const renderX = renderCenterX - renderWidth / 2;
                     const renderY = renderCenterY - renderHeight / 2;
 
-                    const dynamicFont = Math.min(
-                      renderWidth / (Math.max(1, ...el.value.split("\n").map(l => l.length)) * 0.6 + 1),
-                      (renderHeight / Math.max(1, el.value.split("\n").length)) * 0.8
-                    );
+                    const dynamicFont = el.type === "text" ? Math.min(
+                      renderWidth / (Math.max(1, ...(el.value || "").split("\n").map(l => l.length)) * 0.6 + 1),
+                      (renderHeight / Math.max(1, (el.value || "").split("\n").length)) * 0.8
+                    ) : 0;
                     const fontSize = el.fontSize ? Math.min(el.fontSize * sizeScale, dynamicFont) : dynamicFont;
 
-                    return (
+                    return isPreviewMode ? (
+                      <div
+                        key={el.id}
+                        className={styles.rndBox}
+                        style={{
+                          position: "absolute",
+                          left: `${renderX}px`,
+                          top: `${renderY}px`,
+                          width: `${renderWidth}px`,
+                          height: `${renderHeight}px`,
+                          zIndex: 5,
+                        }}
+                      >
+                        <div
+                          className={styles.rndContent}
+                          style={{ transform: `rotate(${el.rotation || 0}deg)`, width: "100%", height: "100%" }}
+                        >
+                          {el.type === "preset" ? (() => {
+                            const presetDef = TEXT_PRESETS.find(p => p.id === el.presetId);
+                            if (!presetDef) return null;
+                            const presetScale = el.width / (el.originalWidth || presetDef.width);
+                            return (
+                              <div className="customizer-drag-handle" style={{ position: "relative", width: presetDef.width, height: presetDef.height, transform: `scale(${presetScale})`, transformOrigin: "top left", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                {presetDef.elements.map((subEl, i) => {
+                                  let displayVal = subEl.value;
+                                  if (el.presetText !== undefined) {
+                                    if (Array.isArray(el.presetText)) {
+                                      displayVal = el.presetText[i] !== undefined ? el.presetText[i] : (subEl.value || "");
+                                    } else {
+                                      // Fallback for old string format
+                                      const inputLines = el.presetText.split("\n");
+                                      if (presetDef.elements.length === 1) {
+                                        displayVal = el.presetText;
+                                      } else {
+                                        displayVal = inputLines[i] || "";
+                                      }
+                                    }
+                                  }
+                                  
+                                  // Auto-verticalize if the original preset was perfectly vertical
+                                  const origVal = subEl.value || "";
+                                  const origLetters = origVal.replace(/\n/g, '');
+                                  const isVertical = origVal.includes('\n') && origVal.length === origLetters.length * 2 - 1;
+                                  
+                                  if (isVertical && displayVal && !displayVal.includes('\n')) {
+                                    displayVal = displayVal.split('').join('\n');
+                                  }
+                                  
+                                  return (
+                                    <div
+                                      key={i}
+                                      style={{
+                                        position: subEl.y !== undefined ? "absolute" : "relative",
+                                        top: subEl.y !== undefined ? 0 : "auto",
+                                        left: subEl.y !== undefined ? 0 : "auto",
+                                        transform: subEl.y !== undefined ? `translate(${subEl.x || 0}px, ${subEl.y}px)` : "none",
+                                        color: subEl.color || "#000",
+                                        fontSize: `${subEl.fontSize}px`,
+                                        fontFamily: subEl.fontFamily || "Inter",
+                                        fontWeight: subEl.fontWeight || "normal",
+                                        fontStyle: subEl.fontStyle || "normal",
+                                        textTransform: subEl.uppercase ? "uppercase" : "none",
+                                        letterSpacing: subEl.letterSpacing ? `${subEl.letterSpacing}px` : "normal",
+                                        lineHeight: subEl.lineHeight || 1.2,
+                                        textShadow: subEl.textShadow,
+                                        WebkitTextStroke: subEl.WebkitTextStroke,
+                                        backgroundColor: subEl.backgroundColor,
+                                        backgroundImage: subEl.backgroundImage,
+                                        WebkitBackgroundClip: subEl.WebkitBackgroundClip,
+                                        WebkitTextFillColor: subEl.WebkitTextFillColor,
+                                        padding: subEl.padding,
+                                        borderRadius: subEl.borderRadius,
+                                        whiteSpace: "pre-wrap",
+                                        textAlign: subEl.textAlign || "center",
+                                      }}
+                                    >
+                                      {displayVal}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            );
+                          })() : el.type === "text" ? (
+                            <div
+                              className={`${styles.rndText} customizer-drag-handle`}
+                              style={{
+                                color: el.color,
+                                fontSize: `${fontSize}px`,
+                                fontFamily: el.fontFamily ? `${el.fontFamily}, sans-serif` : "Inter, sans-serif",
+                                fontWeight: el.fontWeight || "normal",
+                                fontStyle: el.fontStyle || "normal",
+                                textAlign: el.textAlign || "center",
+                                textDecoration: el.textDecoration || "none",
+                                textTransform: el.uppercase ? "uppercase" : "none",
+                                cursor: "pointer",
+                                userSelect: "none",
+                                WebkitUserSelect: "none",
+                                whiteSpace: "pre-wrap",
+                                display: "flex",
+                                flexDirection: "column",
+                                justifyContent: "center",
+                                width: "100%",
+                                height: "100%",
+                                overflow: "visible",
+                                letterSpacing: el.letterSpacing ? `${el.letterSpacing}px` : "normal",
+                                lineHeight: el.lineHeight || 1.2,
+                                textShadow: el.textShadow,
+                                WebkitTextStroke: el.WebkitTextStroke,
+                                backgroundColor: el.backgroundColor,
+                                padding: el.padding,
+                                borderRadius: el.borderRadius,
+                              }}
+                            >
+                              {el.value.split("\n").map((line, i) => (
+                                <div key={i} style={{ minHeight: "1em", width: "100%" }}>
+                                  {el.uppercase ? line.toUpperCase() : line}
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <img
+                              src={el.value}
+                              alt="logo"
+                              draggable={false}
+                              className="customizer-drag-handle"
+                              style={{ width: "100%", height: "100%", objectFit: "contain", touchAction: "auto", pointerEvents: "none" }}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    ) : (
                       <Rnd
                         key={el.id}
                         className={`${styles.rndBox} ${isActive ? styles.rndBoxActive : ""}`}
@@ -457,73 +589,159 @@ export default function CanvasArea({
                         disableDragging={!isActive || isPreviewMode || isEditing}
                         enableResizing={isActive && !isPreviewMode && !isEditing}
                       >
-                  <div
-                    className={styles.rndContent}
-                    style={{ transform: `rotate(${el.rotation || 0}deg)`, width: "100%", height: "100%" }}
-                    onClick={(e) => handleElementClick(el, e)}
-                    onTouchEnd={(e) => handleElementTouchEnd(el, e)}
-                  >
-                    {el.type === "text" ? (
-                      isEditing ? (
-                        <textarea
-                          ref={editRef}
-                          className={styles.rndTextEditable}
-                          value={editDraft}
-                          onChange={(e) => setEditDraft(e.target.value)}
-                          onBlur={commitEdit}
-                          onKeyDown={(e) => {
-                            if (e.key === "Escape") { setEditingId(null); }
-                            if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); commitEdit(); }
-                          }}
-                          style={{
-                            color: el.color,
-                            fontSize: `${fontSize}px`,
-                            fontFamily: el.fontFamily || "Inter",
-                            fontWeight: el.fontWeight || "normal",
-                            fontStyle: el.fontStyle || "normal",
-                            textAlign: el.textAlign || "center",
-                            textDecoration: el.textDecoration || "none",
-                            textTransform: el.uppercase ? "uppercase" : "none",
-                          }}
-                        />
-                      ) : (
                         <div
-                          className={`${styles.rndText} customizer-drag-handle`}
-                          style={{
-                            color: el.color,
-                            fontSize: `${fontSize}px`,
-                            fontFamily: el.fontFamily || "Inter",
-                            fontWeight: el.fontWeight || "normal",
-                            fontStyle: el.fontStyle || "normal",
-                            textAlign: el.textAlign || "center",
-                            textDecoration: el.textDecoration || "none",
-                            textTransform: el.uppercase ? "uppercase" : "none",
-                            cursor: isActive ? "text" : "pointer",
-                            userSelect: "none",
-                            WebkitUserSelect: "none",
-                            whiteSpace: "pre-wrap",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: el.textAlign === "left" ? "flex-start" : el.textAlign === "right" ? "flex-end" : "center",
-                            height: "100%",
-                            width: "100%",
-                            overflow: "hidden",
-                            touchAction: "none",
-                          }}
+                          className={styles.rndContent}
+                          style={{ transform: `rotate(${el.rotation || 0}deg)`, width: "100%", height: "100%" }}
+                          onClick={(e) => handleElementClick(el, e)}
+                          onTouchEnd={(e) => handleElementTouchEnd(el, e)}
                         >
-                          {el.value}
+                          {el.type === "preset" ? (() => {
+                            const presetDef = TEXT_PRESETS.find(p => p.id === el.presetId);
+                            if (!presetDef) return null;
+                            const presetScale = el.width / (el.originalWidth || presetDef.width);
+                            return (
+                              <div className="customizer-drag-handle" style={{ position: "relative", width: presetDef.width, height: presetDef.height, transform: `scale(${presetScale})`, transformOrigin: "top left", cursor: isActive ? "move" : "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                {presetDef.elements.map((subEl, i) => {
+                                  let displayVal = subEl.value;
+                                  if (el.presetText !== undefined) {
+                                    if (Array.isArray(el.presetText)) {
+                                      displayVal = el.presetText[i] !== undefined ? el.presetText[i] : (subEl.value || "");
+                                    } else {
+                                      // Fallback for old string format
+                                      const inputLines = el.presetText.split("\n");
+                                      if (presetDef.elements.length === 1) {
+                                        displayVal = el.presetText;
+                                      } else {
+                                        displayVal = inputLines[i] || "";
+                                      }
+                                    }
+                                  }
+                                  
+                                  // Auto-verticalize if the original preset was perfectly vertical
+                                  const origVal = subEl.value || "";
+                                  const origLetters = origVal.replace(/\n/g, '');
+                                  const isVertical = origVal.includes('\n') && origVal.length === origLetters.length * 2 - 1;
+                                  
+                                  if (isVertical && displayVal && !displayVal.includes('\n')) {
+                                    displayVal = displayVal.split('').join('\n');
+                                  }
+                                  
+                                  return (
+                                    <div
+                                      key={i}
+                                      style={{
+                                        position: subEl.y !== undefined ? "absolute" : "relative",
+                                        top: subEl.y !== undefined ? 0 : "auto",
+                                        left: subEl.y !== undefined ? 0 : "auto",
+                                        transform: subEl.y !== undefined ? `translate(${subEl.x || 0}px, ${subEl.y}px)` : "none",
+                                        color: subEl.color || "#000",
+                                        fontSize: `${subEl.fontSize}px`,
+                                        fontFamily: subEl.fontFamily || "Inter",
+                                        fontWeight: subEl.fontWeight || "normal",
+                                        fontStyle: subEl.fontStyle || "normal",
+                                        textTransform: subEl.uppercase ? "uppercase" : "none",
+                                        letterSpacing: subEl.letterSpacing ? `${subEl.letterSpacing}px` : "normal",
+                                        lineHeight: subEl.lineHeight || 1.2,
+                                        textShadow: subEl.textShadow,
+                                        WebkitTextStroke: subEl.WebkitTextStroke,
+                                        backgroundColor: subEl.backgroundColor,
+                                        backgroundImage: subEl.backgroundImage,
+                                        WebkitBackgroundClip: subEl.WebkitBackgroundClip,
+                                        WebkitTextFillColor: subEl.WebkitTextFillColor,
+                                        padding: subEl.padding,
+                                        borderRadius: subEl.borderRadius,
+                                        whiteSpace: "pre-wrap",
+                                        textAlign: subEl.textAlign || "center",
+                                      }}
+                                    >
+                                      {displayVal}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            );
+                          })() : el.type === "text" ? (
+                            isEditing ? (
+                              <textarea
+                                ref={editRef}
+                                className={styles.rndTextEditable}
+                                value={editDraft}
+                                onChange={(e) => setEditDraft(e.target.value)}
+                                onBlur={commitEdit}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Escape") { setEditingId(null); }
+                                  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); commitEdit(); }
+                                }}
+                                style={{
+                                  color: el.color,
+                                  fontSize: `${fontSize}px`,
+                                  fontFamily: el.fontFamily || "Inter",
+                                  fontWeight: el.fontWeight || "normal",
+                                  fontStyle: el.fontStyle || "normal",
+                                  textAlign: el.textAlign || "center",
+                                  textDecoration: el.textDecoration || "none",
+                                  textTransform: el.uppercase ? "uppercase" : "none",
+                                  letterSpacing: el.letterSpacing ? `${el.letterSpacing}px` : "normal",
+                                  lineHeight: el.lineHeight || 1.2,
+                                  textShadow: el.textShadow,
+                                  WebkitTextStroke: el.WebkitTextStroke,
+                                  backgroundColor: el.backgroundColor,
+                                  backgroundImage: el.backgroundImage,
+                                  WebkitBackgroundClip: el.WebkitBackgroundClip,
+                                  WebkitTextFillColor: el.WebkitTextFillColor,
+                                  padding: el.padding,
+                                  borderRadius: el.borderRadius,
+                                }}
+                              />
+                            ) : (
+                              <div
+                                className={`${styles.rndText} customizer-drag-handle`}
+                                style={{
+                                  color: el.color,
+                                  fontSize: `${fontSize}px`,
+                                  fontFamily: el.fontFamily || "Inter",
+                                  fontWeight: el.fontWeight || "normal",
+                                  fontStyle: el.fontStyle || "normal",
+                                  textAlign: el.textAlign || "center",
+                                  textDecoration: el.textDecoration || "none",
+                                  textTransform: el.uppercase ? "uppercase" : "none",
+                                  cursor: isActive ? "text" : "pointer",
+                                  userSelect: "none",
+                                  WebkitUserSelect: "none",
+                                  whiteSpace: "pre-wrap",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: el.textAlign === "left" ? "flex-start" : el.textAlign === "right" ? "flex-end" : "center",
+                                  height: "100%",
+                                  width: "100%",
+                                  overflow: "hidden",
+                                  touchAction: isPreviewMode ? "auto" : "none",
+                                  letterSpacing: el.letterSpacing ? `${el.letterSpacing}px` : "normal",
+                                  lineHeight: el.lineHeight || 1.2,
+                                  textShadow: el.textShadow,
+                                  WebkitTextStroke: el.WebkitTextStroke,
+                                  backgroundColor: el.backgroundColor,
+                                  backgroundImage: el.backgroundImage,
+                                  WebkitBackgroundClip: el.WebkitBackgroundClip,
+                                  WebkitTextFillColor: el.WebkitTextFillColor,
+                                  padding: el.padding,
+                                  borderRadius: el.borderRadius,
+                                }}
+                              >
+                                {el.value}
+                              </div>
+                            )
+                          ) : (
+                            <img
+                              src={el.value}
+                              alt="logo"
+                              draggable={false}
+                              className="customizer-drag-handle"
+                              style={{ width: "100%", height: "100%", objectFit: "contain", touchAction: isPreviewMode ? "auto" : "none", pointerEvents: isPreviewMode ? "none" : "auto" }}
+                              crossOrigin="anonymous"
+                            />
+                          )}
                         </div>
-                      )
-                    ) : (
-                      <img
-                        src={el.value}
-                        alt="logo"
-                        draggable={false}
-                        className="customizer-drag-handle"
-                        style={{ width: "100%", height: "100%", objectFit: "contain", touchAction: "none" }}
-                      />
-                    )}
-                  </div>
 
                   {/* Floating action buttons */}
                   {isActive && !isDragging && !isEditing && (
@@ -566,7 +784,6 @@ export default function CanvasArea({
             })()}
 
           </div>
-        </div>
         </div>
         {children}
       </div>

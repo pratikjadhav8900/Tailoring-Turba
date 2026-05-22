@@ -20,7 +20,7 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: "100mb",
     },
-    serverComponentsExternalPackages: ['@resvg/resvg-js'],
+    serverComponentsExternalPackages: ['@resvg/resvg-js', 'pdfkit'],
   },
   eslint: {
     ignoreDuringBuilds: true,

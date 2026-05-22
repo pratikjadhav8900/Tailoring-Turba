@@ -3,10 +3,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { sendMail } from "@/lib/mail";
 import { prisma } from "@/lib/prisma";
 import { sanitize } from "@/lib/sanitize";
+import { generateInvoicePdf, InvoiceOrder } from "@/lib/pdf";
 
 export async function POST(req: NextRequest) {
   try {
-    let { name, email, phone, company, quantity, message } = await req.json();
+    let { name, email, phone, company, quantity, message, cartItems, totalAmount, customCharge } = await req.json();
 
     if (!name || !email || !phone || !message) {
       return NextResponse.json({ error: "Name, email, phone and message are required." }, { status: 400 });
@@ -37,7 +38,35 @@ export async function POST(req: NextRequest) {
       }
     });
 
-    // 1. Alert operations team
+    // 1. Generate Pro Forma Invoice if cartItems exist
+    let attachments: { filename: string; content: Buffer; contentType: string }[] = [];
+    if (cartItems && cartItems.length > 0) {
+      try {
+        const order: InvoiceOrder = {
+          id: 'PF-' + Date.now().toString().slice(-6),
+          orderNumber: Math.floor(Math.random() * 10000),
+          createdAt: new Date(),
+          totalAmount: totalAmount || 0,
+          isSplitPayment: true,
+          amountPaid: 0,
+          remainingAmount: totalAmount || 0,
+          type: 'PRO FORMA INVOICE',
+          user: { name, email, phone },
+          shippingAddress: { name: company || name, street: 'TBD', city: 'TBD', state: 'TBD', postalCode: '000000', country: 'IN' },
+          items: cartItems
+        };
+        const pdfBuffer = await generateInvoicePdf(order);
+        attachments.push({
+          filename: `ProForma_Invoice_${company ? company.replace(/\s+/g, '_') : name.replace(/\s+/g, '_')}.pdf`,
+          content: pdfBuffer,
+          contentType: 'application/pdf'
+        });
+      } catch (err) {
+        console.error("Failed to generate Pro Forma Invoice PDF:", err);
+      }
+    }
+
+    // 2. Alert operations team
     const opsHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
         <h2 style="color: #435b43;">📩 New Bulk Quote Request</h2>
@@ -49,6 +78,7 @@ export async function POST(req: NextRequest) {
           <tr><td style="padding: 8px 0; font-weight: 700; color: #555;">Quantity:</td><td style="padding: 8px 0;">${quantity || "—"} units</td></tr>
           <tr><td style="padding: 8px 0; font-weight: 700; color: #555; vertical-align: top;">Message:</td><td style="padding: 8px 0; white-space: pre-wrap;">${message}</td></tr>
         </table>
+        ${attachments.length > 0 ? `<div style="margin-top: 15px; padding: 10px; background: #e8f5e9; color: #2e7d32; border-radius: 4px; font-weight: bold;">📎 Pro Forma Invoice Generated & Attached</div>` : ''}
         <div style="margin-top: 20px; padding: 12px; background: #f4ebd0; border-radius: 6px; font-size: 13px; color: #6b6b65;">
           Reply to this email or call the customer directly to follow up within 24 hours.
         </div>
@@ -59,9 +89,10 @@ export async function POST(req: NextRequest) {
       to: "tailoringturba@gmail.com",
       subject: `[NEW QUOTE] ${company || name} — ${quantity || "?"} units`,
       html: opsHtml,
+      attachments
     });
 
-    // 2. Confirmation to customer
+    // 3. Confirmation to customer
     const customerHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
         <div style="background: #435b43; padding: 24px; border-radius: 6px 6px 0 0; text-align: center;">
@@ -77,6 +108,15 @@ export async function POST(req: NextRequest) {
             ${quantity ? `<p style="margin: 6px 0;"><strong>Quantity:</strong> ${quantity} units</p>` : ""}
             <p style="margin: 6px 0;"><strong>Message:</strong> ${message}</p>
           </div>
+          
+          <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 24px 0; border: 1px solid #e9ecef;">
+            <h3 style="margin-top: 0; color: #333; font-size: 16px;">Important Terms & Conditions</h3>
+            <ul style="padding-left: 20px; color: #555; line-height: 1.5; font-size: 14px;">
+              <li><strong>Payment Terms:</strong> Bulk orders require a 60% advance payment to initiate production, with the remaining 40% balance due prior to final dispatch.</li>
+              <li><strong>Refund Policy:</strong> Due to the highly customized nature of our products, custom bulk orders are non-refundable once production has commenced. Defective or misprinted items will be replaced upon immediate notification after delivery.</li>
+            </ul>
+          </div>
+          
           <p>In the meantime, feel free to WhatsApp us at <strong>+91 90225 53346</strong> for any urgent queries.</p>
           <div style="margin-top: 32px; padding-top: 20px; border-top: 1px solid #e0e0e0; font-size: 13px; color: #6b6b65; text-align: center;">
             <p>Tailoring Turba | Custom B2B Apparel Manufacturer</p>
@@ -88,8 +128,9 @@ export async function POST(req: NextRequest) {
 
     await sendMail({
       to: email,
-      subject: "We received your enquiry — Tailoring Turba",
+      subject: "Your Bulk Quote Request — Tailoring Turba",
       html: customerHtml,
+      attachments
     });
 
     return NextResponse.json({ success: true });

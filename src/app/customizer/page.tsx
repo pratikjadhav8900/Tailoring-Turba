@@ -4,7 +4,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import PoloCustomizer from "@/components/customizer/PoloCustomizer";
 import { CustomizerState } from "@/types/customizer";
 import styles from "./page.module.css";
-import { X, Undo2, Redo2, Eye, EyeOff, UploadCloud, FileText, Trash2 } from "lucide-react";
+import { X, Undo2, Redo2, Eye, EyeOff, UploadCloud, FileText, Trash2, Palette, Ruler, Shield, Truck } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import SizeBreakdown from "@/components/customizer/SizeBreakdown";
 import OrderSummary from "@/components/customizer/OrderSummary";
@@ -22,7 +22,7 @@ function CustomizerContent() {
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
   const [productionFiles, setProductionFiles] = useState<{name: string, size: number, url: string}[]>([]);
-  const [toast, setToast] = useState<{message: string, visible: boolean, type: 'info' | 'error' | 'success'}>({message: "", visible: false, type: 'info'});
+  const [toast, setToast] = useState<{message: string, visible: boolean, type: 'info' | 'error' | 'success' | 'warning'}>({message: "", visible: false, type: 'info'});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { addToCart } = useCart();
   const [isSaving, setIsSaving] = useState(false);
@@ -36,8 +36,37 @@ function CustomizerContent() {
   }, [dbProduct]);
 
   const productId = searchParams.get('id') || searchParams.get('productId');
+  const designId = searchParams.get('designId');
 
   useEffect(() => {
+    if (designId) {
+      const fetchDesign = async () => {
+        try {
+          const res = await fetch(`/api/designs/${designId}`);
+          if (!res.ok) throw new Error("Design not found");
+          const data = await res.json();
+          let state = typeof data.stateJson === 'string' ? JSON.parse(data.stateJson) : data.stateJson;
+          setCustomizerState(state);
+          
+          if (data.sourceProductId) {
+            const pRes = await fetch(`/api/products/${data.sourceProductId}`);
+            if (pRes.ok) {
+               setDbProduct(await pRes.json());
+            } else {
+               const staticMatch = allProducts.find(p => String(p.id) === String(data.sourceProductId));
+               if (staticMatch) setDbProduct(staticMatch);
+            }
+          }
+        } catch (err) {
+          console.error("Failed to fetch design:", err);
+        } finally {
+          setIsLoadingProduct(false);
+        }
+      };
+      fetchDesign();
+      return;
+    }
+
     if (!productId) {
       setIsLoadingProduct(false);
       return;
@@ -60,7 +89,7 @@ function CustomizerContent() {
     };
 
     fetchProduct();
-  }, [productId]);
+  }, [productId, designId]);
 
   // Map product category to garment type
   const categoryToGarment = (category: string, name?: string): string => {
@@ -126,6 +155,21 @@ function CustomizerContent() {
     ? Object.values(customizerState.sizes).reduce((a, b) => a + (b || 0), 0) 
     : 0;
 
+  // True if the customer has placed ANY logo/image element on front or back
+  const hasLogoElements = (
+    (customizerState?.frontElements || []).some(el => el.type === "logo") ||
+    (customizerState?.backElements  || []).some(el => el.type === "logo")
+  );
+
+  // Check if ALL logo elements are from "Your Uploads" (already on Cloudinary/server)
+  const allLogosFromUploads = hasLogoElements && [
+    ...(customizerState?.frontElements || []).filter(el => el.type === "logo"),
+    ...(customizerState?.backElements  || []).filter(el => el.type === "logo"),
+  ].every(el => el.value && (el.value.includes('res.cloudinary.com') || el.value.includes('cloudinary')));
+
+  // Production asset gate: required only when logos are present AND they weren't from existing uploads
+  const needsProductionAsset = hasLogoElements && !allLogosFromUploads && productionFiles.length === 0;
+
   const showToast = (message: string, type: 'info' | 'error' | 'success' = 'info') => {
     setToast({ message, visible: true, type });
     setTimeout(() => setToast(prev => ({ ...prev, visible: false })), 3000);
@@ -153,6 +197,12 @@ function CustomizerContent() {
         showToast(`Minimum order quantity is ${MOQ} pieces. Please add more sizes.`, "error");
         return;
       }
+      if (needsProductionAsset) {
+        showToast("Please upload at least one production asset file before proceeding.", "warning");
+        // Scroll the production assets section into view
+        document.getElementById("production-assets-section")?.scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+      }
       setActiveTab("Review");
       setIsPreviewMode(false);
     } else {
@@ -162,6 +212,12 @@ function CustomizerContent() {
       }
       if (!customizerState || totalQuantity === 0) {
         showToast("Please add at least one garment size to proceed.", "error");
+        return;
+      }
+      if (needsProductionAsset) {
+        showToast("Please upload at least one production asset file before adding to cart.", "warning");
+        setActiveTab("Options");
+        setTimeout(() => document.getElementById("production-assets-section")?.scrollIntoView({ behavior: "smooth", block: "center" }), 100);
         return;
       }
       
@@ -189,8 +245,7 @@ function CustomizerContent() {
               useCORS: true,
               backgroundColor: null,
               scale: 2,
-              logging: false,
-              allowTaint: true
+              logging: false
             });
             const blob = await new Promise<Blob>((resolve) => canvas.toBlob(b => resolve(b!), "image/png"));
             const mockupFile = new File([blob], fileName, { type: "image/png" });
@@ -455,13 +510,52 @@ function CustomizerContent() {
             />
             
             {/* Production Assets Section */}
-            <div className={styles.tabContentInner} style={{ borderTop: '1px solid #e2e8f0', paddingTop: '28px', marginTop: '20px' }}>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: '6px' }}>Production Assets</h3>
+            <div id="production-assets-section" className={styles.tabContentInner} style={{ borderTop: '1px solid #e2e8f0', paddingTop: '28px', marginTop: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>Production Assets</h3>
+                {hasLogoElements && (
+                  <span style={{
+                    fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.04em',
+                    padding: '3px 10px', borderRadius: '20px',
+                    background: needsProductionAsset ? '#fef2f2' : '#f0fdf4',
+                    color: needsProductionAsset ? '#dc2626' : '#16a34a',
+                    border: `1px solid ${needsProductionAsset ? '#fecaca' : '#86efac'}`,
+                  }}>
+                    {needsProductionAsset ? 'Required' : 'Uploaded ✓'}
+                  </span>
+                )}
+              </div>
               <p style={{ color: '#64748b', marginBottom: '16px', fontSize: '0.85rem' }}>Upload high-res vector files for manufacturing.</p>
-              
-              <div onClick={() => fileInputRef.current?.click()} className={styles.uploadArea}>
-                <UploadCloud size={28} color="#94a3b8" style={{ margin: '0 auto 10px' }} />
-                <div style={{ fontWeight: 600, color: '#475569', fontSize: '0.9rem' }}>Click to upload production files</div>
+
+              {/* Warning banner — shown only when logos on canvas but no file uploaded yet */}
+              {needsProductionAsset && (
+                <div style={{
+                  display: 'flex', alignItems: 'flex-start', gap: '10px',
+                  padding: '12px 14px',
+                  background: '#fef9ec',
+                  border: '1.5px solid #fcd34d',
+                  borderRadius: '10px',
+                  marginBottom: '14px',
+                }}>
+                  <span style={{ fontSize: '1.1rem', lineHeight: 1 }}>⚠️</span>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: '0.82rem', color: '#92400e', marginBottom: '2px' }}>
+                      Production file required to continue
+                    </div>
+                    <div style={{ fontSize: '0.78rem', color: '#b45309', lineHeight: 1.5 }}>
+                      You've added a logo/image to your design. Please upload the original high-res file (AI, PDF, PNG, SVG) so our team can reproduce it accurately.
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div 
+                onClick={() => fileInputRef.current?.click()} 
+                className={styles.uploadArea}
+                style={needsProductionAsset ? { borderColor: '#f59e0b', background: '#fffbeb' } : {}}
+              >
+                <UploadCloud size={28} color={needsProductionAsset ? '#f59e0b' : '#94a3b8'} style={{ margin: '0 auto 10px' }} />
+                <div style={{ fontWeight: 600, color: needsProductionAsset ? '#92400e' : '#475569', fontSize: '0.9rem' }}>Click to upload production files</div>
               </div>
               <input type="file" multiple ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileUpload} />
 
@@ -558,13 +652,13 @@ function CustomizerContent() {
                   <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '12px' }}>What's Included</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     {[
-                      { icon: '🎨', text: 'Custom print on garment as designed' },
-                      { icon: '📐', text: 'Industry-standard print placement' },
-                      { icon: '🏭', text: 'Quality checked before dispatch' },
-                      { icon: '📦', text: 'Pan-India delivery included' },
+                      { icon: <Palette size={15} color="#64748b" />, text: 'Custom print on garment as designed' },
+                      { icon: <Ruler size={15} color="#64748b" />, text: 'Industry-standard print placement' },
+                      { icon: <Shield size={15} color="#64748b" />, text: 'Quality checked before dispatch' },
+                      { icon: <Truck size={15} color="#64748b" />, text: 'Pan-India delivery included' },
                     ].map((item, i) => (
                       <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.82rem', color: '#374151' }}>
-                        <span style={{ fontSize: '1rem' }}>{item.icon}</span>
+                        <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{item.icon}</span>
                         {item.text}
                       </div>
                     ))}
@@ -585,41 +679,85 @@ function CustomizerContent() {
 
       </div>
 
-      {/* Sleek Custom Toast Notification */}
-      <div 
+      {/* Brand-matched Toast Notification */}
+      <div
         style={{
           position: 'fixed',
-          bottom: toast.visible ? '32px' : '-100px',
+          bottom: toast.visible ? '32px' : '-120px',
           left: '50%',
           transform: 'translateX(-50%)',
-          background: toast.type === 'error' ? '#EF4444' : toast.type === 'success' ? '#22C55E' : '#1E293B',
-          color: 'white',
-          padding: '14px 28px',
-          borderRadius: '12px',
-          fontWeight: '500',
-          fontSize: '15px',
-          boxShadow: `0 8px 30px ${toast.type === 'error' ? 'rgba(239, 68, 68, 0.4)' : toast.type === 'success' ? 'rgba(34, 197, 94, 0.4)' : 'rgba(30, 41, 59, 0.4)'}`,
-          transition: 'bottom 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+          transition: 'bottom 0.45s cubic-bezier(0.34, 1.56, 0.64, 1)',
           zIndex: 9999,
+          pointerEvents: 'none',
+          minWidth: '300px',
+          maxWidth: '480px',
+          width: 'max-content',
+        }}
+      >
+        <div style={{
+          background: '#FFFBEB',
+          border: `1px solid ${
+            toast.type === 'error'   ? '#FECDD3' :
+            toast.type === 'success' ? '#BBF7D0' :
+            toast.type === 'warning' ? '#FDE68A' :
+                                       '#99F6E4'
+          }`,
+          borderLeft: `4px solid ${
+            toast.type === 'error'   ? '#F43F5E' :
+            toast.type === 'success' ? '#4a5c3f' :
+            toast.type === 'warning' ? '#F59E0B' :
+                                       '#14B8A6'
+          }`,
+          borderRadius: '12px',
+          padding: '13px 18px',
           display: 'flex',
           alignItems: 'center',
           gap: '12px',
-          pointerEvents: 'none'
-        }}
-      >
-        <span style={{ 
-          background: 'rgba(255,255,255,0.25)', 
-          width: '24px', 
-          height: '24px', 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'center', 
-          borderRadius: '50%',
-          fontSize: '14px',
-          fontWeight: 'bold'
-        }}>{toast.type === 'error' ? '!' : toast.type === 'success' ? '✓' : 'i'}</span>
-        {toast.message}
+          boxShadow: '0 8px 32px rgba(26, 26, 24, 0.12), 0 2px 8px rgba(26, 26, 24, 0.06)',
+          fontFamily: 'var(--font-sans)',
+        }}>
+          {/* Icon dot */}
+          <span style={{
+            width: '28px',
+            height: '28px',
+            borderRadius: '50%',
+            flexShrink: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '14px',
+            background:
+              toast.type === 'error'   ? '#FFF1F2' :
+              toast.type === 'success' ? '#f0fdf4' :
+              toast.type === 'warning' ? '#FFFBEB' :
+                                         '#F0FDFA',
+            border: `1.5px solid ${
+              toast.type === 'error'   ? '#FDA4AF' :
+              toast.type === 'success' ? '#86efac' :
+              toast.type === 'warning' ? '#FCD34D' :
+                                         '#5EEAD4'
+            }`,
+            color:
+              toast.type === 'error'   ? '#E11D48' :
+              toast.type === 'success' ? '#4a5c3f' :
+              toast.type === 'warning' ? '#B45309' :
+                                         '#0D9488',
+          }}>
+            {toast.type === 'error' ? '✕' : toast.type === 'success' ? '✓' : toast.type === 'warning' ? '⚠' : 'i'}
+          </span>
+          {/* Message */}
+          <span style={{
+            fontSize: '0.875rem',
+            fontWeight: 600,
+            color: '#1a1a18',
+            lineHeight: 1.4,
+            letterSpacing: '-0.01em',
+          }}>
+            {toast.message}
+          </span>
+        </div>
       </div>
+
     </main>
   );
 }

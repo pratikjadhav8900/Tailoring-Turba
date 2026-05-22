@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import styles from "./page.module.css";
 import { Paintbrush, ArrowRight } from "lucide-react";
+import { allProducts } from "@/lib/products-data";
 
 export default async function DesignsPage() {
   const session = await auth();
@@ -56,11 +57,16 @@ export default async function DesignsPage() {
           </div>
         ) : (
         <div className={styles.grid}>
-          {designs.map(design => (
+          {designs.map(design => {
+            const staticProduct = design.sourceProductId ? allProducts.find(p => String(p.id) === String(design.sourceProductId)) : null;
+            const fallbackImage = design.product?.images?.[0] || design.product?.image || staticProduct?.image || '/studio_designs_bg.png';
+            const displayImage = design.imageUrl || fallbackImage;
+
+            return (
             <div key={design.id} className={styles.card}>
               <div className={styles.imageWrapper}>
-                {design.imageUrl ? (
-                  <Image src={design.imageUrl} alt={design.name} fill style={{ objectFit: 'contain' }} />
+                {displayImage ? (
+                  <Image src={displayImage} alt={design.name} fill style={{ objectFit: 'contain' }} />
                 ) : (
                   <div className={styles.placeholder}>No Image</div>
                 )}
@@ -72,7 +78,7 @@ export default async function DesignsPage() {
                   <span>{new Date(design.createdAt).toLocaleDateString()}</span>
                 </div>
                 <div className={styles.actions}>
-                  <Link href={`/customizer`} className={styles.actionBtn}>
+                  <Link href={`/customizer?designId=${design.id}`} className={styles.actionBtn}>
                     Edit Design
                   </Link>
                   <Link href={`/cart`} className={styles.actionBtnPrimary}>
@@ -81,7 +87,7 @@ export default async function DesignsPage() {
                 </div>
               </div>
             </div>
-          ))}
+          )})}
         </div>
         )}
       </div>

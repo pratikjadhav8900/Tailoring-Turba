@@ -11,6 +11,7 @@ import { useCart } from "@/context/CartContext";
 import styles from "./page.module.css";
 import EmptyState from "@/components/EmptyState";
 import { getElementDetails } from "@/lib/customizer-utils";
+import { GARMENTS } from "@/lib/fabric-data";
 
 export default function CartPage() {
   const { cart, removeFromCart, cartCount } = useCart();
@@ -105,7 +106,9 @@ export default function CartPage() {
                     {/* Image */}
                     <div className={styles.itemImageContainer}>
                       {item.customDesign && <span className={styles.customBadge}>Custom</span>}
-                      {item.image ? (
+                      {item.customDesign ? (
+                        <Image src={(GARMENTS as any)[garmentType]?.baseFront || (GARMENTS as any)[garmentType]?.front || item.image || ''} alt={item.name} fill style={{ objectFit: 'contain' }} />
+                      ) : item.image ? (
                         <Image src={item.image} alt={item.name} fill style={{ objectFit: 'contain' }} />
                       ) : (
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', opacity: 0.15 }}>

@@ -129,13 +129,13 @@ export default function BigShipShipmentModal({ order, onClose, onSuccess }: Prop
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '16px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '0.8rem', fontWeight: 600 }}>Pickup Warehouse</label>
                 <select 
                   value={formData.warehouseId} 
                   onChange={(e) => setFormData({...formData, warehouseId: e.target.value})}
-                  style={{ padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0' }}
+                  style={{ padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0', width: '100%', boxSizing: 'border-box', minWidth: 0 }}
                 >
                   {warehouses.map(w => (
                     <option key={w.warehouseId} value={w.warehouseId}>{w.warehouseName} ({w.pincode})</option>
@@ -144,22 +144,22 @@ export default function BigShipShipmentModal({ order, onClose, onSuccess }: Prop
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '0.8rem', fontWeight: 600 }}>Weight (kg)</label>
-                <input type="number" value={formData.weight} onChange={e => setFormData({...formData, weight: e.target.value})} style={{ padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0' }} />
+                <input type="number" value={formData.weight} onChange={e => setFormData({...formData, weight: e.target.value})} style={{ padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0', width: '100%', boxSizing: 'border-box', minWidth: 0 }} />
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))', gap: '12px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '0.8rem', fontWeight: 600 }}>Length (cm)</label>
-                <input type="number" value={formData.length} onChange={e => setFormData({...formData, length: e.target.value})} style={{ padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0' }} />
+                <input type="number" value={formData.length} onChange={e => setFormData({...formData, length: e.target.value})} style={{ padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0', width: '100%', boxSizing: 'border-box', minWidth: 0 }} />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '0.8rem', fontWeight: 600 }}>Breadth (cm)</label>
-                <input type="number" value={formData.breadth} onChange={e => setFormData({...formData, breadth: e.target.value})} style={{ padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0' }} />
+                <input type="number" value={formData.breadth} onChange={e => setFormData({...formData, breadth: e.target.value})} style={{ padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0', width: '100%', boxSizing: 'border-box', minWidth: 0 }} />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 <label style={{ fontSize: '0.8rem', fontWeight: 600 }}>Height (cm)</label>
-                <input type="number" value={formData.height} onChange={e => setFormData({...formData, height: e.target.value})} style={{ padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0' }} />
+                <input type="number" value={formData.height} onChange={e => setFormData({...formData, height: e.target.value})} style={{ padding: '8px', borderRadius: '6px', border: '1px solid #e2e8f0', width: '100%', boxSizing: 'border-box', minWidth: 0 }} />
               </div>
             </div>
 

@@ -3,7 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import Razorpay from "razorpay";
-import { sendBalancePaymentRequestEmail, sendOrderCancellationEmail } from "@/lib/mail";
+import { sendBalancePaymentRequestEmail, sendOrderCancellationEmail, sendTaxInvoiceEmail } from "@/lib/mail";
+import { generateInvoicePdf } from "@/lib/pdf";
 
 function getRazorpay() {
   const key_id = process.env.RAZORPAY_KEY_ID;
@@ -137,7 +138,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     }
   }
 
-  // Handle Dispatch / Shipped (Split Payment Balance Request Email)
+  // Handle Dispatch / Shipped (Split Payment Balance Request Email + Tax Invoice)
   if (status === "SHIPPED" && order.status !== "SHIPPED") {
     // If it's a split payment and the balance is still unpaid
     if (order.isSplitPayment && order.remainingAmount > 0 && order.secondPaymentStatus !== "PAID") {
@@ -154,6 +155,56 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
           order.orderNumber
         ).catch(err => console.error("[MAIL_ERROR] Failed to send balance request email:", err));
         console.log(`[MAIL] Sent split payment balance request email for order: ${order.id}`);
+      }
+    }
+
+    // Generate and email Tax Invoice PDF to customer
+    if (order.user.email) {
+      const fullOrderForPdf = await prisma.order.findUnique({
+        where: { id: params.id },
+        include: {
+          items: { include: { product: true } },
+          user: { select: { name: true, email: true, phone: true } },
+          shippingAddress: true,
+        },
+      });
+
+      if (fullOrderForPdf) {
+        const pdfOrder = {
+          id: fullOrderForPdf.id,
+          orderNumber: fullOrderForPdf.orderNumber,
+          createdAt: fullOrderForPdf.createdAt,
+          totalAmount: fullOrderForPdf.totalAmount,
+          isSplitPayment: fullOrderForPdf.isSplitPayment ?? false,
+          amountPaid: fullOrderForPdf.amountPaid ?? 0,
+          remainingAmount: fullOrderForPdf.remainingAmount ?? 0,
+          user: {
+            name: fullOrderForPdf.user?.name ?? null,
+            email: fullOrderForPdf.user?.email ?? null,
+            phone: fullOrderForPdf.user?.phone ?? null,
+          },
+          shippingAddress: fullOrderForPdf.shippingAddress ? {
+            name: fullOrderForPdf.shippingAddress.name,
+            street: fullOrderForPdf.shippingAddress.street,
+            city: fullOrderForPdf.shippingAddress.city,
+            state: fullOrderForPdf.shippingAddress.state,
+            postalCode: fullOrderForPdf.shippingAddress.postalCode,
+            country: fullOrderForPdf.shippingAddress.country,
+          } : null,
+          items: fullOrderForPdf.items.map(i => ({ product: { name: i.product.name }, quantity: i.quantity, price: i.price })),
+          type: 'INVOICE' as const,
+        };
+
+        generateInvoicePdf(pdfOrder).then(pdfBuffer => {
+          return sendTaxInvoiceEmail(
+            fullOrderForPdf.user!.email!,
+            fullOrderForPdf.user!.name || 'Customer',
+            fullOrderForPdf.id,
+            pdfBuffer,
+            fullOrderForPdf.orderNumber ?? undefined
+          );
+        }).catch(err => console.error("[MAIL_ERROR] Failed to send Tax Invoice email:", err));
+        console.log(`[MAIL] Queued Tax Invoice email for order: ${order.id}`);
       }
     }
   }

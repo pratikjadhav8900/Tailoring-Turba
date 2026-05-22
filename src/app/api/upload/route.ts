@@ -1,6 +1,8 @@
 export const dynamic = 'force-dynamic';
 import { v2 as cloudinary } from "cloudinary";
 import { NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -34,6 +36,20 @@ export async function POST(request: Request) {
       );
       uploadStream.end(buffer);
     });
+
+    const session = await auth();
+    if (session?.user?.id && result?.secure_url) {
+      try {
+        await prisma.userAsset.create({
+          data: {
+            userId: session.user.id,
+            url: result.secure_url,
+          },
+        });
+      } catch (dbErr) {
+        console.error("Failed to save asset to user account:", dbErr);
+      }
+    }
 
     return NextResponse.json({ 
       url: result.secure_url,

@@ -7,6 +7,7 @@ import { Download, Package, MapPin, FileImage } from "lucide-react";
 import { CustomizerState, DesignElement } from "@/types/customizer";
 import { getElementDetails } from "@/lib/customizer-utils";
 import DownloadButton from "./DownloadButton";
+import ResendInvoiceButton from "./ResendInvoiceButton";
 
 export default async function OrderDetailsPage({ params }: { params: { id: string } }) {
   const order = await prisma.order.findUnique({
@@ -89,6 +90,9 @@ export default async function OrderDetailsPage({ params }: { params: { id: strin
           </div>
         </div>
       </div>
+
+      {/* Resend Invoice */}
+      <ResendInvoiceButton orderId={order.id} />
 
       {/* Production Assets */}
       <div className="bg-white p-6 rounded-xl border shadow-sm">

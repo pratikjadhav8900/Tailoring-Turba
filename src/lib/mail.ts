@@ -177,7 +177,7 @@ export const sendOrderConfirmationEmail = async (
           If you cancel this order within <strong>24 hours</strong> of placement, you will receive a <strong>75% refund</strong> of the paid amount (25% fee will be deducted for administrative costs). After 24 hours, no refund will be provided because customization and fabric-cutting will have already begun.
         </p>
 
-        <p>Your official tax invoice PDF has been attached to this email.</p>
+        <p>Your <strong>Pro Forma Invoice</strong> has been attached to this email. Your official Tax Invoice will be sent when your order is dispatched.</p>
         <p>Best regards,<br/>The Tailoring Turba Team</p>
       </div>
     </div>
@@ -189,7 +189,52 @@ export const sendOrderConfirmationEmail = async (
     html,
     attachments: [
       {
-        filename: `Invoice_Order_${displayNo}.pdf`,
+        filename: `ProForma_Invoice_${displayNo}.pdf`,
+        content: pdfBuffer,
+        contentType: 'application/pdf',
+      },
+    ],
+  });
+};
+
+export const sendTaxInvoiceEmail = async (
+  email: string,
+  name: string,
+  orderId: string,
+  pdfBuffer: Buffer,
+  orderNumber?: number
+) => {
+  const displayNo = orderNumber ? String(orderNumber) : orderId.slice(-8).toUpperCase();
+  const subject = `Your Tax Invoice — Tailoring Turba Order #${displayNo}`;
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+      <div style="background: #435b43; padding: 24px; border-radius: 6px 6px 0 0; text-align: center;">
+        <h1 style="color: white; margin: 0; font-size: 22px; letter-spacing: 1px;">TAILORING TURBA</h1>
+      </div>
+      <div style="padding: 28px 24px;">
+        <h2 style="color: #435b43; margin-top: 0;">Your Order Has Been Dispatched! 🚚</h2>
+        <p>Dear <strong>${name}</strong>,</p>
+        <p>Great news! Your order <strong>#${displayNo}</strong> has been dispatched and is on its way to you.</p>
+
+        <div style="background-color: #f0fdf4; padding: 20px; border-radius: 8px; margin: 24px 0; border-left: 4px solid #16a34a;">
+          <p style="margin: 0 0 8px 0; font-size: 14px; color: #166534; text-transform: uppercase; letter-spacing: 1px;">What's Next?</p>
+          <p style="margin: 6px 0;">📄 Your official <strong>Tax Invoice</strong> is attached to this email.</p>
+          <p style="margin: 6px 0;">📦 Your package is on its way — tracking details will be shared shortly.</p>
+        </div>
+
+        <p>Please keep this Tax Invoice for your GST records. If you have any questions, feel free to reach out to us.</p>
+        <p>Best regards,<br/>The Tailoring Turba Team</p>
+      </div>
+    </div>
+  `;
+
+  return sendMail({
+    to: email,
+    subject,
+    html,
+    attachments: [
+      {
+        filename: `Tax_Invoice_${displayNo}.pdf`,
         content: pdfBuffer,
         contentType: 'application/pdf',
       },
