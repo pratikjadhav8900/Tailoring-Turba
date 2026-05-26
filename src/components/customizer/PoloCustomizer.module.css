@@ -171,8 +171,8 @@
 /* Color swatch grid */
 .colorSwatchGrid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px 6px;
 }
 .colorSwatchCard {
   display: flex;
@@ -189,18 +189,18 @@
 .colorSwatchCard:hover { transform: scale(1.06); }
 .colorSwatchCardActive .colorSwatchBlock {
   outline: 2.5px solid #007aff;
-  outline-offset: 2px;
+  outline-offset: 2.5px;
 }
 .colorSwatchBlock {
   width: 100%;
   aspect-ratio: 1;
-  border-radius: 10px;
+  border-radius: 50%;
   position: relative;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
   transition: box-shadow 0.15s;
 }
 .colorSwatchCard:hover .colorSwatchBlock {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.22);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.18);
 }
 .colorCheckmark {
   position: absolute;
@@ -1041,17 +1041,22 @@
 
 /* ─── MOBILE ──────────────────────────────────────────────────────── */
 @media (max-width: 1024px) {
-  .wrapper { flex-direction: column; height: 100vh; overflow: hidden; }
+  .wrapper { flex-direction: column; height: 100%; overflow: hidden; }
 
   .leftSidebar {
     width: 100%;
     flex-direction: row;
-    height: 60px;
-    padding: 0 8px;
+    height: calc(64px + env(safe-area-inset-bottom, 0px));
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
     justify-content: space-around;
     border-right: none;
-    border-bottom: 1px solid #eee;
+    border-top: 1px solid #e2e8f0;
+    border-bottom: none;
+    background: white;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.04);
     flex-shrink: 0;
+    order: 2;
+    z-index: 30;
   }
   .sidebarToolBtn { width: 52px; height: 52px; gap: 2px; }
   .sidebarToolLabel { font-size: 0.58rem; }
@@ -1086,6 +1091,7 @@
   .canvasColumn {
     flex: 1;
     min-height: 0;
+    order: 1;
   }
 
   .canvasWrapper {

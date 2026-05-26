@@ -13,8 +13,8 @@ export const GARMENTS = {
     printableArea: {
       front: { top: "19%", left: "25%", width: "50%", height: "55%" },
       back: { top: "18%", left: "27%", width: "46%", height: "60%" },
-      left: { top: "32%", left: "48%", width: "22%", height: "30%" },
-      right: { top: "32%", left: "48%", width: "22%", height: "30%" }
+      left: { top: "45%", left: "60%", width: "12%", height: "18%" },
+      right: { top: "45%", left: "60%", width: "12%", height: "18%" }
     }
   },
   "v-neck": {
@@ -36,8 +36,8 @@ export const GARMENTS = {
     printableArea: {
       front: { top: "22%", left: "25%", width: "50%", height: "60%" },
       back: { top: "17%", left: "27%", width: "46%", height: "60%" },
-      left: { top: "32%", left: "48%", width: "22%", height: "30%" },
-      right: { top: "32%", left: "48%", width: "22%", height: "30%" }
+      left: { top: "46%", left: "58%", width: "14%", height: "20%" },
+      right: { top: "46%", left: "58%", width: "14%", height: "20%" }
     }
   },
   hoodie: {

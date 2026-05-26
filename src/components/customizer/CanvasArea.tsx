@@ -50,6 +50,9 @@ export default function CanvasArea({
   // Double-tap detection for mobile text editing
   const lastTapRef = useRef<{ id: string; time: number } | null>(null);
 
+  // Track dragging to prevent click triggers
+  const hasDraggedRef = useRef(false);
+
   const [deviceScale, setDeviceScale] = useState(1);
 
   React.useEffect(() => {
@@ -90,7 +93,17 @@ export default function CanvasArea({
     zoomRef.current = zoom;
     onZoomChangeRef.current = onZoomChange;
     panRef.current = pan;
-  }, [zoom, onZoomChange, pan]);
+
+    // Update cursor when zoom changes
+    const canvas = canvasRef.current;
+    if (canvas && !isPreviewMode) {
+      if (zoom > 1.05) {
+        canvas.style.cursor = "grab";
+      } else {
+        canvas.style.cursor = "";
+      }
+    }
+  }, [zoom, onZoomChange, pan, isPreviewMode]);
 
   React.useEffect(() => {
     const canvas = canvasRef.current;
@@ -103,6 +116,13 @@ export default function CanvasArea({
     let touchStartZoom = 1;
     let touchStartMid = { x: 0, y: 0 };
     let touchStartPan = { x: 0, y: 0 };
+    let touchStartSingle = { x: 0, y: 0 };
+    let isSingleFingerPan = false;
+
+    // Mouse drag state
+    let isMouseDown = false;
+    let startMousePos = { x: 0, y: 0 };
+    let startPan = { x: 0, y: 0 };
 
     const getMidpoint = (touches: TouchList) => {
       return {
@@ -123,16 +143,43 @@ export default function CanvasArea({
         const delta = e.deltaY;
         const newZoom = zoomRef.current - delta * 0.005;
         onZoomChangeRef.current(Math.max(0.3, Math.min(3.0, newZoom)));
+      } else {
+        // Trackpad panning (two-finger scroll)
+        if (zoomRef.current > 1.05) {
+          e.preventDefault();
+          setPan(p => ({
+            x: p.x - e.deltaX,
+            y: p.y - e.deltaY
+          }));
+        }
       }
     };
 
     const handleTouchStart = (e: TouchEvent) => {
+      const target = e.target as HTMLElement;
+      // Prevent canvas panning if the touch initiates on any design element or drag handle
+      if (target.closest('.customizer-drag-handle') || target.closest('[class*="rndBox"]')) {
+        return;
+      }
+
+      hasDraggedRef.current = false;
+
       if (e.touches.length === 2) {
         e.preventDefault();
         setIsGestureActive(true);
+        isSingleFingerPan = false;
         touchStartDist = getDistance(e.touches);
         touchStartZoom = zoomRef.current;
         touchStartMid = getMidpoint(e.touches);
+        touchStartPan = { ...panRef.current };
+      } else if (e.touches.length === 1) {
+        // Prevent browser viewport scrolling only if zoomed in, so user can pan the shirt
+        if (zoomRef.current > 1.05) {
+          e.preventDefault();
+        }
+        setIsGestureActive(true);
+        isSingleFingerPan = true;
+        touchStartSingle = { x: e.touches[0].clientX, y: e.touches[0].clientY };
         touchStartPan = { ...panRef.current };
       }
     };
@@ -140,6 +187,7 @@ export default function CanvasArea({
     const handleTouchMove = (e: TouchEvent) => {
       if (e.touches.length === 2) {
         e.preventDefault();
+        isSingleFingerPan = false;
         if (touchStartDist > 0) {
           const dist = getDistance(e.touches);
           const scaleChange = dist / touchStartDist;
@@ -153,11 +201,75 @@ export default function CanvasArea({
           x: touchStartPan.x + dx,
           y: touchStartPan.y + dy
         });
+        hasDraggedRef.current = true;
+      } else if (e.touches.length === 1 && isSingleFingerPan) {
+        if (zoomRef.current > 1.05) {
+          e.preventDefault();
+        }
+        const dx = e.touches[0].clientX - touchStartSingle.x;
+        const dy = e.touches[0].clientY - touchStartSingle.y;
+        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+          hasDraggedRef.current = true;
+        }
+        setPan({
+          x: touchStartPan.x + dx,
+          y: touchStartPan.y + dy
+        });
       }
     };
 
     const handleTouchEnd = () => {
       setIsGestureActive(false);
+      isSingleFingerPan = false;
+    };
+
+    // Mouse drag handlers
+    const handleMouseDown = (e: MouseEvent) => {
+      if (e.button !== 0) return; // Only pan on left click
+      const target = e.target as HTMLElement;
+      // Prevent panning if clicking on a design element, handle, formatted bar or control button
+      if (
+        target.closest('.customizer-drag-handle') || 
+        target.closest('[class*="rndBox"]') || 
+        target.closest('[class*="topFormattingBar"]') ||
+        target.closest('button') ||
+        target.closest('input') ||
+        target.closest('select') ||
+        target.closest('textarea')
+      ) {
+        return;
+      }
+
+      isMouseDown = true;
+      hasDraggedRef.current = false;
+      startMousePos = { x: e.clientX, y: e.clientY };
+      startPan = { ...panRef.current };
+      canvas.style.cursor = 'grabbing';
+
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isMouseDown) return;
+      const dx = e.clientX - startMousePos.x;
+      const dy = e.clientY - startMousePos.y;
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+        hasDraggedRef.current = true;
+      }
+      setPan({
+        x: startPan.x + dx,
+        y: startPan.y + dy
+      });
+    };
+
+    const handleMouseUp = () => {
+      if (isMouseDown) {
+        isMouseDown = false;
+        canvas.style.cursor = zoomRef.current > 1.05 ? 'grab' : '';
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mouseup', handleMouseUp);
+      }
     };
 
     canvas.addEventListener("wheel", handleWheel, { passive: false });
@@ -165,6 +277,14 @@ export default function CanvasArea({
     canvas.addEventListener("touchmove", handleTouchMove, { passive: false });
     canvas.addEventListener("touchend", handleTouchEnd, { passive: true });
     canvas.addEventListener("touchcancel", handleTouchEnd, { passive: true });
+    canvas.addEventListener("mousedown", handleMouseDown);
+
+    // Initial cursor check
+    if (zoomRef.current > 1.05) {
+      canvas.style.cursor = 'grab';
+    } else {
+      canvas.style.cursor = '';
+    }
 
     return () => {
       canvas.removeEventListener("wheel", handleWheel);
@@ -172,6 +292,9 @@ export default function CanvasArea({
       canvas.removeEventListener("touchmove", handleTouchMove);
       canvas.removeEventListener("touchend", handleTouchEnd);
       canvas.removeEventListener("touchcancel", handleTouchEnd);
+      canvas.removeEventListener("mousedown", handleMouseDown);
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
     };
   }, [isPreviewMode]);
 
@@ -224,7 +347,11 @@ export default function CanvasArea({
     setEditingId(null);
   }, [editingId, editDraft, onRemoveElement, onUpdateElement]);
 
-  const handleCanvasClick = () => {
+  const handleCanvasClick = (e: React.MouseEvent) => {
+    if (hasDraggedRef.current) {
+      hasDraggedRef.current = false;
+      return;
+    }
     if (editingId) { commitEdit(); return; }
     onElementClick(null);
   };
@@ -276,100 +403,81 @@ export default function CanvasArea({
                   height: "100%"
                 }}
               >
-            {/* Optional Base Image (e.g., Man wearing the shirt) */}
-            {currentBaseImg && (
-              <img
-                src={currentBaseImg}
-                alt="Base Mockup"
-                className={styles.garmentBaseImage}
-                style={{ zIndex: 0 }}
-                crossOrigin="anonymous"
-              />
-            )}
+            {/* Base photo: either the model image (baseFront) or the shirt cutout itself (front).
+                We render this untouched, preserving 100% of the original photographed fabric lighting, shadows, wrinkles, and gradients. */}
+            <img
+              src={currentBaseImg || currentImg}
+              alt="Base Garment"
+              className={styles.garmentBaseImage}
+              style={{ zIndex: 0 }}
+              crossOrigin="anonymous"
+            />
             
-            {/* Color & Texture Layers: Rendered for all states, using white as fallback if transparent */}
+            {/* Color Dye Tint overlays: Rendered with blend modes directly on top of the base image */}
             {(() => {
               const isTransparent = bodyColor === "transparent";
               const effectiveColor = isTransparent ? "#ffffff" : bodyColor;
               
-              // Determine if the color is very dark (e.g. black) to adjust opacity
+              // Calculate luminance to scale overlay values naturally
               const hex = effectiveColor.replace("#", "");
-              const r = parseInt(hex.substring(0,2), 16) || 0;
-              const g = parseInt(hex.substring(2,4), 16) || 0;
-              const b = parseInt(hex.substring(4,6), 16) || 0;
+              const r = parseInt(hex.substring(0, 2), 16) || 0;
+              const g = parseInt(hex.substring(2, 4), 16) || 0;
+              const b = parseInt(hex.substring(4, 6), 16) || 0;
               const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
               
-              // We make the color layer nearly opaque so the color is rich and true to the selected swatch
-              const colorOpacity = luminance < 0.15 ? 0.90 : luminance < 0.35 ? 0.94 : 0.97;
-              
-              // Shadows layer (Multiply) adjustments:
-              // For dark colors, make the shadows less dark so details aren't lost
-              // For light colors, make them standard
-              const textureFilter = luminance < 0.15 
-                ? "brightness(1.6) contrast(1.15)" 
-                : luminance < 0.35 
-                  ? "brightness(1.3) contrast(1.1)"
-                  : effectiveColor.toLowerCase() === "#ffffff" ? "none" : "brightness(1.05)";
+              // Dynamic opacities to prevent flattening the fabric wrinkles and to keep dye subtle:
+              // - Multiply applies color and subtractive shade depth based on target darkness.
+              // - Color applies the hue/saturation tint without touching underlying luminance.
+              const multiplyOpacity = isTransparent ? 0 : Math.max(0, 0.75 * (1 - luminance));
+              const colorOpacity = isTransparent ? 0 : 0.70;
 
-              const textureOpacity = luminance < 0.15 ? 0.65 : effectiveColor.toLowerCase() === "#ffffff" ? 0.95 : 0.80;
-
-              // Highlights layer (Screen) adjustments:
-              // For dark colors, we need more highlight reflection to define fabric folds
-              // For light colors, we need less since the base is already bright
-              const highlightOpacity = luminance < 0.15 
-                ? 0.35 
-                : luminance < 0.35 
-                  ? 0.28 
-                  : luminance < 0.7 
-                    ? 0.20 
-                    : 0.08;
-
-              const highlightFilter = "brightness(0.5) contrast(1.4) grayscale(1)";
+              // Mask properties to align overlay perfectly over the shirt shape
+              const maskStyle: React.CSSProperties = {
+                position: "absolute",
+                inset: 0,
+                width: "100%",
+                height: "100%",
+                maskImage: `url(${currentImg})`,
+                WebkitMaskImage: `url(${currentImg})`,
+                maskSize: "contain",
+                WebkitMaskSize: "contain",
+                maskRepeat: "no-repeat",
+                WebkitMaskRepeat: "no-repeat",
+                maskPosition: "center",
+                WebkitMaskPosition: "center",
+                pointerEvents: "none",
+              };
 
               return (
                 <>
-                  <div
-                    className={styles.garmentColorLayer}
-                    data-html2canvas-ignore="true"
-                    style={{
-                      backgroundColor: effectiveColor,
-                      opacity: colorOpacity,
-                      maskImage: `url(${currentImg})`,
-                      WebkitMaskImage: `url(${currentImg})`,
-                      maskSize: "contain",
-                      WebkitMaskSize: "contain",
-                      maskRepeat: "no-repeat",
-                      WebkitMaskRepeat: "no-repeat",
-                      maskPosition: "center",
-                      WebkitMaskPosition: "center",
-                    }}
-                  />
-                  {/* Shadows Layer */}
-                  <img
-                    key={`${garmentType}-${activeSide}-shadows`}
-                    src={currentImg}
-                    alt="Garment Shadows"
-                    className={styles.garmentBaseImage}
-                    style={{ 
-                      mixBlendMode: "multiply", 
-                      opacity: textureOpacity,
-                      filter: textureFilter,
-                    }}
-                    crossOrigin="anonymous"
-                  />
-                  {/* Highlights Layer */}
-                  <img
-                    key={`${garmentType}-${activeSide}-highlights`}
-                    src={currentImg}
-                    alt="Garment Highlights"
-                    className={styles.garmentBaseImage}
-                    style={{ 
-                      mixBlendMode: "screen", 
-                      opacity: highlightOpacity,
-                      filter: highlightFilter,
-                    }}
-                    crossOrigin="anonymous"
-                  />
+                  {/* Layer 1: Multiply blend mode to dye the fabric fibers, adjusting for target color darkness */}
+                  {!isTransparent && (
+                    <div
+                      className={styles.garmentColorLayer}
+                      data-html2canvas-ignore="true"
+                      style={{
+                        ...maskStyle,
+                        backgroundColor: effectiveColor,
+                        mixBlendMode: "multiply",
+                        opacity: multiplyOpacity,
+                        zIndex: 1,
+                      }}
+                    />
+                  )}
+                  {/* Layer 2: Color blend mode to overlay exact hue and saturation tint without flattening texture details */}
+                  {!isTransparent && (
+                    <div
+                      className={styles.garmentColorLayer}
+                      data-html2canvas-ignore="true"
+                      style={{
+                        ...maskStyle,
+                        backgroundColor: effectiveColor,
+                        mixBlendMode: "color",
+                        opacity: colorOpacity,
+                        zIndex: 2,
+                      }}
+                    />
+                  )}
                 </>
               );
             })()}

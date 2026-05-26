@@ -340,7 +340,7 @@ export default function ToolPanel({
               {activeTool === "Properties" && "Edit Element"}
             </div>
             <button className={styles.closeContextBtn} onClick={() => onToolSelect(null)} title="Close">
-              <ArrowUpRight size={16} />
+              <X size={18} />
             </button>
           </div>
 

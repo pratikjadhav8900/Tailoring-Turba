@@ -182,31 +182,114 @@
 
 @media (max-width: 1024px) {
   .topBar {
-    flex-direction: column;
+    display: grid;
+    grid-template-areas:
+      "left left"
+      "tabs actions";
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    padding: 6px 12px;
+    gap: 8px;
     height: auto;
-    padding: 12px;
-    gap: 12px;
   }
 
   .topBarLeft {
+    grid-area: left;
     width: 100%;
+    display: flex;
     justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 6px;
+  }
+
+  /* Make exit button icon-only on mobile */
+  .exitBtn {
+    font-size: 0 !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: #f1f5f9;
+    border-radius: 50%;
+  }
+  .exitBtn svg {
+    margin-right: 0 !important;
+  }
+
+  /* Hide the product details badge on mobile to save horizontal space */
+  .topBarLeft div[style] {
+    display: none !important;
+  }
+
+  /* Compact Save button styling */
+  .topBarLeft button:not(.exitBtn) {
+    padding: 4px 10px !important;
+    font-size: 0.72rem !important;
+    height: 30px !important;
+    border-radius: 6px !important;
   }
 
   .productName {
     display: none;
   }
 
+  /* Row 2: Stacks Tabs and Right side actions side-by-side */
   .topBarCenter {
-    width: 100%;
-    justify-content: center;
-    border-top: 1px solid #eee;
-    border-bottom: 1px solid #eee;
+    grid-area: tabs;
+    width: auto;
+    display: flex;
+    justify-content: flex-start;
+    border: none !important;
+    height: 32px;
+    align-items: center;
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Tab bar buttons */
+  .tab {
+    padding: 0 8px !important;
+    font-size: 0.8rem !important;
+    border-bottom-width: 2.5px !important;
+    height: 100% !important;
   }
 
   .topBarRight {
-    width: 100%;
-    justify-content: space-between;
+    grid-area: actions;
+    width: auto;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .actionIcons {
+    gap: 4px !important;
+    padding-right: 6px !important;
+    border-right: 1px solid #e2e8f0;
+  }
+
+  .iconBtn {
+    width: 28px !important;
+    height: 28px !important;
+    background: #f1f5f9 !important;
+  }
+
+  .previewBtn {
+    padding: 4px 10px !important;
+    font-size: 0.72rem !important;
+    height: 28px !important;
+  }
+
+  .nextBtn {
+    padding: 4px 12px !important;
+    font-size: 0.72rem !important;
+    height: 28px !important;
+    display: flex;
+    align-items: center;
   }
 }
 
