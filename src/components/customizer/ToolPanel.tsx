@@ -125,11 +125,13 @@ export default function ToolPanel({
 
   const [showQrModal, setShowQrModal] = useState(false);
   const [qrSessionId, setQrSessionId] = useState<string | null>(null);
+  const [qrStatus, setQrStatus] = useState<"waiting" | "received">("waiting");
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const openQrModal = useCallback(() => {
     const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     setQrSessionId(id);
+    setQrStatus("waiting");
     setShowQrModal(true);
     fetch(`/api/upload-session?session=${id}`).catch(() => {});
   }, []);
@@ -137,6 +139,7 @@ export default function ToolPanel({
   const closeQrModal = useCallback(() => {
     setShowQrModal(false);
     setQrSessionId(null);
+    setQrStatus("waiting");
     if (pollRef.current) clearInterval(pollRef.current);
   }, []);
 
@@ -148,6 +151,7 @@ export default function ToolPanel({
         if (!res.ok) return;
         const data = await res.json();
         if (data.url) {
+          setQrStatus("received");
           if (pollRef.current) clearInterval(pollRef.current);
           onAddLogoUrl?.(data.url);
           setTimeout(closeQrModal, 2000);
@@ -204,7 +208,9 @@ export default function ToolPanel({
   const handleWidthChange = (val: number) => {
     if (!activeElement || isNaN(val) || val <= 0) return;
     const scale = SIZE_SCALES[previewSize] || 1.0;
-    const pxPerInch = (printableWidthPx / 12) * scale;
+    const isSleeve = activeSide === "left" || activeSide === "right";
+    const physicalWidthInches = isSleeve ? 4 : 12;
+    const pxPerInch = (printableWidthPx / physicalWidthInches) * scale;
     let newWidth = Math.round(val * pxPerInch);
     newWidth = Math.max(20, Math.min(560, newWidth));
 
@@ -224,7 +230,9 @@ export default function ToolPanel({
   const handleHeightChange = (val: number) => {
     if (!activeElement || isNaN(val) || val <= 0) return;
     const scale = SIZE_SCALES[previewSize] || 1.0;
-    const pxPerInch = (printableWidthPx / 12) * scale;
+    const isSleeve = activeSide === "left" || activeSide === "right";
+    const physicalWidthInches = isSleeve ? 4 : 12;
+    const pxPerInch = (printableWidthPx / physicalWidthInches) * scale;
     let newHeight = Math.round(val * pxPerInch);
     newHeight = Math.max(20, Math.min(560, newHeight));
 
@@ -241,9 +249,14 @@ export default function ToolPanel({
     onUpdateElement?.(activeElement.id, updates);
   };
 
-  const applyPresetSizeAndPosition = (targetWidthInches: number, positionType: "left-chest" | "center" | "locker-patch" | "oversized") => {
+  const applyPresetSizeAndPosition = (
+    targetWidthInches: number,
+    positionType: "left-chest" | "center" | "locker-patch" | "oversized" | "sleeve-center"
+  ) => {
     if (!activeElement) return;
-    const pxPerInch = (printableWidthPx / 12);
+    const isSleeve = activeSide === "left" || activeSide === "right";
+    const physicalWidthInches = isSleeve ? 4 : 12;
+    const pxPerInch = (printableWidthPx / physicalWidthInches);
     
     const aspectRatio = activeElement.width / activeElement.height;
     const targetPx = targetWidthInches * pxPerInch;
@@ -272,6 +285,9 @@ export default function ToolPanel({
       newX = Math.round(printableLeftPx + (printableWidthPx / 2) - (newWidth / 2));
       newY = Math.round(printableTopPx + (printableHeightPx * 0.18) - (newHeight / 2));
     } else if (positionType === "oversized") {
+      newX = Math.round(printableLeftPx + (printableWidthPx / 2) - (newWidth / 2));
+      newY = Math.round(printableTopPx + (printableHeightPx / 2) - (newHeight / 2));
+    } else if (positionType === "sleeve-center") {
       newX = Math.round(printableLeftPx + (printableWidthPx / 2) - (newWidth / 2));
       newY = Math.round(printableTopPx + (printableHeightPx / 2) - (newHeight / 2));
     } else {
@@ -1044,8 +1060,91 @@ export default function ToolPanel({
                               Oversized (11.5")
                             </button>
                           </>
-                        ) : (
-                          <>
+                         ) : (activeSide === "left" || activeSide === "right") ? (
+                           <>
+                             <button
+                               type="button"
+                               onClick={() => applyPresetSizeAndPosition(1.0, "sleeve-center")}
+                               style={{
+                                 padding: '4px 8px',
+                                 fontSize: '0.7rem',
+                                 fontWeight: 600,
+                                 borderRadius: '4px',
+                                 border: '1px solid #E2E8F0',
+                                 background: '#F8FAFC',
+                                 cursor: 'pointer',
+                                 color: '#334155',
+                                 transition: 'all 0.15s',
+                                 textAlign: 'center'
+                               }}
+                               onMouseEnter={(e) => { e.currentTarget.style.background = '#EFF6FF'; e.currentTarget.style.borderColor = '#BFDBFE'; }}
+                               onMouseLeave={(e) => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.borderColor = '#E2E8F0'; }}
+                             >
+                               Sleeve Mini (1.0")
+                             </button>
+                             <button
+                               type="button"
+                               onClick={() => applyPresetSizeAndPosition(1.5, "sleeve-center")}
+                               style={{
+                                 padding: '4px 8px',
+                                 fontSize: '0.7rem',
+                                 fontWeight: 600,
+                                 borderRadius: '4px',
+                                 border: '1px solid #E2E8F0',
+                                 background: '#F8FAFC',
+                                 cursor: 'pointer',
+                                 color: '#334155',
+                                 transition: 'all 0.15s',
+                                 textAlign: 'center'
+                               }}
+                               onMouseEnter={(e) => { e.currentTarget.style.background = '#EFF6FF'; e.currentTarget.style.borderColor = '#BFDBFE'; }}
+                               onMouseLeave={(e) => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.borderColor = '#E2E8F0'; }}
+                             >
+                               Sleeve Small (1.5")
+                             </button>
+                             <button
+                               type="button"
+                               onClick={() => applyPresetSizeAndPosition(2.0, "sleeve-center")}
+                               style={{
+                                 padding: '4px 8px',
+                                 fontSize: '0.7rem',
+                                 fontWeight: 600,
+                                 borderRadius: '4px',
+                                 border: '1px solid #E2E8F0',
+                                 background: '#F8FAFC',
+                                 cursor: 'pointer',
+                                 color: '#334155',
+                                 transition: 'all 0.15s',
+                                 textAlign: 'center'
+                               }}
+                               onMouseEnter={(e) => { e.currentTarget.style.background = '#EFF6FF'; e.currentTarget.style.borderColor = '#BFDBFE'; }}
+                               onMouseLeave={(e) => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.borderColor = '#E2E8F0'; }}
+                             >
+                               Sleeve Medium (2.0")
+                             </button>
+                             <button
+                               type="button"
+                               onClick={() => applyPresetSizeAndPosition(2.5, "sleeve-center")}
+                               style={{
+                                 padding: '4px 8px',
+                                 fontSize: '0.7rem',
+                                 fontWeight: 600,
+                                 borderRadius: '4px',
+                                 border: '1px solid #E2E8F0',
+                                 background: '#F8FAFC',
+                                 cursor: 'pointer',
+                                 color: '#334155',
+                                 transition: 'all 0.15s',
+                                 textAlign: 'center'
+                               }}
+                               onMouseEnter={(e) => { e.currentTarget.style.background = '#EFF6FF'; e.currentTarget.style.borderColor = '#BFDBFE'; }}
+                               onMouseLeave={(e) => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.borderColor = '#E2E8F0'; }}
+                             >
+                               Sleeve Large (2.5")
+                             </button>
+                           </>
+                         ) : (
+                           <>
                             <button
                               type="button"
                               onClick={() => applyPresetSizeAndPosition(2, "locker-patch")}
