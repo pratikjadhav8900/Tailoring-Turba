@@ -38,7 +38,9 @@ export async function POST(request: Request) {
     });
 
     const session = await auth();
-    if (session?.user?.id && result?.secure_url) {
+    const isLogo = formData.get("isLogo") === "true";
+
+    if (session?.user?.id && result?.secure_url && isLogo) {
       try {
         await prisma.userAsset.create({
           data: {

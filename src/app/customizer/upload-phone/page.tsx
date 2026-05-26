@@ -31,6 +31,7 @@ export default function UploadPhonePage() {
       // Step 1 — Upload to Cloudinary via existing endpoint
       const formData = new FormData();
       formData.append("file", file);
+      formData.append("isLogo", "true");
       const uploadRes = await fetch("/api/upload", { method: "POST", body: formData });
 
       if (!uploadRes.ok) {

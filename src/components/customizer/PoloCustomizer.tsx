@@ -40,6 +40,8 @@ export default function PoloCustomizer({
   const [activeTool, setActiveTool] = useState<ActiveTool>(null);
   const [frontElements, setFrontElements] = useState<DesignElement[]>(initialState?.frontElements || []);
   const [backElements, setBackElements] = useState<DesignElement[]>(initialState?.backElements || []);
+  const [leftElements, setLeftElements] = useState<DesignElement[]>(initialState?.leftElements || []);
+  const [rightElements, setRightElements] = useState<DesignElement[]>(initialState?.rightElements || []);
   const [activeElementId, setActiveElementId] = useState<string | null>(null);
   const [previewSize, setPreviewSize] = useState<"S" | "M" | "L" | "XL" | "XXL">(initialState?.previewSize || "M");
   const [isDragging, setIsDragging] = useState(false);
@@ -55,35 +57,50 @@ export default function PoloCustomizer({
     }
   }, [activeElementId]);
 
+  useEffect(() => {
+    if (activeSide === "left" || activeSide === "right") {
+      setZoom(3.0);
+    } else {
+      setZoom(1.52);
+    }
+  }, [activeSide]);
+
 
 
   // --- History (Undo/Redo) System ---
   const [history, setHistory] = useState<DesignElement[][]>([]);
   const [backHistory, setBackHistory] = useState<DesignElement[][]>([]);
+  const [leftHistory, setLeftHistory] = useState<DesignElement[][]>([]);
+  const [rightHistory, setRightHistory] = useState<DesignElement[][]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [backHistoryIndex, setBackHistoryIndex] = useState(-1);
+  const [leftHistoryIndex, setLeftHistoryIndex] = useState(-1);
+  const [rightHistoryIndex, setRightHistoryIndex] = useState(-1);
   const isInternalChange = useRef(false);
 
-  const pushToHistory = (newFront: DesignElement[], newBack: DesignElement[]) => {
+  const pushToHistory = (newFront: DesignElement[], newBack: DesignElement[], newLeft: DesignElement[], newRight: DesignElement[]) => {
     if (isInternalChange.current) return;
-    setHistory(prev => {
-      const next = prev.slice(0, historyIndex + 1);
-      return [...next, JSON.parse(JSON.stringify(newFront))];
-    });
-    setBackHistory(prev => {
-      const next = prev.slice(0, backHistoryIndex + 1);
-      return [...next, JSON.parse(JSON.stringify(newBack))];
-    });
+    setHistory(prev => [...prev.slice(0, historyIndex + 1), JSON.parse(JSON.stringify(newFront))]);
+    setBackHistory(prev => [...prev.slice(0, backHistoryIndex + 1), JSON.parse(JSON.stringify(newBack))]);
+    setLeftHistory(prev => [...prev.slice(0, leftHistoryIndex + 1), JSON.parse(JSON.stringify(newLeft))]);
+    setRightHistory(prev => [...prev.slice(0, rightHistoryIndex + 1), JSON.parse(JSON.stringify(newRight))]);
+    
     setHistoryIndex(prev => prev + 1);
     setBackHistoryIndex(prev => prev + 1);
+    setLeftHistoryIndex(prev => prev + 1);
+    setRightHistoryIndex(prev => prev + 1);
   };
 
   useEffect(() => {
     if (history.length === 0) {
       setHistory([JSON.parse(JSON.stringify(frontElements))]);
       setBackHistory([JSON.parse(JSON.stringify(backElements))]);
+      setLeftHistory([JSON.parse(JSON.stringify(leftElements))]);
+      setRightHistory([JSON.parse(JSON.stringify(rightElements))]);
       setHistoryIndex(0);
       setBackHistoryIndex(0);
+      setLeftHistoryIndex(0);
+      setRightHistoryIndex(0);
     }
   }, []);
 
@@ -100,8 +117,12 @@ export default function PoloCustomizer({
       const prevIdx = historyIndex - 1;
       setFrontElements(JSON.parse(JSON.stringify(history[prevIdx])));
       setBackElements(JSON.parse(JSON.stringify(backHistory[prevIdx])));
+      setLeftElements(JSON.parse(JSON.stringify(leftHistory[prevIdx])));
+      setRightElements(JSON.parse(JSON.stringify(rightHistory[prevIdx])));
       setHistoryIndex(prevIdx);
       setBackHistoryIndex(prevIdx);
+      setLeftHistoryIndex(prevIdx);
+      setRightHistoryIndex(prevIdx);
       setTimeout(() => { isInternalChange.current = false; }, 0);
     };
     const handleRedo = () => {
@@ -110,8 +131,12 @@ export default function PoloCustomizer({
       const nextIdx = historyIndex + 1;
       setFrontElements(JSON.parse(JSON.stringify(history[nextIdx])));
       setBackElements(JSON.parse(JSON.stringify(backHistory[nextIdx])));
+      setLeftElements(JSON.parse(JSON.stringify(leftHistory[nextIdx])));
+      setRightElements(JSON.parse(JSON.stringify(rightHistory[nextIdx])));
       setHistoryIndex(nextIdx);
       setBackHistoryIndex(nextIdx);
+      setLeftHistoryIndex(nextIdx);
+      setRightHistoryIndex(nextIdx);
       setTimeout(() => { isInternalChange.current = false; }, 0);
     };
     window.addEventListener("undo-customizer", handleUndo);
@@ -126,15 +151,24 @@ export default function PoloCustomizer({
   const activeSideRef = useRef<Side>("front");
   useEffect(() => { activeSideRef.current = activeSide; }, [activeSide]);
 
-  const elements = activeSide === "front" ? frontElements : backElements;
+  const elements = activeSide === "front" ? frontElements : activeSide === "back" ? backElements : activeSide === "left" ? leftElements : rightElements;
 
   const setElementsWithHistory = (newElements: DesignElement[]) => {
     const isFront = activeSide === "front";
+    const isBack = activeSide === "back";
+    const isLeft = activeSide === "left";
+    const isRight = activeSide === "right";
     const nextFront = isFront ? newElements : frontElements;
-    const nextBack = isFront ? backElements : newElements;
+    const nextBack = isBack ? newElements : backElements;
+    const nextLeft = isLeft ? newElements : leftElements;
+    const nextRight = isRight ? newElements : rightElements;
+    
     if (isFront) setFrontElements(newElements);
-    else setBackElements(newElements);
-    pushToHistory(nextFront, nextBack);
+    else if (isBack) setBackElements(newElements);
+    else if (isLeft) setLeftElements(newElements);
+    else if (isRight) setRightElements(newElements);
+    
+    pushToHistory(nextFront, nextBack, nextLeft, nextRight);
   };
 
   const handleElementClick = (id: string | null) => {
@@ -146,14 +180,18 @@ export default function PoloCustomizer({
           // Remove from state directly to avoid circular dependencies
           const newElements = elements.filter(el => el.id !== activeElementId);
           if (activeSide === "front") setFrontElements(newElements);
-          else setBackElements(newElements);
+          else if (activeSide === "back") setBackElements(newElements);
+          else if (activeSide === "left") setLeftElements(newElements);
+          else if (activeSide === "right") setRightElements(newElements);
         } else if (activeEl.type === "preset") {
           const isArray = Array.isArray(activeEl.presetText);
           const lines = isArray ? (activeEl.presetText as string[]) : [(activeEl.presetText as string) || ""];
           if (!lines.some(line => line && line.trim())) {
             const newElements = elements.filter(el => el.id !== activeElementId);
             if (activeSide === "front") setFrontElements(newElements);
-            else setBackElements(newElements);
+            else if (activeSide === "back") setBackElements(newElements);
+            else if (activeSide === "left") setLeftElements(newElements);
+            else if (activeSide === "right") setRightElements(newElements);
           }
         }
       }
@@ -163,9 +201,9 @@ export default function PoloCustomizer({
 
   useEffect(() => {
     if (onChange) {
-      onChange({ bodyColor, garmentType, frontElements, backElements, previewSize });
+      onChange({ bodyColor, garmentType, frontElements, backElements, leftElements, rightElements, previewSize });
     }
-  }, [frontElements, backElements, bodyColor, garmentType, previewSize]);
+  }, [frontElements, backElements, leftElements, rightElements, bodyColor, garmentType, previewSize]);
 
   const addText = (text?: string) => {
     const id = Date.now().toString();
@@ -238,6 +276,7 @@ export default function PoloCustomizer({
     try {
       const formData = new FormData();
       formData.append("file", file);
+      formData.append("isLogo", "true");
       const res = await fetch("/api/upload", { method: "POST", body: formData });
       if (!res.ok) throw new Error("Upload failed");
       const data = await res.json();
@@ -314,7 +353,7 @@ export default function PoloCustomizer({
       const x = Math.round((560 - width) / 2);
       const y = 180;
 
-      const currentElements = activeSideRef.current === "front" ? frontElements : backElements;
+      const currentElements = activeSideRef.current === "front" ? frontElements : activeSideRef.current === "back" ? backElements : activeSideRef.current === "left" ? leftElements : rightElements;
       const newEl: DesignElement = {
         id: Date.now().toString(),
         type: "logo",
@@ -328,13 +367,18 @@ export default function PoloCustomizer({
         originalWidth,
         originalHeight,
       };
-      if (activeSideRef.current === "front") {
-        setFrontElements([...currentElements, newEl]);
-        pushToHistory([...currentElements, newEl], backElements);
-      } else {
-        setBackElements([...currentElements, newEl]);
-        pushToHistory(frontElements, [...currentElements, newEl]);
-      }
+      
+      const nextFront = activeSideRef.current === "front" ? [...currentElements, newEl] : frontElements;
+      const nextBack = activeSideRef.current === "back" ? [...currentElements, newEl] : backElements;
+      const nextLeft = activeSideRef.current === "left" ? [...currentElements, newEl] : leftElements;
+      const nextRight = activeSideRef.current === "right" ? [...currentElements, newEl] : rightElements;
+
+      if (activeSideRef.current === "front") setFrontElements(nextFront);
+      else if (activeSideRef.current === "back") setBackElements(nextBack);
+      else if (activeSideRef.current === "left") setLeftElements(nextLeft);
+      else if (activeSideRef.current === "right") setRightElements(nextRight);
+
+      pushToHistory(nextFront, nextBack, nextLeft, nextRight);
       setActiveTool(null);
     } catch (err) {
       console.error("Mobile logo add error:", err);
@@ -350,11 +394,16 @@ export default function PoloCustomizer({
   const updateElement = (id: string, updates: Partial<DesignElement>, skipHistory = false) => {
     const newElements = elements.map(e => e.id === id ? { ...e, ...updates } : e);
     if (activeSide === "front") setFrontElements(newElements);
-    else setBackElements(newElements);
+    else if (activeSide === "back") setBackElements(newElements);
+    else if (activeSide === "left") setLeftElements(newElements);
+    else if (activeSide === "right") setRightElements(newElements);
+    
     if (!skipHistory) {
       const nextFront = activeSide === "front" ? newElements : frontElements;
-      const nextBack = activeSide === "front" ? backElements : newElements;
-      pushToHistory(nextFront, nextBack);
+      const nextBack = activeSide === "back" ? newElements : backElements;
+      const nextLeft = activeSide === "left" ? newElements : leftElements;
+      const nextRight = activeSide === "right" ? newElements : rightElements;
+      pushToHistory(nextFront, nextBack, nextLeft, nextRight);
     }
   };
 
@@ -464,29 +513,34 @@ export default function PoloCustomizer({
           {/* Side Switcher Thumbnails & Preview Size Selector */}
           {!isPreviewMode && (
             <div className={styles.rightThumbnails}>
-              {(["front", "back"] as Side[]).map((side) => (
-                <button
-                  key={side}
-                  className={`${styles.thumbnailBtn} ${activeSide === side ? styles.thumbnailBtnActive : ""}`}
-                  onClick={() => {
-                    handleElementClick(null);
-                    setActiveSide(side);
-                  }}
-                >
-                  <div className={styles.thumbnailImgWrap}>
-                    <Image
-                      src={(GARMENTS[garmentType as keyof typeof GARMENTS] || GARMENTS["round-neck"])[side]}
-                      alt={side}
-                      fill
-                      className={styles.garmentImage}
-                      style={{ objectFit: "contain" }}
-                    />
-                  </div>
-                  <span className={styles.thumbnailLabel}>{side.charAt(0).toUpperCase() + side.slice(1)}</span>
-                </button>
-              ))}
-
-
+              {(["front", "back", "left"] as Side[]).map((side) => {
+                const garment = (GARMENTS[garmentType as keyof typeof GARMENTS] || GARMENTS["round-neck"]) as any;
+                const img = garment[side];
+                if (!img) return null;
+                return (
+                  <button
+                    key={side}
+                    className={`${styles.thumbnailBtn} ${activeSide === side ? styles.thumbnailBtnActive : ""}`}
+                    onClick={() => {
+                      handleElementClick(null);
+                      setActiveSide(side);
+                    }}
+                  >
+                    <div className={styles.thumbnailImgWrap}>
+                      <Image
+                        src={img}
+                        alt={side === "left" ? "Sleeves" : side}
+                        fill
+                        className={styles.garmentImage}
+                        style={{ objectFit: "contain" }}
+                      />
+                    </div>
+                    <span className={styles.thumbnailLabel}>
+                      {side === "left" ? "Sleeves" : side.charAt(0).toUpperCase() + side.slice(1)}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           )}
         </CanvasArea>

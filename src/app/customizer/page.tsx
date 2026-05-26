@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, Suspense, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import PoloCustomizer from "@/components/customizer/PoloCustomizer";
-import { CustomizerState } from "@/types/customizer";
+import { CustomizerState, Side } from "@/types/customizer";
 import styles from "./page.module.css";
 import { X, Undo2, Redo2, Eye, EyeOff, UploadCloud, FileText, Trash2, Palette, Ruler, Shield, Truck } from "lucide-react";
 import { useCart } from "@/context/CartContext";
@@ -17,7 +17,7 @@ function CustomizerContent() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"Design" | "Options" | "Review">("Design");
   const [customizerState, setCustomizerState] = useState<CustomizerState | null>(null);
-  const [activeSide, setActiveSide] = useState<"front" | "back">("front");
+  const [activeSide, setActiveSide] = useState<Side>("front");
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
@@ -126,6 +126,8 @@ function CustomizerContent() {
         bodyColor: 'transparent',
         frontElements: [],
         backElements: [],
+        leftElements: [],
+        rightElements: [],
         fabricId: fabricId || undefined,
         sizes: { S: 0, M: 0, L: 0, XL: 0, XXL: 0 }
       });
@@ -140,7 +142,7 @@ function CustomizerContent() {
     if (customizerState) {
       setHasUnsavedChanges(true);
     }
-  }, [customizerState?.frontElements, customizerState?.backElements, customizerState?.bodyColor, customizerState?.garmentType]);
+  }, [customizerState?.frontElements, customizerState?.backElements, customizerState?.leftElements, customizerState?.rightElements, customizerState?.bodyColor, customizerState?.garmentType]);
 
   useEffect(() => {
     const handleBounds = (e: any) => {
@@ -155,16 +157,20 @@ function CustomizerContent() {
     ? Object.values(customizerState.sizes).reduce((a, b) => a + (b || 0), 0) 
     : 0;
 
-  // True if the customer has placed ANY logo/image element on front or back
+  // True if the customer has placed ANY logo/image element on any side
   const hasLogoElements = (
     (customizerState?.frontElements || []).some(el => el.type === "logo") ||
-    (customizerState?.backElements  || []).some(el => el.type === "logo")
+    (customizerState?.backElements  || []).some(el => el.type === "logo") ||
+    (customizerState?.leftElements  || []).some(el => el.type === "logo") ||
+    (customizerState?.rightElements || []).some(el => el.type === "logo")
   );
 
   // Check if ALL logo elements are from "Your Uploads" (already on Cloudinary/server)
   const allLogosFromUploads = hasLogoElements && [
     ...(customizerState?.frontElements || []).filter(el => el.type === "logo"),
     ...(customizerState?.backElements  || []).filter(el => el.type === "logo"),
+    ...(customizerState?.leftElements  || []).filter(el => el.type === "logo"),
+    ...(customizerState?.rightElements || []).filter(el => el.type === "logo"),
   ].every(el => el.value && (el.value.includes('res.cloudinary.com') || el.value.includes('cloudinary')));
 
   // Production asset gate: required only when logos are present AND they weren't from existing uploads
@@ -226,6 +232,8 @@ function CustomizerContent() {
         // Capture Mockup
         let mockupUrl = "";
         let mockupUrlBack = "";
+        let mockupUrlLeft = "";
+        let mockupUrlRight = "";
         
         try {
           const html2canvas = (await import("html2canvas")).default;
@@ -260,6 +268,12 @@ function CustomizerContent() {
           if (customizerState.backElements.length > 0) {
             mockupUrlBack = await captureId("review-mockup-back", "mockup_back.png");
           }
+          if (customizerState.leftElements.length > 0) {
+            mockupUrlLeft = await captureId("review-mockup-left", "mockup_left.png");
+          }
+          if (customizerState.rightElements.length > 0) {
+            mockupUrlRight = await captureId("review-mockup-right", "mockup_right.png");
+          }
 
         } catch (err) {
           console.error("Failed to capture mockup:", err);
@@ -278,6 +292,8 @@ function CustomizerContent() {
           quantity: totalQuantity,
           image: mockupUrl || dbProduct?.images?.[0] || dbProduct?.image,
           mockupUrlBack: mockupUrlBack, // Save the back mockup
+          mockupUrlLeft: mockupUrlLeft, // Save the left mockup
+          mockupUrlRight: mockupUrlRight, // Save the right mockup
           customDesign: customizerState,
           uploadedAssets: productionFiles.map(f => f.url),
         });
@@ -494,7 +510,7 @@ function CustomizerContent() {
             onChange={(s) => setCustomizerState({ ...customizerState, ...s } as CustomizerState)} 
             isPreviewMode={isPreviewMode}
             activeSide={activeSide}
-            onSideChange={(s) => setActiveSide(s as "front" | "back")}
+            onSideChange={setActiveSide}
             garmentType={customizerState?.garmentType as any}
             availableColors={synchronizedColors}
           />
@@ -645,6 +661,34 @@ function CustomizerContent() {
                       />
                     </div>
                   </div>
+                  {customizerState?.leftElements && customizerState.leftElements.length > 0 && (
+                  <div style={{ background: '#f9f9f7', border: '1px solid #e5e2da', borderRadius: '12px', overflow: 'hidden' }}>
+                    <div style={{ padding: '8px 12px', borderBottom: '1px solid #eee', fontSize: '0.65rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Sleeves</div>
+                    <div style={{ height: '200px', position: 'relative' }}>
+                      <PoloCustomizer 
+                        initialState={customizerState} 
+                        isPreviewMode={true} 
+                        activeSide="left" 
+                        mockupId="review-mockup-left" 
+                        availableColors={synchronizedColors}
+                      />
+                    </div>
+                  </div>
+                  )}
+                  {customizerState?.rightElements && customizerState.rightElements.length > 0 && (
+                  <div style={{ background: '#f9f9f7', border: '1px solid #e5e2da', borderRadius: '12px', overflow: 'hidden' }}>
+                    <div style={{ padding: '8px 12px', borderBottom: '1px solid #eee', fontSize: '0.65rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Right Sleeve</div>
+                    <div style={{ height: '200px', position: 'relative' }}>
+                      <PoloCustomizer 
+                        initialState={customizerState} 
+                        isPreviewMode={true} 
+                        activeSide="right" 
+                        mockupId="review-mockup-right" 
+                        availableColors={synchronizedColors}
+                      />
+                    </div>
+                  </div>
+                  )}
                 </div>
 
                 {/* What's included checklist */}

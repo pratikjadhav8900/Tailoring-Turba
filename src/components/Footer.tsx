@@ -8,7 +8,7 @@ export default function Footer() {
   const pathname = usePathname();
   if (pathname === "/customizer" || pathname === "/admin/login") return null;
 
-  const noMarginPages = ["/", "/cart", "/checkout", "/contact", "/login", "/register", "/wishlist", "/compare"];
+  const noMarginPages = ["/", "/cart", "/checkout", "/contact", "/login", "/register", "/wishlist", "/compare", "/booking"];
   const isNoMargin = noMarginPages.includes(pathname) || pathname.startsWith("/products");
 
   return (

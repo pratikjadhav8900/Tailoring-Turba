@@ -2,12 +2,13 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Truck } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { useCart } from "@/context/CartContext";
 import { INDIAN_STATES } from "@/lib/logistics";
 import styles from "./page.module.css";
 import { getElementDetails } from "@/lib/customizer-utils";
+import { getEstimatedDeliveryDays } from "@/lib/delivery";
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -143,7 +144,9 @@ export default function CheckoutPage() {
             customStateJson: item.customDesign ? JSON.stringify(item.customDesign) : undefined,
             printFiles: item.uploadedAssets || undefined,
             mockupUrl: item.customDesign ? item.image : undefined,
-            mockupUrlBack: item.mockupUrlBack
+            mockupUrlBack: item.mockupUrlBack,
+            mockupUrlLeft: item.mockupUrlLeft,
+            mockupUrlRight: item.mockupUrlRight
           })),
           shippingAddress: {
             name: `${formData.firstName} ${formData.lastName}`,
@@ -474,6 +477,31 @@ export default function CheckoutPage() {
                 ))}
               </div>
 
+              {/* Delivery Estimate */}
+              <div style={{
+                background: 'rgba(255, 255, 255, 0.06)',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                borderRadius: '8px',
+                padding: '16px',
+                marginBottom: '24px',
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '14px',
+                backdropFilter: 'blur(10px)'
+              }}>
+                <div style={{ color: '#fff', paddingTop: '2px' }}>
+                  <Truck size={20} strokeWidth={2} />
+                </div>
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#fff', letterSpacing: '0.01em' }}>
+                    Estimated Delivery: {getEstimatedDeliveryDays(totalQuantity).label}
+                  </div>
+                  <div style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.7)', marginTop: '6px', lineHeight: 1.4 }}>
+                    Delivery dates may vary slightly depending on manufacturing complexity and courier transit times.
+                  </div>
+                </div>
+              </div>
+
               <div className={styles.summaryBreakdown}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span>Subtotal</span>
@@ -499,19 +527,19 @@ export default function CheckoutPage() {
                 {isSplitPayment && (
                   <div style={{ 
                     marginTop: '12px',
-                    paddingTop: '12px',
-                    borderTop: '1px dashed var(--tth-beige-light)',
+                    paddingTop: '16px',
+                    borderTop: '1px dashed rgba(255, 255, 255, 0.25)',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '6px',
+                    gap: '8px',
                     fontSize: '0.9rem',
                     fontFamily: 'var(--font-sans)'
                   }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--tth-black)', fontWeight: 600 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#ffffff', fontWeight: 600 }}>
                       <span>60% Deposit Due Now</span>
                       <span>₹{initialPaymentDue.toLocaleString('en-IN')}</span>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--tth-text-muted)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', color: 'rgba(255, 255, 255, 0.7)' }}>
                       <span>40% Balance Due on Dispatch</span>
                       <span>₹{remainingPaymentDue.toLocaleString('en-IN')}</span>
                     </div>

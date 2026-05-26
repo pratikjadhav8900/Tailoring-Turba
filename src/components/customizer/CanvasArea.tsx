@@ -7,7 +7,7 @@ import { DesignElement, Side } from "@/types/customizer";
 import { GARMENTS } from "@/lib/fabric-data";
 import { SIZE_SCALES } from "@/lib/customizer-utils";
 import { ALL_PRESETS as TEXT_PRESETS } from "@/lib/presets";
-
+import { motion, AnimatePresence } from "framer-motion";
 interface CanvasAreaProps {
   garmentType: string;
   activeSide: Side;
@@ -234,6 +234,13 @@ export default function CanvasArea({
   const currentPan = isPreviewMode ? { x: 0, y: 0 } : pan;
   const totalScale = scale * deviceScale;
 
+  const motionProps = isPreviewMode ? {} : {
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    exit: { opacity: 0 },
+    transition: { duration: 0.15, ease: "linear" as any }
+  };
+
   return (
     <div 
       className={styles.canvasWrapper}
@@ -259,6 +266,16 @@ export default function CanvasArea({
           }}
         >
           <div id={mockupId} className={styles.garmentContainer}>
+            <AnimatePresence>
+              <motion.div
+                key={`${garmentType}-${activeSide}`}
+                {...motionProps}
+                style={{ 
+                  position: "absolute",
+                  width: "100%",
+                  height: "100%"
+                }}
+              >
             {/* Optional Base Image (e.g., Man wearing the shirt) */}
             {currentBaseImg && (
               <img
@@ -282,19 +299,32 @@ export default function CanvasArea({
               const b = parseInt(hex.substring(4,6), 16) || 0;
               const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
               
-              // For dark colors, use lower opacity so texture/shadows remain visible
-              // For light colors (white etc.), use higher opacity
-              const colorOpacity = luminance < 0.15 ? 0.72 : luminance < 0.35 ? 0.80 : 0.88;
+              // We make the color layer nearly opaque so the color is rich and true to the selected swatch
+              const colorOpacity = luminance < 0.15 ? 0.90 : luminance < 0.35 ? 0.94 : 0.97;
               
-              // For dark colors, boost the texture brightness so wrinkles show
+              // Shadows layer (Multiply) adjustments:
+              // For dark colors, make the shadows less dark so details aren't lost
+              // For light colors, make them standard
               const textureFilter = luminance < 0.15 
-                ? "brightness(2.2) contrast(1.3)" 
+                ? "brightness(1.6) contrast(1.15)" 
                 : luminance < 0.35 
-                  ? "brightness(1.5) contrast(1.15)"
-                  : effectiveColor.toLowerCase() === "#ffffff" ? "none" : "brightness(1.1)";
+                  ? "brightness(1.3) contrast(1.1)"
+                  : effectiveColor.toLowerCase() === "#ffffff" ? "none" : "brightness(1.05)";
 
-              // Texture opacity: more visible on dark colors  
-              const textureOpacity = luminance < 0.15 ? 0.70 : effectiveColor.toLowerCase() === "#ffffff" ? 1 : 0.82;
+              const textureOpacity = luminance < 0.15 ? 0.65 : effectiveColor.toLowerCase() === "#ffffff" ? 0.95 : 0.80;
+
+              // Highlights layer (Screen) adjustments:
+              // For dark colors, we need more highlight reflection to define fabric folds
+              // For light colors, we need less since the base is already bright
+              const highlightOpacity = luminance < 0.15 
+                ? 0.35 
+                : luminance < 0.35 
+                  ? 0.28 
+                  : luminance < 0.7 
+                    ? 0.20 
+                    : 0.08;
+
+              const highlightFilter = "brightness(0.5) contrast(1.4) grayscale(1)";
 
               return (
                 <>
@@ -314,15 +344,29 @@ export default function CanvasArea({
                       WebkitMaskPosition: "center",
                     }}
                   />
+                  {/* Shadows Layer */}
                   <img
-                    key={`${garmentType}-${activeSide}`}
+                    key={`${garmentType}-${activeSide}-shadows`}
                     src={currentImg}
-                    alt="Garment Texture"
+                    alt="Garment Shadows"
                     className={styles.garmentBaseImage}
                     style={{ 
                       mixBlendMode: "multiply", 
                       opacity: textureOpacity,
                       filter: textureFilter,
+                    }}
+                    crossOrigin="anonymous"
+                  />
+                  {/* Highlights Layer */}
+                  <img
+                    key={`${garmentType}-${activeSide}-highlights`}
+                    src={currentImg}
+                    alt="Garment Highlights"
+                    className={styles.garmentBaseImage}
+                    style={{ 
+                      mixBlendMode: "screen", 
+                      opacity: highlightOpacity,
+                      filter: highlightFilter,
                     }}
                     crossOrigin="anonymous"
                   />
@@ -346,8 +390,11 @@ export default function CanvasArea({
               const widthPercent = parseFloat(sidePrintable?.width || "40%");
               const heightPercent = parseFloat(sidePrintable?.height || "50%");
               const ratio = heightPercent / widthPercent;
-              const heightInches = 12 * ratio;
+              const isSleeve = activeSide === "left" || activeSide === "right";
+              const physicalWidthInches = isSleeve ? 4 : 12;
+              const heightInches = physicalWidthInches * ratio;
               const heightCm = Math.round(heightInches * 2.54 * 10) / 10;
+              const widthCm = Math.round(physicalWidthInches * 2.54 * 100) / 100;
 
               const sizeScale = 1.0;
 
@@ -361,10 +408,11 @@ export default function CanvasArea({
                         left: sidePrintable?.left || "28%",
                         width: sidePrintable?.width || "44%",
                         height: sidePrintable?.height || "60%",
+                        ['--zoom-scale' as any]: String(zoom)
                       }}
                     >
                       {/* Pill badges — anchored to top-right of box */}
-                      <div className={styles.areaPills}>
+                      <div className={`${styles.areaPills} ${(activeSide === "left" || activeSide === "right") ? styles.areaPillsSmall : ""}`}>
                         <span className={styles.areaPillSafety}>Safety Area</span>
                         <span className={styles.areaPillBleed}>Bleed</span>
                       </div>
@@ -379,7 +427,7 @@ export default function CanvasArea({
                       {/* Bottom Ruler */}
                       <div className={styles.rulerBottom}>
                         <div className={styles.rulerLineHorizontal} />
-                        <span className={styles.rulerTextHorizontal}>30.48cm</span>
+                        <span className={styles.rulerTextHorizontal}>{widthCm}cm</span>
                         <div className={styles.rulerLineHorizontal} />
                       </div>
                     </div>
@@ -782,7 +830,8 @@ export default function CanvasArea({
                 </>
               );
             })()}
-
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
         {children}

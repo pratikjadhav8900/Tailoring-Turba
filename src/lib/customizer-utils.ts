@@ -33,8 +33,11 @@ export function getElementDetails(
 
   const printableWidthPx = 560 * printableWidthPercent;
 
+  const isSleeve = activeSide === "left" || activeSide === "right";
+  const physicalWidthInches = isSleeve ? 4 : 12;
+
   const scale = SIZE_SCALES[previewSize] || 1.0;
-  const pxPerInch = (printableWidthPx / 12) * scale;
+  const pxPerInch = (printableWidthPx / physicalWidthInches) * scale;
 
   const widthInches = Math.round((el.width / pxPerInch) * 100) / 100;
   const heightInches = Math.round((el.height / pxPerInch) * 100) / 100;

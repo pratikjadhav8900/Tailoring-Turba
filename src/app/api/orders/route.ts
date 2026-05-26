@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { sendOperationsOrderAlert, sendOrderConfirmationEmail } from "@/lib/mail";
+import { getEstimatedDeliveryDateRange } from "@/lib/delivery";
 import { generateInvoicePdf } from "@/lib/pdf";
 
 export async function POST(req: NextRequest) {
@@ -82,6 +83,8 @@ export async function POST(req: NextRequest) {
               printFiles?: string[];
               mockupUrl?: string;
               mockupUrlBack?: string;
+              mockupUrlLeft?: string;
+              mockupUrlRight?: string;
             }) => ({
               productId: i.productId,
               quantity: i.quantity,
@@ -90,7 +93,9 @@ export async function POST(req: NextRequest) {
               ...(i.customStateJson && { customStateJson: i.customStateJson }),
               ...(i.printFiles && { printFiles: i.printFiles }),
               ...(i.mockupUrl && { mockupUrl: i.mockupUrl }),
-              ...(i.mockupUrlBack && { mockupUrlBack: i.mockupUrlBack })
+              ...(i.mockupUrlBack && { mockupUrlBack: i.mockupUrlBack }),
+              ...(i.mockupUrlLeft && { mockupUrlLeft: i.mockupUrlLeft }),
+              ...(i.mockupUrlRight && { mockupUrlRight: i.mockupUrlRight })
             })),
           },
           ...(orderSheetData && {
@@ -148,7 +153,7 @@ export async function POST(req: NextRequest) {
         items: fullOrder.items.map(i => ({ product: { name: i.product.name }, quantity: i.quantity, price: i.price })),
         type: 'PRO FORMA INVOICE' as const,
       };
-
+      const totalQty = fullOrder.items.reduce((sum, i) => sum + i.quantity, 0);
       generateInvoicePdf(pdfOrder).then(pdfBuffer => {
         return sendOrderConfirmationEmail(
           fullOrder.user!.email!,
@@ -157,7 +162,8 @@ export async function POST(req: NextRequest) {
           isSplit,
           fullOrder.amountPaid ?? 0,
           pdfBuffer,
-          fullOrder.orderNumber ?? undefined
+          fullOrder.orderNumber ?? undefined,
+          getEstimatedDeliveryDateRange(fullOrder.createdAt, totalQty)
         );
       }).catch(err => {
         console.error("[MAIL_ERROR] Failed to send Pro Forma Invoice email:", err);

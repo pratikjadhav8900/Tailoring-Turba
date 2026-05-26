@@ -5,6 +5,7 @@ import { Loader2, ExternalLink, Download, Calendar, RefreshCw } from "lucide-rea
 import Link from "next/link";
 import styles from "../page.module.css";
 import BigShipShipmentModal from "./BigShipShipmentModal";
+import LocalShipmentModal from "./LocalShipmentModal";
 
 type Order = any;
 
@@ -22,6 +23,7 @@ export default function AdminOrdersClient({ initialOrders }: { initialOrders: Or
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [selectedForBigShip, setSelectedForBigShip] = useState<Order | null>(null);
+  const [selectedForLocalShip, setSelectedForLocalShip] = useState<any>(null);
   const [resendingInvoice, setResendingInvoice] = useState<string | null>(null);
 
   const resendInvoice = async (orderId: string) => {
@@ -41,13 +43,13 @@ export default function AdminOrdersClient({ initialOrders }: { initialOrders: Or
     }
   };
 
-  const updateStatus = async (orderId: string, newStatus: string) => {
+  const updateStatus = async (orderId: string, newStatus: string, extraPayload: any = {}) => {
     setIsUpdating(orderId);
     try {
       const res = await fetch(`/api/orders/${orderId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus }),
+        body: JSON.stringify({ status: newStatus, ...extraPayload }),
       });
 
       if (res.ok) {
@@ -228,8 +230,7 @@ export default function AdminOrdersClient({ initialOrders }: { initialOrders: Or
                           {order.status === "PROCESSING" && (
                             <>
                               <button
-                                onClick={() => updateStatus(order.id, "SHIPPED")}
-                                disabled={isUpdating === order.id}
+                                onClick={() => setSelectedForLocalShip(order)}
                                 style={{ padding: "4px 8px", background: "#f5f3ff", color: "#7c3aed", border: "1px solid #7c3aed40", borderRadius: "4px", fontSize: "0.7rem", fontWeight: 700, cursor: "pointer" }}
                               >
                                 Ship
@@ -340,6 +341,20 @@ export default function AdminOrdersClient({ initialOrders }: { initialOrders: Or
             setOrders(orders.map(o => o.id === selectedForBigShip.id ? { ...o, status: "SHIPPED", bigshipTrackingId: trackingId } : o));
             setSelectedForBigShip(null);
             alert(`Shipment booked successfully! Tracking ID: ${trackingId}`);
+          }}
+        />
+      )}
+
+      {selectedForLocalShip && (
+        <LocalShipmentModal
+          order={selectedForLocalShip}
+          onClose={() => setSelectedForLocalShip(null)}
+          onSubmit={async (courierName, trackingId) => {
+            await updateStatus(selectedForLocalShip.id, "SHIPPED", {
+              bigshipCourierName: courierName || undefined,
+              bigshipTrackingId: trackingId || undefined
+            });
+            setSelectedForLocalShip(null);
           }}
         />
       )}

@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
 import { sendOperationsOrderAlert, sendOrderConfirmationEmail } from '@/lib/mail';
+import { getEstimatedDeliveryDateRange } from '@/lib/delivery';
 import { generateInvoicePdf } from '@/lib/pdf';
 
 // Helper to get Razorpay instance
@@ -179,6 +180,7 @@ export async function POST(request: NextRequest) {
         });
 
         if (customerEmail) {
+          const totalQty = order.items.reduce((sum: number, i: any) => sum + (i.quantity || 0), 0);
           await sendOrderConfirmationEmail(
             customerEmail as string,
             customerName as string,
@@ -186,7 +188,8 @@ export async function POST(request: NextRequest) {
             order.isSplitPayment,
             order.amountPaid,
             pdfBuffer,
-            order.orderNumber
+            order.orderNumber,
+            getEstimatedDeliveryDateRange(order.createdAt, totalQty)
           );
           console.log('[MAIL] Invoice and confirmation email sent for order:', order.id);
         }

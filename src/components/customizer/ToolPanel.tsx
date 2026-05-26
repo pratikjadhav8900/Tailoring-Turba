@@ -387,12 +387,9 @@ export default function ToolPanel({
               )}
               <button
                 className={styles.addAssetBtn}
-                onClick={() => {
-                  names.split("\n").filter(l => l.trim()).forEach(line => onAddText(line.trim()));
-                  setNames("");
-                }}
+                onClick={() => onAddText()}
               >
-                <Plus size={15} /> Add Names to Design
+                <Plus size={15} /> Add Text
               </button>
             </div>
           )}

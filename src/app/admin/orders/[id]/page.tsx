@@ -102,7 +102,29 @@ export default async function OrderDetailsPage({ params }: { params: { id: strin
           </div>
 
           <div className="space-y-8">
-            {order.items.map((item, index) => (
+            {order.items.map((item, index) => {
+              // Parse custom state to extract any logo URLs (e.g. from existing asset library)
+              let customState: CustomizerState | null = null;
+              let stateLogoUrls: string[] = [];
+              try {
+                if (item.customStateJson) {
+                  customState = JSON.parse(item.customStateJson) as CustomizerState;
+                  stateLogoUrls = [
+                    ...(customState.frontElements || []).filter((el) => el.type === "logo" && el.value).map((el) => el.value),
+                    ...(customState.backElements || []).filter((el) => el.type === "logo" && el.value).map((el) => el.value),
+                    ...(customState.leftElements || []).filter((el) => el.type === "logo" && el.value).map((el) => el.value),
+                    ...(customState.rightElements || []).filter((el) => el.type === "logo" && el.value).map((el) => el.value),
+                  ];
+                }
+              } catch (e) {
+                console.error("Failed to parse customState for logos", e);
+              }
+
+              // Combine explicitly uploaded printFiles with logo URLs from the canvas state
+              const allPrintFiles = [...(item.printFiles || []), ...stateLogoUrls];
+              const uniquePrintFiles = Array.from(new Set(allPrintFiles));
+
+              return (
               <div key={item.id} className="border rounded-lg p-6 flex flex-col md:flex-row gap-6">
                 
                 {/* Mockup Preview */}
@@ -112,8 +134,8 @@ export default async function OrderDetailsPage({ params }: { params: { id: strin
                     <span className="text-sm font-medium px-2 py-1 bg-gray-100 rounded text-gray-600">Item {index + 1}</span>
                   </div>
                   
-                  {(item.design?.imageUrl || item.mockupUrl || item.mockupUrlBack) ? (
-                    <div className={`grid gap-4 ${item.mockupUrl && item.mockupUrlBack ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                  {(item.design?.imageUrl || item.mockupUrl || item.mockupUrlBack || item.mockupUrlLeft || item.mockupUrlRight) ? (
+                    <div className="grid gap-4 grid-cols-2">
                       {/* Front Side */}
                       {(item.design?.imageUrl || item.mockupUrl) && (
                         <div className="flex flex-col gap-2">
@@ -145,6 +167,38 @@ export default async function OrderDetailsPage({ params }: { params: { id: strin
                           <p className="text-[10px] text-center font-bold text-gray-400 uppercase tracking-widest">Back View</p>
                         </div>
                       )}
+                      
+                      {/* Left Side */}
+                      {item.mockupUrlLeft && (
+                        <div className="flex flex-col gap-2">
+                          <div className="relative w-full aspect-[4/5] border rounded-xl overflow-hidden bg-white shadow-inner group">
+                            <Image 
+                              src={item.mockupUrlLeft} 
+                              alt="Sleeves Mockup" 
+                              fill 
+                              style={{ objectFit: "contain", padding: "20px" }}
+                            />
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors pointer-events-none" />
+                          </div>
+                          <p className="text-[10px] text-center font-bold text-gray-400 uppercase tracking-widest">Sleeves</p>
+                        </div>
+                      )}
+                      
+                      {/* Right Side */}
+                      {item.mockupUrlRight && (
+                        <div className="flex flex-col gap-2">
+                          <div className="relative w-full aspect-[4/5] border rounded-xl overflow-hidden bg-white shadow-inner group">
+                            <Image 
+                              src={item.mockupUrlRight} 
+                              alt="Right Mockup" 
+                              fill 
+                              style={{ objectFit: "contain", padding: "20px" }}
+                            />
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors pointer-events-none" />
+                          </div>
+                          <p className="text-[10px] text-center font-bold text-gray-400 uppercase tracking-widest">Right Sleeve</p>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <div className="w-full aspect-[4/5] border border-dashed rounded-xl flex flex-col items-center justify-center bg-gray-50 text-gray-400 gap-2">
@@ -158,7 +212,7 @@ export default async function OrderDetailsPage({ params }: { params: { id: strin
                 <div className="w-full md:w-1/2 flex flex-col gap-6">
                    <div>
                      <h3 className="font-bold text-lg text-[#435b43] border-b pb-2 mb-4">Production Assets</h3>
-                     {(item.design?.rawUrl || (item.printFiles && item.printFiles.length > 0)) ? (
+                     {(item.design?.rawUrl || uniquePrintFiles.length > 0) ? (
                        <div className="flex flex-col gap-3">
                           {item.design?.rawUrl && (
                             <DownloadButton 
@@ -174,7 +228,7 @@ export default async function OrderDetailsPage({ params }: { params: { id: strin
                                </div>
                              </DownloadButton>
                           )}
-                          {item.printFiles && item.printFiles.map((url, fi) => {
+                          {uniquePrintFiles.map((url, fi) => {
                             const filename = url.split('/').pop() || `Asset ${fi + 1}`;
                             return (
                               <DownloadButton 
@@ -187,7 +241,7 @@ export default async function OrderDetailsPage({ params }: { params: { id: strin
                                    <FileImage size={20} />
                                    <div className="text-left">
                                      <div className="font-bold text-sm truncate max-w-[200px]">{filename}</div>
-                                     <div className="text-[10px] opacity-70">Customer Uploaded Asset</div>
+                                     <div className="text-[10px] opacity-70">Design Logo / Asset</div>
                                    </div>
                                  </div>
                                </DownloadButton>
@@ -216,9 +270,8 @@ export default async function OrderDetailsPage({ params }: { params: { id: strin
 
                        {/* Parse Custom State */}
                        {(() => {
-                         if (!item.customStateJson) return null;
+                         if (!customState) return null;
                          try {
-                           const customState = JSON.parse(item.customStateJson) as CustomizerState;
                            const garmentType = customState.garmentType || "round-neck";
                            
                            const renderElements = (elements: DesignElement[], side: string) => {
@@ -285,6 +338,8 @@ export default async function OrderDetailsPage({ params }: { params: { id: strin
                                <h4 className="text-sm font-bold text-gray-700 mb-2 font-semibold">Design Placement & Specs:</h4>
                                {renderElements(customState.frontElements, "Front")}
                                {renderElements(customState.backElements, "Back")}
+                               {renderElements(customState.leftElements, "Sleeves")}
+                               {renderElements(customState.rightElements, "Right")}
                              </div>
                            );
                          } catch (err) {
@@ -296,7 +351,8 @@ export default async function OrderDetailsPage({ params }: { params: { id: strin
                 </div>
 
               </div>
-            ))}
+              );
+            })}
           </div>
       </div>
     </div>

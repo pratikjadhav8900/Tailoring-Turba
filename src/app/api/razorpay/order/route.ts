@@ -136,7 +136,9 @@ export async function POST(request: NextRequest) {
               ...(i.customStateJson && { customStateJson: i.customStateJson }),
               ...(i.printFiles && { printFiles: i.printFiles }),
               ...(i.mockupUrl && { mockupUrl: i.mockupUrl }),
-              ...(i.mockupUrlBack && { mockupUrlBack: i.mockupUrlBack })
+              ...(i.mockupUrlBack && { mockupUrlBack: i.mockupUrlBack }),
+              ...(i.mockupUrlLeft && { mockupUrlLeft: i.mockupUrlLeft }),
+              ...(i.mockupUrlRight && { mockupUrlRight: i.mockupUrlRight })
             })),
           },
         }

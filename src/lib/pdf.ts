@@ -9,6 +9,18 @@ export interface InvoiceItem {
   price: number;
 }
 
+function getHsnForProductName(name: string): string {
+  const n = name.toLowerCase();
+  if (n.includes("trouser") || n.includes("pant")) return "6203";
+  if (n.includes("shirt") && !n.includes("t-shirt") && !n.includes("polo") && !n.includes("tee") && !n.includes("sweatshirt")) return "6205";
+  if (n.includes("hoodie") || n.includes("sweatshirt") || n.includes("jacket")) return "6110";
+  if (n.includes("lab coat") || n.includes("apron")) return "6211";
+  if (n.includes("bag") || n.includes("duffel")) return "4202";
+  if (n.includes("pen") || n.includes("keychain")) return "7326";
+  if (n.includes("bottle") || n.includes("flask") || n.includes("mug")) return "3922";
+  return "6109"; // Default: T-shirts, Polos (knitted)
+}
+
 export interface InvoiceOrder {
   id: string;
   orderNumber: number;
@@ -237,7 +249,7 @@ export function generateInvoicePdf(order: InvoiceOrder): Promise<Buffer> {
         
         doc.font('Helvetica').text((idx + 1).toString(), cols[0], itemY, { width: cols[1] - cols[0], align: 'center', lineBreak: false });
         doc.font('Helvetica-Bold').text(item.product.name, cols[1] + 5, itemY, { width: cols[2] - cols[1] - 10 });
-        doc.font('Helvetica').text('6211', cols[2], itemY, { width: cols[3] - cols[2], align: 'center', lineBreak: false });
+        doc.font('Helvetica').text(getHsnForProductName(item.product.name), cols[2], itemY, { width: cols[3] - cols[2], align: 'center', lineBreak: false });
         doc.text(item.quantity.toString() + ' SET', cols[3], itemY, { width: cols[4] - cols[3], align: 'center', lineBreak: false });
         doc.text(item.price.toFixed(2), cols[4] - 2, itemY, { width: cols[5] - cols[4], align: 'right', lineBreak: false });
         doc.text(taxable.toFixed(2), cols[5] - 2, itemY, { width: cols[6] - cols[5], align: 'right', lineBreak: false });
@@ -332,6 +344,42 @@ export function generateInvoicePdf(order: InvoiceOrder): Promise<Buffer> {
       y += 15;
       drawLine(doc, cols[6], y, rightMargin, y, brandColor);
       
+      // Payment Split Breakdown
+      doc.font('Helvetica-Bold').fontSize(8);
+      let advPaid = order.amountPaid || 0;
+      let balDue = order.remainingAmount || 0;
+      let qrAmount = grandTotal;
+      
+      if (order.type === 'PRO FORMA INVOICE') {
+        advPaid = Math.round(grandTotal * 0.6);
+        balDue = Math.round(grandTotal * 0.4);
+        qrAmount = advPaid;
+        doc.text('Required Advance (60%)', cols[6] + 5, y + 4);
+        doc.text('Rs. ' + advPaid.toFixed(2), cols[8] - 2, y + 4, { width: rightMargin - cols[8], align: 'right' });
+        y += 15;
+        drawLine(doc, cols[6], y, rightMargin, y, brandColor);
+        doc.text('Balance Due (40%)', cols[6] + 5, y + 4);
+        doc.text('Rs. ' + balDue.toFixed(2), cols[8] - 2, y + 4, { width: rightMargin - cols[8], align: 'right' });
+        y += 15;
+        drawLine(doc, cols[6], y, rightMargin, y, brandColor);
+      } else if (order.isSplitPayment) {
+        qrAmount = balDue > 0 ? balDue : 0;
+        doc.text('Advance Paid (60%)', cols[6] + 5, y + 4);
+        doc.text('Rs. ' + advPaid.toFixed(2), cols[8] - 2, y + 4, { width: rightMargin - cols[8], align: 'right' });
+        y += 15;
+        drawLine(doc, cols[6], y, rightMargin, y, brandColor);
+        doc.text('Balance Due (40%)', cols[6] + 5, y + 4);
+        doc.text('Rs. ' + balDue.toFixed(2), cols[8] - 2, y + 4, { width: rightMargin - cols[8], align: 'right' });
+        y += 15;
+        drawLine(doc, cols[6], y, rightMargin, y, brandColor);
+      } else {
+        qrAmount = grandTotal;
+        doc.text('Amount Paid (100%)', cols[6] + 5, y + 4);
+        doc.text('Rs. ' + advPaid.toFixed(2), cols[8] - 2, y + 4, { width: rightMargin - cols[8], align: 'right' });
+        y += 15;
+        drawLine(doc, cols[6], y, rightMargin, y, brandColor);
+      }
+      
       // Right border for Tax box
       drawLine(doc, cols[6], taxBoxY, cols[6], y, brandColor);
       drawLine(doc, rightMargin, taxBoxY, rightMargin, y, brandColor);
@@ -350,7 +398,7 @@ export function generateInvoicePdf(order: InvoiceOrder): Promise<Buffer> {
       doc.text('UPI ID',     bLeft, bankDetailsY + rowH*5); doc.text('merchant581768.augp@aubank',     bRight, bankDetailsY + rowH*5);
       
       // Generate UPI QR Code
-      const upiString = 'upi://pay?pa=merchant581768.augp@aubank&pn=TailoringTurba&am=' + grandTotal.toFixed(2);
+      const upiString = 'upi://pay?pa=merchant581768.augp@aubank&pn=TailoringTurba&am=' + qrAmount.toFixed(2);
       const qrDataUrl = await QRCode.toDataURL(upiString, { width: 90, margin: 2 });
       const qrX = margin + 215;
       const qrSize = 75;

@@ -6,9 +6,15 @@ export const GARMENTS = {
     baseFront: "/mockups/man_base.png",
     back: "/mockups/round_neck_back_mask_transparent.png",
     baseBack: "/mockups/round_neck_back_base.png",
+    left: "/mockups/round_neck_left_sleeve_mask.png",
+    baseLeft: "/mockups/round_neck_left_sleeve_base.png",
+    right: "/mockups/round_neck_left_sleeve_mask.png", // fallback for right using left image, could be styled via CSS if needed
+    baseRight: "/mockups/round_neck_left_sleeve_base.png",
     printableArea: {
       front: { top: "19%", left: "25%", width: "50%", height: "55%" },
-      back: { top: "18%", left: "27%", width: "46%", height: "60%" }
+      back: { top: "18%", left: "27%", width: "46%", height: "60%" },
+      left: { top: "32%", left: "48%", width: "22%", height: "30%" },
+      right: { top: "32%", left: "48%", width: "22%", height: "30%" }
     }
   },
   "v-neck": {
@@ -23,9 +29,15 @@ export const GARMENTS = {
     baseFront: "/mockups/polo_front_base.png",
     back: "/mockups/polo_back_mask_transparent.png",
     baseBack: "/mockups/polo_back_base.png",
+    left: "/mockups/polo_neck_left_sleeve_mask.png",
+    baseLeft: "/mockups/polo_neck_left_sleeve_base.png",
+    right: "/mockups/polo_neck_left_sleeve_mask.png",
+    baseRight: "/mockups/polo_neck_left_sleeve_base.png",
     printableArea: {
       front: { top: "22%", left: "25%", width: "50%", height: "60%" },
-      back: { top: "17%", left: "27%", width: "46%", height: "60%" }
+      back: { top: "17%", left: "27%", width: "46%", height: "60%" },
+      left: { top: "32%", left: "48%", width: "22%", height: "30%" },
+      right: { top: "32%", left: "48%", width: "22%", height: "30%" }
     }
   },
   hoodie: {

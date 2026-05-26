@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { generateInvoicePdf } from "@/lib/pdf";
 import { sendOrderConfirmationEmail, sendTaxInvoiceEmail } from "@/lib/mail";
+import { getEstimatedDeliveryDateRange } from "@/lib/delivery";
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await auth();
@@ -67,6 +68,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         order.orderNumber ?? undefined
       );
     } else {
+      const totalQty = order.items.reduce((sum, i) => sum + i.quantity, 0);
       await sendOrderConfirmationEmail(
         order.user.email,
         order.user.name || "Customer",
@@ -74,7 +76,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         order.isSplitPayment ?? false,
         order.amountPaid ?? 0,
         pdfBuffer,
-        order.orderNumber ?? undefined
+        order.orderNumber ?? undefined,
+        getEstimatedDeliveryDateRange(order.createdAt, totalQty)
       );
     }
 

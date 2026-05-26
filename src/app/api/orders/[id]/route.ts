@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import Razorpay from "razorpay";
-import { sendBalancePaymentRequestEmail, sendOrderCancellationEmail, sendTaxInvoiceEmail } from "@/lib/mail";
+import { sendBalancePaymentRequestEmail, sendOrderCancellationEmail, sendTaxInvoiceEmail, sendOrderDeliveredEmail } from "@/lib/mail";
 import { generateInvoicePdf } from "@/lib/pdf";
 
 function getRazorpay() {
@@ -49,7 +49,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
 
-  const { status } = await req.json();
+  const { status, bigshipCourierName, bigshipTrackingId } = await req.json();
   const validStatuses = ["PENDING", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED"];
   if (!validStatuses.includes(status)) {
     return NextResponse.json({ error: "Invalid status." }, { status: 400 });
@@ -209,13 +209,28 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     }
   }
 
+  // Handle Delivered
+  if (status === "DELIVERED" && order.status !== "DELIVERED") {
+    if (order.user.email) {
+      sendOrderDeliveredEmail(
+        order.user.email,
+        order.user.name || "Customer",
+        order.id,
+        order.orderNumber ?? undefined
+      ).catch(err => console.error("[MAIL_ERROR] Failed to send order delivered email:", err));
+      console.log(`[MAIL] Sent order delivered email for order: ${order.id}`);
+    }
+  }
+
   // Update order status in DB
   const updated = await prisma.order.update({
     where: { id: params.id },
     data: { 
       status,
       ...(refundedAmount !== null && { refundedAmount }),
-      ...(refundId !== null && { refundId })
+      ...(refundId !== null && { refundId }),
+      ...(bigshipCourierName !== undefined && { bigshipCourierName }),
+      ...(bigshipTrackingId !== undefined && { bigshipTrackingId })
     },
   });
 

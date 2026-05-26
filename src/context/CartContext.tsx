@@ -13,6 +13,8 @@ export type CartItem = {
   quantity: number;
   image?: string;
   mockupUrlBack?: string;
+  mockupUrlLeft?: string;
+  mockupUrlRight?: string;
   customDesign?: CustomizerState;
   uploadedAssets?: string[];
 };

@@ -1,4 +1,4 @@
-export type Side = "front" | "back";
+export type Side = "front" | "back" | "left" | "right";
 
 export interface DesignElement {
   id: string;
@@ -58,5 +58,7 @@ export interface CustomizerState {
   sizes?: SizeQuantities;
   frontElements: DesignElement[];
   backElements: DesignElement[];
+  leftElements: DesignElement[];
+  rightElements: DesignElement[];
   previewSize?: "S" | "M" | "L" | "XL" | "XXL";
 }

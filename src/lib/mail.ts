@@ -150,7 +150,8 @@ export const sendOrderConfirmationEmail = async (
   isSplit: boolean,
   amountPaid: number,
   pdfBuffer: Buffer,
-  orderNumber?: number
+  orderNumber?: number,
+  estimatedDeliveryRange?: string
 ) => {
   const displayNo = orderNumber ? String(orderNumber) : orderId.slice(-8).toUpperCase();
   const subject = `Your Order is Confirmed — Tailoring Turba #${displayNo}`;
@@ -170,11 +171,14 @@ export const sendOrderConfirmationEmail = async (
           <p style="margin: 6px 0;"><strong>💰 Payment Type:</strong> ${isSplit ? "60% Split Payment (Bulk Order)" : "100% Full Payment"}</p>
           <p style="margin: 6px 0;"><strong>💳 Paid Amount:</strong> ₹${amountPaid.toLocaleString('en-IN')}</p>
           ${isSplit ? `<p style="margin: 6px 0; color: #d97706;"><strong>⏳ Balance Remaining:</strong> 40% (Due on dispatch)</p>` : ""}
+          ${estimatedDeliveryRange ? `<p style="margin: 6px 0; color: #435b43;"><strong>🚚 Estimated Delivery:</strong> ${estimatedDeliveryRange}</p>` : ""}
         </div>
 
         <p style="font-size: 13px; color: #6b7280; line-height: 1.5; margin: 20px 0;">
           <strong>Important Cancellation Policy Reminder:</strong><br/>
           If you cancel this order within <strong>24 hours</strong> of placement, you will receive a <strong>75% refund</strong> of the paid amount (25% fee will be deducted for administrative costs). After 24 hours, no refund will be provided because customization and fabric-cutting will have already begun.
+          <br/><br/>
+          <em>*Please note: Delivery dates may vary slightly depending on exact manufacturing requirements and courier transit times.</em>
         </p>
 
         <p>Your <strong>Pro Forma Invoice</strong> has been attached to this email. Your official Tax Invoice will be sent when your order is dispatched.</p>
@@ -319,6 +323,40 @@ export const sendOrderCancellationEmail = async (
         }
         
         <p>If you have any questions, please feel free to reach out to our customer support team.</p>
+        <p>Best regards,<br/>The Tailoring Turba Team</p>
+      </div>
+    </div>
+  `;
+
+  return sendMail({ to: email, subject, html });
+};
+
+export const sendOrderDeliveredEmail = async (
+  email: string,
+  name: string,
+  orderId: string,
+  orderNumber?: number
+) => {
+  const displayNo = orderNumber ? String(orderNumber) : orderId.slice(-8).toUpperCase();
+  const subject = `Your Order has been Delivered! 🎉 — Tailoring Turba #${displayNo}`;
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+      <div style="background: #435b43; padding: 24px; border-radius: 6px 6px 0 0; text-align: center;">
+        <h1 style="color: white; margin: 0; font-size: 22px; letter-spacing: 1px;">TAILORING TURBA</h1>
+      </div>
+      <div style="padding: 28px 24px;">
+        <h2 style="color: #435b43; margin-top: 0;">Order Delivered Successfully! 📦</h2>
+        <p>Dear <strong>${name}</strong>,</p>
+        <p>Your order <strong>#${displayNo}</strong> has been marked as Delivered!</p>
+        <p>We hope you are thrilled with your custom apparel. It was a pleasure crafting this order for you.</p>
+        
+        <div style="background-color: #f0fdf4; padding: 20px; border-radius: 8px; margin: 24px 0; border-left: 4px solid #16a34a;">
+          <p style="margin: 0 0 8px 0; font-size: 14px; color: #166534; text-transform: uppercase; letter-spacing: 1px;">What's Next?</p>
+          <p style="margin: 6px 0;">If you have any feedback or concerns regarding your order, please reach out to us within 48 hours.</p>
+          <p style="margin: 6px 0;">Looking to place a reorder? Simply log in to your account and go to your Orders section.</p>
+        </div>
+
+        <p>Thank you for choosing Tailoring Turba!</p>
         <p>Best regards,<br/>The Tailoring Turba Team</p>
       </div>
     </div>

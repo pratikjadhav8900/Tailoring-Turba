@@ -8,6 +8,7 @@ import EmptyState from "@/components/EmptyState";
 import OrderTracking from "@/components/OrderTracking";
 import CancelOrderButton from "@/components/CancelOrderButton";
 import Image from "next/image";
+import { getEstimatedDeliveryDateRange } from "@/lib/delivery";
 
 export default async function OrdersPage() {
   const session = await auth();
@@ -72,12 +73,56 @@ export default async function OrdersPage() {
                   <div className={styles.orderDate}>
                     {new Date(order.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
                   </div>
+                  {order.status !== "CANCELLED" && order.status !== "DELIVERED" && (
+                    <div style={{ fontSize: '0.8rem', color: '#6b7280', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <span style={{ color: '#4b5563' }}>🚚 Est. Delivery:</span> 
+                      <span style={{ fontWeight: 600 }}>{getEstimatedDeliveryDateRange(order.createdAt, order.items.reduce((sum, item) => sum + item.quantity, 0))}</span>
+                    </div>
+                  )}
                 </div>
                 <div className={styles.orderRight}>
                   <div className={styles.amount}>₹{order.totalAmount.toLocaleString('en-IN')}</div>
                   <div className={`${styles.badge} ${styles[`badge-${order.status.toLowerCase()}`]}`}>{order.status}</div>
                 </div>
               </div>
+
+              {/* Shipment Tracking Info */}
+              {order.status === "SHIPPED" && order.bigshipTrackingId && (
+                <div style={{
+                  background: '#f0fdf4',
+                  border: '1px solid #bbf7d0',
+                  borderRadius: '6px',
+                  padding: '12px 16px',
+                  margin: '0 24px 16px 24px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}>
+                  <div>
+                    <div style={{ fontSize: '0.75rem', color: '#166534', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Shipment Details</div>
+                    <div style={{ fontSize: '0.9rem', color: '#14532d', marginTop: '2px' }}>
+                      Courier: <strong>{order.bigshipCourierName || "Logistics Partner"}</strong> <br/>
+                      Tracking No (AWB): <strong style={{ letterSpacing: '0.5px' }}>{order.bigshipTrackingId}</strong>
+                    </div>
+                  </div>
+                  <a 
+                    href={order.bigshipTrackingId.startsWith("http") ? order.bigshipTrackingId : `https://app.bigship.in/track_order`} 
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      background: '#16a34a',
+                      color: 'white',
+                      padding: '8px 16px',
+                      borderRadius: '4px',
+                      fontSize: '0.85rem',
+                      fontWeight: 600,
+                      textDecoration: 'none'
+                    }}
+                  >
+                    Track Order
+                  </a>
+                </div>
+              )}
 
               {/* Visual Order Progress */}
               <OrderTracking status={order.status} />
@@ -179,7 +224,7 @@ export default async function OrdersPage() {
                     return (
                       <CancelOrderButton 
                         orderId={order.id} 
-                        orderNumber={order.orderNumber || ""} 
+                        orderNumber={order.orderNumber ? String(order.orderNumber) : ""} 
                         isPaid={order.amountPaid > 0} 
                         isWithin24h={isWithin24h} 
                       />
