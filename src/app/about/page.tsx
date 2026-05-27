@@ -288,7 +288,7 @@ export default function AboutPage() {
       </section>
 
       {/* 6. FOUNDER SECTION */}
-      <section className="pt-20 md:pt-32 pb-8 bg-white border-t border-[#fafaf8]">
+      <section className="pt-20 md:pt-32 pb-20 md:pb-32 bg-white border-t border-[#fafaf8]">
         <div className="container px-4 max-w-4xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
