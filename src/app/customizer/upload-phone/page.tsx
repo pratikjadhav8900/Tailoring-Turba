@@ -1,10 +1,10 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
 type UploadState = "idle" | "uploading" | "success" | "error";
 
-export default function UploadPhonePage() {
+function UploadPhoneContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -515,5 +515,17 @@ export default function UploadPhonePage() {
         <div className="footer">Tailoring Turba · Secure mobile upload</div>
       </div>
     </>
+  );
+}
+
+export default function UploadPhonePage() {
+  return (
+    <Suspense fallback={
+      <div style={{ minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", background: "#0f1924", color: "#5e8c82", fontFamily: "sans-serif" }}>
+        Loading...
+      </div>
+    }>
+      <UploadPhoneContent />
+    </Suspense>
   );
 }
