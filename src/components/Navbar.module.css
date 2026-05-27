@@ -227,7 +227,7 @@
   }
 
   .logo img {
-    width: 140px !important;
+    width: 160px !important;
     height: auto !important;
   }
 
@@ -238,12 +238,12 @@
 
   .actions {
     flex: 0 0 auto;
-    gap: 8px; /* Reduced gap to fit more icons on 390px */
+    gap: 12px;
   }
 
   .iconBtn {
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
   }
 
   .leftLinks {
@@ -287,22 +287,22 @@
     padding: 0 12px;
   }
   .logo img {
-    width: 100px !important;
+    width: 135px !important;
     height: auto !important;
   }
   .actions {
-    gap: 4px;
+    gap: 8px;
   }
   .iconBtn {
-    width: 26px;
-    height: 26px;
+    width: 32px;
+    height: 32px;
   }
   .iconBtn svg {
-    width: 18px;
-    height: 18px;
+    width: 21px !important;
+    height: 21px !important;
   }
   .mobileMenuToggle {
     padding: 6px;
-    flex: 0 0 30px;
+    flex: 0 0 32px;
   }
 }
