@@ -42,11 +42,12 @@ function StatCard({ stat, index, isVisible }: {
 
   return (
     <div
-      className={styles.statCard}
+      className={`${styles.statCard} ${index === 0 ? styles.statCardLarge : ""}`}
       style={{ animationDelay: `${index * 120}ms` }}
       data-visible={isVisible}
     >
-      <div className={styles.accentLine} />
+      <div className={styles.cardGlow} />
+      <div className={styles.cardBadge} />
       <div className={styles.numberRow}>
         <span className={styles.number}>
           {isVisible ? formatCount(count) : "0"}
@@ -94,12 +95,7 @@ export default function StatsStrip() {
 
         <div className={styles.grid}>
           {STATS.map((stat, i) => (
-            <React.Fragment key={stat.label}>
-              <StatCard stat={stat} index={i} isVisible={isVisible} />
-              {i < STATS.length - 1 && (
-                <div className={styles.divider} aria-hidden="true" />
-              )}
-            </React.Fragment>
+            <StatCard key={stat.label} stat={stat} index={i} isVisible={isVisible} />
           ))}
         </div>
       </div>
