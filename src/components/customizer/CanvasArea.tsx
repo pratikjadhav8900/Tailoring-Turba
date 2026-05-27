@@ -157,8 +157,16 @@ export default function CanvasArea({
 
     const handleTouchStart = (e: TouchEvent) => {
       const target = e.target as HTMLElement;
-      // Prevent canvas panning if the touch initiates on any design element or drag handle
-      if (target.closest('.customizer-drag-handle') || target.closest('[class*="rndBox"]')) {
+      // Prevent canvas panning and zoom gestures if the touch initiates on any design element, button, input, or control panel
+      if (
+        target.closest('.customizer-drag-handle') || 
+        target.closest('[class*="rndBox"]') ||
+        target.closest('[class*="topFormattingBar"]') ||
+        target.closest('button') ||
+        target.closest('input') ||
+        target.closest('select') ||
+        target.closest('textarea')
+      ) {
         return;
       }
 

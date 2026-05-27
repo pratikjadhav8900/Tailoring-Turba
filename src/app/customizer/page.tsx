@@ -491,7 +491,15 @@ function CustomizerContent() {
             {isPreviewMode ? 'Exit Preview' : 'Preview'}
           </button>
           <button className={styles.nextBtn} onClick={handleNext}>
-            {nextText}
+            {activeTab === "Design" ? (
+              <>Next<span className={styles.btnTextSuffix}>: Options</span></>
+            ) : activeTab === "Options" ? (
+              <>Next<span className={styles.btnTextSuffix}>: Review</span></>
+            ) : (isSaving || isUploadingAssets) ? (
+              "Processing..."
+            ) : (
+              "Add to Cart"
+            )}
           </button>
         </div>
       </header>

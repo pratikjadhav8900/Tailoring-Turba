@@ -444,3 +444,35 @@
   letter-spacing: 0.1em;
   border-bottom: 1px solid #eee;
 }
+
+.btnTextSuffix {
+  display: inline;
+}
+
+@media (max-width: 768px) {
+  .actionIcons {
+    display: none !important;
+  }
+  .topBar {
+    padding: 6px 8px !important;
+    gap: 4px !important;
+  }
+  .topBarRight {
+    gap: 4px !important;
+  }
+  .tab {
+    padding: 0 6px !important;
+    font-size: 0.78rem !important;
+  }
+  .previewBtn {
+    padding: 4px 6px !important;
+    font-size: 0.72rem !important;
+  }
+  .nextBtn {
+    padding: 4px 8px !important;
+    font-size: 0.72rem !important;
+  }
+  .btnTextSuffix {
+    display: none !important;
+  }
+}
