@@ -4,6 +4,7 @@ import { Providers } from "./providers";
 import LayoutWrapper from "./LayoutWrapper";
 import NextTopLoader from 'nextjs-toploader';
 import { Toaster } from "react-hot-toast";
+import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
   title: {
@@ -42,6 +43,7 @@ export default function RootLayout({
             </main>
           </LayoutWrapper>
         </Providers>
+        <Analytics />
       </body>
     </html>
   );
