@@ -41,7 +41,6 @@ export default function InquiryTable({ initialInquiries }: { initialInquiries: I
   });
 
   const exportToCSV = () => {
-    if (!startDate || !endDate) return; // require date range
     const headers = ["Customer Name", "Phone", "Email", "Quantity", "Requirements"];
     const rows = filteredInquiries.map(iq => [
       `"${iq.name.replace(/"/g, '""')}"`,
@@ -56,7 +55,17 @@ export default function InquiryTable({ initialInquiries }: { initialInquiries: I
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
     link.setAttribute("href", url);
-    link.setAttribute("download", `Tailoring_Turba_Inquiries_${startDate}_to_${endDate}.csv`);
+
+    let filename = "Tailoring_Turba_Inquiries.csv";
+    if (startDate && endDate) {
+      filename = `Tailoring_Turba_Inquiries_${startDate}_to_${endDate}.csv`;
+    } else if (startDate) {
+      filename = `Tailoring_Turba_Inquiries_from_${startDate}.csv`;
+    } else if (endDate) {
+      filename = `Tailoring_Turba_Inquiries_until_${endDate}.csv`;
+    }
+
+    link.setAttribute("download", filename);
     link.style.visibility = "hidden";
     document.body.appendChild(link);
     link.click();
@@ -152,8 +161,7 @@ export default function InquiryTable({ initialInquiries }: { initialInquiries: I
 
         <button 
           onClick={exportToCSV}
-          disabled={!startDate || !endDate || filteredInquiries.length === 0}
-          title={(!startDate || !endDate) ? "Please select a date range first" : ""}
+          disabled={filteredInquiries.length === 0}
           style={{ 
             display: "flex", 
             alignItems: "center", 
@@ -165,13 +173,13 @@ export default function InquiryTable({ initialInquiries }: { initialInquiries: I
             border: "none", 
             fontSize: "0.85rem", 
             fontWeight: 700, 
-            cursor: (!startDate || !endDate || filteredInquiries.length === 0) ? "not-allowed" : "pointer",
+            cursor: filteredInquiries.length === 0 ? "not-allowed" : "pointer",
             transition: "opacity 0.2s",
-            opacity: (!startDate || !endDate || filteredInquiries.length === 0) ? 0.4 : 1
+            opacity: filteredInquiries.length === 0 ? 0.4 : 1
           }}
         >
           <Download size={18} />
-          Export to Excel (CSV)
+          {startDate || endDate ? "Export Filtered to Excel (CSV)" : "Export All to Excel (CSV)"}
         </button>
       </div>
 

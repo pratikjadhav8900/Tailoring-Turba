@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Calendar, Clock, CheckCheck, Ban, Check } from "lucide-react";
+import { Calendar, Clock, CheckCheck, Ban, Check, Download } from "lucide-react";
 import styles from "../page.module.css";
 
 type Booking = {
@@ -10,13 +10,57 @@ type Booking = {
   date: string;
   timeSlot: string;
   notes: string | null;
-  user: { name: string | null; email: string };
+  user: { name: string | null; email: string; phone: string | null };
 };
 
 export default function BookingsClient({ initialBookings }: { initialBookings: Booking[] }) {
   const [bookings, setBookings] = useState<Booking[]>(initialBookings);
   const [pending, startTransition] = useTransition();
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+
+  const filteredBookings = bookings.filter(b => {
+    if (!startDate && !endDate) return true;
+    const bDate = new Date(b.date).getTime();
+    const start = startDate ? new Date(startDate).setHours(0, 0, 0, 0) : -Infinity;
+    const end = endDate ? new Date(endDate).setHours(23, 59, 59, 999) : Infinity;
+    return bDate >= start && bDate <= end;
+  });
+
+  const exportToCSV = () => {
+    const headers = ["Customer Name", "Phone", "Email", "Booking Date", "Time Slot", "Notes", "Status"];
+    const rows = filteredBookings.map(b => [
+      `"${(b.user.name || "Guest").replace(/"/g, '""')}"`,
+      b.user.phone || "",
+      b.user.email || "",
+      new Date(b.date).toLocaleDateString("en-IN"),
+      b.timeSlot,
+      `"${(b.notes || "").replace(/"/g, '""')}"`,
+      b.status
+    ]);
+
+    const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    
+    let filename = "Tailoring_Turba_Bookings.csv";
+    if (startDate && endDate) {
+      filename = `Tailoring_Turba_Bookings_${startDate}_to_${endDate}.csv`;
+    } else if (startDate) {
+      filename = `Tailoring_Turba_Bookings_from_${startDate}.csv`;
+    } else if (endDate) {
+      filename = `Tailoring_Turba_Bookings_until_${endDate}.csv`;
+    }
+    
+    link.setAttribute("download", filename);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const updateStatus = (bookingId: string, newStatus: string) => {
     setLoadingId(bookingId);
@@ -52,6 +96,91 @@ export default function BookingsClient({ initialBookings }: { initialBookings: B
         </div>
       </div>
 
+      {/* Filters & Export Bar */}
+      <div style={{ 
+        background: "white", 
+        padding: "16px 24px", 
+        borderRadius: "4px", 
+        border: "1px solid var(--tth-beige-light, #e7e5e4)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: "20px",
+        flexWrap: "wrap",
+        marginBottom: "16px"
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <Calendar size={16} color="var(--tth-text-muted, #78716c)" />
+            <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--tth-black, #1c1917)" }}>Filter Period:</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+            <input 
+              type="date" 
+              value={startDate} 
+              onChange={(e) => setStartDate(e.target.value)}
+              style={{ 
+                padding: "8px 12px", 
+                borderRadius: "4px", 
+                border: "1px solid var(--tth-beige-light, #e7e5e4)", 
+                fontSize: "0.85rem", 
+                outline: "none", 
+                minWidth: "140px",
+                color: "var(--tth-black, #1c1917)",
+                backgroundColor: "white"
+              }}
+            />
+            <span style={{ color: "var(--tth-text-muted, #78716c)", fontSize: "0.85rem" }}>to</span>
+            <input 
+              type="date" 
+              value={endDate} 
+              onChange={(e) => setEndDate(e.target.value)}
+              style={{ 
+                padding: "8px 12px", 
+                borderRadius: "4px", 
+                border: "1px solid var(--tth-beige-light, #e7e5e4)", 
+                fontSize: "0.85rem", 
+                outline: "none", 
+                minWidth: "140px",
+                color: "var(--tth-black, #1c1917)",
+                backgroundColor: "white"
+              }}
+            />
+            {(startDate || endDate) && (
+              <button 
+                onClick={() => { setStartDate(""); setEndDate(""); }}
+                style={{ fontSize: "0.8rem", color: "#dc2626", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}
+              >
+                Clear
+              </button>
+            )}
+          </div>
+        </div>
+
+        <button 
+          onClick={exportToCSV}
+          disabled={filteredBookings.length === 0}
+          style={{ 
+            display: "flex", 
+            alignItems: "center", 
+            gap: "8px", 
+            padding: "8px 16px", 
+            background: "var(--tth-olive-dark, #435b43)", 
+            color: "white", 
+            borderRadius: "4px", 
+            border: "none", 
+            fontSize: "0.85rem", 
+            fontWeight: 600, 
+            cursor: filteredBookings.length === 0 ? "not-allowed" : "pointer",
+            transition: "opacity 0.2s",
+            opacity: filteredBookings.length === 0 ? 0.4 : 1
+          }}
+        >
+          <Download size={16} />
+          {startDate || endDate ? "Export Filtered to Excel (CSV)" : "Export All to Excel (CSV)"}
+        </button>
+      </div>
+
       <div className={styles.tableBlock}>
         <div className={styles.tableWrap}>
           <table className={styles.table}>
@@ -66,7 +195,7 @@ export default function BookingsClient({ initialBookings }: { initialBookings: B
               </tr>
             </thead>
             <tbody>
-              {bookings.map((booking) => {
+              {filteredBookings.map((booking) => {
                 const cfg = statusConfig[booking.status] || statusConfig.REQUESTED;
                 const isLoading = loadingId === booking.id;
 
@@ -75,6 +204,11 @@ export default function BookingsClient({ initialBookings }: { initialBookings: B
                     <td>
                       <div className={styles.customerName}>{booking.user.name || "Guest"}</div>
                       <div className={styles.customerEmail}>{booking.user.email}</div>
+                      {booking.user.phone && (
+                        <div style={{ fontSize: "0.82rem", color: "var(--tth-text-muted)", marginTop: "3px", display: "flex", alignItems: "center", gap: "4px" }}>
+                          <span style={{ opacity: 0.7 }}>📞</span> {booking.user.phone}
+                        </div>
+                      )}
                     </td>
                     <td>
                       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -136,10 +270,10 @@ export default function BookingsClient({ initialBookings }: { initialBookings: B
                   </tr>
                 );
               })}
-              {bookings.length === 0 && (
+              {filteredBookings.length === 0 && (
                 <tr>
                   <td colSpan={6} style={{ textAlign: "center", padding: "40px", color: "var(--tth-text-muted)" }}>
-                    No bookings scheduled.
+                    No bookings found.
                   </td>
                 </tr>
               )}

@@ -12,7 +12,7 @@ export default async function AdminBookingsPage() {
   const bookings = await prisma.booking.findMany({
     include: {
       user: {
-        select: { name: true, email: true }
+        select: { name: true, email: true, phone: true }
       }
     },
     orderBy: { date: "desc" }
@@ -22,7 +22,9 @@ export default async function AdminBookingsPage() {
   const serialized = bookings.map(b => ({
     ...b,
     date: b.date.toISOString(),
-    user: b.user ? { name: b.user.name, email: b.user.email || "" } : { name: b.guestName, email: b.guestEmail || "" },
+    user: b.user 
+      ? { name: b.user.name, email: b.user.email || "", phone: b.user.phone || b.guestPhone || "" } 
+      : { name: b.guestName, email: b.guestEmail || "", phone: b.guestPhone || "" },
   }));
 
   return <BookingsClient initialBookings={serialized} />;
