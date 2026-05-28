@@ -171,7 +171,7 @@
 /* Color swatch grid */
 .colorSwatchGrid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 10px 6px;
 }
 .colorSwatchCard {
@@ -185,6 +185,8 @@
   padding: 0;
   border-radius: 8px;
   transition: transform 0.15s;
+  width: 100%;
+  min-width: 0;
 }
 .colorSwatchCard:hover { transform: scale(1.06); }
 .colorSwatchCardActive .colorSwatchBlock {

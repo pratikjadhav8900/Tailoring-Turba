@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic';
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { prisma, withRetry } from "@/lib/prisma";
 import Link from "next/link";
 import styles from "./page.module.css";
 import { 
@@ -21,11 +21,13 @@ export default async function DashboardPage() {
   const session = await auth();
   const userId = session?.user?.id as string;
 
-  const [orders, designs, bookings] = await Promise.all([
-    prisma.order.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 5, include: { items: true } }),
-    prisma.design.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 4 }),
-    prisma.booking.findMany({ where: { userId, status: { in: ["REQUESTED", "CONFIRMED"] } }, orderBy: { date: "asc" } }),
-  ]);
+  const [orders, designs, bookings] = await withRetry(() =>
+    Promise.all([
+      prisma.order.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 5, include: { items: true } }),
+      prisma.design.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 4 }),
+      prisma.booking.findMany({ where: { userId, status: { in: ["REQUESTED", "CONFIRMED"] } }, orderBy: { date: "asc" } }),
+    ])
+  );
 
   const totalSpent = orders.reduce((s, o) => s + o.totalAmount, 0);
 
