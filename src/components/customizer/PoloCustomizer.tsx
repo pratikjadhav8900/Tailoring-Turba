@@ -273,6 +273,9 @@ export default function PoloCustomizer({
     const file = e.target.files?.[0];
     if (!file) return;
     setIsUploading(true);
+    // Snapshot which side is active *now*, before any async operations
+    // (on mobile the file picker can trigger re-renders that change activeSide)
+    const sideAtStart = activeSideRef.current;
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -318,7 +321,20 @@ export default function PoloCustomizer({
         originalWidth,
         originalHeight,
       };
-      setElementsWithHistory([...elements, newEl]);
+
+      // Use functional updaters to always get the freshest array from React,
+      // and use sideAtStart (captured before async gap) to target the correct side.
+      // This fixes the mobile stale-closure bug where elements/activeSide were
+      // captured before the file picker opened and the bottom sheet closed.
+      if (sideAtStart === "front") {
+        setFrontElements(prev => [...prev, newEl]);
+      } else if (sideAtStart === "back") {
+        setBackElements(prev => [...prev, newEl]);
+      } else if (sideAtStart === "left") {
+        setLeftElements(prev => [...prev, newEl]);
+      } else {
+        setRightElements(prev => [...prev, newEl]);
+      }
       setActiveTool(null);
     } catch (err) {
       console.error("Logo upload error:", err);
