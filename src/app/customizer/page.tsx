@@ -5,7 +5,7 @@ import PoloCustomizer from "@/components/customizer/PoloCustomizer";
 import { CustomizerState, Side } from "@/types/customizer";
 import styles from "./page.module.css";
 import { X, Undo2, Redo2, Eye, EyeOff, UploadCloud, FileText, Trash2, Palette, Ruler, Shield, Truck } from "lucide-react";
-import { useCart } from "@/context/CartContext";
+import { useCart } from "@/contexts/CartContext";
 import SizeBreakdown from "@/components/customizer/SizeBreakdown";
 import OrderSummary from "@/components/customizer/OrderSummary";
 import { allProducts } from "@/lib/products-data";

@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Home, LayoutGrid, User, ShoppingCart } from "lucide-react";
 import styles from "./MobileNav.module.css";
-import { useCart } from "@/context/CartContext";
+import { useCart } from "@/contexts/CartContext";
 import { useSession } from "next-auth/react";
 
 export default function MobileNav() {

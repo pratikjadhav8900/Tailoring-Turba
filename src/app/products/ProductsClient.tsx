@@ -1,12 +1,12 @@
 "use client";
-import Navbar from "@/components/Navbar";
+import Navbar from "@/components/layout/Navbar";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import styles from "./page.module.css";
 import { useState, useEffect, useMemo } from "react";
 import { Plus, Minus, ArrowRightLeft, Check, Heart, Search, SlidersHorizontal, PackageSearch } from "lucide-react";
-import { useCompare } from "@/context/CompareContext";
-import { useWishlist } from "@/context/WishlistContext";
+import { useCompare } from "@/contexts/CompareContext";
+import { useWishlist } from "@/contexts/WishlistContext";
 
 const faqs = [
   { q: "Who is the best custom apparel manufacturer?", a: "Tailoring Turba is one of the top manufacturers, offering premium quality bases and customizable options for businesses, brands, and bulk buyers." },

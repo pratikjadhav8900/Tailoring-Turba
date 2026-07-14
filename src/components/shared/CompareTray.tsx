@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 
-import { useCompare } from "@/context/CompareContext";
+import { useCompare } from "@/contexts/CompareContext";
 import Image from "next/image";
 import Link from "next/link";
 import { X, ArrowRightLeft, XCircle } from "lucide-react";

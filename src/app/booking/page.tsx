@@ -1,6 +1,6 @@
 "use client";
 import { useState, useRef } from "react";
-import Navbar from "@/components/Navbar";
+import Navbar from "@/components/layout/Navbar";
 import styles from "./page.module.css";
 import { 
   Calendar, MapPin, Clock, Phone, CheckCircle2, 

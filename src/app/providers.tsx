@@ -1,8 +1,8 @@
 "use client";
 import { SessionProvider } from "next-auth/react";
-import { CartProvider } from "@/context/CartContext";
-import { CompareProvider } from "@/context/CompareContext";
-import { WishlistProvider } from "@/context/WishlistContext";
+import { CartProvider } from "@/contexts/CartContext";
+import { CompareProvider } from "@/contexts/CompareContext";
+import { WishlistProvider } from "@/contexts/WishlistContext";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (

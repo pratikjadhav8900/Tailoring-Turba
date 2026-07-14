@@ -1,5 +1,5 @@
 import Skeleton from "./Skeleton";
-import styles from "../app/products/page.module.css";
+import styles from "@/app/products/page.module.css";
 
 export default function ProductCardSkeleton() {
   return (

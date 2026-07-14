@@ -4,9 +4,9 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import styles from "./page.module.css";
 import { Package, Plus, FileText } from "lucide-react";
-import EmptyState from "@/components/EmptyState";
-import OrderTracking from "@/components/OrderTracking";
-import CancelOrderButton from "@/components/CancelOrderButton";
+import EmptyState from "@/components/ui/EmptyState";
+import OrderTracking from "@/components/shared/OrderTracking";
+import CancelOrderButton from "@/components/shared/CancelOrderButton";
 import Image from "next/image";
 import { getEstimatedDeliveryDateRange } from "@/lib/delivery";
 

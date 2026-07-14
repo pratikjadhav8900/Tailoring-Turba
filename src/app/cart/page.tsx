@@ -5,11 +5,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Trash2, ShoppingBag, ShieldCheck, Truck, RotateCcw, Tag, ChevronRight, Palette, ArrowRight } from "lucide-react";
-import Navbar from "@/components/Navbar";
+import Navbar from "@/components/layout/Navbar";
 import AuthModal from "@/components/auth/AuthModal";
-import { useCart } from "@/context/CartContext";
+import { useCart } from "@/contexts/CartContext";
 import styles from "./page.module.css";
-import EmptyState from "@/components/EmptyState";
+import EmptyState from "@/components/ui/EmptyState";
 import { getElementDetails } from "@/lib/customizer-utils";
 import { GARMENTS } from "@/lib/fabric-data";
 

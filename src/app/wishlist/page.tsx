@@ -1,11 +1,11 @@
 "use client";
 
-import { useWishlist } from "@/context/WishlistContext";
-import { useCompare } from "@/context/CompareContext";
+import { useWishlist } from "@/contexts/WishlistContext";
+import { useCompare } from "@/contexts/CompareContext";
 import Image from "next/image";
 import Link from "next/link";
 import { Heart, ShoppingCart, Trash2, ArrowRightLeft, Check } from "lucide-react";
-import Navbar from "@/components/Navbar";
+import Navbar from "@/components/layout/Navbar";
 import styles from "./page.module.css";
 
 export default function WishlistPage() {

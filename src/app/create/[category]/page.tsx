@@ -3,7 +3,7 @@ import { useState, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import Navbar from "@/components/Navbar";
+import Navbar from "@/components/layout/Navbar";
 import { FABRICS, FABRIC_CATEGORIES, GARMENTS, Fabric, FabricCategory } from "@/lib/fabric-data";
 import styles from "./page.module.css";
 

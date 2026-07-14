@@ -4,8 +4,8 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 import { Search, User, ShoppingCart, ChevronDown, LayoutDashboard, ShieldCheck, Heart } from "lucide-react";
 import styles from "./Navbar.module.css";
-import { useCart } from "@/context/CartContext";
-import { useWishlist } from "@/context/WishlistContext";
+import { useCart } from "@/contexts/CartContext";
+import { useWishlist } from "@/contexts/WishlistContext";
 import { useSession } from "next-auth/react";
 
 // Assuming we want a "transparent" prop to still exist so we don't break page.tsx, 

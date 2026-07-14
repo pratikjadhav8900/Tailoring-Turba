@@ -1,11 +1,11 @@
 "use client";
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import Navbar from "@/components/Navbar";
+import Navbar from "@/components/layout/Navbar";
 import styles from "./page.module.css";
 import { CheckCircle2, Mail, Phone, MapPin } from "lucide-react";
 import toast from "react-hot-toast";
-import { useCart } from "@/context/CartContext";
+import { useCart } from "@/contexts/CartContext";
 import { getElementDetails } from "@/lib/customizer-utils";
 
 function ContactForm() {

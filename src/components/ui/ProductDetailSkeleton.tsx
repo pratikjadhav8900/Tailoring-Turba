@@ -1,5 +1,5 @@
 import Skeleton from "./Skeleton";
-import styles from "../app/products/[id]/page.module.css";
+import styles from "@/app/products/[id]/page.module.css";
 
 export default function ProductDetailSkeleton() {
   return (

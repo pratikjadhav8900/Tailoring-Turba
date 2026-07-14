@@ -1,12 +1,12 @@
 "use client";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
-import Navbar from "@/components/Navbar";
+import Navbar from "@/components/layout/Navbar";
 import MarqueeTicker from "@/components/landing/MarqueeTicker";
-import Footer from "@/components/Footer";
-import WhatsAppButton from "@/components/WhatsAppButton";
-import CompareTray from "@/components/CompareTray";
-import MobileNav from "@/components/MobileNav";
+import Footer from "@/components/layout/Footer";
+import WhatsAppButton from "@/components/shared/WhatsAppButton";
+import CompareTray from "@/components/shared/CompareTray";
+import MobileNav from "@/components/layout/MobileNav";
 
 export default function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();

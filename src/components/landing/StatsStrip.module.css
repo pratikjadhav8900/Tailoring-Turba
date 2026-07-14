@@ -1,104 +1,82 @@
 .section {
   position: relative;
-  background: #0d0d0b;
-  padding: 120px 0 110px;
+  background: #f7f6f2; /* Matches var(--tth-offwhite) */
+  padding: 70px 0 60px;
   overflow: hidden;
+  border-top: 1px solid rgba(74, 94, 58, 0.08);
+  border-bottom: 1px solid rgba(74, 94, 58, 0.08);
 }
 
-/* Subtle radial glow in center of the section */
-.section::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 1000px;
-  height: 500px;
-  background: radial-gradient(ellipse at center, rgba(196, 157, 50, 0.05) 0%, transparent 70%);
-  pointer-events: none;
-}
-
+/* Faint overlay noise texture for editorial organic feeling */
 .noiseOverlay {
   position: absolute;
   inset: 0;
-  opacity: 0.02;
+  opacity: 0.012;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
   background-repeat: repeat;
   background-size: 200px 200px;
   pointer-events: none;
 }
 
-.topGoldLine {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 160px;
-  height: 2px;
-  background: linear-gradient(to right, transparent, var(--tth-gold, #c49d32), transparent);
-}
-
 .inner {
-  max-width: 1440px;
+  max-width: 1120px;
   margin: 0 auto;
   padding: 0 24px;
 }
 
-/* Eyebrow styling */
+/* Eyebrow / Section Header */
 .eyebrow {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 20px;
-  margin-bottom: 56px;
-}
-
-.eyebrowLine {
-  display: block;
-  width: 48px;
-  height: 1px;
-  background: rgba(196, 157, 50, 0.4);
+  gap: 8px;
+  margin-bottom: 32px;
+  text-align: center;
 }
 
 .eyebrowText {
   font-family: var(--font-sans);
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   letter-spacing: 0.25em;
   text-transform: uppercase;
-  color: rgba(196, 157, 50, 0.9);
-  font-weight: 600;
-  white-space: nowrap;
+  color: var(--tth-olive-dark, #4a5c3f);
+  font-weight: 700;
 }
 
-/* Bento Grid Layout */
+.title {
+  font-family: var(--font-serif);
+  font-size: 2.5rem;
+  font-weight: 400;
+  color: #1a1a1a;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+/* 
+  Symmetrical 4-Column Grid Layout (No Borders)
+*/
 .grid {
   display: grid;
-  grid-template-columns: 1.3fr 1fr 1fr;
-  gap: 24px;
-  align-items: stretch;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 40px;
+  background: transparent;
 }
 
-/* Premium Glassmorphic Stat Card */
+/* Card Cell */
 .statCard {
   position: relative;
-  background: rgba(18, 18, 16, 0.6);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(196, 157, 50, 0.08);
-  border-radius: 20px;
-  padding: 40px;
-  text-align: left;
+  background: transparent;
+  padding: 32px 16px;
+  text-align: center;
   overflow: hidden;
   opacity: 0;
-  transform: translateY(24px);
+  transform: translateY(20px);
   transition: opacity 0.6s ease,
-              transform 0.6s cubic-bezier(0.16, 1, 0.3, 1),
-              border-color 0.4s ease,
-              box-shadow 0.4s ease;
+              transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  min-height: 190px;
+  align-items: center;
 }
 
 .statCard[data-visible="true"] {
@@ -110,7 +88,7 @@
 @keyframes fadeSlideUp {
   from {
     opacity: 0;
-    transform: translateY(24px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
@@ -118,165 +96,123 @@
   }
 }
 
-/* Large Card row spanning */
-.statCardLarge {
-  grid-row: span 2;
-  background: linear-gradient(135deg, rgba(26, 24, 20, 0.7) 0%, rgba(15, 15, 13, 0.65) 100%);
-  border: 1px solid rgba(196, 157, 50, 0.16);
-  padding: 56px 48px;
-}
-
-/* Card Glow Effect */
+/* Card Glow - Subtle wash background on hover */
 .cardGlow {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 100% 0%, rgba(196, 157, 50, 0.08) 0%, transparent 60%);
-  opacity: 0.6;
-  transition: opacity 0.5s ease, background 0.5s ease;
+  background: radial-gradient(circle at 50% 50%, rgba(74, 94, 58, 0.04) 0%, transparent 80%);
+  opacity: 0;
+  transition: opacity 0.5s ease;
   pointer-events: none;
   z-index: 0;
 }
 
-/* Floating Gold Dot Badge */
-.cardBadge {
-  position: absolute;
-  top: 24px;
-  right: 24px;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: rgba(196, 157, 50, 0.25);
-  transition: background-color 0.4s ease, box-shadow 0.4s ease;
-  z-index: 1;
+/* Card Content Container for translation transition */
+.cardContent {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  transform: translateY(0);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Card Hover Interactions */
-.statCard:hover {
-  transform: translateY(-6px);
-  border-color: rgba(196, 157, 50, 0.3);
-  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.8),
-              inset 0 1px 1px rgba(255, 255, 255, 0.05);
-}
-
 .statCard:hover .cardGlow {
   opacity: 1;
-  background: radial-gradient(circle at 90% 10%, rgba(196, 157, 50, 0.16) 0%, transparent 70%);
 }
 
-.statCard:hover .cardBadge {
-  background-color: var(--tth-gold, #c49d32);
-  box-shadow: 0 0 12px var(--tth-gold, #c49d32), 0 0 4px var(--tth-gold, #c49d32);
+.statCard:hover .cardContent {
+  transform: translateY(-4px);
 }
 
-/* Layer text elements above glow background */
-.numberRow,
-.label,
-.description {
-  position: relative;
-  z-index: 2;
-}
-
+/* Number & Suffix Typography */
 .numberRow {
   display: flex;
   align-items: baseline;
-  justify-content: flex-start;
-  gap: 4px;
-  margin-bottom: 12px;
+  justify-content: center;
+  gap: 2px;
+  margin-bottom: 16px;
 }
 
 .number {
   font-family: var(--font-serif);
-  font-size: 3.6rem;
-  font-weight: 700;
-  color: #f5f0e8;
-  line-height: 1;
-  letter-spacing: -1px;
+  font-size: 5.5rem;
+  font-weight: 400;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  color: #1a1a1a;
   transition: color 0.3s ease;
-}
-
-.statCardLarge .number {
-  font-size: 5rem;
 }
 
 .suffix {
   font-family: var(--font-serif);
-  font-size: 1.8rem;
+  font-size: 2.2rem;
   font-weight: 400;
-  color: var(--tth-gold, #c49d32);
+  color: var(--tth-olive-dark, #4a5c3f);
   line-height: 1;
-}
-
-.statCardLarge .suffix {
-  font-size: 2.4rem;
-}
-
-.statCard:hover .number {
-  color: #ffffff;
 }
 
 .label {
   font-family: var(--font-sans);
-  font-size: 0.825rem;
+  font-size: 0.8rem;
   font-weight: 700;
-  letter-spacing: 0.15em;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.65);
-  margin-bottom: 8px;
+  color: #1a1a1a;
+  margin-bottom: 10px;
   transition: color 0.3s ease;
 }
 
 .statCard:hover .label {
-  color: var(--tth-gold, #c49d32);
+  color: var(--tth-olive-dark, #4a5c3f);
 }
 
 .description {
   font-family: var(--font-sans);
   font-size: 0.82rem;
-  color: rgba(255, 255, 255, 0.4);
-  letter-spacing: 0.015em;
+  color: #555555;
+  letter-spacing: 0.02em;
   line-height: 1.5;
   transition: color 0.3s ease;
+  max-width: 240px;
 }
 
 .statCard:hover .description {
-  color: rgba(255, 255, 255, 0.65);
+  color: #1a1a1a;
 }
 
 /* ── RESPONSIVE STYLING ── */
 
 @media (max-width: 1024px) {
   .section {
-    padding: 100px 0 90px;
+    padding: 60px 0 50px;
   }
 
   .grid {
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-  }
-
-  .statCardLarge {
-    grid-column: span 2;
-    grid-row: auto;
-    padding: 44px 36px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
   }
 
   .statCard {
-    padding: 32px;
-    min-height: 170px;
+    padding: 20px 12px;
   }
 
   .number {
-    font-size: 3.2rem;
+    font-size: 4.5rem;
   }
 
-  .statCardLarge .number {
-    font-size: 4.2rem;
+  .suffix {
+    font-size: 1.8rem;
   }
 }
 
 @media (max-width: 768px) {
   .section {
-    padding: 80px 0;
+    padding: 50px 0;
   }
 
   .grid {
@@ -284,56 +220,45 @@
     gap: 16px;
   }
 
-  .statCardLarge {
-    grid-column: auto;
-    grid-row: auto;
-    padding: 40px 32px;
-  }
-
   .statCard {
-    padding: 32px;
-    min-height: auto;
+    padding: 12px 8px;
   }
 
   .number {
-    font-size: 2.8rem;
+    font-size: 3.8rem;
   }
 
-  .statCardLarge .number {
-    font-size: 3.6rem;
+  .suffix {
+    font-size: 1.6rem;
+  }
+
+  .title {
+    font-size: 2rem;
   }
 
   .eyebrow {
-    margin-bottom: 40px;
+    margin-bottom: 24px;
   }
 }
 
 @media (max-width: 480px) {
   .section {
-    padding: 64px 0;
+    padding: 40px 0;
   }
 
   .statCard {
-    padding: 24px;
-  }
-
-  .statCardLarge {
-    padding: 28px 24px;
+    padding: 8px 4px;
   }
 
   .number {
-    font-size: 2.4rem;
-  }
-
-  .statCardLarge .number {
-    font-size: 3rem;
+    font-size: 3.2rem;
   }
 
   .suffix {
     font-size: 1.4rem;
   }
 
-  .statCardLarge .suffix {
-    font-size: 1.8rem;
+  .title {
+    font-size: 1.7rem;
   }
 }

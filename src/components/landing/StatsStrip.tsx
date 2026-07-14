@@ -6,7 +6,6 @@ const STATS = [
   { numeric: 5000000, suffix: "M+", prefix: "", display: "5M+", label: "Garments Delivered", description: "pieces crafted with precision" },
   { numeric: 48, suffix: " hrs", prefix: "", display: "48 hrs", label: "Sample Dispatch", description: "fastest turnaround in the industry" },
   { numeric: 50, suffix: "+", prefix: "", display: "50+", label: "Colors Available", description: "across every fabric category" },
-  { numeric: 10, suffix: " pcs", prefix: "", display: "10 pcs", label: "Minimum Order", description: "accessible bulk manufacturing" },
   { numeric: 25, suffix: "+", prefix: "", display: "25+", label: "Brand Partners", description: "India's leading corporates & names" },
 ];
 
@@ -42,20 +41,23 @@ function StatCard({ stat, index, isVisible }: {
 
   return (
     <div
-      className={`${styles.statCard} ${index === 0 ? styles.statCardLarge : ""}`}
+      className={styles.statCard}
       style={{ animationDelay: `${index * 120}ms` }}
       data-visible={isVisible}
     >
       <div className={styles.cardGlow} />
-      <div className={styles.cardBadge} />
-      <div className={styles.numberRow}>
-        <span className={styles.number}>
-          {isVisible ? formatCount(count) : "0"}
-        </span>
-        <span className={styles.suffix}>{stat.suffix}</span>
+      
+      {/* Group text elements to enable vertical slide transitions */}
+      <div className={styles.cardContent}>
+        <div className={styles.numberRow}>
+          <span className={styles.number}>
+            {isVisible ? formatCount(count) : "0"}
+          </span>
+          <span className={styles.suffix}>{stat.suffix}</span>
+        </div>
+        <div className={styles.label}>{stat.label}</div>
+        <div className={styles.description}>{stat.description}</div>
       </div>
-      <div className={styles.label}>{stat.label}</div>
-      <div className={styles.description}>{stat.description}</div>
     </div>
   );
 }
@@ -82,15 +84,12 @@ export default function StatsStrip() {
     <section ref={sectionRef} className={styles.section}>
       {/* Subtle noise texture overlay */}
       <div className={styles.noiseOverlay} aria-hidden="true" />
-      
-      {/* Top decorative line */}
-      <div className={styles.topGoldLine} aria-hidden="true" />
 
       <div className={styles.inner}>
+        {/* Editorial Section Header */}
         <div className={styles.eyebrow}>
-          <span className={styles.eyebrowLine} />
-          <span className={styles.eyebrowText}>Our Numbers Speak</span>
-          <span className={styles.eyebrowLine} />
+          <span className={styles.eyebrowText}>Metrics & Scale</span>
+          <h2 className={styles.title}>Our Numbers Speak</h2>
         </div>
 
         <div className={styles.grid}>

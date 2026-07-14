@@ -1,6 +1,6 @@
-import ProductCardSkeleton from "@/components/ProductCardSkeleton";
+import ProductCardSkeleton from "@/components/ui/ProductCardSkeleton";
 import styles from "./page.module.css";
-import Skeleton from "@/components/Skeleton";
+import Skeleton from "@/components/ui/Skeleton";
 
 export default function ProductsLoading() {
   return (

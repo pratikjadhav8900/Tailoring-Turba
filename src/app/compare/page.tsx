@@ -1,6 +1,6 @@
 "use client";
 
-import { useCompare } from "@/context/CompareContext";
+import { useCompare } from "@/contexts/CompareContext";
 import Image from "next/image";
 import Link from "next/link";
 import { X, ArrowLeft, ShoppingCart, MessageSquare } from "lucide-react";

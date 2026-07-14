@@ -3,8 +3,8 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import styles from "./page.module.css";
-import { useCart } from "@/context/CartContext";
-import Skeleton from "@/components/Skeleton";
+import { useCart } from "@/contexts/CartContext";
+import Skeleton from "@/components/ui/Skeleton";
 
 type Product = {
   id: string;

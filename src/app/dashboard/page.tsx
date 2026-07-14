@@ -13,7 +13,7 @@ import {
   ClipboardList,
   User
 } from "lucide-react";
-import EmptyState from "@/components/EmptyState";
+import EmptyState from "@/components/ui/EmptyState";
 
 import Image from "next/image";
 
