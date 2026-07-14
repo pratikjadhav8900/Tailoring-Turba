@@ -764,7 +764,7 @@ export default function CanvasArea({
                             if (!presetDef) return null;
                             const presetScale = el.width / (el.originalWidth || presetDef.width);
                             return (
-                              <div className="customizer-drag-handle" style={{ position: "relative", width: presetDef.width, height: presetDef.height, transform: `scale(${presetScale})`, transformOrigin: "top left", cursor: isActive ? "move" : "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                              <div className="customizer-drag-handle" style={{ position: "relative", width: presetDef.width, height: presetDef.height, transform: `scale(${presetScale})`, transformOrigin: "top left", cursor: isActive ? "move" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", touchAction: isPreviewMode ? "auto" : "none" }}>
                                 {presetDef.elements.map((subEl, i) => {
                                   let displayVal = subEl.value;
                                   if (el.presetText !== undefined) {

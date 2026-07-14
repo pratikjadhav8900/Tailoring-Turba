@@ -862,6 +862,7 @@
 .rndBoxActive {
   outline: 1.5px solid #007aff;
   z-index: 10;
+  touch-action: none;
 }
 .rndBox:not(.rndBoxActive) .react-resizable-handle { display: none !important; }
 
