@@ -85,6 +85,10 @@ export default function CanvasArea({
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isGestureActive, setIsGestureActive] = useState(false);
 
+  React.useEffect(() => {
+    setPan({ x: 0, y: 0 });
+  }, [isPreviewMode, activeSide]);
+
   const zoomRef = useRef(zoom);
   const onZoomChangeRef = useRef(onZoomChange);
   const panRef = useRef(pan);
@@ -213,16 +217,16 @@ export default function CanvasArea({
       } else if (e.touches.length === 1 && isSingleFingerPan) {
         if (zoomRef.current > 1.05) {
           e.preventDefault();
+          const dx = e.touches[0].clientX - touchStartSingle.x;
+          const dy = e.touches[0].clientY - touchStartSingle.y;
+          if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+            hasDraggedRef.current = true;
+          }
+          setPan({
+            x: touchStartPan.x + dx,
+            y: touchStartPan.y + dy
+          });
         }
-        const dx = e.touches[0].clientX - touchStartSingle.x;
-        const dy = e.touches[0].clientY - touchStartSingle.y;
-        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
-          hasDraggedRef.current = true;
-        }
-        setPan({
-          x: touchStartPan.x + dx,
-          y: touchStartPan.y + dy
-        });
       }
     };
 
@@ -233,7 +237,7 @@ export default function CanvasArea({
 
     // Mouse drag handlers
     const handleMouseDown = (e: MouseEvent) => {
-      if (e.button !== 0) return; // Only pan on left click
+      if (e.button !== 0 || zoomRef.current <= 1.05) return; // Only pan on left click when zoomed in
       const target = e.target as HTMLElement;
       // Prevent panning if clicking on a design element, handle, formatted bar or control button
       if (
