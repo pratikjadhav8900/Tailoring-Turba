@@ -581,7 +581,7 @@ export default function CanvasArea({
                       renderWidth / (Math.max(1, ...(el.value || "").split("\n").map(l => l.length)) * 0.6 + 1),
                       (renderHeight / Math.max(1, (el.value || "").split("\n").length)) * 0.8
                     ) : 0;
-                    const fontSize = el.fontSize ? Math.min(el.fontSize * sizeScale, dynamicFont) : dynamicFont;
+                    const fontSize = el.fontSize ? (el.fontSize * sizeScale) : dynamicFont;
 
                     return isPreviewMode ? (
                       <div
