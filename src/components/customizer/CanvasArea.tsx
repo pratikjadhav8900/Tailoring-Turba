@@ -405,7 +405,7 @@ export default function CanvasArea({
             height: '560px',
             transform: `translate(calc(-50% + ${currentPan.x}px), calc(-50% + ${currentPan.y}px)) scale(${totalScale})`, 
             transformOrigin: "center center", 
-            transition: isGestureActive ? "none" : "transform 0.2s" 
+            transition: "none" 
           }}
         >
           <div id={mockupId} className={styles.garmentContainer}>
