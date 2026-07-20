@@ -310,39 +310,47 @@ export default function CanvasArea({
     (el: DesignElement, e: React.MouseEvent) => {
       e.stopPropagation();
       onElementClick(el.id);
+    },
+    [onElementClick]
+  );
 
-      // If already selected and it's a text element, enter inline edit mode
-      if (el.id === activeElementId && el.type === "text" && !isPreviewMode && !editingId) {
+  const handleElementDoubleClick = useCallback(
+    (el: DesignElement, e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (el.type === "text" && !isPreviewMode && !editingId) {
         setEditDraft(el.value);
         setEditingId(el.id);
         setTimeout(() => editRef.current?.focus(), 30);
       }
     },
-    [activeElementId, editingId, isPreviewMode, onElementClick]
+    [editingId, isPreviewMode]
   );
 
   // Double-tap handler for mobile touch devices
   const handleElementTouchEnd = useCallback(
     (el: DesignElement, e: React.TouchEvent) => {
-      if (isPreviewMode || el.type !== "text") return;
+      if (isPreviewMode) return;
+      if (hasDraggedRef.current) return;
       e.stopPropagation();
 
-      const now = Date.now();
-      const last = lastTapRef.current;
+      onElementClick(el.id);
 
-      if (last && last.id === el.id && now - last.time < 350) {
-        // Double-tap detected — enter edit mode
-        lastTapRef.current = null;
-        onElementClick(el.id);
-        setEditDraft(el.value);
-        setEditingId(el.id);
-        setTimeout(() => editRef.current?.focus(), 50);
-      } else {
-        lastTapRef.current = { id: el.id, time: now };
-        onElementClick(el.id);
+      if (el.type === "text" && !editingId) {
+        const now = Date.now();
+        const last = lastTapRef.current;
+
+        if (last && last.id === el.id && now - last.time < 350) {
+          // Double-tap detected — enter edit mode
+          lastTapRef.current = null;
+          setEditDraft(el.value);
+          setEditingId(el.id);
+          setTimeout(() => editRef.current?.focus(), 50);
+        } else {
+          lastTapRef.current = { id: el.id, time: now };
+        }
       }
     },
-    [isPreviewMode, onElementClick]
+    [editingId, isPreviewMode, onElementClick]
   );
 
   const commitEdit = useCallback(() => {
@@ -714,7 +722,10 @@ export default function CanvasArea({
                         position={{ x: renderX, y: renderY }}
                         size={{ width: renderWidth, height: renderHeight }}
                         scale={totalScale}
-                        onDragStart={onDragStart}
+                        onDragStart={() => {
+                          onElementClick(el.id);
+                          onDragStart();
+                        }}
                         onDragStop={(_, d) => {
                           onDragStop();
                           const bw = renderWidth / sizeScale;
@@ -750,7 +761,7 @@ export default function CanvasArea({
 
                           onUpdateElement(el.id, updates);
                         }}
-                        disableDragging={!isActive || isPreviewMode || isEditing}
+                        disableDragging={isPreviewMode || isEditing}
                         enableResizing={isActive && !isPreviewMode && !isEditing}
                       >
                         <div
@@ -860,6 +871,7 @@ export default function CanvasArea({
                             ) : (
                               <div
                                 className={`${styles.rndText} customizer-drag-handle`}
+                                onDoubleClick={(e) => handleElementDoubleClick(el, e)}
                                 style={{
                                   color: el.color,
                                   fontSize: `${fontSize}px`,
@@ -869,7 +881,7 @@ export default function CanvasArea({
                                   textAlign: el.textAlign || "center",
                                   textDecoration: el.textDecoration || "none",
                                   textTransform: el.uppercase ? "uppercase" : "none",
-                                  cursor: isActive ? "text" : "pointer",
+                                  cursor: "move",
                                   userSelect: "none",
                                   WebkitUserSelect: "none",
                                   whiteSpace: "pre-wrap",
@@ -929,7 +941,7 @@ export default function CanvasArea({
                         title="Move"
                         style={{ touchAction: 'none', cursor: 'grab' }}
                       >
-                        <Move size={13} />
+                        <Move size={13} style={{ pointerEvents: 'none' }} />
                       </div>
                       <div
                         className={`${styles.circleActionBtn} ${styles.circleActionBtnDanger}`}

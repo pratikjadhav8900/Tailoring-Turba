@@ -131,7 +131,7 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
             <div className={styles.formRow}>
               <div className={styles.inputGroup}>
                 <label>Product Name *</label>
-                <input required type="text" name="name" value={formData.name} onChange={handleChange} placeholder="e.g. Magic Bio (Men)" />
+                <input required type="text" name="name" value={formData.name} onChange={handleChange} placeholder="e.g. Turba Bio (Men)" />
               </div>
               <div className={styles.inputGroup}>
                 <label>Price *</label>
