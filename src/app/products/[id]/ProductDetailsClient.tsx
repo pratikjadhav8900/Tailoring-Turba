@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { Receipt, RotateCcw, Brush, Truck, Package, ShieldCheck, Lock, Award, ArrowRightLeft, Check, Heart } from "lucide-react";
 import { useCompare } from "@/contexts/CompareContext";
 import { useWishlist } from "@/contexts/WishlistContext";
+import { getResizedCloudinaryUrl } from "@/lib/cloudinary-client";
 
 type Review = {
   id: string;
@@ -32,8 +33,14 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
   const [reviews, setReviews] = useState<Review[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [lightboxImg, setLightboxImg] = useState<string | null>(null);
+  const [lightboxZoomed, setLightboxZoomed] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [openAccordion, setOpenAccordion] = useState<string | null>('details');
+
+  const handleImageClick = () => {
+    setLightboxImg(activeImage);
+    setLightboxZoomed(false);
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -167,12 +174,27 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
         </div>
 
         {/* Hero Product Section */}
-        <div className={`container ${styles.layout}`}>
+        <div className={styles.layout}>
           {/* LEFT COLUMN */}
           <div className={styles.leftColumn}>
-            <div className={styles.mainImageContainer}>
+            <div 
+              className={styles.mainImageContainer}
+              onClick={handleImageClick}
+              style={{ cursor: "zoom-in" }}
+            >
               {activeImage ? (
-                <Image src={activeImage} alt={product.name} fill style={{ objectFit: "cover" }} priority sizes="(max-width: 768px) 100vw, 50vw" />
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={getResizedCloudinaryUrl(activeImage, 800, 800)}
+                  alt={product.name}
+                  style={{ 
+                    width: '100%', 
+                    height: '100%', 
+                    objectFit: 'contain', 
+                    padding: '16px', 
+                    boxSizing: 'border-box'
+                  }}
+                />
               ) : (
                 <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#e5e7eb', color: '#9ca3af' }}>No Image</div>
               )}
@@ -187,7 +209,8 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
               <div className={styles.thumbnailStrip}>
                 {product.gallery.map((img: string, i: number) => (
                   <button key={i} className={`${styles.thumbnailBtn} ${activeImage === img ? styles.active : ""}`} onClick={() => setActiveImage(img)} title={`View ${i + 1}`}>
-                    <Image src={img} alt={`${product.name} view ${i + 1}`} fill style={{ objectFit: "cover", padding: "4px" }} sizes="80px" />
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={getResizedCloudinaryUrl(img, 150, 150)} alt={`${product.name} view ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '4px', boxSizing: 'border-box' }} />
                   </button>
                 ))}
               </div>
@@ -424,12 +447,11 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
                   <div 
                     key={rp.id} 
                     onClick={() => router.push(`/products/${rp.id}`)}
-                    className="glass-card" 
-                    style={{ padding: 0, overflow: "hidden", transition: "transform 0.2s, box-shadow 0.2s", cursor: "pointer", border: "1px solid #e2e8f0", borderRadius: "12px" }}
+                    style={{ padding: 0, overflow: "hidden", transition: "transform 0.2s, box-shadow 0.2s", cursor: "pointer", border: "1px solid #e2e8f0", borderRadius: "12px", background: "#ffffff" }}
                     onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(-4px)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 12px 32px rgba(0,0,0,0.1)"; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ""; (e.currentTarget as HTMLElement).style.boxShadow = ""; }}
                   >
-                      <div style={{ height: "200px", position: "relative", background: "#f1f5f9" }}>
+                      <div style={{ height: "200px", position: "relative", background: "#f8fafc" }}>
                         {rp.image ? (
                            <Image src={rp.image} alt={rp.name} fill style={{ objectFit: "cover" }} sizes="(max-width: 768px) 100vw, 240px" />
                         ) : (
@@ -437,7 +459,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
                         )}
                         {rp.badge && (<span style={{ position: "absolute", top: 10, right: 10, background: "var(--tth-olive-dark)", color: "white", fontSize: "0.7rem", padding: "3px 8px", borderRadius: "4px", fontWeight: 700, textTransform: "uppercase" }}>{rp.badge}</span>)}
                       </div>
-                      <div style={{ padding: "16px" }}>
+                      <div style={{ padding: "16px", background: "#ffffff" }}>
                         <div style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "4px" }}>{rp.type}</div>
                         <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "#1e293b", marginBottom: "8px" }}>{rp.name}</h3>
                         <div style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--tth-olive-dark)" }}>₹{typeof rp.price === 'number' ? rp.price.toLocaleString('en-IN') : rp.price}</div>
@@ -607,10 +629,99 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
         </section>
 
         {lightboxImg && (
-          <div onClick={() => setLightboxImg(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.9)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", cursor: "zoom-out" }}>
+          <div 
+            onClick={() => {
+              setLightboxImg(null);
+              setLightboxZoomed(false);
+            }} 
+            style={{ 
+              position: "fixed", 
+              inset: 0, 
+              background: "rgba(0,0,0,0.95)", 
+              zIndex: 9999, 
+              display: lightboxZoomed ? "block" : "flex", 
+              alignItems: "center", 
+              justifyContent: "center", 
+              overflow: lightboxZoomed ? "auto" : "hidden",
+              padding: lightboxZoomed ? "40px" : "0",
+              cursor: "zoom-out"
+            }}
+          >
+            {!lightboxZoomed && (
+              <span style={{
+                position: "fixed",
+                bottom: "30px",
+                left: "50%",
+                transform: "translateX(-50%)",
+                background: "rgba(0,0,0,0.7)",
+                color: "white",
+                padding: "8px 16px",
+                borderRadius: "20px",
+                fontSize: "0.85rem",
+                pointerEvents: "none",
+                zIndex: 10000,
+                backdropFilter: "blur(4px)",
+                border: "1px solid rgba(255,255,255,0.1)"
+              }}>
+                Click image to zoom
+              </span>
+            )}
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={lightboxImg} alt="review photo" style={{ maxWidth: "90vw", maxHeight: "90vh", objectFit: "contain", borderRadius: "8px" }} />
-            <button onClick={() => setLightboxImg(null)} style={{ position: "absolute", top: "20px", right: "20px", background: "rgba(255,255,255,0.15)", border: "none", color: "white", fontSize: "2rem", cursor: "pointer", borderRadius: "50%", width: "44px", height: "44px" }}>×</button>
+            <img 
+              src={lightboxImg} 
+              alt="Zoomed view" 
+              onClick={(e) => {
+                e.stopPropagation();
+                setLightboxZoomed(!lightboxZoomed);
+              }}
+              style={
+                lightboxZoomed 
+                  ? { 
+                      display: "block", 
+                      margin: "0 auto", 
+                      maxWidth: "none", 
+                      maxHeight: "none", 
+                      width: "180vw", 
+                      height: "auto", 
+                      cursor: "zoom-out",
+                      transition: "width 0.2s ease"
+                    }
+                  : { 
+                      maxWidth: "90vw", 
+                      maxHeight: "90vh", 
+                      objectFit: "contain", 
+                      borderRadius: "8px", 
+                      cursor: "zoom-in",
+                      transition: "max-width 0.2s ease"
+                    }
+              } 
+            />
+            <button 
+              onClick={() => {
+                setLightboxImg(null);
+                setLightboxZoomed(false);
+              }} 
+              style={{ 
+                position: "fixed", 
+                top: "20px", 
+                right: "20px", 
+                background: "rgba(255,255,255,0.15)", 
+                border: "none", 
+                color: "white", 
+                fontSize: "2rem", 
+                cursor: "pointer", 
+                borderRadius: "50%", 
+                width: "44px", 
+                height: "44px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                zIndex: 10000,
+                backdropFilter: "blur(4px)"
+              }}
+            >
+              ×
+            </button>
           </div>
         )}
       </main>

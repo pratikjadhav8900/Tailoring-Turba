@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Trash2, Loader2, Image as ImageIcon } from "lucide-react";
+import { Plus, Trash2, Loader2, Edit2, Image as ImageIcon } from "lucide-react";
 import Image from "next/image";
 import styles from "./page.module.css";
+import { getResizedCloudinaryUrl } from "@/lib/cloudinary-client";
 
 type Product = any; // We can type this properly later
 type Category = any;
@@ -11,6 +12,7 @@ type Category = any;
 export default function AdminProductsClient({ initialProducts, categories }: { initialProducts: Product[], categories: Category[] }) {
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [isAdding, setIsAdding] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -26,34 +28,65 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
     colors: "",
     badge: "",
     imageUrl: "",
+    imageUrls: [] as string[],
   });
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
-    setIsUploading(true);
-    const uploadData = new FormData();
-    uploadData.append("file", file);
-
-    try {
-      const res = await fetch("/api/admin/upload", {
-        method: "POST",
-        body: uploadData,
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        setFormData({ ...formData, imageUrl: data.url });
-      } else {
-        alert("Upload failed. Please check your Cloudinary credentials in .env");
-      }
-    } catch (error) {
-      console.error(error);
-      alert("Error uploading image");
-    } finally {
-      setIsUploading(false);
+    const currentCount = formData.imageUrls.length;
+    const allowedCount = 6 - currentCount;
+    if (allowedCount <= 0) {
+      alert("You can only upload up to 6 images.");
+      return;
     }
+
+    const filesToUpload = Array.from(files).slice(0, allowedCount);
+    setIsUploading(true);
+
+    const uploadedUrls: string[] = [];
+
+    for (const file of filesToUpload) {
+      const uploadData = new FormData();
+      uploadData.append("file", file);
+
+      try {
+        const res = await fetch("/api/admin/upload", {
+          method: "POST",
+          body: uploadData,
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          uploadedUrls.push(data.url);
+        } else {
+          alert(`Upload failed for ${file.name}. Please check Cloudinary credentials.`);
+        }
+      } catch (error) {
+        console.error(error);
+        alert(`Error uploading file ${file.name}`);
+      }
+    }
+
+    if (uploadedUrls.length > 0) {
+      setFormData(prev => ({
+        ...prev,
+        imageUrl: prev.imageUrl || uploadedUrls[0],
+        imageUrls: [...prev.imageUrls, ...uploadedUrls]
+      }));
+    }
+
+    setIsUploading(false);
+  };
+
+  const handleRemoveImage = (indexToRemove: number) => {
+    const updatedUrls = formData.imageUrls.filter((_, idx) => idx !== indexToRemove);
+    setFormData({
+      ...formData,
+      imageUrls: updatedUrls,
+      imageUrl: updatedUrls[0] || "",
+    });
   };
 
   const handleDelete = async (id: string) => {
@@ -77,6 +110,48 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
     }
   };
 
+  const handleAddNewClick = () => {
+    if (isAdding || editingProduct) {
+      setIsAdding(false);
+      setEditingProduct(null);
+    } else {
+      setEditingProduct(null);
+      setFormData({
+        name: "",
+        category: "",
+        newCategory: "",
+        type: "",
+        price: "",
+        description: "",
+        features: "",
+        colors: "",
+        badge: "",
+        imageUrl: "",
+        imageUrls: [],
+      });
+      setIsAdding(true);
+    }
+  };
+
+  const handleEditClick = (p: Product) => {
+    setEditingProduct(p);
+    setIsAdding(false);
+    setFormData({
+      name: p.name,
+      category: p.category?.name || "",
+      newCategory: "",
+      type: p.type || "",
+      price: String(p.basePrice),
+      description: p.description || "",
+      features: p.features ? p.features.join("\n") : "",
+      colors: p.colors ? String(p.colors) : "",
+      badge: p.badge || "",
+      imageUrl: p.images && p.images[0] ? p.images[0] : "",
+      imageUrls: p.images || [],
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -87,19 +162,22 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
         category: formData.category === "NEW" ? formData.newCategory : formData.category,
       };
 
-      const res = await fetch("/api/admin/products", {
-        method: "POST",
+      const url = editingProduct 
+        ? `/api/admin/products/${editingProduct.id}`
+        : "/api/admin/products";
+      const method = editingProduct ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(submitData),
       });
 
       if (res.ok) {
-        const newProduct = await res.json();
-        // Just reload the page to get the updated list with proper category relations
         window.location.reload();
       } else {
         const errorData = await res.json();
-        alert(`Failed to add product: ${errorData.error}`);
+        alert(`Failed to save product: ${errorData.error}`);
         setIsSubmitting(false);
       }
     } catch (error) {
@@ -118,15 +196,17 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
       <div className={styles.actions}>
         <button 
           className={styles.addBtn}
-          onClick={() => setIsAdding(!isAdding)}
+          onClick={handleAddNewClick}
         >
-          {isAdding ? "Cancel" : <><Plus size={16} /> Add New Product</>}
+          {(isAdding || editingProduct) ? "Cancel" : <><Plus size={16} /> Add New Product</>}
         </button>
       </div>
 
-      {isAdding && (
+      {(isAdding || editingProduct) && (
         <div className={`${styles.formCard} glass-card`}>
-          <h2 className={styles.formTitle}>Add New Product</h2>
+          <h2 className={styles.formTitle}>
+            {editingProduct ? `Edit Product: ${editingProduct.name}` : "Add New Product"}
+          </h2>
           <form onSubmit={handleSubmit} className={styles.form}>
             <div className={styles.formRow}>
               <div className={styles.inputGroup}>
@@ -172,37 +252,45 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
             </div>
 
             <div className={styles.inputGroup}>
-              <label>Product Image</label>
-              <div className={styles.uploadContainer}>
-                {formData.imageUrl ? (
-                  <div className={styles.imagePreview}>
-                    <Image src={formData.imageUrl} alt="Preview" fill style={{ objectFit: "cover" }} />
+              <label>Product Images (Max 6)</label>
+              <div className={styles.imagesGrid}>
+                {formData.imageUrls?.map((url, index) => (
+                  <div key={index} className={styles.imageThumbnailSlot}>
+                    <Image src={getResizedCloudinaryUrl(url, 200, 200)} alt={`Preview ${index + 1}`} fill style={{ objectFit: "contain" }} />
                     <button 
                       type="button" 
-                      className={styles.removeImage}
-                      onClick={() => setFormData({ ...formData, imageUrl: "" })}
+                      className={styles.removeThumbnail}
+                      onClick={() => handleRemoveImage(index)}
+                      title="Remove Image"
                     >
                       ×
                     </button>
+                    {index === 0 && <span className={styles.mainBadge}>Main</span>}
                   </div>
-                ) : (
-                  <label className={styles.uploadPlaceholder}>
+                ))}
+                
+                {formData.imageUrls?.length < 6 && (
+                  <label className={styles.uploadSlot}>
                     <input 
                       type="file" 
                       accept="image/*" 
+                      multiple
                       onChange={handleUpload} 
                       style={{ display: "none" }} 
                       disabled={isUploading}
                     />
                     {isUploading ? (
-                      <><Loader2 size={24} className={styles.spin} /> <span>Uploading...</span></>
+                      <Loader2 size={24} className={styles.spin} />
                     ) : (
-                      <><Plus size={24} /> <span>Upload Image</span></>
+                      <>
+                        <Plus size={20} />
+                        <span style={{ fontSize: '0.75rem', marginTop: '4px' }}>Add Image</span>
+                      </>
                     )}
                   </label>
                 )}
               </div>
-              <p className={styles.hint}>Recommended: Square image, min 1000x1000px</p>
+              <p className={styles.hint}>Supported formats: JPG, PNG, WEBP. First image will be used as the primary display image. Double check that images show correctly.</p>
             </div>
 
             <div className={styles.inputGroup}>
@@ -216,7 +304,7 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
             </div>
 
             <button type="submit" className={styles.submitBtn} disabled={isSubmitting}>
-              {isSubmitting ? <><Loader2 size={16} className={styles.spin} /> Saving...</> : "Save Product"}
+              {isSubmitting ? <><Loader2 size={16} className={styles.spin} /> Saving...</> : (editingProduct ? "Save Changes" : "Save Product")}
             </button>
           </form>
         </div>
@@ -241,7 +329,7 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
                     <div className={styles.productCell}>
                       <div className={styles.imageThumbnail}>
                         {p.images && p.images[0] ? (
-                          <Image src={p.images[0]} alt={p.name} fill style={{objectFit:'cover'}} />
+                          <Image src={getResizedCloudinaryUrl(p.images[0], 100, 100)} alt={p.name} fill style={{objectFit:'cover'}} />
                         ) : (
                           <ImageIcon size={16} color="#aaa" />
                         )}
@@ -256,13 +344,23 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
                   <td className={styles.typeText}>{p.type}</td>
                   <td className={styles.price}>₹{p.basePrice}</td>
                   <td>
-                    <button 
-                      className={styles.deleteBtn} 
-                      onClick={() => handleDelete(p.id)}
-                      disabled={isDeleting === p.id}
-                    >
-                      {isDeleting === p.id ? <Loader2 size={14} className={styles.spin} /> : <Trash2 size={14} />}
-                    </button>
+                    <div className={styles.actionsCell}>
+                      <button 
+                        className={styles.editBtn} 
+                        onClick={() => handleEditClick(p)}
+                        title="Edit Product"
+                      >
+                        <Edit2 size={14} />
+                      </button>
+                      <button 
+                        className={styles.deleteBtn} 
+                        onClick={() => handleDelete(p.id)}
+                        disabled={isDeleting === p.id}
+                        title="Delete Product"
+                      >
+                        {isDeleting === p.id ? <Loader2 size={14} className={styles.spin} /> : <Trash2 size={14} />}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

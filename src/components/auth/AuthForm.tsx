@@ -15,7 +15,7 @@ interface AuthFormProps {
 export default function AuthForm({ initialMode }: AuthFormProps) {
   const router = useRouter();
   const [mode, setMode] = useState<'login' | 'register'>(initialMode);
-  
+
   // Form State
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -25,7 +25,7 @@ export default function AuthForm({ initialMode }: AuthFormProps) {
   const [isB2B, setIsB2B] = useState(false);
   const [companyName, setCompanyName] = useState("");
   const [gstNumber, setGstNumber] = useState("");
-  
+
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -105,13 +105,13 @@ export default function AuthForm({ initialMode }: AuthFormProps) {
 
         {/* Tabs */}
         <div className={styles.tabs}>
-          <button 
+          <button
             className={`${styles.tab} ${mode === 'login' ? styles.tabActive : ""}`}
             onClick={() => { setMode('login'); setError(""); }}
           >
             Login
           </button>
-          <button 
+          <button
             className={`${styles.tab} ${mode === 'register' ? styles.tabActive : ""}`}
             onClick={() => { setMode('register'); setError(""); }}
           >
@@ -132,9 +132,9 @@ export default function AuthForm({ initialMode }: AuthFormProps) {
 
           {/* Social Login */}
           <div className={styles.socialGrid}>
-            <button 
-              type="button" 
-              onClick={() => signIn('google', { callbackUrl: '/dashboard' })} 
+            <button
+              type="button"
+              onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
               className={styles.socialBtn}
             >
               <Image src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" width={18} height={18} />
@@ -154,12 +154,12 @@ export default function AuthForm({ initialMode }: AuthFormProps) {
             <form onSubmit={handleLogin} className={styles.form}>
               <div className={styles.formGroup}>
                 <label className={styles.label}>Email Address</label>
-                <input 
-                  type="email" 
-                  className={styles.input} 
+                <input
+                  type="email"
+                  className={styles.input}
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  required 
+                  required
                 />
               </div>
               <div className={styles.formGroup}>
@@ -167,12 +167,12 @@ export default function AuthForm({ initialMode }: AuthFormProps) {
                   <label className={styles.label}>Password</label>
                   <Link href="/forgot-password" className={styles.link} style={{ fontSize: '0.75rem' }}>Forgot?</Link>
                 </div>
-                <input 
-                  type="password" 
-                  className={styles.input} 
+                <input
+                  type="password"
+                  className={styles.input}
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  required 
+                  required
                 />
               </div>
               <button type="submit" className={styles.submitBtn} disabled={loading}>
@@ -183,30 +183,30 @@ export default function AuthForm({ initialMode }: AuthFormProps) {
             <form onSubmit={handleRegister} className={styles.form}>
               <div className={styles.formGroup}>
                 <label className={styles.label}>Full Name</label>
-                <input 
-                  type="text" 
-                  className={styles.input} 
+                <input
+                  type="text"
+                  className={styles.input}
                   value={name}
                   onChange={e => setName(e.target.value)}
-                  required 
+                  required
                 />
               </div>
               <div className={styles.formRow}>
                 <div className={styles.formGroup}>
                   <label className={styles.label}>Email Address</label>
-                  <input 
-                    type="email" 
-                    className={styles.input} 
+                  <input
+                    type="email"
+                    className={styles.input}
                     value={email}
                     onChange={e => setEmail(e.target.value)}
-                    required 
+                    required
                   />
                 </div>
                 <div className={styles.formGroup}>
                   <label className={styles.label}>Phone Number</label>
-                  <input 
-                    type="tel" 
-                    className={styles.input} 
+                  <input
+                    type="tel"
+                    className={styles.input}
                     value={phone}
                     onChange={e => setPhone(e.target.value)}
                   />
@@ -215,32 +215,32 @@ export default function AuthForm({ initialMode }: AuthFormProps) {
               <div className={styles.formRow}>
                 <div className={styles.formGroup}>
                   <label className={styles.label}>Password</label>
-                  <input 
-                    type="password" 
-                    className={styles.input} 
+                  <input
+                    type="password"
+                    className={styles.input}
                     value={password}
                     onChange={e => setPassword(e.target.value)}
-                    required 
+                    required
                   />
                 </div>
                 <div className={styles.formGroup}>
                   <label className={styles.label}>Confirm</label>
-                  <input 
-                    type="password" 
-                    className={styles.input} 
+                  <input
+                    type="password"
+                    className={styles.input}
                     value={confirmPassword}
                     onChange={e => setConfirmPassword(e.target.value)}
-                    required 
+                    required
                   />
                 </div>
               </div>
 
               {/* B2B Toggle */}
               <div className={styles.b2bToggle} onClick={() => setIsB2B(!isB2B)}>
-                <div style={{ 
-                  width: 20, 
-                  height: 20, 
-                  border: '2px solid var(--tth-olive)', 
+                <div style={{
+                  width: 20,
+                  height: 20,
+                  border: '2px solid var(--tth-olive)',
                   borderRadius: '4px',
                   display: 'flex',
                   alignItems: 'center',
@@ -262,18 +262,18 @@ export default function AuthForm({ initialMode }: AuthFormProps) {
                 <div className={styles.b2bSection}>
                   <div className={styles.formGroup}>
                     <label className={styles.label}>Company Name</label>
-                    <input 
-                      type="text" 
-                      className={styles.input} 
+                    <input
+                      type="text"
+                      className={styles.input}
                       value={companyName}
                       onChange={e => setCompanyName(e.target.value)}
                     />
                   </div>
                   <div className={styles.formGroup}>
                     <label className={styles.label}>GST Number</label>
-                    <input 
-                      type="text" 
-                      className={styles.input} 
+                    <input
+                      type="text"
+                      className={styles.input}
                       value={gstNumber}
                       onChange={e => setGstNumber(e.target.value.toUpperCase())}
                       maxLength={15}

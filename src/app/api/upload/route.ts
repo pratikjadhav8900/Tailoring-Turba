@@ -28,6 +28,9 @@ export async function POST(request: Request) {
         {
           folder: "kraftx_customizations",
           resource_type: "auto",
+          transformation: [
+            { width: 1000, height: 1000, crop: "fill", gravity: "auto", quality: "auto", fetch_format: "auto" }
+          ]
         },
         (error, result) => {
           if (error) reject(error);

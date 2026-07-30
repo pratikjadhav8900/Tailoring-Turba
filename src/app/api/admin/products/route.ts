@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { name, category, type, price, description, features, colors, badge, imageUrl } = body;
+    const { name, category, type, price, description, features, colors, badge, imageUrl, imageUrls } = body;
 
     if (!name || !category || !price) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
         features: features ? features.split('\n').filter((f: string) => f.trim()) : [],
         colors: colors ? parseInt(colors) : null,
         badge: badge || null,
-        images: imageUrl ? [imageUrl] : [],
+        images: imageUrls || (imageUrl ? [imageUrl] : []),
         minOrderQuantity: 1,
       }
     });

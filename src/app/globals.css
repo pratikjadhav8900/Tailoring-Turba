@@ -7,16 +7,16 @@
 /* TTH-inspired editorial palette */
 :root {
   --tth-white: #ffffff;
-  --tth-offwhite: #f7f6f2;
+  --tth-offwhite: #f8fafc;
   --tth-black: #000000;
   --tth-olive: #6b7d60;
   --tth-olive-dark: #4a5c3f;
   --tth-gold: #c49d32;
   --tth-gold-dark: #b8941f;
-  --tth-beige: #d2bb9b;
-  --tth-beige-light: #e8e0d4;
-  --tth-tan: #c7ad8d;
-  --tth-grey: #f5f4f0;
+  --tth-beige: #e2e8f0;
+  --tth-beige-light: #f1f5f9;
+  --tth-tan: #cbd5e1;
+  --tth-grey: #f8fafc;
   --tth-text: #1a1a18;
   --tth-text-muted: #6b6b65;
   --font-serif: 'Playfair Display', 'Cormorant Garamond', Georgia, serif;
@@ -94,8 +94,8 @@
 
   /* Neutral Colors */
   --color-neutral-0: #FFFFFF;
-  --color-neutral-50: #FFFBEB; /* Off-White - Warm premium backgrounds */
-  --color-neutral-100: #F3F4F6; /* Light Gray - Subtle dividers, cards */
+  --color-neutral-50: #f8fafc; /* Crisp cool neutral background */
+  --color-neutral-100: #f1f5f9; /* Light Gray - Subtle dividers, cards */
   --color-neutral-200: #E5E7EB;
   --color-neutral-300: #D1D5DB;
   --color-neutral-400: #9CA3AF;
@@ -116,22 +116,22 @@
   --color-info-hover: var(--color-teal-600);
 
   /* Legacy Variable Mapping (for backward compatibility) */
-  --bg-main: var(--color-neutral-50);
-  --bg-card: var(--color-neutral-0);
+  --bg-main: #ffffff;
+  --bg-card: #ffffff;
   --text-main: var(--color-neutral-800);
   --text-muted: var(--color-neutral-500);
   --accent: var(--color-primary-500);
   --accent-hover: var(--color-primary-600);
-  --border-light: var(--color-neutral-200);
+  --border-light: #e2e8f0;
 
   /* Neomorphism Variables */
-  --neo-bg: var(--bg-main);
+  --neo-bg: #ffffff;
   --neo-shadow-light: rgba(255, 255, 255, 1);
-  --neo-shadow-dark: rgba(210, 195, 160, 0.5);
-  --neo-shadow-outer: 6px 6px 12px var(--neo-shadow-dark), -6px -6px 12px var(--neo-shadow-light);
-  --neo-shadow-outer-sm: 4px 4px 8px var(--neo-shadow-dark), -4px -4px 8px var(--neo-shadow-light);
-  --neo-shadow-inner: inset 4px 4px 8px var(--neo-shadow-dark), inset -4px -4px 8px var(--neo-shadow-light);
-  --neo-shadow-inner-sm: inset 2px 2px 4px var(--neo-shadow-dark), inset -2px -2px 4px var(--neo-shadow-light);
+  --neo-shadow-dark: rgba(0, 0, 0, 0.05);
+  --neo-shadow-outer: 0 4px 12px rgba(0, 0, 0, 0.05);
+  --neo-shadow-outer-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --neo-shadow-inner: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+  --neo-shadow-inner-sm: inset 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 html, body {

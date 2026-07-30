@@ -8,15 +8,15 @@ import styles from "./HeroSlider.module.css";
 const SLIDES = [
   {
     id: 1,
-    image: "https://images.unsplash.com/photo-1618354691438-25bc04584c23?auto=format&fit=crop&q=100&w=2560",
-    subtitle: "SUSTAINABLE AND LONG LASTING",
-    title: "science meets fabric innovation",
+    image: "/hero_embroidery_machine.png",
+    subtitle: "PRECISION LOGO EMBROIDERY",
+    title: "custom embroidery on t-shirts & polos",
   },
   {
     id: 2,
-    image: "https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?auto=format&fit=crop&q=100&w=2560",
-    subtitle: "RETAIL APPAREL STORES",
-    title: "curated premium collections",
+    image: "/hero_dtf_printing.png",
+    subtitle: "DTF & SCREEN PRINTING",
+    title: "vibrant custom logo & graphic printing",
   },
   {
     id: 3,
