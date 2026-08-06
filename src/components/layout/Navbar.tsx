@@ -100,6 +100,7 @@ export default function Navbar({ transparent = false }: { transparent?: boolean 
           
           <Link href="/about" className={styles.navLink} onClick={() => setMobileMenuOpen(false)}>Our Story</Link>
           <Link href="/booking" className={styles.navLink} onClick={() => setMobileMenuOpen(false)}>Book a Visit</Link>
+          <Link href="/tt-luxe" className={`${styles.navLink} ${styles.luxeLink}`} onClick={() => setMobileMenuOpen(false)}>TT Luxe ✨</Link>
         </div>
 
         {/* Right: Icons */}

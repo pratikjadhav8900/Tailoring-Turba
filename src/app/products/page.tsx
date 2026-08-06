@@ -26,6 +26,7 @@ export default async function ProductsPage() {
       name: p.name,
       category: p.category?.name || "Uncategorized",
       type: p.type || "",
+      brand: p.brand || "",
       image: p.images && p.images.length > 0 ? p.images[0] : "",
       gallery: p.images || [],
       price: p.basePrice,

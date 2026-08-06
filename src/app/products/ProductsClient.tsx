@@ -110,6 +110,33 @@ function getGsmValue(p: any): number | null {
   return match ? parseInt(match[1], 10) : null;
 }
 
+const BRAND_BANNERS: Record<string, { title: string; subtitle: string; logoText: string; bgGradient: string }> = {
+  adidas: {
+    title: "Official Adidas Sourcing Collection",
+    subtitle: "High-performance tipping polos, cotton t-shirts, and activewear engineered for excellence.",
+    logoText: "ADIDAS",
+    bgGradient: "linear-gradient(135deg, #111111 0%, #222222 100%)"
+  },
+  "allen-solly": {
+    title: "Official Allen Solly Sourcing Collection",
+    subtitle: "Sophisticated corporate apparel, casual collared shirts, and Friday dressing options.",
+    logoText: "ALLEN SOLLY",
+    bgGradient: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)"
+  },
+  "monte-carlo": {
+    title: "Official Monte Carlo Sourcing Collection",
+    subtitle: "Premium winter jackets, fleece hoodies, and luxury knitwear tailored for peak comfort.",
+    logoText: "MONTE CARLO",
+    bgGradient: "linear-gradient(135deg, #1c1917 0%, #292524 100%)"
+  },
+  "us-polo": {
+    title: "Official US Polo Assn. Sourcing Collection",
+    subtitle: "Timeless heritage sportswear, pique polos, and premium woven cotton button-down shirts.",
+    logoText: "US POLO ASSN.",
+    bgGradient: "linear-gradient(135deg, #1a1610 0%, #2a2215 100%)"
+  }
+};
+
 export default function ProductsClient({ products }: { products: any[] }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -118,6 +145,7 @@ export default function ProductsClient({ products }: { products: any[] }) {
 
   const urlCategory = searchParams.get("category");
   const urlGender = searchParams.get("gender") as Gender | null;
+  const activeBrand = searchParams.get("brand");
 
   const [activeGender, setActiveGender] = useState<Gender>(
     urlGender && GENDER_CONFIG[urlGender] ? urlGender : "Men"
@@ -161,9 +189,12 @@ export default function ProductsClient({ products }: { products: any[] }) {
     setSelectedColor("all");
     setGsmRange("all");
     setSearchTerm("");
+    if (activeBrand) {
+      router.push("/products");
+    }
   };
 
-  const hasActiveFilters = activeCategory !== "All" || priceRange !== "all" || selectedColor !== "all" || gsmRange !== "all" || debouncedSearch !== "";
+  const hasActiveFilters = activeCategory !== "All" || priceRange !== "all" || selectedColor !== "all" || gsmRange !== "all" || debouncedSearch !== "" || !!activeBrand;
 
   const genderConfig = GENDER_CONFIG[activeGender];
   const categories = genderConfig.categories;
@@ -237,7 +268,13 @@ export default function ProductsClient({ products }: { products: any[] }) {
         (p.description && p.description.toLowerCase().includes(searchLower)) ||
         (p.category && p.category.toLowerCase().includes(searchLower));
 
-      return matchesGender && matchesCategory && matchesPrice && matchesColor && matchesGsm && matchesSearch;
+      // Brand match
+      let matchesBrand = true;
+      if (activeBrand) {
+        matchesBrand = p.brand?.toLowerCase() === activeBrand.toLowerCase();
+      }
+
+      return matchesGender && matchesCategory && matchesPrice && matchesColor && matchesGsm && matchesSearch && matchesBrand;
     });
 
     // Sort
@@ -246,7 +283,7 @@ export default function ProductsClient({ products }: { products: any[] }) {
     if (sortBy === "newest") result = [...result].reverse();
 
     return result;
-  }, [products, activeGender, activeCategory, priceRange, selectedColor, gsmRange, debouncedSearch, sortBy]);
+  }, [products, activeGender, activeCategory, priceRange, selectedColor, gsmRange, debouncedSearch, sortBy, activeBrand]);
 
   return (
     <>
@@ -412,6 +449,36 @@ export default function ProductsClient({ products }: { products: any[] }) {
           {/* ── Product Area ── */}
           <div className={styles.productContentArea}>
 
+            {/* Luxe Brand Banner */}
+            {activeBrand && BRAND_BANNERS[activeBrand.toLowerCase()] && (
+              <div 
+                style={{ 
+                  background: BRAND_BANNERS[activeBrand.toLowerCase()].bgGradient,
+                  border: "1px solid rgba(212, 175, 55, 0.35)",
+                  borderRadius: "12px",
+                  padding: "32px",
+                  marginBottom: "24px",
+                  position: "relative",
+                  overflow: "hidden",
+                  boxShadow: "0 10px 30px rgba(0, 0, 0, 0.3)"
+                }}
+              >
+                <div style={{ position: "absolute", top: "-10px", right: "-10px", opacity: 0.05, fontSize: "8rem", fontWeight: 900, color: "#fff", pointerEvents: "none", fontFamily: "var(--font-serif)" }}>
+                  LUXE
+                </div>
+                <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#D4AF37", letterSpacing: "0.15em", textTransform: "uppercase", display: "inline-flex", alignItems: "center", gap: "6px", marginBottom: "12px" }}>
+                  <Star size={12} fill="#D4AF37" color="#D4AF37" />
+                  TT LUXE COLLECTION
+                </span>
+                <h1 style={{ fontSize: "2rem", fontWeight: 800, color: "#ffffff", marginBottom: "8px", fontFamily: "var(--font-serif)" }}>
+                  {BRAND_BANNERS[activeBrand.toLowerCase()].title}
+                </h1>
+                <p style={{ color: "#cbd5e1", fontSize: "0.95rem", maxWidth: "700px", lineHeight: 1.5 }}>
+                  {BRAND_BANNERS[activeBrand.toLowerCase()].subtitle}
+                </p>
+              </div>
+            )}
+
             {/* Breadcrumb & Toolbar Header */}
             <div className={styles.toolbarHeader}>
               <div className={styles.breadcrumbPath}>
@@ -449,6 +516,12 @@ export default function ProductsClient({ products }: { products: any[] }) {
             {hasActiveFilters && (
               <div className={styles.activePillsBar}>
                 <span className={styles.activePillLabel}>Active Filters:</span>
+                {activeBrand && (
+                  <span className={styles.filterPill} style={{ background: "rgba(212, 175, 55, 0.12)", border: "1px solid rgba(212, 175, 55, 0.3)", color: "#b8941f" }}>
+                    Brand: {activeBrand}
+                    <X size={12} className={styles.removePillIcon} onClick={() => router.push("/products")} />
+                  </span>
+                )}
                 {activeCategory !== "All" && (
                   <span className={styles.filterPill}>
                     Category: {activeCategory}
@@ -491,8 +564,21 @@ export default function ProductsClient({ products }: { products: any[] }) {
                 const price = Number(p.price || 199);
                 const mrp = Math.round(price * 1.55);
                 const discount = Math.round(((mrp - price) / mrp) * 100);
-                const rating = (4.1 + ((Number(p.id) * 7) % 8) / 10).toFixed(1);
-                const ratingCount = 15 + ((Number(p.id) * 13) % 70);
+                
+                // Get stable number from ID (handles both numeric and CUID/string IDs)
+                const getStableIdNumber = (id: string) => {
+                  const num = Number(id);
+                  if (!isNaN(num)) return num;
+                  let hash = 0;
+                  for (let i = 0; i < id.length; i++) {
+                    hash = (hash << 5) - hash + id.charCodeAt(i);
+                    hash |= 0;
+                  }
+                  return Math.abs(hash);
+                };
+                const idNum = getStableIdNumber(p.id);
+                const rating = (4.1 + ((idNum * 7) % 8) / 10).toFixed(1);
+                const ratingCount = 15 + ((idNum * 13) % 70);
 
                 const hasGallerySecond = Array.isArray(p.gallery) && p.gallery.length > 1;
                 const isHovered = hoveredCardId === p.id;

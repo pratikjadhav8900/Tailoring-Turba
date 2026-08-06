@@ -1,0 +1,681 @@
+/* Puma India Inspired Branded Category Portal Styles */
+.pageWrapper {
+  background-color: #FAFAFA;
+  color: #111827;
+  min-height: 100vh;
+  font-family: var(--font-sans), sans-serif;
+  padding-top: 0;
+}
+
+.container {
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 0 16px;
+  }
+}
+
+/* 1. Puma-Style High-Impact Hero Banner */
+.pumaHero {
+  background-color: #FFFFFF;
+  border-bottom: 1px solid #E5E7EB;
+  padding: 40px 0 28px 0;
+}
+
+@media (max-width: 768px) {
+  .pumaHero {
+    padding: 24px 0 20px 0;
+  }
+}
+
+.heroContainer {
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+@media (max-width: 640px) {
+  .heroContainer {
+    padding: 0 16px;
+  }
+}
+
+.heroTextContent {
+  max-width: 820px;
+}
+
+.pumaEyebrow {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  color: #1B3B2B; /* Forest Green */
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.pumaTitle {
+  font-family: var(--font-serif), serif;
+  font-size: clamp(2.2rem, 5vw, 3.6rem);
+  font-weight: 800;
+  color: #111827;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+}
+
+.pumaSubtitle {
+  font-size: 1rem;
+  color: #4B5563;
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+/* Hero Filter Row */
+.heroFilterRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filterPill {
+  background-color: #F1F5F9;
+  border: 1px solid #E2E8F0;
+  color: #4B5563;
+  padding: 8px 18px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filterPill:hover {
+  background-color: #E2E8F0;
+  color: #111827;
+}
+
+.filterPillActive {
+  background-color: #1B3B2B !important;
+  border-color: #1B3B2B !important;
+  color: #FFFFFF !important;
+}
+
+/* PUMA-STYLE INTER-SECTION HERO BANNERS */
+.pumaInterSectionBanner {
+  position: relative;
+  width: 100%;
+  min-height: 440px;
+  display: flex;
+  align-items: center;
+  padding: 48px 60px;
+  overflow: hidden;
+  margin: 36px 0;
+  background-color: #0F172A;
+}
+
+@media (max-width: 768px) {
+  .pumaInterSectionBanner {
+    min-height: 380px;
+    padding: 32px 24px;
+  }
+}
+
+.interBannerBg {
+  object-fit: cover;
+  object-position: right center;
+  z-index: 0;
+  transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.pumaInterSectionBanner:hover .interBannerBg {
+  transform: scale(1.03);
+}
+
+.interBannerOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.75) 45%, rgba(15, 23, 42, 0.2) 100%);
+  z-index: 1;
+}
+
+.interBannerContent {
+  position: relative;
+  z-index: 2;
+  color: #FFFFFF;
+  max-width: 650px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.interBannerBadge {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #FFFFFF;
+  padding: 6px 14px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  backdrop-filter: blur(8px);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+}
+
+.interBannerSub {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  color: #A7F3D0;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.interBannerTitle {
+  font-family: var(--font-serif), serif;
+  font-size: clamp(2rem, 4.5vw, 3.4rem);
+  font-weight: 800;
+  color: #FFFFFF;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.interBannerDesc {
+  font-size: 0.95rem;
+  color: #E2E8F0;
+  line-height: 1.6;
+  margin-bottom: 24px;
+  max-width: 520px;
+}
+
+.interBannerBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background-color: #FFFFFF;
+  color: #111827;
+  border: none;
+  padding: 14px 28px;
+  border-radius: 4px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.2s;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.interBannerBtn:hover {
+  background-color: #F8FAFC;
+  transform: translateY(-2px);
+}
+
+/* 2. Interactive Filter & Product Grid Section */
+.catalogSection {
+  padding: 40px 0 80px 0;
+}
+
+.filterBarHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 28px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #E5E7EB;
+}
+
+@media (max-width: 768px) {
+  .filterBarHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+.categoryPills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.catTab {
+  background: transparent;
+  border: none;
+  color: #6B7280;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.catTab:hover {
+  color: #111827;
+  background-color: #F1F5F9;
+}
+
+.catTabActive {
+  color: #1B3B2B !important;
+  background-color: rgba(27, 59, 43, 0.08) !important;
+}
+
+.resultsCount {
+  font-size: 0.82rem;
+  color: #6B7280;
+}
+
+/* Puma E-Commerce Product Card Grid */
+.productGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+
+@media (max-width: 1200px) {
+  .productGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 840px) {
+  .productGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .productGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.productCard {
+  background-color: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.productCard:hover {
+  transform: translateY(-4px);
+  border-color: #1B3B2B;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
+}
+
+.cardImgWrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  background-color: #F8FAFC;
+}
+
+.cardImg {
+  object-fit: cover;
+  transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.productCard:hover .cardImg {
+  transform: scale(1.06);
+}
+
+.brandBadge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: rgba(17, 24, 39, 0.88);
+  color: #FFFFFF;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  backdrop-filter: blur(4px);
+}
+
+.gsmBadge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #1B3B2B;
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid rgba(27, 59, 43, 0.2);
+  backdrop-filter: blur(4px);
+}
+
+.cardDetails {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-grow: 1;
+}
+
+.categoryLabel {
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #1B3B2B;
+}
+
+.productTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.35;
+}
+
+.fabricText {
+  font-size: 0.78rem;
+  color: #6B7280;
+  line-height: 1.4;
+}
+
+.cardSwatches {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.swatchDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.moqText {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #9CA3AF;
+  margin-left: auto;
+}
+
+.cardActions {
+  margin-top: auto;
+  padding-top: 12px;
+}
+
+.cardQuoteBtn {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background-color: #1B3B2B;
+  color: #FFFFFF;
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-decoration: none;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.cardQuoteBtn:hover {
+  background-color: #142B20;
+  transform: translateY(-1px);
+}
+
+/* 3. Puma-Style Split Category Banners */
+.featureBannersSection {
+  padding: 60px 0;
+  background-color: #FFFFFF;
+  border-top: 1px solid #E5E7EB;
+  border-bottom: 1px solid #E5E7EB;
+}
+
+.sectionTitleHeader {
+  margin-bottom: 32px;
+}
+
+.sectionHeadline {
+  font-family: var(--font-serif), serif;
+  font-size: clamp(1.8rem, 3.5vw, 2.5rem);
+  font-weight: 700;
+  color: #111827;
+}
+
+.bannerGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+@media (max-width: 768px) {
+  .bannerGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.bannerCard {
+  position: relative;
+  width: 100%;
+  height: 320px;
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  padding: 32px;
+}
+
+.bannerImg {
+  object-fit: cover;
+  transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.bannerCard:hover .bannerImg {
+  transform: scale(1.05);
+}
+
+.bannerOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.75) 100%);
+  z-index: 1;
+}
+
+.bannerContent {
+  position: relative;
+  z-index: 2;
+  color: #FFFFFF;
+}
+
+.bannerTag {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  color: #A7F3D0;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.bannerTitle {
+  font-family: var(--font-serif), serif;
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.bannerDesc {
+  font-size: 0.88rem;
+  color: #E2E8F0;
+  margin-bottom: 16px;
+  max-width: 400px;
+}
+
+.bannerBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #FFFFFF;
+  color: #111827;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.bannerBtn:hover {
+  background-color: #F8FAFC;
+}
+
+/* 4. Complete Brand Catalogue Hub */
+.pdfHubSection {
+  padding: 60px 0;
+}
+
+.hubCompactGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 768px) {
+  .hubCompactGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.hubDownloadRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background-color: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  padding: 12px 16px;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.hubDownloadRow:hover {
+  border-color: #1B3B2B;
+  box-shadow: 0 4px 15px rgba(27, 59, 43, 0.08);
+}
+
+.hubIconBox {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background-color: rgba(27, 59, 43, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.hubTextGroup {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  overflow: hidden;
+}
+
+.hubTitle {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hubSub {
+  font-size: 0.72rem;
+  color: #6B7280;
+}
+
+.hubArrow {
+  color: #9CA3AF;
+  flex-shrink: 0;
+  transition: color 0.2s;
+}
+
+.hubDownloadRow:hover .hubArrow {
+  color: #1B3B2B;
+}
+
+/* 5. Consultation CTA */
+.ctaSection {
+  padding: 0 0 80px 0;
+}
+
+.ctaCard {
+  background: linear-gradient(135deg, #1B3B2B 0%, #0F251B 100%);
+  border-radius: 20px;
+  padding: 60px 40px;
+  text-align: center;
+  color: #FFFFFF;
+  box-shadow: 0 20px 40px rgba(27, 59, 43, 0.2);
+}
+
+@media (max-width: 640px) {
+  .ctaCard {
+    padding: 40px 20px;
+  }
+}
+
+.ctaContent {
+  max-width: 650px;
+  margin: 0 auto;
+}
+
+.ctaTitle {
+  font-family: var(--font-serif), serif;
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.ctaText {
+  font-size: 1rem;
+  color: #E2E8F0;
+  line-height: 1.65;
+  margin-bottom: 32px;
+}
+
+.ctaBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background-color: #FFFFFF;
+  color: #1B3B2B;
+  padding: 16px 36px;
+  border-radius: 10px;
+  font-weight: 800;
+  font-size: 0.92rem;
+  text-decoration: none;
+  transition: transform 0.2s, background-color 0.2s;
+}
+
+.ctaBtn:hover {
+  background-color: #F8FAFC;
+  transform: translateY(-2px);
+}
