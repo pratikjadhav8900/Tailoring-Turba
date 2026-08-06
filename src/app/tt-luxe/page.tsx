@@ -147,6 +147,76 @@ const productCatalogData: ProductItem[] = [
     pdfPath: "/TT Luxe/MONTE CARLO DRYFIT TSHIRT.pdf",
     pdfName: "Monte Carlo DryFit Specs (PDF)",
     colors: ["#881337", "#374151", "#1D4ED8", "#0F172A", "#064E3B"]
+  },
+  {
+    id: "prod-9",
+    brandId: "allen-solly",
+    brandName: "Allen Solly",
+    title: "Allen Solly Premium Crewneck Tee",
+    category: "T-Shirts",
+    image: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=800",
+    gsm: "220 GSM",
+    fabric: "100% Combed Bio-Wash Cotton",
+    moq: "10 Pieces",
+    pdfPath: "/TT Luxe/ALLEN-SOLLY_TSHIRTS_CATALOGUE.pdf",
+    pdfName: "Allen Solly T-Shirts Catalogue (PDF)",
+    colors: ["#FFFFFF", "#18181B", "#1E3A8A", "#94A3B8"]
+  },
+  {
+    id: "prod-10",
+    brandId: "adidas",
+    brandName: "Adidas",
+    title: "Adidas Cotton Tipping Tee",
+    category: "T-Shirts",
+    image: "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?q=80&w=800",
+    gsm: "210 GSM",
+    fabric: "100% Premium Cotton Knit",
+    moq: "10 Pieces",
+    pdfPath: "/TT Luxe/Adidas 100-  Cotton Tipping Tshirt (210 gsm).pdf",
+    pdfName: "Adidas Tipping Tee Specs (PDF)",
+    colors: ["#94A3B8", "#FFFFFF", "#0F172A", "#16A34A", "#1D4ED8", "#DC2626"]
+  },
+  {
+    id: "prod-11",
+    brandId: "monte-carlo",
+    brandName: "Monte Carlo",
+    title: "Monte Carlo Classic Oxford Shirt",
+    category: "Oxford Shirts",
+    image: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?q=80&w=800",
+    gsm: "180 GSM",
+    fabric: "Fine Cotton Oxford Weave",
+    moq: "10 Pieces",
+    pdfPath: "/TT Luxe/MONTE CARLO OXFORD SHIRT.pdf",
+    pdfName: "Monte Carlo Oxford Shirt Catalogue (PDF)",
+    colors: ["#FFFFFF", "#86EFAC"]
+  },
+  {
+    id: "prod-12",
+    brandId: "monte-carlo",
+    brandName: "Monte Carlo",
+    title: "Monte Carlo Poly-Cotton Custom Tee",
+    category: "T-Shirts",
+    image: "https://images.unsplash.com/photo-1576566588028-4147f3842f27?q=80&w=800",
+    gsm: "200 GSM",
+    fabric: "Poly-Cotton Comfort Blend (60:40)",
+    moq: "10 Pieces",
+    pdfPath: "/TT Luxe/MONTE CARLO POLY COTTON TSHIRT.pdf",
+    pdfName: "Monte Carlo Poly-Cotton Catalogue (PDF)",
+    colors: ["#FFFFFF", "#0F172A", "#1D4ED8", "#16A34A", "#18181B", "#BAE6FD"]
+  },
+  {
+    id: "prod-13",
+    brandId: "us-polo",
+    brandName: "US Polo Assn.",
+    title: "US Polo Assn. Premium Pique Polo",
+    category: "Polos",
+    image: "https://images.unsplash.com/photo-1625910513397-a4002678680c?q=80&w=800",
+    gsm: "220 GSM",
+    fabric: "100% Combed Pique Cotton",
+    moq: "10 Pieces",
+    pdfPath: "/TT Luxe/US POLO PREMIUM COTTON SHIRT.pdf",
+    pdfName: "US Polo Premium Shirt Specs (PDF)",
+    colors: ["#3B82F6", "#0F172A", "#15803D"]
   }
 ];
 
@@ -158,7 +228,7 @@ const brandFilterList = [
   { id: "monte-carlo", label: "MONTE CARLO" }
 ];
 
-const categoryFilterList = ["All Categories", "Polos", "Jackets", "Activewear", "Oxford Shirts"];
+const categoryFilterList = ["All Categories", "Polos", "Jackets", "Activewear", "Oxford Shirts", "T-Shirts"];
 
 export default function TTLuxeBrandedPage() {
   const [selectedBrand, setSelectedBrand] = useState<string>("all");
