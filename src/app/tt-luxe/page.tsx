@@ -404,6 +404,61 @@ const brandFilterList = [
 
 const categoryFilterList = ["All Categories", "Polos", "Jackets", "Activewear", "Oxford Shirts", "T-Shirts"];
 
+const brandCatalogPdfs = [
+  {
+    brandName: "Allen Solly",
+    pdfs: [
+      { name: "Executive Shirting Collection", path: "/TT%20Luxe/ALLEN%20SOLLY_NEW_1.pdf", size: "Allen Solly New" },
+      { name: "Premium T-Shirts Catalog", path: "/TT%20Luxe/ALLEN-SOLLY_TSHIRTS_CATALOGUE.pdf", size: "Allen Solly Tees" }
+    ]
+  },
+  {
+    brandName: "Adidas",
+    pdfs: [
+      { name: "Adidas Cotton Tipping T-Shirts", path: "/TT%20Luxe/Adidas%20100-%20%20Cotton%20Tipping%20Tshirt%20(210%20gsm).pdf", size: "210 GSM Cotton" }
+    ]
+  },
+  {
+    brandName: "US Polo Assn.",
+    pdfs: [
+      { name: "US Polo Premium Cotton Shirts", path: "/TT%20Luxe/US%20POLO%20PREMIUM%20COTTON%20SHIRT.pdf", size: "Premium Shirting" }
+    ]
+  },
+  {
+    brandName: "Monte Carlo",
+    pdfs: [
+      { name: "Monte Carlo Jackets & Fleece", path: "/TT%20Luxe/Monte%20Carlo%20Jacket-.pdf", size: "Winter Outerwear" },
+      { name: "Monte Carlo DryFit Sportswear", path: "/TT%20Luxe/MONTE%20CARLO%20DRYFIT%20TSHIRT.pdf", size: "Activewear" },
+      { name: "Monte Carlo Oxford Shirts", path: "/TT%20Luxe/MONTE%20CARLO%20OXFORD%20SHIRT.pdf", size: "Oxford Collection" },
+      { name: "Monte Carlo Poly-Cotton Tees", path: "/TT%20Luxe/MONTE%20CARLO%20POLY%20COTTON%20TSHIRT.pdf", size: "Casual Tees" }
+    ]
+  },
+  {
+    brandName: "Jack & Jones",
+    pdfs: [
+      { name: "Jack & Jones Stock Report", path: "/TT%20Luxe/Jack&Jones_VeroModa%20-%20Stock%20Report%2006.03.2026.pdf", size: "Polos & Tees" }
+    ]
+  },
+  {
+    brandName: "Being Human",
+    pdfs: [
+      { name: "Being Human Tees Catalog", path: "/TT%20Luxe/being%20human%20t%20shirt%20.pdf", size: "Cotton Graphic Tees" }
+    ]
+  },
+  {
+    brandName: "Benetton",
+    pdfs: [
+      { name: "Benetton Apparel Catalog", path: "/TT%20Luxe/Benetton.pdf", size: "United Colors Collection" }
+    ]
+  },
+  {
+    brandName: "Puma",
+    pdfs: [
+      { name: "Puma Sports Activewear & Caps", path: "/TT%20Luxe/Puma%20MRP%20New%2025%20.pdf", size: "Activewear & Accessories" }
+    ]
+  }
+];
+
 const getCategoryIcon = (category: string) => {
   switch (category) {
     case "Polos":
@@ -728,22 +783,24 @@ export default function TTLuxeBrandedPage() {
           </div>
 
           <div className={styles.hubCompactGrid}>
-            {productCatalogData.map((prod) => (
-              <a
-                key={prod.id}
-                href={prod.pdfPath}
-                download
-                className={styles.hubDownloadRow}
-              >
-                <div className={styles.hubIconBox}>
-                  <FileDown size={16} className="text-[#1B3B2B]" />
+            {brandCatalogPdfs.map((brand, idx) => (
+              <div key={idx} className={styles.catalogBrandCard}>
+                <h3 className={styles.brandCardTitle}>{brand.brandName}</h3>
+                <div className={styles.brandPdfList}>
+                  {brand.pdfs.map((pdf, pIdx) => (
+                    <a
+                      key={pIdx}
+                      href={pdf.path}
+                      download
+                      className={styles.brandPdfItem}
+                    >
+                      <FileDown size={14} className={styles.brandPdfIcon} />
+                      <span className={styles.brandPdfName}>{pdf.name}</span>
+                      <span className={styles.brandPdfSize}>{pdf.size}</span>
+                    </a>
+                  ))}
                 </div>
-                <div className={styles.hubTextGroup}>
-                  <span className={styles.hubTitle}>{prod.title}</span>
-                  <span className={styles.hubSub}>{prod.brandName} • {prod.gsm}</span>
-                </div>
-                <Download size={15} className={styles.hubArrow} />
-              </a>
+              </div>
             ))}
           </div>
         </div>

@@ -553,72 +553,93 @@
 
 .hubCompactGrid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
+  .hubCompactGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
   .hubCompactGrid {
     grid-template-columns: 1fr;
   }
 }
 
-.hubDownloadRow {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background-color: #FFFFFF;
-  border: 1px solid #E5E7EB;
-  padding: 12px 16px;
-  border-radius: 10px;
-  text-decoration: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.hubDownloadRow:hover {
-  border-color: #1B3B2B;
-  box-shadow: 0 4px 15px rgba(27, 59, 43, 0.08);
-}
-
-.hubIconBox {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background-color: rgba(27, 59, 43, 0.08);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.hubTextGroup {
+.catalogBrandCard {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(27, 59, 43, 0.08);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 15px -3px rgba(0, 0, 0, 0.02);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
-  flex-grow: 1;
-  overflow: hidden;
 }
 
-.hubTitle {
+.catalogBrandCard:hover {
+  border-color: rgba(27, 59, 43, 0.2);
+  box-shadow: 0 8px 24px -5px rgba(27, 59, 43, 0.07);
+  transform: translateY(-2px);
+}
+
+.brandCardTitle {
   font-size: 0.85rem;
+  font-weight: 800;
+  color: #1B3B2B;
+  margin: 0 0 12px 0;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(27, 59, 43, 0.08);
+  padding-bottom: 8px;
+}
+
+.brandPdfList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-grow: 1;
+}
+
+.brandPdfItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: rgba(27, 59, 43, 0.03);
+  border: 1px solid rgba(27, 59, 43, 0.05);
+  border-radius: 8px;
+  color: #4B5563;
+  text-decoration: none;
+  font-size: 0.72rem;
+  transition: all 0.2s ease;
+}
+
+.brandPdfItem:hover {
+  background: rgba(27, 59, 43, 0.08);
+  border-color: rgba(27, 59, 43, 0.18);
+  color: #1B3B2B;
+}
+
+.brandPdfName {
   font-weight: 700;
-  color: #111827;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  flex-grow: 1;
 }
 
-.hubSub {
-  font-size: 0.72rem;
-  color: #6B7280;
-}
-
-.hubArrow {
-  color: #9CA3AF;
+.brandPdfIcon {
+  color: rgba(27, 59, 43, 0.6);
   flex-shrink: 0;
   transition: color 0.2s;
 }
 
-.hubDownloadRow:hover .hubArrow {
+.brandPdfItem:hover .brandPdfIcon {
   color: #1B3B2B;
 }
 
