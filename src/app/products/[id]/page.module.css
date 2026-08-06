@@ -4,13 +4,13 @@
   padding-bottom: 0;
 }
 
-/* Layout Grid: compact 2-column layout */
+/* Layout Grid: Myntra-Style 2-column layout */
 .layout {
   display: grid;
-  grid-template-columns: 500px minmax(0, 420px);
+  grid-template-columns: minmax(0, 1fr) 420px;
   justify-content: center;
-  gap: 40px;
-  max-width: 1020px;
+  gap: 48px;
+  max-width: 1200px;
   width: 100%;
   margin: 0 auto;
   padding: 24px 20px 48px;
@@ -18,13 +18,12 @@
   box-sizing: border-box;
 }
 
-/* Left column: image + thumbs + description/features */
+/* Left column: multi-image grid gallery */
 .leftColumn {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 24px;
   width: 100%;
-  max-width: 500px;
 }
 
 /* Main Image */
@@ -825,3 +824,557 @@
     font-size: 0.8rem;
   }
 }
+
+/* Myntra-Style E-Commerce Additions */
+
+/* 1. Large Multi-Image Grid */
+.imageGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  width: 100%;
+}
+
+.gridImageWrap {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  background-color: #f8fafc;
+  border-radius: 8px;
+  cursor: zoom-in;
+  border: 1px solid #f1f5f9;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.gridImageWrap:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.04);
+}
+
+@media (max-width: 768px) {
+  .imageGrid {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    gap: 8px;
+    padding-bottom: 8px;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+  .gridImageWrap {
+    flex: 0 0 100%;
+    scroll-snap-align: start;
+    aspect-ratio: 1 / 1;
+  }
+}
+
+/* 2. Compact Ratings Floating Badge */
+.ratingsBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #1e293b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 8px;
+}
+
+.ratingsBadge:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+}
+
+.ratingsBadgeStar {
+  color: #f59e0b;
+  font-size: 0.9rem;
+}
+
+.ratingsBadgeCount {
+  color: #64748b;
+  border-left: 1px solid #cbd5e1;
+  padding-left: 8px;
+  font-weight: 500;
+}
+
+/* 3. E-commerce Pricing Details */
+.mrpText {
+  font-size: 0.95rem;
+  color: #94a3b8;
+  text-decoration: line-through;
+  font-weight: 400;
+}
+
+.discountText {
+  font-size: 1rem;
+  color: #f97316; /* Myntra orange discount color */
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.taxLabel {
+  font-size: 0.72rem;
+  color: #10b981; /* Green inclusive of taxes badge */
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+/* 4. Size Selection Component */
+.sizeContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 20px;
+  margin-top: 20px;
+}
+
+.sizeHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sizeLabel {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #1e293b;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.sizeChartLink {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #ef4444; /* Hot pink/coral accent */
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  letter-spacing: 0.04em;
+}
+
+.sizeChartLink:hover {
+  text-decoration: underline;
+}
+
+.sizeGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.sizeButton {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 1px solid #cbd5e1;
+  background: white;
+  color: #1e293b;
+  font-size: 0.85rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  outline: none;
+}
+
+.sizeButton:hover {
+  border-color: #0f172a;
+  transform: scale(1.05);
+}
+
+.sizeButtonActive {
+  background: #0f172a;
+  border-color: #0f172a;
+  color: white;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.15);
+}
+
+.sizeButtonDisabled {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+  color: #cbd5e1;
+  cursor: not-allowed;
+  position: relative;
+  overflow: hidden;
+}
+
+.sizeButtonDisabled::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 1.5px;
+  background: #e2e8f0;
+  transform: rotate(-45deg);
+}
+
+/* 5. Circular size chart modal popup */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(4px);
+  padding: 20px;
+}
+
+.modalContent {
+  background: white;
+  width: 100%;
+  max-width: 580px;
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  padding: 32px;
+  position: relative;
+  animation: modalSlideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modalSlideUp {
+  from { opacity: 0; transform: translateY(30px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.modalClose {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: #f1f5f9;
+  border: none;
+  font-size: 1.25rem;
+  color: #64748b;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.modalClose:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.modalTitle {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 20px;
+  letter-spacing: -0.01em;
+}
+
+.chartTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+  font-size: 0.85rem;
+}
+
+.chartTh {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 12px;
+  font-weight: 800;
+  color: #475569;
+  text-align: left;
+}
+
+.chartTd {
+  border: 1px solid #e2e8f0;
+  padding: 12px;
+  color: #1e293b;
+  font-weight: 500;
+}
+
+.chartTr:nth-child(even) {
+  background: #fafafa;
+}
+
+/* 6. Interactive Delivery Pincode Checker */
+.pincodeContainer {
+  border-top: 1px solid #f1f5f9;
+  padding-top: 20px;
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pincodeTitle {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #1e293b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pincodeForm {
+  display: flex;
+  gap: 10px;
+  max-width: 320px;
+}
+
+.pincodeInput {
+  flex: 1;
+  padding: 12px 16px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  outline: none;
+  font-weight: 500;
+  transition: all 0.2s;
+  box-sizing: border-box;
+}
+
+.pincodeInput:focus {
+  border-color: #0f172a;
+  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.05);
+}
+
+.pincodeBtn {
+  background: #0f172a;
+  color: white;
+  border: none;
+  padding: 0 24px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  transition: background 0.2s;
+}
+
+.pincodeBtn:hover {
+  background: #1e293b;
+}
+
+.pincodeResult {
+  margin-top: 4px;
+  animation: itemFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes itemFadeIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.pincodeSuccess {
+  color: #16a34a;
+  font-size: 0.85rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.pincodeError {
+  color: #dc2626;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.deliveryDetailList {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.deliveryDetailItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 0.88rem;
+  color: #334155;
+  line-height: 1.4;
+}
+
+.deliveryIcon {
+  color: #10b981;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* 7. Coupon and Best Offers section */
+.offersContainer {
+  border-top: 1px solid #f1f5f9;
+  padding-top: 20px;
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.offersTitle {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #1e293b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.offersList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.offerItem {
+  border: 1px dashed #cbd5e1;
+  background: #fbfbfb;
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-size: 0.85rem;
+  color: #475569;
+  line-height: 1.5;
+  position: relative;
+}
+
+.offerBadge {
+  display: inline-block;
+  background: #fef3c7;
+  color: #b45309;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.offerCode {
+  font-weight: 800;
+  color: #0f172a;
+  background: #f1f5f9;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+}
+
+/* 8. Specifications Key-Value Table */
+.specsTable {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.specRow {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #f1f5f9;
+}
+
+.specLabel {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.specValue {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+@media (max-width: 600px) {
+  .specsTable {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 9. Action Buttons Overrides */
+.actionRowFlex {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+  width: 100%;
+}
+
+.btnCartBag {
+  flex: 3;
+  background: #ef4444; /* Standard Coral Pink-ish Red */
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 18px 24px;
+  font-weight: 800;
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.2);
+}
+
+.btnCartBag:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+}
+
+.btnWishlistCard {
+  flex: 2;
+  background: white;
+  color: #1e293b;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 18px 24px;
+  font-weight: 800;
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.btnWishlistCard:hover {
+  border-color: #0f172a;
+  background: #f8fafc;
+}
+

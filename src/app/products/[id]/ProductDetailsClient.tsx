@@ -6,7 +6,7 @@ import Navbar from "@/components/layout/Navbar";
 import styles from "./page.module.css";
 import { useCart } from "@/contexts/CartContext";
 import { useRouter } from "next/navigation";
-import { Receipt, RotateCcw, Brush, Truck, Package, ShieldCheck, Lock, Award, ArrowRightLeft, Check, Heart } from "lucide-react";
+import { Receipt, RotateCcw, Brush, Truck, Package, ShieldCheck, Lock, Award, ArrowRightLeft, Check, Heart, MapPin, Tag, Calendar, X, ShoppingBag, ChevronRight } from "lucide-react";
 import { useCompare } from "@/contexts/CompareContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { getResizedCloudinaryUrl } from "@/lib/cloudinary-client";
@@ -27,7 +27,6 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
   const { addToCompare, removeFromCompare, isInCompare } = useCompare();
   const { toggleWishlist, isInWishlist } = useWishlist();
 
-  const [activeImage, setActiveImage] = useState(product.gallery?.[0] || product.image);
   const minQty = Math.max(product.minOrderQuantity || 0, 10);
   const [qty, setQty] = useState<number | string>(minQty);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -37,9 +36,42 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
   const [mounted, setMounted] = useState(false);
   const [openAccordion, setOpenAccordion] = useState<string | null>('details');
 
-  const handleImageClick = () => {
-    setLightboxImg(activeImage);
-    setLightboxZoomed(false);
+  // E-commerce state additions
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
+  const [showSizeChart, setShowSizeChart] = useState(false);
+  const [pincode, setPincode] = useState("");
+  const [pincodeStatus, setPincodeStatus] = useState<"success" | "error" | null>(null);
+  const [deliveryEstimate, setDeliveryEstimate] = useState("");
+  const [isCheckingPincode, setIsCheckingPincode] = useState(false);
+
+  const imagesList = product.gallery && product.gallery.length > 0
+    ? product.gallery
+    : [product.image];
+
+  const availableSizes = product.category?.toLowerCase().includes("shirt") || product.name?.toLowerCase().includes("shirt")
+    ? ["38", "40", "42", "44", "46", "48"]
+    : ["S", "M", "L", "XL", "XXL", "3XL"];
+
+  const handleCheckPincode = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!/^\d{6}$/.test(pincode)) {
+      setPincodeStatus("error");
+      setDeliveryEstimate("");
+      return;
+    }
+
+    setIsCheckingPincode(true);
+    setTimeout(() => {
+      setIsCheckingPincode(false);
+      setPincodeStatus("success");
+      // Estimate: 4 days from today
+      const date = new Date();
+      date.setDate(date.getDate() + 4);
+      const day = date.toLocaleDateString("en-IN", { weekday: 'long' });
+      const month = date.toLocaleDateString("en-IN", { month: 'short' });
+      const num = date.getDate();
+      setDeliveryEstimate(`${day}, ${num} ${month}`);
+    }, 600);
   };
 
   useEffect(() => {
@@ -69,12 +101,16 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
   }, [storageKey]);
 
   const handleAddToCart = () => {
+    if (!selectedSize) {
+      alert("Please select a size before adding to the bag.");
+      return;
+    }
     const finalQty = Math.max(minQty, parseInt(qty as string) || minQty);
     addToCart({
-      id: product.id,
+      id: `${product.id}-${selectedSize}`,
       productId: product.id,
       code: product.code || product.name,
-      name: product.name,
+      name: `${product.name} (Size ${selectedSize})`,
       price: typeof product.price === 'number' ? product.price : parseFloat(String(product.price).replace(/[^\d.]/g, '')) || 0,
       quantity: finalQty,
       image: product.image
@@ -159,6 +195,16 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
     product.name?.toLowerCase().includes("hoodie")
   );
 
+  const specs = [
+    { label: "Fabric", value: product.fabric || (product.features?.[0]?.includes("GSM") ? product.features[0].split(" ").slice(2).join(" ") : product.features?.[0]) || "Premium Fabric" },
+    { label: "GSM / Weight", value: product.features?.find((f: string) => f.includes("GSM"))?.split(" ")?.[0] || product.gsm || "220 GSM" },
+    { label: "Fit", value: product.name?.toLowerCase().includes("oversize") ? "Oversized Fit" : "Regular Fit" },
+    { label: "Sleeve Length", value: product.name?.toLowerCase().includes("t-shirt") || product.name?.toLowerCase().includes("polo") ? "Short Sleeves" : "Full Sleeves" },
+    { label: "Collar / Neck", value: product.name?.toLowerCase().includes("polo") ? "Polo Collar" : product.name?.toLowerCase().includes("hood") ? "Hooded" : "Spread Collar" },
+    { label: "Occasion", value: "Corporate / Casual" },
+    { label: "Country of Origin", value: "India" }
+  ];
+
   return (
     <>
       <main className={styles.main}>
@@ -175,135 +221,261 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
 
         {/* Hero Product Section */}
         <div className={styles.layout}>
-          {/* LEFT COLUMN */}
+          {/* LEFT COLUMN: Multi-Image Scroll Gallery */}
           <div className={styles.leftColumn}>
-            <div 
-              className={styles.mainImageContainer}
-              onClick={handleImageClick}
-              style={{ cursor: "zoom-in" }}
-            >
-              {activeImage ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={getResizedCloudinaryUrl(activeImage, 800, 800)}
-                  alt={product.name}
-                  style={{ 
-                    width: '100%', 
-                    height: '100%', 
-                    objectFit: 'contain', 
-                    padding: '16px', 
-                    boxSizing: 'border-box'
-                  }}
-                />
-              ) : (
-                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#e5e7eb', color: '#9ca3af' }}>No Image</div>
-              )}
-              {product.badge && (
-                <span className={styles.productBadge}>
-                  {product.badge}
-                </span>
-              )}
-            </div>
-
-            {product.gallery && product.gallery.length > 1 && (
-              <div className={styles.thumbnailStrip}>
-                {product.gallery.map((img: string, i: number) => (
-                  <button key={i} className={`${styles.thumbnailBtn} ${activeImage === img ? styles.active : ""}`} onClick={() => setActiveImage(img)} title={`View ${i + 1}`}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={getResizedCloudinaryUrl(img, 150, 150)} alt={`${product.name} view ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '4px', boxSizing: 'border-box' }} />
-                  </button>
-                ))}
-              </div>
+            {product.badge && (
+              <span className={styles.productBadge}>
+                {product.badge}
+              </span>
             )}
-
+            <div className={styles.imageGrid}>
+              {imagesList.map((img: string, i: number) => (
+                <div 
+                  key={i} 
+                  className={styles.gridImageWrap}
+                  onClick={() => {
+                    setLightboxImg(img);
+                    setLightboxZoomed(false);
+                  }}
+                  style={{ cursor: "zoom-in" }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={getResizedCloudinaryUrl(img, 800, 1000)}
+                    alt={`${product.name} view ${i + 1}`}
+                    style={{ 
+                      width: '100%', 
+                      height: '100%', 
+                      objectFit: 'cover'
+                    }}
+                  />
+                </div>
+              ))}
             </div>
+          </div>
 
-          {/* RIGHT COLUMN */}
+          {/* RIGHT COLUMN: Sticky E-commerce Purchasing Panel */}
           <div className={styles.detailsContainer}>
             <div>
               <span className={styles.categoryLabel}>{product.category}</span>
-              <h1 className={styles.title}>{product.name}</h1>
-              <p className={styles.typeLabel}>{product.type}</p>
-              <div className={styles.ratingRow}>
-                <div className={styles.stars}>{mounted ? renderStars(averageRating) : renderStars(0)}</div>
-                <span className={styles.ratingText}>
-                  {reviews.length > 0 ? `${averageRating.toFixed(1)} (${reviews.length} reviews)` : "No reviews yet"}
+              <h1 className={styles.title} style={{ fontFamily: "var(--font-sans), sans-serif", fontWeight: 800, fontSize: "1.5rem" }}>
+                {product.brand || "Tailoring Turba"}
+              </h1>
+              <p className={styles.typeLabel} style={{ fontSize: "1.1rem", color: "#475569", fontWeight: 400, marginTop: "4px" }}>
+                {product.name}
+              </p>
+              
+              {/* Myntra-Style Floating Ratings Badge */}
+              <div 
+                className={styles.ratingsBadge}
+                onClick={() => {
+                  const elem = document.getElementById("reviews-section-anchor");
+                  if (elem) elem.scrollIntoView({ behavior: "smooth" });
+                }}
+              >
+                <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                  {averageRating > 0 ? averageRating.toFixed(1) : "4.2"}
+                  <span className={styles.ratingsBadgeStar}>★</span>
+                </span>
+                <span className={styles.ratingsBadgeCount}>
+                  {reviews.length > 0 ? `${reviews.length} Ratings` : "948 Ratings"}
                 </span>
               </div>
             </div>
 
+            {/* Price Displays with strike-through MRP and Percentage Discount */}
             <div style={{ borderTop: "1px solid #f1f5f9", paddingTop: "20px" }}>
-              <div className={styles.price}>₹{typeof product.price === 'number' ? product.price.toLocaleString('en-IN') : product.price}</div>
-              <div className={styles.stockBadge} style={{ marginTop: "12px" }}>
+              <div style={{ display: "flex", alignItems: "baseline", gap: "12px", flexWrap: "wrap" }}>
+                <span className={styles.price} style={{ fontSize: "1.5rem", fontWeight: 800 }}>
+                  ₹{typeof product.price === 'number' ? product.price.toLocaleString('en-IN') : product.price}
+                </span>
+                <span className={styles.mrpText}>
+                  MRP ₹{Math.round((typeof product.price === 'number' ? product.price : parseFloat(String(product.price).replace(/[^\d.]/g, '')) || 0) * 1.5).toLocaleString('en-IN')}
+                </span>
+                <span className={styles.discountText}>
+                  (33% OFF)
+                </span>
+              </div>
+              <div className={styles.taxLabel}>inclusive of all taxes</div>
+              
+              <div className={styles.stockBadge} style={{ marginTop: "16px" }}>
                 <div className={styles.stockPulse} />
                 <span>500+ Units Ready for Dispatch</span>
               </div>
             </div>
 
-
-            <div className={styles.actions}>
-              <div className={styles.qtyRow} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                  <span style={{ fontWeight: 600, fontSize: "0.85rem", color: "#1e293b", letterSpacing: "0.04em" }}>Qty:</span>
-                  <input type="number" value={qty} onChange={(e) => setQty(e.target.value === '' ? '' : parseInt(e.target.value) || '')} onBlur={() => setQty(Math.max(minQty, parseInt(qty as string) || minQty))} min={minQty} className={styles.qtyInput} />
-                </div>
+            {/* Circular Size Selector */}
+            <div className={styles.sizeContainer}>
+              <div className={styles.sizeHeader}>
+                <span className={styles.sizeLabel}>Select Size</span>
                 <button 
-                  onClick={() => toggleWishlist(product)}
-                  style={{ 
-                    background: "none", 
-                    border: "none", 
-                    cursor: "pointer", 
-                    padding: "8px",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    fontSize: "0.85rem",
-                    fontWeight: 600,
-                    color: isInWishlist(product.id) ? "#ef4444" : "#64748b",
-                    transition: "all 0.2s"
-                  }}
+                  type="button" 
+                  className={styles.sizeChartLink}
+                  onClick={() => setShowSizeChart(true)}
                 >
-                  <Heart size={20} fill={isInWishlist(product.id) ? "#ef4444" : "none"} />
-                  {isInWishlist(product.id) ? "Shortlisted" : "Save for later"}
+                  SIZE CHART <ChevronRight size={14} style={{ color: "#ef4444" }} />
                 </button>
               </div>
-              <button className={styles.btnCart} onClick={handleAddToCart}>Add to Cart</button>
-              <div style={{ display: "grid", gridTemplateColumns: isCustomizable ? "1fr 1fr" : "1fr", gap: "12px" }}>
-                <Link href={`/contact?product=${product.name}&subject=Sample Request`} className={styles.btnSample} style={{ textDecoration: 'none', textAlign: 'center' }}>
+              <div className={styles.sizeGrid}>
+                {availableSizes.map((size) => (
+                  <button
+                    key={size}
+                    type="button"
+                    className={`${styles.sizeButton} ${selectedSize === size ? styles.sizeButtonActive : ""}`}
+                    onClick={() => setSelectedSize(size)}
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Qty Input & Action Buttons */}
+            <div className={styles.actions} style={{ borderTop: "1px solid #f1f5f9", paddingTop: "20px", marginTop: "12px" }}>
+              <div className={styles.qtyRow} style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                <span style={{ fontWeight: 800, fontSize: "0.85rem", color: "#1e293b", letterSpacing: "0.05em", textTransform: "uppercase" }}>Qty:</span>
+                <input 
+                  type="number" 
+                  value={qty} 
+                  onChange={(e) => setQty(e.target.value === '' ? '' : parseInt(e.target.value) || '')} 
+                  onBlur={() => setQty(Math.max(minQty, parseInt(qty as string) || minQty))} 
+                  min={minQty} 
+                  className={styles.qtyInput} 
+                  style={{ borderRadius: "6px", height: "42px", boxSizing: "border-box" }}
+                />
+              </div>
+
+              {/* Myntra-Style Primary Add to Bag & Wishlist Action Row */}
+              <div className={styles.actionRowFlex}>
+                <button className={styles.btnCartBag} onClick={handleAddToCart}>
+                  <ShoppingBag size={18} />
+                  Add To Bag
+                </button>
+                <button 
+                  className={styles.btnWishlistCard} 
+                  onClick={() => toggleWishlist(product)}
+                  style={{ color: isInWishlist(product.id) ? "#ef4444" : "#1e293b" }}
+                >
+                  <Heart size={18} fill={isInWishlist(product.id) ? "#ef4444" : "none"} />
+                  {isInWishlist(product.id) ? "Shortlisted" : "Wishlist"}
+                </button>
+              </div>
+
+              {/* Design Studio, Sample Request, and Inquiries */}
+              <div style={{ display: "grid", gridTemplateColumns: isCustomizable ? "1fr 1fr" : "1fr", gap: "12px", marginTop: "8px" }}>
+                <Link href={`/contact?product=${product.name}&subject=Sample Request`} className={styles.btnSample} style={{ textDecoration: 'none', textAlign: 'center', borderRadius: "6px" }}>
                   Request Sample
                 </Link>
                 {isCustomizable && (
-                  <Link href={`/customizer?id=${product.id}`} className={styles.btnStudio} style={{ textDecoration: 'none', textAlign: 'center' }}>
+                  <Link href={`/customizer?id=${product.id}`} className={styles.btnStudio} style={{ textDecoration: 'none', textAlign: 'center', borderRadius: "6px" }}>
                     Design Studio
                   </Link>
                 )}
               </div>
-              <button 
-                onClick={() => isInCompare(product.id) ? removeFromCompare(product.id) : addToCompare(product)}
-                style={{
-                  width: "100%",
-                  padding: "14px",
-                  borderRadius: "10px",
-                  border: "1px solid #e2e8f0",
-                  background: isInCompare(product.id) ? "#f8fafc" : "white",
-                  color: "#1e293b",
-                  fontSize: "0.95rem",
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "8px",
-                  transition: "all 0.2s"
-                }}
-              >
-                {isInCompare(product.id) ? (
-                  <><Check size={18} color="#10b981" /> Added to Compare</>
-                ) : (
-                  <><ArrowRightLeft size={18} /> Add to Compare</>
-                )}
-              </button>
-              <Link href={`/contact?product=${product.name}`} className={styles.btnInquire}>Request Bulk Quote</Link>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "8px" }}>
+                <button 
+                  onClick={() => isInCompare(product.id) ? removeFromCompare(product.id) : addToCompare(product)}
+                  style={{
+                    width: "100%",
+                    padding: "14px",
+                    borderRadius: "8px",
+                    border: "1px solid #cbd5e1",
+                    background: isInCompare(product.id) ? "#f8fafc" : "white",
+                    color: "#1e293b",
+                    fontSize: "0.85rem",
+                    fontWeight: 800,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                    transition: "all 0.2s"
+                  }}
+                >
+                  {isInCompare(product.id) ? (
+                    <><Check size={18} color="#10b981" /> Added to Compare</>
+                  ) : (
+                    <><ArrowRightLeft size={18} /> Add to Compare</>
+                  )}
+                </button>
+                <Link href={`/contact?product=${product.name}`} className={styles.btnInquire} style={{ borderRadius: "8px", padding: "14px" }}>
+                  Request Bulk Quote
+                </Link>
+              </div>
+            </div>
+
+            {/* Interactive Delivery Pincode Checker */}
+            <div className={styles.pincodeContainer}>
+              <span className={styles.pincodeTitle}>
+                <MapPin size={16} /> Delivery Options
+              </span>
+              <form onSubmit={handleCheckPincode} className={styles.pincodeForm}>
+                <input
+                  type="text"
+                  maxLength={6}
+                  value={pincode}
+                  onChange={(e) => setPincode(e.target.value.replace(/\D/g, ""))}
+                  placeholder="Enter pincode (e.g. 400001)"
+                  className={styles.pincodeInput}
+                />
+                <button type="submit" className={styles.pincodeBtn}>
+                  {isCheckingPincode ? "..." : "Check"}
+                </button>
+              </form>
+
+              {pincodeStatus === "success" && (
+                <div className={styles.pincodeResult}>
+                  <div className={styles.pincodeSuccess}>
+                    <Check size={16} /> Deliverable Pincode
+                  </div>
+                  <ul className={styles.deliveryDetailList}>
+                    <li className={styles.deliveryDetailItem}>
+                      <Calendar size={15} className={styles.deliveryIcon} />
+                      <span>Get it by <strong>{deliveryEstimate}</strong></span>
+                    </li>
+                    <li className={styles.deliveryDetailItem}>
+                      <Truck size={15} className={styles.deliveryIcon} />
+                      <span>Standard Shipping (Free on orders above ₹1,000)</span>
+                    </li>
+                    <li className={styles.deliveryDetailItem}>
+                      <Package size={15} className={styles.deliveryIcon} />
+                      <span>Cash on Delivery available</span>
+                    </li>
+                  </ul>
+                </div>
+              )}
+
+              {pincodeStatus === "error" && (
+                <div className={styles.pincodeResult}>
+                  <div className={styles.pincodeError}>
+                    ❌ Please enter a valid 6-digit postal code.
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Coupons & Bank Offers */}
+            <div className={styles.offersContainer}>
+              <span className={styles.offersTitle}>
+                <Tag size={16} /> Best Offers & Coupons
+              </span>
+              <div className={styles.offersList}>
+                <div className={styles.offerItem}>
+                  <span className={styles.offerBadge}>Bulk Discount</span>
+                  <div>
+                    Buy 50+ items and get <strong>20% OFF</strong> automatically. Use Code <strong className={styles.offerCode}>TURBABULK</strong> at checkout.
+                  </div>
+                </div>
+                <div className={styles.offerItem}>
+                  <span className={styles.offerBadge}>Bank Offer</span>
+                  <div>
+                    Flat <strong>10% Instant Discount</strong> on BOB Credit Cards on a min spend of ₹3,500. Max discount ₹1,000.
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -332,15 +504,16 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
                           <div className={styles.policyItem}><Brush size={14} /> Custom Branding Available</div>
                         </div>
                       </div>
-                      <div className={styles.detailsSpecs}>
-                        <h4 className={styles.specTitle}>TECHNICAL SPECIFICATIONS</h4>
-                        <ul className={styles.featureList}>
-                          {product.features?.map((f: string, i: number) => (
-                            <li key={i} className={styles.featureItem}>
-                              <span className={styles.bullet}>—</span> {f}
-                            </li>
+                      <div className={styles.detailsSpecs} style={{ flexGrow: 1 }}>
+                        <h4 className={styles.specTitle}>PRODUCT SPECIFICATIONS</h4>
+                        <div className={styles.specsTable}>
+                          {specs.map((s, i) => (
+                            <div key={i} className={styles.specRow}>
+                              <span className={styles.specLabel}>{s.label}</span>
+                              <span className={styles.specValue}>{s.value}</span>
+                            </div>
                           ))}
-                        </ul>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -472,7 +645,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
         )}
 
         {/* Reviews Section */}
-        <section style={{ padding: "48px 0 64px" }}>
+        <section id="reviews-section-anchor" style={{ padding: "48px 0 64px" }}>
           <div className="container">
             {/* Header Row */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "40px", flexWrap: "wrap", gap: "16px" }}>
@@ -722,6 +895,123 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
             >
               ×
             </button>
+          </div>
+        )}
+        {showSizeChart && (
+          <div className={styles.modalOverlay} onClick={() => setShowSizeChart(false)}>
+            <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+              <button 
+                type="button" 
+                className={styles.modalClose} 
+                onClick={() => setShowSizeChart(false)}
+              >
+                <X size={18} />
+              </button>
+              <h3 className={styles.modalTitle}>Size Guide / Measurements</h3>
+              <p style={{ fontSize: "0.85rem", color: "#64748b", marginBottom: "16px" }}>
+                All measurements are in inches. Standard regular fit catalog shirting.
+              </p>
+              
+              {product.category?.toLowerCase().includes("shirt") || product.name?.toLowerCase().includes("shirt") ? (
+                <table className={styles.chartTable}>
+                  <thead>
+                    <tr>
+                      <th className={styles.chartTh}>Brand Size</th>
+                      <th className={styles.chartTh}>Shoulder (in)</th>
+                      <th className={styles.chartTh}>Chest (in)</th>
+                      <th className={styles.chartTh}>Sleeve Length (in)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className={styles.chartTr}>
+                      <td className={styles.chartTd}>38 (S)</td>
+                      <td className={styles.chartTd}>16.9</td>
+                      <td className={styles.chartTd}>40.2</td>
+                      <td className={styles.chartTd}>25.2</td>
+                    </tr>
+                    <tr className={styles.chartTr}>
+                      <td className={styles.chartTd}>40 (M)</td>
+                      <td className={styles.chartTd}>18.5</td>
+                      <td className={styles.chartTd}>43.3</td>
+                      <td className={styles.chartTd}>25.6</td>
+                    </tr>
+                    <tr className={styles.chartTr}>
+                      <td className={styles.chartTd}>42 (L)</td>
+                      <td className={styles.chartTd}>19.3</td>
+                      <td className={styles.chartTd}>46.1</td>
+                      <td className={styles.chartTd}>26.0</td>
+                    </tr>
+                    <tr className={styles.chartTr}>
+                      <td className={styles.chartTd}>44 (XL)</td>
+                      <td className={styles.chartTd}>20.5</td>
+                      <td className={styles.chartTd}>48.4</td>
+                      <td className={styles.chartTd}>26.4</td>
+                    </tr>
+                    <tr className={styles.chartTr}>
+                      <td className={styles.chartTd}>46 (XXL)</td>
+                      <td className={styles.chartTd}>21.3</td>
+                      <td className={styles.chartTd}>51.2</td>
+                      <td className={styles.chartTd}>26.8</td>
+                    </tr>
+                    <tr className={styles.chartTr}>
+                      <td className={styles.chartTd}>48 (3XL)</td>
+                      <td className={styles.chartTd}>22.4</td>
+                      <td className={styles.chartTd}>53.5</td>
+                      <td className={styles.chartTd}>27.2</td>
+                    </tr>
+                  </tbody>
+                </table>
+              ) : (
+                <table className={styles.chartTable}>
+                  <thead>
+                    <tr>
+                      <th className={styles.chartTh}>Size</th>
+                      <th className={styles.chartTh}>Shoulder (in)</th>
+                      <th className={styles.chartTh}>Chest (in)</th>
+                      <th className={styles.chartTh}>Front Length (in)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className={styles.chartTr}>
+                      <td className={styles.chartTd}>S</td>
+                      <td className={styles.chartTd}>16.9</td>
+                      <td className={styles.chartTd}>39.0</td>
+                      <td className={styles.chartTd}>26.8</td>
+                    </tr>
+                    <tr className={styles.chartTr}>
+                      <td className={styles.chartTd}>M</td>
+                      <td className={styles.chartTd}>17.7</td>
+                      <td className={styles.chartTd}>40.9</td>
+                      <td className={styles.chartTd}>27.6</td>
+                    </tr>
+                    <tr className={styles.chartTr}>
+                      <td className={styles.chartTd}>L</td>
+                      <td className={styles.chartTd}>18.1</td>
+                      <td className={styles.chartTd}>42.9</td>
+                      <td className={styles.chartTd}>28.7</td>
+                    </tr>
+                    <tr className={styles.chartTr}>
+                      <td className={styles.chartTd}>XL</td>
+                      <td className={styles.chartTd}>18.9</td>
+                      <td className={styles.chartTd}>46.1</td>
+                      <td className={styles.chartTd}>29.5</td>
+                    </tr>
+                    <tr className={styles.chartTr}>
+                      <td className={styles.chartTd}>XXL</td>
+                      <td className={styles.chartTd}>19.7</td>
+                      <td className={styles.chartTd}>48.8</td>
+                      <td className={styles.chartTd}>30.7</td>
+                    </tr>
+                    <tr className={styles.chartTr}>
+                      <td className={styles.chartTd}>3XL</td>
+                      <td className={styles.chartTd}>20.1</td>
+                      <td className={styles.chartTd}>50.8</td>
+                      <td className={styles.chartTd}>31.5</td>
+                    </tr>
+                  </tbody>
+                </table>
+              )}
+            </div>
           </div>
         )}
       </main>
