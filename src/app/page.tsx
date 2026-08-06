@@ -5,6 +5,7 @@ import EditorialWelcome from "@/components/landing/EditorialWelcome";
 import CategoryCarousel from "@/components/landing/CategoryCarousel";
 import FeaturesGrid from "@/components/landing/FeaturesGrid";
 import TargetAudienceGrid from "@/components/landing/TargetAudienceGrid";
+import CustomizationEducation from "@/components/landing/CustomizationEducation";
 import AppShowcase from "@/components/landing/AppShowcase";
 
 export default function Home() {
@@ -30,6 +31,9 @@ export default function Home() {
 
       {/* 7. Who we serve */}
       <TargetAudienceGrid />
+
+      {/* 7.5 Customization Printing Education Section */}
+      <CustomizationEducation />
 
       {/* 8. App showcase */}
       <AppShowcase />
