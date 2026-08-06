@@ -184,7 +184,7 @@ const productCatalogData: ProductItem[] = [
     brandName: "Monte Carlo",
     title: "Monte Carlo Classic Oxford Shirt",
     category: "Oxford Shirts",
-    image: "/TT%20Luxe/extracted/monte_carlo_oxford_shirt_p2_2__Im44_crop.jpg",
+    image: "/TT%20Luxe/extracted/monte_carlo_oxford_shirt_pos2.jpg",
     gsm: "180 GSM",
     fabric: "Fine Cotton Oxford Weave",
     moq: "10 Pieces",
