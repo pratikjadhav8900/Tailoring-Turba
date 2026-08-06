@@ -42,7 +42,7 @@ const productCatalogData: ProductItem[] = [
     brandName: "Allen Solly",
     title: "Allen Solly Executive Oxford Shirt",
     category: "Oxford Shirts",
-    image: "/TT%20Luxe/extracted/allen_solly_new_1_p1_1__X0.jpg",
+    image: "/TT%20Luxe/extracted/allen_solly_new_1_p3_11__X20.jpg",
     gsm: "190 GSM",
     fabric: "Combed Oxford Soft Cotton",
     moq: "10 Pieces",
@@ -217,6 +217,118 @@ const productCatalogData: ProductItem[] = [
     pdfPath: "/TT%20Luxe/US%20POLO%20PREMIUM%20COTTON%20SHIRT.pdf",
     pdfName: "US Polo Premium Shirt Specs (PDF)",
     colors: ["#3B82F6", "#0F172A", "#15803D"]
+  },
+  {
+    id: "prod-14",
+    brandId: "jack-jones",
+    brandName: "Jack & Jones",
+    title: "Jack & Jones Premium Slim Fit Polo",
+    category: "Polos",
+    image: "/TT%20Luxe/extracted/jack&jones_veromoda___stock_report_06.03.2026_p10_10__X1.jpg",
+    gsm: "220 GSM",
+    fabric: "100% Pique Cotton",
+    moq: "10 Pieces",
+    pdfPath: "/TT%20Luxe/Jack&Jones_VeroModa%20-%20Stock%20Report%2006.03.2026.pdf",
+    pdfName: "Jack & Jones Stock Collection (PDF)",
+    colors: ["#0F172A", "#FFFFFF", "#1E3A8A", "#64748B"]
+  },
+  {
+    id: "prod-15",
+    brandId: "jack-jones",
+    brandName: "Jack & Jones",
+    title: "Jack & Jones Comfort Crewneck Tee",
+    category: "T-Shirts",
+    image: "/TT%20Luxe/extracted/jack&jones_veromoda___stock_report_06.03.2026_p12_12__X1.jpg",
+    gsm: "190 GSM",
+    fabric: "100% Combed Premium Cotton",
+    moq: "10 Pieces",
+    pdfPath: "/TT%20Luxe/Jack&Jones_VeroModa%20-%20Stock%20Report%2006.03.2026.pdf",
+    pdfName: "Jack & Jones Classic Catalog (PDF)",
+    colors: ["#FFFFFF", "#18181B", "#64748B", "#E5E7EB"]
+  },
+  {
+    id: "prod-16",
+    brandId: "being-human",
+    brandName: "Being Human",
+    title: "Being Human Classic Graphic Tee",
+    category: "T-Shirts",
+    image: "/TT%20Luxe/extracted/being_human_t_shirt__p1_2__Image11.png",
+    gsm: "180 GSM",
+    fabric: "100% Combed Bio-Wash Cotton",
+    moq: "10 Pieces",
+    pdfPath: "/TT%20Luxe/being%20human%20t%20shirt%20.pdf",
+    pdfName: "Being Human Tees Catalogue (PDF)",
+    colors: ["#FFFFFF", "#0F172A", "#B91C1C", "#1D4ED8"]
+  },
+  {
+    id: "prod-17",
+    brandId: "being-human",
+    brandName: "Being Human",
+    title: "Being Human Signature Polo",
+    category: "Polos",
+    image: "/TT%20Luxe/extracted/being_human_t_shirt__p2_4__Image15.jpg",
+    gsm: "210 GSM",
+    fabric: "Soft Combed Cotton Blend",
+    moq: "10 Pieces",
+    pdfPath: "/TT%20Luxe/being%20human%20t%20shirt%20.pdf",
+    pdfName: "Being Human Signature Catalogue (PDF)",
+    colors: ["#1E3A8A", "#FFFFFF", "#15803D", "#475569"]
+  },
+  {
+    id: "prod-18",
+    brandId: "benetton",
+    brandName: "Benetton",
+    title: "Benetton United Colors Crewneck Tee",
+    category: "T-Shirts",
+    image: "/TT%20Luxe/extracted/benetton_p1_1__Im0.jpg",
+    gsm: "190 GSM",
+    fabric: "100% Premium Combed Cotton",
+    moq: "10 Pieces",
+    pdfPath: "/TT%20Luxe/Benetton.pdf",
+    pdfName: "Benetton Classic Collection (PDF)",
+    colors: ["#FFFFFF", "#111827", "#15803D", "#DC2626"]
+  },
+  {
+    id: "prod-19",
+    brandId: "benetton",
+    brandName: "Benetton",
+    title: "Benetton Pique Cotton Polo",
+    category: "Polos",
+    image: "/TT%20Luxe/extracted/benetton_p2_3__Im0.jpg",
+    gsm: "220 GSM",
+    fabric: "100% Cotton Pique Knit",
+    moq: "10 Pieces",
+    pdfPath: "/TT%20Luxe/Benetton.pdf",
+    pdfName: "Benetton Polo Collection (PDF)",
+    colors: ["#FFFFFF", "#1E3A8A", "#064E3B", "#475569"]
+  },
+  {
+    id: "prod-20",
+    brandId: "puma",
+    brandName: "Puma",
+    title: "Puma DryCell Athletic Tee",
+    category: "Activewear",
+    image: "/TT%20Luxe/extracted/puma_mrp_new_25__p10_10__Image36.jpg",
+    gsm: "180 GSM",
+    fabric: "Moisture-Wicking DryCell Polyester",
+    moq: "10 Pieces",
+    pdfPath: "/TT%20Luxe/Puma%20MRP%20New%2025%20.pdf",
+    pdfName: "Puma Sports Activewear Specs (PDF)",
+    colors: ["#18181B", "#FFFFFF", "#E5E7EB", "#1D4ED8"]
+  },
+  {
+    id: "prod-21",
+    brandId: "puma",
+    brandName: "Puma",
+    title: "Puma Training Active Sweatshirt",
+    category: "Jackets",
+    image: "/TT%20Luxe/extracted/puma_mrp_new_25__p12_12__Image45.jpg",
+    gsm: "290 GSM",
+    fabric: "Poly-Cotton Sports Fleece",
+    moq: "10 Pieces",
+    pdfPath: "/TT%20Luxe/Puma%20MRP%20New%2025%20.pdf",
+    pdfName: "Puma Outerwear Catalogue (PDF)",
+    colors: ["#18181B", "#64748B", "#1E3A8A"]
   }
 ];
 
@@ -225,7 +337,11 @@ const brandFilterList = [
   { id: "allen-solly", label: "ALLEN SOLLY" },
   { id: "adidas", label: "ADIDAS" },
   { id: "us-polo", label: "US POLO ASSN." },
-  { id: "monte-carlo", label: "MONTE CARLO" }
+  { id: "monte-carlo", label: "MONTE CARLO" },
+  { id: "jack-jones", label: "JACK & JONES" },
+  { id: "being-human", label: "BEING HUMAN" },
+  { id: "benetton", label: "BENETTON" },
+  { id: "puma", label: "PUMA" }
 ];
 
 const categoryFilterList = ["All Categories", "Polos", "Jackets", "Activewear", "Oxford Shirts", "T-Shirts"];
