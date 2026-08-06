@@ -680,31 +680,44 @@
   transform: translateY(-2px);
 }
 
-/* Branded Catalog Filters */
+/* Premium Glassmorphic Catalog Filters Panel */
 .catalogueFilterCard {
-  background-color: #FFFFFF;
-  border: 1px solid #E5E7EB;
-  border-radius: 12px;
-  padding: 24px;
-  margin-bottom: 28px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(27, 59, 43, 0.1);
+  border-radius: 16px;
+  padding: 28px 32px;
+  margin-bottom: 32px;
+  box-shadow: 0 10px 30px -10px rgba(27, 59, 43, 0.05),
+              0 1px 3px rgba(0, 0, 0, 0.02);
+  transition: all 0.3s ease;
+}
+
+.catalogueFilterCard:hover {
+  border-color: rgba(27, 59, 43, 0.2);
+  box-shadow: 0 12px 35px -8px rgba(27, 59, 43, 0.07),
+              0 1px 4px rgba(0, 0, 0, 0.02);
 }
 
 .filterRow {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 20px;
   width: 100%;
 }
 
 .filterRowLabel {
-  width: 100px;
+  width: 110px;
   font-size: 0.72rem;
   font-weight: 800;
-  color: #9CA3AF;
-  letter-spacing: 0.08em;
+  color: #1B3B2B;
+  opacity: 0.8;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .filterPillsGroup {
@@ -715,65 +728,84 @@
 }
 
 .filterPillCompact {
-  background-color: #F3F4F6;
-  border: 1px solid #E5E7EB;
+  background-color: rgba(27, 59, 43, 0.03);
+  border: 1px solid rgba(27, 59, 43, 0.08);
   color: #4B5563;
-  padding: 6px 14px;
-  border-radius: 6px;
+  padding: 8px 16px;
+  border-radius: 8px;
   font-size: 0.75rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s ease;
+  letter-spacing: 0.02em;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .filterPillCompact:hover {
-  background-color: #E5E7EB;
-  color: #111827;
+  background-color: rgba(27, 59, 43, 0.08);
+  border-color: rgba(27, 59, 43, 0.25);
+  color: #1B3B2B;
+  transform: translateY(-1px);
 }
 
 .filterPillCompactActive {
   background-color: #1B3B2B !important;
   border-color: #1B3B2B !important;
   color: #FFFFFF !important;
+  box-shadow: 0 4px 14px rgba(27, 59, 43, 0.25);
+  transform: translateY(-1px);
 }
 
 .catTabCompact {
   background: transparent;
-  border: 1px solid transparent;
+  border: 1px solid rgba(27, 59, 43, 0.05);
   color: #6B7280;
   font-size: 0.75rem;
   font-weight: 700;
-  padding: 6px 14px;
-  border-radius: 6px;
+  padding: 8px 16px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .catTabCompact:hover {
-  color: #111827;
-  background-color: #F1F5F9;
+  color: #1B3B2B;
+  background-color: rgba(27, 59, 43, 0.04);
+  border-color: rgba(27, 59, 43, 0.15);
+  transform: translateY(-1px);
 }
 
 .catTabCompactActive {
   color: #1B3B2B !important;
   background-color: rgba(27, 59, 43, 0.08) !important;
+  border-color: rgba(27, 59, 43, 0.2) !important;
+  box-shadow: 0 4px 10px rgba(27, 59, 43, 0.08);
+  transform: translateY(-1px);
 }
 
 .resultsHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+  padding-left: 4px;
 }
 
 @media (max-width: 768px) {
+  .catalogueFilterCard {
+    padding: 20px;
+  }
+  
   .filterRow {
     flex-direction: column;
     align-items: flex-start;
-    gap: 8px;
+    gap: 10px;
   }
   
   .filterRowLabel {
     width: auto;
+    margin-bottom: 2px;
   }
 }

@@ -16,7 +16,9 @@ import {
   Filter,
   CheckCircle2,
   ExternalLink,
-  Sparkles
+  Sparkles,
+  Activity,
+  Shirt
 } from "lucide-react";
 import styles from "./page.module.css";
 
@@ -402,6 +404,23 @@ const brandFilterList = [
 
 const categoryFilterList = ["All Categories", "Polos", "Jackets", "Activewear", "Oxford Shirts", "T-Shirts"];
 
+const getCategoryIcon = (category: string) => {
+  switch (category) {
+    case "Polos":
+      return <Sparkles size={13} style={{ opacity: 0.9 }} />;
+    case "Jackets":
+      return <Layers size={13} style={{ opacity: 0.9 }} />;
+    case "Activewear":
+      return <Award size={13} style={{ opacity: 0.9 }} />;
+    case "Oxford Shirts":
+      return <ShieldCheck size={13} style={{ opacity: 0.9 }} />;
+    case "T-Shirts":
+      return <Scissors size={13} style={{ opacity: 0.9 }} />;
+    default:
+      return <Filter size={13} style={{ opacity: 0.9 }} />;
+  }
+};
+
 export default function TTLuxeBrandedPage() {
   const [selectedBrand, setSelectedBrand] = useState<string>("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("All Categories");
@@ -489,6 +508,14 @@ export default function TTLuxeBrandedPage() {
         <div className={styles.container}>
           {/* Branded Catalogue Interactive Filters */}
           <div className={styles.catalogueFilterCard}>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "20px", borderBottom: "1px solid rgba(27, 59, 43, 0.08)", paddingBottom: "14px" }}>
+              <Filter size={16} style={{ color: "#1B3B2B", opacity: 0.8 }} />
+              <div>
+                <h4 style={{ margin: 0, fontSize: "0.85rem", fontWeight: 800, color: "#1B3B2B", letterSpacing: "0.06em", textTransform: "uppercase" }}>FILTER BY BRAND & APPAREL</h4>
+                <p style={{ margin: "2px 0 0 0", fontSize: "0.72rem", color: "#6B7280" }}>Select a brand and category to narrow down your custom apparel sourcing</p>
+              </div>
+            </div>
+
             {/* 1. Brands Row */}
             <div className={styles.filterRow}>
               <span className={styles.filterRowLabel}>Brands:</span>
@@ -506,7 +533,7 @@ export default function TTLuxeBrandedPage() {
             </div>
 
             {/* 2. Categories Row */}
-            <div className={styles.filterRow} style={{ marginTop: "16px", borderTop: "1px dashed #e5e7eb", paddingTop: "16px" }}>
+            <div className={styles.filterRow} style={{ marginTop: "20px", borderTop: "1px solid rgba(27, 59, 43, 0.08)", paddingTop: "20px" }}>
               <span className={styles.filterRowLabel}>Categories:</span>
               <div className={styles.filterPillsGroup}>
                 {categoryFilterList.map((cat) => (
@@ -515,6 +542,7 @@ export default function TTLuxeBrandedPage() {
                     onClick={() => setSelectedCategory(cat)}
                     className={`${styles.catTabCompact} ${selectedCategory === cat ? styles.catTabCompactActive : ""}`}
                   >
+                    {getCategoryIcon(cat)}
                     {cat}
                   </button>
                 ))}
