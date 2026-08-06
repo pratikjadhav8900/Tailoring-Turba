@@ -195,6 +195,33 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
     product.name?.toLowerCase().includes("hoodie")
   );
 
+  const getProductDescription = () => {
+    if (product.description && product.description.trim().length > 10) {
+      return product.description;
+    }
+    
+    const category = product.category?.toLowerCase() || "";
+    const name = product.name?.toLowerCase() || "";
+    
+    if (category.includes("polo") || name.includes("polo")) {
+      return `This premium custom corporate polo is designed for maximum daily comfort and team presentation. Featuring durable double-needle stitching, rich fabric weight, and excellent color fastness. Ready for custom logo embroidery or printing.`;
+    }
+    if (category.includes("t-shirt") || name.includes("t-shirt") || name.includes("crewneck") || name.includes("round neck")) {
+      return `A classic crewneck custom t-shirt engineered for daily comfort and brand promotions. Made from combed, bio-washed cotton/dryfit fibers to ensure a soft skin-feel and superior print results.`;
+    }
+    if (category.includes("shirt") || name.includes("shirt")) {
+      return `A classic shirting essential tailored for professional boardroom meetings and smart-casual corporate attire. Crafted with high-grade shirting fibers, offering a clean, breathable structure that keeps you sharp all day.`;
+    }
+    if (category.includes("hoodie") || name.includes("hoodie") || name.includes("jacket") || category.includes("winter")) {
+      return `Keep your team warm with this premium winterwear collection. Featuring heavyweight fleece poly-cotton fabric, sturdy lining, and a comfortable relaxed fit. Perfect for corporate gifting and employee kits.`;
+    }
+    if (category.includes("trouser") || name.includes("trouser") || name.includes("pant")) {
+      return `Premium formal trousers constructed with stretch-infused poly-viscose fabric for optimal comfort and crease-resistance. Features tailored pocketing and waistband details suitable for standard boardroom dressing.`;
+    }
+    
+    return `Premium custom apparel tailored for corporate branding, team uniforms, and promotional merchandise. Crafted from hand-selected fabrics to ensure excellent wearability, durability, and printing compliance.`;
+  };
+
   const specs = [
     { label: "Fabric", value: product.fabric || (product.features?.[0]?.includes("GSM") ? product.features[0].split(" ").slice(2).join(" ") : product.features?.[0]) || "Premium Fabric" },
     { label: "GSM / Weight", value: product.features?.find((f: string) => f.includes("GSM"))?.split(" ")?.[0] || product.gsm || "220 GSM" },
@@ -497,9 +524,19 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
                 {openAccordion === 'details' && (
                   <div className={styles.accordionContent}>
                     <div className={styles.detailsGrid}>
-                      <div className={styles.detailsStory}>
-                        <p className={styles.description}>{product.description}</p>
-                        <div className={styles.policyStripCompact}>
+                      <div className={styles.detailsStory} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                        <p className={styles.description} style={{ margin: 0 }}>{getProductDescription()}</p>
+                        
+                        <div style={{ borderTop: "1px solid #f1f5f9", paddingTop: "12px", marginTop: "4px" }}>
+                          <h5 style={{ fontSize: "0.75rem", fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "8px" }}>Material & Care</h5>
+                          <p style={{ fontSize: "0.85rem", color: "#64748b", margin: 0 }}>
+                            {product.name?.toLowerCase().includes("dryfit") || product.type?.toLowerCase().includes("dryfit")
+                              ? "100% Micro Polyester Dryfit fabric. Machine wash cold with like colors, do not iron on print."
+                              : "100% Premium Combed Cotton, Bio-Washed. Machine wash cold, tumble dry low."}
+                          </p>
+                        </div>
+                        
+                        <div className={styles.policyStripCompact} style={{ borderTop: "1px solid #f1f5f9", paddingTop: "12px" }}>
                           <div className={styles.policyItem}><RotateCcw size={14} /> 7-Day Inspection Period</div>
                           <div className={styles.policyItem}><Brush size={14} /> Custom Branding Available</div>
                         </div>
