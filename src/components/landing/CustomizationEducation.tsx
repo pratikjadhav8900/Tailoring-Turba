@@ -24,17 +24,17 @@ const printMethods: PrintMethod[] = [
     name: "Embroidery",
     icon: Sparkles,
     title: "Computerized Embroidery",
-    description: "Premium stitched branding using high-speed industrial computerized sewing lines. Threads are tightly woven directly into the fabric to create a raised, luxury embossed logo that conveys institutional quality.",
-    bestFor: "Corporate Polo Shirts, Oxford Shirts, Blazers, Uniform Jackets, and Structured Caps.",
-    fabrics: "Heavy cotton, Pique Knits, Poly-Cotton blends, Fleece, and heavy canvas.",
-    durability: "Excellent. Outlasts the garment itself. Will not fade, peel, or crack under repetitive commercial laundering.",
-    costProfile: "Embroidery card/digitization fee applies for new setups. Highly cost-effective for recurring corporate orders.",
-    proTip: "Perfect for chest logos. Avoid embroidery for very large designs (e.g. full back prints) as it makes the garment heavy and stiff against the skin.",
+    description: "Classic, high-quality thread work stitched directly onto the fabric. Gives a clean, slightly raised logo that looks professional and never fades.",
+    bestFor: "Corporate polo shirts, uniform shirts, jackets, hoodies, and caps.",
+    fabrics: "Thicker materials like pique cotton, fleece, canvas, and poly-blends.",
+    durability: "Top-tier. Outlasts the garment. Machine wash as much as you want.",
+    costProfile: "One-time digitization/setup fee. Very cheap for repeat bulk orders.",
+    proTip: "Great for chest or sleeve logos. Avoid full-back designs as stitched embroidery makes the fabric stiff and heavy.",
     details: [
-      "Rich 3D embossed look and texture",
-      "Up to 15 thread colors per design",
-      "Excellent color fastness",
-      "Resistant to high-temp ironing"
+      "Premium embossed texture",
+      "Rich, professional look",
+      "Safe to iron directly",
+      "Won't peel or fade"
     ]
   },
   {
@@ -42,17 +42,17 @@ const printMethods: PrintMethod[] = [
     name: "Screen Printing",
     icon: Layers,
     title: "Precision Screen Printing",
-    description: "The classic industry standard for bulk apparel customization. Uses stencils (screens) to apply layers of durable ink onto the garment surface, resulting in bold, vibrant colors with high opacity.",
-    bestFor: "High-volume promotional T-Shirts, Event Tees, Crewnecks, and Canvas Tote Bags.",
-    fabrics: "100% Cotton, Cotton-Poly blends, and standard canvas materials.",
-    durability: "High. Long-lasting colors that resist fading. Over several years, minor ink cracking may occur if tumble-dried hot.",
-    costProfile: "High setup cost per color (screen creation), but extremely low unit cost. Ideal for orders of 100+ units.",
-    proTip: "Limit your design to 1-3 solid colors for maximum budget efficiency. Each additional color requires a separate screen, which increases setup costs.",
+    description: "The industry standard for bulk t-shirts. Uses screens to press ink onto the fabric, creating sharp, solid colors that pop.",
+    bestFor: "Promotional t-shirts, events, custom bags, and crewnecks.",
+    fabrics: "100% cotton, poly-cotton blends, and canvas.",
+    durability: "Long-lasting. To prevent cracking over the years, wash inside-out.",
+    costProfile: "Low unit cost for big runs. Best for simple 1-3 color logos.",
+    proTip: "Keep the colors limited to save money. Adding colors means more screens, which adds to the setup cost.",
     details: [
-      "Extremely vibrant ink colors",
-      "Most cost-effective for large bulk orders",
-      "Works best on solid block designs",
-      "Smooth, uniform ink finish"
+      "Vibrant, solid ink",
+      "Vast range of colors",
+      "Best price for bulk",
+      "Smooth, clean finish"
     ]
   },
   {
@@ -60,17 +60,17 @@ const printMethods: PrintMethod[] = [
     name: "DTG (Direct to Garment)",
     icon: Shirt,
     title: "Direct to Garment Digital Print",
-    description: "High-resolution digital inkjet printing directly onto the fabric fibers (similar to a paper printer). Excellent for complex, multi-colored designs, photographs, and high-detail gradient artwork.",
-    bestFor: "Bespoke designer t-shirts, small batch merchandise, and highly detailed artistic prints.",
-    fabrics: "100% Combed Cotton or high-cotton blends (minimum 80% cotton is recommended for ink absorption).",
-    durability: "Medium. Ink fuses with fibers, resulting in a soft feel. Colors fade gradually over 40+ washes.",
-    costProfile: "Zero setup fee. Flat cost per print, making it perfect for custom low-volume runs (10-50 units).",
-    proTip: "Great for quick-turnaround samples or colorful gradient logos. Always wash inside out in cold water to preserve print details.",
+    description: "Like printing on paper, but for t-shirts. Specialized fabric printers spray ink directly onto cotton fibers, capturing every tiny detail and color.",
+    bestFor: "Complex multi-color logos, colorful artwork, and small runs.",
+    fabrics: "100% cotton works best.",
+    durability: "Soft feel, no heavy ink print. Fades slightly over time, like vintage tees.",
+    costProfile: "No setup fees. Perfect for smaller, highly detailed orders.",
+    proTip: "Perfect if your logo has gradients or photos. Wash inside-out in cold water.",
     details: [
-      "Unlimited colors and smooth gradients",
-      "Ultra-soft feel (no thick ink layer)",
-      "Zero setup costs or plate charges",
-      "Ideal for photography and fine art prints"
+      "Unlimited print colors",
+      "Super soft to touch",
+      "Zero setup costs",
+      "Perfect for gradients"
     ]
   },
   {
@@ -78,17 +78,17 @@ const printMethods: PrintMethod[] = [
     name: "Sublimation",
     icon: Activity,
     title: "Dye Sublimation Printing",
-    description: "Heat-activated dyes are chemically gas-fused directly into polyester fibers. The print becomes part of the fabric itself, meaning there is absolutely zero physical ink feel and maximum breathability.",
-    bestFor: "Athletic uniforms, dryfit corporate polo shirts, custom sports jerseys, and high-performance cycling wear.",
-    fabrics: "100% Polyester or high-polyester active fabrics only (White or light colors).",
-    durability: "Maximum. The print will never crack, peel, or fade, even under sweat, stretching, or daily washing.",
-    costProfile: "Low setup fees, highly efficient for full-surface all-over printing (AOP).",
-    proTip: "Choose this for corporate sports days, gyms, or outdoor workers who require light, breathable, moisture-wicking uniforms.",
+    description: "Dye is chemically infused directly into polyester fibers using heat. The print literally becomes part of the shirt, meaning there is zero physical ink texture.",
+    bestFor: "Sports jerseys, activewear, dry-fit polos, and gym wear.",
+    fabrics: "100% polyester only (white or light colors).",
+    durability: "Will never fade, crack, or peel—even with intense sweat and sports washing.",
+    costProfile: "Cost-effective, perfect for full-coverage prints.",
+    proTip: "Choose this if you need moisture-wicking, breathable uniforms for sports or hot environments.",
     details: [
-      "100% breathable with zero ink weight",
-      "All-over print (AOP) seamless graphics",
-      "Colors stay vibrant forever",
-      "No cracking or peeling possible"
+      "100% breathable",
+      "Print is part of fabric",
+      "Never fades or cracks",
+      "Full all-over print (AOP)"
     ]
   },
   {
@@ -96,17 +96,17 @@ const printMethods: PrintMethod[] = [
     name: "DTF / Heat Transfer",
     icon: Flame,
     title: "Direct to Film & Heat Transfer",
-    description: "Artwork is digitally printed onto a release film and heat-pressed onto the garment with specialized adhesive. Delivers razor-sharp edges, solid gradients, and fine details on almost any fabric type.",
-    bestFor: "Corporate event badges, sleeve logos, sports numbers, and windbreakers/jackets.",
-    fabrics: "Polyester, Nylon, Cotton, Poly-spandex, and waterproof outerwear fabrics.",
-    durability: "High. Flexible adhesive allows the print to stretch. Withstands standard machine wash cycles.",
-    costProfile: "Minimal setup cost. Very economical for small logos, badges, and personalizing names/numbers.",
-    proTip: "Excellent for multi-colored brand logos placed on difficult spots (like sleeves, collars, or polyester jackets) where screen printing fails.",
+    description: "Designs are printed on a film and heat-pressed onto the garment with specialized adhesive. Creates extremely sharp edges and vibrant gradients.",
+    bestFor: "Logo badges, numbers on sports jerseys, and waterproof jackets.",
+    fabrics: "Polyester, nylon, cotton, spandex—works on almost anything.",
+    durability: "Good stretch and durability. Machine wash friendly.",
+    costProfile: "Very cheap for individual names, small logo placements, or labels.",
+    proTip: "Great for placing logos in tricky spots (collars, sleeves) where standard printing is hard.",
     details: [
-      "Razor-sharp edges and fine details",
-      "Applies perfectly to synthetic and synthetic-blend fabrics",
-      "Elastic, stretch-resistant prints",
-      "Vivid color rendering"
+      "Sharp borders & lines",
+      "Flexible & stretchable",
+      "Great on jackets & nylon",
+      "Vivid color gradients"
     ]
   }
 ];
@@ -120,10 +120,10 @@ export default function CustomizationEducation() {
     <section className={styles.section}>
       <div className={styles.container}>
         <div className={styles.header}>
-          <span className={styles.tagline}>Branding & Customization</span>
-          <h2 className={styles.title}>Garment Personalization Methods</h2>
+          <span className={styles.tagline}>Branding Options</span>
+          <h2 className={styles.title}>Garment Customization Methods</h2>
           <p className={styles.subtitle}>
-            Empowering brands with the right technology. Learn about our industry-grade customization techniques to select the best match for your project.
+            Not sure which printing method fits your logo and fabric choice? Here is a simple guide to our custom clothing printing services.
           </p>
         </div>
 
@@ -212,7 +212,7 @@ export default function CustomizationEducation() {
             </div>
 
             <div className={styles.educationalNote}>
-              💡 <strong>Confused?</strong> Don&apos;t worry. When you place a bulk order, our production managers review your artwork and recommend the most cost-effective, high-quality printing method for your selected fabric.
+              💡 <strong>Still unsure?</strong> Don&apos;t worry. Once you submit a quote or design, our team will review your logo and fabric choice to recommend the best, most budget-friendly printing method before production.
             </div>
           </div>
         </div>
