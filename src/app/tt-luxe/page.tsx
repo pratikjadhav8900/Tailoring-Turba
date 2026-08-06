@@ -245,22 +245,45 @@ export default function TTLuxeBrandedPage() {
       {/* 2. Interactive Filter & Product Catalogue Grid */}
       <section id="catalog-grid-anchor" className={styles.catalogSection}>
         <div className={styles.container}>
-          {/* Category Filter Pills & Result Counter */}
-          <div className={styles.filterBarHeader}>
-            <div className={styles.categoryPills}>
-              {categoryFilterList.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`${styles.catTab} ${selectedCategory === cat ? styles.catTabActive : ""}`}
-                >
-                  {cat}
-                </button>
-              ))}
+          {/* Branded Catalogue Interactive Filters */}
+          <div className={styles.catalogueFilterCard}>
+            {/* 1. Brands Row */}
+            <div className={styles.filterRow}>
+              <span className={styles.filterRowLabel}>Brands:</span>
+              <div className={styles.filterPillsGroup}>
+                {brandFilterList.map((b) => (
+                  <button
+                    key={b.id}
+                    onClick={() => setSelectedBrand(b.id)}
+                    className={`${styles.filterPillCompact} ${selectedBrand === b.id ? styles.filterPillCompactActive : ""}`}
+                  >
+                    {b.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <div className={styles.resultsCount}>
-              Showing <strong>{filteredProducts.length}</strong> Official Products
+            {/* 2. Categories Row */}
+            <div className={styles.filterRow} style={{ marginTop: "16px", borderTop: "1px dashed #e5e7eb", paddingTop: "16px" }}>
+              <span className={styles.filterRowLabel}>Categories:</span>
+              <div className={styles.filterPillsGroup}>
+                {categoryFilterList.map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setSelectedCategory(cat)}
+                    className={`${styles.catTabCompact} ${selectedCategory === cat ? styles.catTabCompactActive : ""}`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Results Summary Counter */}
+          <div className={styles.resultsHeader}>
+            <div className={styles.resultsCount} style={{ fontSize: "0.9rem", color: "#4b5563" }}>
+              Showing <strong>{filteredProducts.length}</strong> Official Products {selectedBrand !== "all" && `for ${brandFilterList.find(b => b.id === selectedBrand)?.label}`} {selectedCategory !== "All Categories" && `in ${selectedCategory}`}
             </div>
           </div>
 
