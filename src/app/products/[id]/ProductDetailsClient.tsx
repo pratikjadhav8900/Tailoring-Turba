@@ -340,7 +340,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
                   className={styles.sizeChartLink}
                   onClick={() => setShowSizeChart(true)}
                 >
-                  SIZE CHART <ChevronRight size={14} style={{ color: "#ef4444" }} />
+                  SIZE CHART <ChevronRight size={14} />
                 </button>
               </div>
               <div className={styles.sizeGrid}>

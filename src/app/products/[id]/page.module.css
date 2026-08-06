@@ -952,7 +952,7 @@
 .sizeChartLink {
   font-size: 0.78rem;
   font-weight: 800;
-  color: #ef4444; /* Hot pink/coral accent */
+  color: var(--tth-olive-dark);
   text-decoration: none;
   background: none;
   border: none;
@@ -1331,7 +1331,7 @@
 
 .btnCartBag {
   flex: 3;
-  background: #ef4444; /* Standard Coral Pink-ish Red */
+  background: var(--tth-olive-dark);
   color: white;
   border: none;
   border-radius: 8px;
@@ -1346,11 +1346,11 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
-  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.2);
+  box-shadow: 0 4px 14px rgba(75, 83, 32, 0.2);
 }
 
 .btnCartBag:hover {
-  background: #dc2626;
+  background: #3a4118;
   transform: translateY(-1px);
 }
 
