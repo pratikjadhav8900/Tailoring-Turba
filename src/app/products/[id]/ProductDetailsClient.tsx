@@ -292,22 +292,24 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
                 {product.name}
               </p>
               
-              {/* Myntra-Style Floating Ratings Badge */}
-              <div 
-                className={styles.ratingsBadge}
-                onClick={() => {
-                  const elem = document.getElementById("reviews-section-anchor");
-                  if (elem) elem.scrollIntoView({ behavior: "smooth" });
-                }}
-              >
-                <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                  {averageRating > 0 ? averageRating.toFixed(1) : "4.2"}
-                  <span className={styles.ratingsBadgeStar}>★</span>
-                </span>
-                <span className={styles.ratingsBadgeCount}>
-                  {reviews.length > 0 ? `${reviews.length} Ratings` : "948 Ratings"}
-                </span>
-              </div>
+              {/* Myntra-Style Floating Ratings Badge - Only shown if there are real reviews */}
+              {reviews.length > 0 && (
+                <div 
+                  className={styles.ratingsBadge}
+                  onClick={() => {
+                    const elem = document.getElementById("reviews-section-anchor");
+                    if (elem) elem.scrollIntoView({ behavior: "smooth" });
+                  }}
+                >
+                  <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                    {averageRating.toFixed(1)}
+                    <span className={styles.ratingsBadgeStar}>★</span>
+                  </span>
+                  <span className={styles.ratingsBadgeCount}>
+                    {reviews.length} {reviews.length === 1 ? "Rating" : "Ratings"}
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Price Displays with strike-through MRP and Percentage Discount */}
