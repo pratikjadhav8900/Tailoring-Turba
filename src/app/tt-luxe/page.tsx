@@ -48,7 +48,7 @@ const productCatalogData: ProductItem[] = [
     moq: "10 Pieces",
     pdfPath: "/TT Luxe/ALLEN SOLLY_NEW_1.pdf",
     pdfName: "Allen Solly New Collection (PDF)",
-    colors: ["#1E293B", "#1B3B2B", "#881337"]
+    colors: ["#FFFFFF", "#FEF08A", "#BAE6FD", "#E9D5FF", "#E2E8F0"]
   },
   {
     id: "prod-2",
@@ -62,7 +62,7 @@ const productCatalogData: ProductItem[] = [
     moq: "10 Pieces",
     pdfPath: "/TT Luxe/ALLEN-SOLLY_TSHIRTS_CATALOGUE.pdf",
     pdfName: "Allen Solly T-Shirts Catalogue (PDF)",
-    colors: ["#18181B", "#1E293B", "#FFFFFF"]
+    colors: ["#FFFFFF", "#18181B", "#1E3A8A", "#D1D5DB"]
   },
   {
     id: "prod-3",
@@ -76,7 +76,7 @@ const productCatalogData: ProductItem[] = [
     moq: "10 Pieces",
     pdfPath: "/TT Luxe/Adidas 100-  Cotton Tipping Tshirt (210 gsm).pdf",
     pdfName: "Adidas Tipping Polo Specs (PDF)",
-    colors: ["#18181B", "#1E293B", "#FFFFFF"]
+    colors: ["#94A3B8", "#FFFFFF", "#0F172A", "#16A34A", "#1D4ED8", "#DC2626"]
   },
   {
     id: "prod-4",
@@ -90,7 +90,7 @@ const productCatalogData: ProductItem[] = [
     moq: "10 Pieces",
     pdfPath: "/TT Luxe/Adidas 100-  Cotton Tipping Tshirt (210 gsm).pdf",
     pdfName: "Adidas Activewear Catalogue (PDF)",
-    colors: ["#18181B", "#1B3B2B", "#FFFFFF"]
+    colors: ["#94A3B8", "#FFFFFF", "#0F172A", "#16A34A", "#1D4ED8", "#DC2626"]
   },
   {
     id: "prod-5",
@@ -104,7 +104,7 @@ const productCatalogData: ProductItem[] = [
     moq: "10 Pieces",
     pdfPath: "/TT Luxe/US POLO PREMIUM COTTON SHIRT.pdf",
     pdfName: "US Polo Premium Shirt Specs (PDF)",
-    colors: ["#0F172A", "#FFFFFF", "#991B1B"]
+    colors: ["#3B82F6", "#0F172A", "#15803D"]
   },
   {
     id: "prod-6",
@@ -118,7 +118,7 @@ const productCatalogData: ProductItem[] = [
     moq: "10 Pieces",
     pdfPath: "/TT Luxe/US POLO PREMIUM COTTON SHIRT.pdf",
     pdfName: "US Polo Full Catalogue (PDF)",
-    colors: ["#1E293B", "#FFFFFF", "#1B3B2B"]
+    colors: ["#3B82F6", "#0F172A", "#15803D"]
   },
   {
     id: "prod-7",
@@ -132,7 +132,7 @@ const productCatalogData: ProductItem[] = [
     moq: "10 Pieces",
     pdfPath: "/TT Luxe/Monte Carlo Jacket-.pdf",
     pdfName: "Monte Carlo Jacket Catalogue (PDF)",
-    colors: ["#78151D", "#334155", "#0F172A"]
+    colors: ["#18181B", "#64748B", "#0F172A"]
   },
   {
     id: "prod-8",
@@ -146,7 +146,7 @@ const productCatalogData: ProductItem[] = [
     moq: "10 Pieces",
     pdfPath: "/TT Luxe/MONTE CARLO DRYFIT TSHIRT.pdf",
     pdfName: "Monte Carlo DryFit Specs (PDF)",
-    colors: ["#18181B", "#0F172A", "#FFFFFF"]
+    colors: ["#881337", "#374151", "#1D4ED8", "#0F172A", "#064E3B"]
   }
 ];
 
