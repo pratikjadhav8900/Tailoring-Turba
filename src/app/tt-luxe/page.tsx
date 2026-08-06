@@ -128,7 +128,7 @@ const productCatalogData: ProductItem[] = [
     brandName: "Monte Carlo",
     title: "Monte Carlo Executive Soft Knit Jacket",
     category: "Jackets",
-    image: "/TT%20Luxe/extracted/monte_carlo_jacket__p1_1__Im14_cropped.jpg",
+    image: "/TT%20Luxe/extracted/monte_carlo_jacket__p1_1__Im14_front.jpg",
     gsm: "320 GSM",
     fabric: "Heavyweight Fleece & Soft Knit Poly-Cotton",
     moq: "10 Pieces",
