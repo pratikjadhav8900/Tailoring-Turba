@@ -117,6 +117,8 @@
   letter-spacing: 0.05em;
   cursor: pointer;
   transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .filterPill:hover {
@@ -782,6 +784,8 @@
   cursor: pointer;
   letter-spacing: 0.02em;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .filterPillCompact:hover {
@@ -812,6 +816,8 @@
   align-items: center;
   gap: 6px;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .catTabCompact:hover {
