@@ -10,6 +10,7 @@ import { Receipt, RotateCcw, Brush, Truck, Package, ShieldCheck, Lock, Award, Ar
 import { useCompare } from "@/contexts/CompareContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { getResizedCloudinaryUrl } from "@/lib/cloudinary-client";
+import toast from "react-hot-toast";
 
 type Review = {
   id: string;
@@ -102,7 +103,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
 
   const handleAddToCart = () => {
     if (!selectedSize) {
-      alert("Please select a size before adding to the bag.");
+      toast.error("Please select a size before adding to the bag.");
       return;
     }
     const finalQty = Math.max(minQty, parseInt(qty as string) || minQty);

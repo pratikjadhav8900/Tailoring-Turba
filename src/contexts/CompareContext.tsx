@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import toast from "react-hot-toast";
 
 type CompareProduct = {
   id: string;
@@ -40,7 +41,7 @@ export function CompareProvider({ children }: { children: React.ReactNode }) {
 
   const addToCompare = (product: CompareProduct) => {
     if (compareItems.length >= 4) {
-      alert("You can compare up to 4 products at a time.");
+      toast.error("You can compare up to 4 products at a time.");
       return;
     }
     if (compareItems.find(item => item.id === product.id)) return;

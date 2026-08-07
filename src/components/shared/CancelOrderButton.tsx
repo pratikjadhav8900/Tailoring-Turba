@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import toast from "react-hot-toast";
 
 export default function CancelOrderButton({ 
   orderId, 
@@ -37,10 +38,10 @@ export default function CancelOrderButton({
         throw new Error(data.error || "Failed to cancel order.");
       }
 
-      alert("Your order has been cancelled, and the refund is being processed.");
+      toast.success("Your order has been cancelled, and the refund is being processed.");
       router.refresh();
     } catch (err: any) {
-      alert(err.message || "Failed to cancel order.");
+      toast.error(err.message || "Failed to cancel order.");
     } finally {
       setLoading(false);
     }
