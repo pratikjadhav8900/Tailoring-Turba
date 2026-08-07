@@ -183,17 +183,21 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
   }));
 
   const isCustomizable = Boolean(
-    product.type?.toLowerCase().includes("polo") || 
-    product.type?.toLowerCase().includes("round neck") || 
-    product.type?.toLowerCase().includes("t-shirt") ||
-    product.type?.toLowerCase().includes("crewneck") ||
-    product.type?.toLowerCase().includes("oversize") ||
-    product.type?.toLowerCase().includes("hoodie") ||
-    product.type?.toLowerCase().includes("jacket") ||
-    product.name?.toLowerCase().includes("t-shirt") ||
-    product.name?.toLowerCase().includes("polo") ||
-    product.name?.toLowerCase().includes("crewneck") ||
-    product.name?.toLowerCase().includes("hoodie")
+    (product.type?.toLowerCase().includes("polo") || 
+     product.type?.toLowerCase().includes("round neck") || 
+     product.type?.toLowerCase().includes("t-shirt") ||
+     product.type?.toLowerCase().includes("crewneck") ||
+     product.type?.toLowerCase().includes("oversize") ||
+     product.type?.toLowerCase().includes("hoodie") ||
+     product.type?.toLowerCase().includes("jacket") ||
+     product.name?.toLowerCase().includes("t-shirt") ||
+     product.name?.toLowerCase().includes("polo") ||
+     product.name?.toLowerCase().includes("crewneck") ||
+     product.name?.toLowerCase().includes("hoodie")) &&
+    !(
+      (product.category?.toLowerCase().includes("shirt") && !product.category?.toLowerCase().includes("t-shirt")) ||
+      (product.name?.toLowerCase().includes("shirt") && !product.name?.toLowerCase().includes("t-shirt"))
+    )
   );
 
   const getProductDescription = () => {
