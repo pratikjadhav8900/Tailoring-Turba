@@ -6,6 +6,7 @@ import Link from "next/link";
 import styles from "../page.module.css";
 import BigShipShipmentModal from "./BigShipShipmentModal";
 import LocalShipmentModal from "./LocalShipmentModal";
+import toast from "react-hot-toast";
 
 type Order = any;
 
@@ -32,12 +33,12 @@ export default function AdminOrdersClient({ initialOrders }: { initialOrders: Or
       const res = await fetch(`/api/orders/${orderId}/resend-invoice?type=proforma`, { method: "POST" });
       const data = await res.json();
       if (res.ok) {
-        alert(`✅ ${data.message}`);
+        toast.success(data.message || "Invoice resent successfully");
       } else {
-        alert(`❌ ${data.error || "Failed to resend invoice"}`);
+        toast.error(data.error || "Failed to resend invoice");
       }
     } catch {
-      alert("Network error. Please try again.");
+      toast.error("Network error. Please try again.");
     } finally {
       setResendingInvoice(null);
     }
@@ -55,11 +56,11 @@ export default function AdminOrdersClient({ initialOrders }: { initialOrders: Or
       if (res.ok) {
         setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
       } else {
-        alert("Failed to update status");
+        toast.error("Failed to update status");
       }
     } catch (error) {
       console.error(error);
-      alert("An error occurred");
+      toast.error("An error occurred");
     } finally {
       setIsUpdating(null);
     }
@@ -370,7 +371,7 @@ export default function AdminOrdersClient({ initialOrders }: { initialOrders: Or
           onSuccess={(trackingId) => {
             setOrders(orders.map(o => o.id === selectedForBigShip.id ? { ...o, status: "SHIPPED", bigshipTrackingId: trackingId } : o));
             setSelectedForBigShip(null);
-            alert(`Shipment booked successfully! Tracking ID: ${trackingId}`);
+            toast.success(`Shipment booked successfully! Tracking ID: ${trackingId}`);
           }}
         />
       )}

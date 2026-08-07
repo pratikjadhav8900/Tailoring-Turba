@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { X, Truck, Loader2 } from "lucide-react";
+import toast from "react-hot-toast";
 
 interface LocalShipmentModalProps {
   order: any;
@@ -20,7 +21,7 @@ export default function LocalShipmentModal({ order, onClose, onSubmit }: LocalSh
       await onSubmit(courierName, trackingId);
     } catch (err) {
       console.error(err);
-      alert("Failed to update tracking info");
+      toast.error("Failed to update tracking info");
     } finally {
       setIsSubmitting(false);
     }

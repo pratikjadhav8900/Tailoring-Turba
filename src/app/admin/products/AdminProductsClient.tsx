@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Plus, Trash2, Loader2, Edit2, Image as ImageIcon } from "lucide-react";
+import toast from "react-hot-toast";
 import Image from "next/image";
 import styles from "./page.module.css";
 import { getResizedCloudinaryUrl } from "@/lib/cloudinary-client";
@@ -38,7 +39,7 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
     const currentCount = formData.imageUrls.length;
     const allowedCount = 6 - currentCount;
     if (allowedCount <= 0) {
-      alert("You can only upload up to 6 images.");
+      toast.error("You can only upload up to 6 images.");
       return;
     }
 
@@ -61,11 +62,11 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
           const data = await res.json();
           uploadedUrls.push(data.url);
         } else {
-          alert(`Upload failed for ${file.name}. Please check Cloudinary credentials.`);
+          toast.error(`Upload failed for ${file.name}. Please check Cloudinary credentials.`);
         }
       } catch (error) {
         console.error(error);
-        alert(`Error uploading file ${file.name}`);
+        toast.error(`Error uploading file ${file.name}`);
       }
     }
 
@@ -100,11 +101,11 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
       if (res.ok) {
         setProducts(products.filter(p => p.id !== id));
       } else {
-        alert("Failed to delete product");
+        toast.error("Failed to delete product");
       }
     } catch (e) {
       console.error(e);
-      alert("Error deleting product");
+      toast.error("Error deleting product");
     } finally {
       setIsDeleting(null);
     }
@@ -177,12 +178,12 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
         window.location.reload();
       } else {
         const errorData = await res.json();
-        alert(`Failed to save product: ${errorData.error}`);
+        toast.error(`Failed to save product: ${errorData.error}`);
         setIsSubmitting(false);
       }
     } catch (error) {
       console.error(error);
-      alert("An error occurred");
+      toast.error("An error occurred");
       setIsSubmitting(false);
     }
   };

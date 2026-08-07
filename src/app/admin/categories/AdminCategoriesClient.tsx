@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Plus, Trash2, Folder, Shirt, Loader2 } from "lucide-react";
 import styles from "../page.module.css";
+import toast from "react-hot-toast";
 
 export default function AdminCategoriesClient({ initialCategories }: { initialCategories: any[] }) {
   const [categories, setCategories] = useState(initialCategories);
@@ -27,10 +28,10 @@ export default function AdminCategoriesClient({ initialCategories }: { initialCa
         window.location.reload(); // Reload to get updated counts and slug
       } else {
         const data = await res.json();
-        alert(data.error || "Failed to add category");
+        toast.error(data.error || "Failed to add category");
       }
     } catch (e) {
-      alert("Error occurred");
+      toast.error("Error occurred");
     } finally {
       setIsSubmitting(false);
     }
@@ -49,10 +50,10 @@ export default function AdminCategoriesClient({ initialCategories }: { initialCa
         setCategories(categories.filter(c => c.id !== id));
       } else {
         const data = await res.json();
-        alert(data.error || "Failed to delete");
+        toast.error(data.error || "Failed to delete");
       }
     } catch (e) {
-      alert("Error occurred");
+      toast.error("Error occurred");
     } finally {
       setIsDeleting(null);
     }

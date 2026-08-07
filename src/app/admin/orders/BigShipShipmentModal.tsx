@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Loader2, Package, Truck, X } from "lucide-react";
+import toast from "react-hot-toast";
 
 interface Props {
   order: any;
@@ -56,10 +57,10 @@ export default function BigShipShipmentModal({ order, onClose, onSuccess }: Prop
         setRates(data.rates);
         setMasterOrderId(data.masterCustomOrderId);
       } else {
-        alert(data.error || "Failed to fetch rates");
+        toast.error(data.error || "Failed to fetch rates");
       }
     } catch (err) {
-      alert("Error preparing shipment");
+      toast.error("Error preparing shipment");
     } finally {
       setPreparing(false);
     }
@@ -84,10 +85,10 @@ export default function BigShipShipmentModal({ order, onClose, onSuccess }: Prop
       if (data.status) {
         onSuccess(data.data.awb_assigned);
       } else {
-        alert(data.error || "Booking failed");
+        toast.error(data.error || "Booking failed");
       }
     } catch (err) {
-      alert("Error booking shipment");
+      toast.error("Error booking shipment");
     } finally {
       setBooking(false);
     }
