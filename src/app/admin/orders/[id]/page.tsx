@@ -22,6 +22,7 @@ export default async function OrderDetailsPage({ params }: { params: { id: strin
           design: true,
         },
       },
+      feedback: true,
     },
   });
 
@@ -90,6 +91,86 @@ export default async function OrderDetailsPage({ params }: { params: { id: strin
           </div>
         </div>
       </div>
+            {order.feedback && (
+        <div className="bg-white p-6 rounded-xl border shadow-sm border-l-4 border-l-[#435b43]">
+          <div className="flex items-center gap-2 mb-4 pb-2 border-b">
+            <h2 className="text-xl font-semibold text-[#435b43]">Customer Review & Feedback</h2>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            {/* Service Section */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-[#435b43] border-b pb-1">Service (out of 5)</h3>
+              <div className="flex justify-between text-sm text-gray-700">
+                <span>Overall Experience:</span>
+                <span className="font-bold">{order.feedback.serviceOverall}/5</span>
+              </div>
+              <div className="flex justify-between text-sm text-gray-700">
+                <span>Team Helpfulness:</span>
+                <span className="font-bold">{order.feedback.serviceProfessionalism}/5</span>
+              </div>
+              <div className="flex justify-between text-sm text-gray-700">
+                <span>On-time Delivery:</span>
+                <span className="font-bold">{order.feedback.serviceTimeline}/5</span>
+              </div>
+            </div>
+
+            {/* Ease of Service */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-[#435b43] border-b pb-1">Ease of Service (out of 5)</h3>
+              <div className="flex justify-between text-sm text-gray-700">
+                <span>Placing Order:</span>
+                <span className="font-bold">{order.feedback.easeOrdering}/5</span>
+              </div>
+              <div className="flex justify-between text-sm text-gray-700">
+                <span>Updates & Communication:</span>
+                <span className="font-bold">{order.feedback.easeCommunication}/5</span>
+              </div>
+              <div className="flex justify-between text-sm text-gray-700">
+                <span>Approval Process:</span>
+                <span className="font-bold">{order.feedback.easeProcess}/5</span>
+              </div>
+            </div>
+
+            {/* Fabric Quality */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-[#435b43] border-b pb-1">Fabric Quality (out of 5)</h3>
+              <div className="flex justify-between text-sm text-gray-700">
+                <span>Fabric Quality:</span>
+                <span className="font-bold">{order.feedback.fabricQuality}/5</span>
+              </div>
+              <div className="flex justify-between text-sm text-gray-700">
+                <span>Comfort & Finish:</span>
+                <span className="font-bold">{order.feedback.fabricExpectations}/5</span>
+              </div>
+              <div className="flex justify-between text-sm text-gray-700">
+                <span>Stitching & Garment:</span>
+                <span className="font-bold">{order.feedback.fabricStitching}/5</span>
+              </div>
+            </div>
+
+            {/* Printing & Branding */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-[#435b43] border-b pb-1">Printing & Branding (out of 5)</h3>
+              <div className="flex justify-between text-sm text-gray-700">
+                <span>Branding Quality:</span>
+                <span className="font-bold">{order.feedback.printingLogo}/5</span>
+              </div>
+              <div className="flex justify-between text-sm text-gray-700">
+                <span>Color & Design Placement:</span>
+                <span className="font-bold">{order.feedback.printingAccuracy}/5</span>
+              </div>
+            </div>
+          </div>
+
+          {order.feedback.comment && (
+            <div className="p-4 bg-[#fcfbf9] border border-gray-100 rounded-lg">
+              <p className="text-xs uppercase tracking-wider text-gray-400 font-bold mb-2">Q12. What could we improve to make your next experience even better?</p>
+              <p className="text-gray-700 italic font-medium">"{order.feedback.comment}"</p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Resend Invoice */}
       <ResendInvoiceButton orderId={order.id} />

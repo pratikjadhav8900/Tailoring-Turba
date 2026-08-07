@@ -23,7 +23,8 @@ export default async function AdminOrdersPage() {
         include: {
           product: true
         }
-      }
+      },
+      feedback: true
     },
     orderBy: {
       createdAt: 'desc'

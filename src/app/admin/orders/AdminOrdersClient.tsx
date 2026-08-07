@@ -197,6 +197,36 @@ export default function AdminOrdersClient({ initialOrders }: { initialOrders: Or
                           📞 {order.user.phone}
                         </div>
                       )}
+                      {order.feedback && (
+                        <div style={{ 
+                          display: "inline-flex", 
+                          alignItems: "center", 
+                          gap: "4px", 
+                          fontSize: "0.72rem", 
+                          background: "#f0fdf4", 
+                          color: "#16a34a", 
+                          padding: "2px 6px", 
+                          borderRadius: "4px", 
+                          fontWeight: 600,
+                          marginTop: "6px",
+                          border: "1px solid #16a34a30"
+                        }}>
+                          ★ Reviewed: {(
+                            (order.feedback.serviceOverall +
+                              order.feedback.serviceProfessionalism +
+                              order.feedback.serviceTimeline +
+                              order.feedback.easeOrdering +
+                              order.feedback.easeCommunication +
+                              order.feedback.easeProcess +
+                              order.feedback.fabricQuality +
+                              order.feedback.fabricExpectations +
+                              order.feedback.fabricStitching +
+                              order.feedback.printingLogo +
+                              order.feedback.printingAccuracy) /
+                            11
+                          ).toFixed(1)}/5
+                        </div>
+                      )}
                     </td>
                     <td style={{ fontSize: "0.85rem", color: "var(--tth-text-muted)" }}>
                       {order.items?.length ?? 0} item(s)

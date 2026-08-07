@@ -120,6 +120,7 @@ model Order {
   user                  User        @relation(fields: [userId], references: [id])
   items                 OrderItem[]
   orderSheet            OrderSheet?
+  feedback              OrderFeedback?
 }
 
 model OrderItem {
@@ -146,6 +147,26 @@ model OrderSheet {
   sheetData Json
   createdAt DateTime @default(now())
   order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model OrderFeedback {
+  id                    String   @id @default(cuid())
+  orderId               String   @unique
+  order                 Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  serviceOverall        Int      // Q1: Overall experience (1-5)
+  serviceProfessionalism Int      // Q2: Professionalism/helpfulness (1-5)
+  serviceTimeline       Int      // Q3: Delivery timeline (1-5)
+  easeOrdering          Int      // Q4: Ease of placing order (1-5)
+  easeCommunication     Int      // Q5: Communication and updates (1-5)
+  easeProcess           Int      // Q6: Ordering and approval process (1-5)
+  fabricQuality         Int      // Q7: Fabric quality (1-5)
+  fabricExpectations    Int      // Q8: Comfort, durability, finish (1-5)
+  fabricStitching       Int      // Q9: Stitching and garment quality (1-5)
+  printingLogo          Int      // Q10: Logo/print/embroidery quality (1-5)
+  printingAccuracy      Int      // Q11: Color, design, placement accuracy (1-5)
+  comment               String?  @db.Text // Q12: Improvements suggestion
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 }
 
 model Booking {
@@ -264,4 +285,18 @@ model UserAsset {
   url       String
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Job {
+  id               String   @id @default(cuid())
+  title            String
+  department       String
+  location         String
+  type             String
+  salaryRange      String
+  description      String
+  requirements     String[]
+  responsibilities String[]
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }

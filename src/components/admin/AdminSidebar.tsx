@@ -15,7 +15,8 @@ import {
   LogOut,
   ArrowLeft,
   Mail,
-  Home
+  Home,
+  Briefcase
 } from "lucide-react";
 
 const navItems = [
@@ -27,6 +28,7 @@ const navItems = [
   { icon: Layers, label: "Categories", href: "/admin/categories" },
   { icon: Calendar, label: "Bookings", href: "/admin/bookings" },
   { icon: Mail, label: "Inquiries", href: "/admin/inquiries" },
+  { icon: Briefcase, label: "Jobs", href: "/admin/jobs" },
   { icon: CreditCard, label: "Transactions", href: "/admin/transactions" },
 ];
 

@@ -8,7 +8,7 @@ export default function Footer() {
   const pathname = usePathname();
   if (pathname === "/customizer" || pathname === "/admin/login") return null;
 
-  const noMarginPages = ["/", "/about", "/cart", "/checkout", "/contact", "/login", "/register", "/wishlist", "/compare", "/booking"];
+  const noMarginPages = ["/", "/about", "/cart", "/checkout", "/contact", "/login", "/register", "/wishlist", "/compare", "/booking", "/careers"];
   const isNoMargin = noMarginPages.includes(pathname) || pathname.startsWith("/products");
 
   return (
@@ -65,6 +65,7 @@ export default function Footer() {
                 { label: "Our Story", href: "/about" },
                 { label: "Full Catalogue", href: "/products/catalogue" },
                 { label: "Book Showroom", href: "/booking" },
+                { label: "Careers", href: "/careers" },
               ].map(link => (
                 <Link key={link.href} href={link.href} style={{ color: "#94a3b8", textDecoration: "none", fontSize: "0.9rem", transition: "color 0.2s" }}
                   onMouseEnter={e => (e.currentTarget.style.color = "white")}

@@ -339,6 +339,7 @@ export const sendOrderDeliveredEmail = async (
 ) => {
   const displayNo = orderNumber ? String(orderNumber) : orderId.slice(-8).toUpperCase();
   const subject = `Your Order has been Delivered! 🎉 — Tailoring Turba #${displayNo}`;
+  const feedbackUrl = `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/feedback/${orderId}`;
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
       <div style="background: #435b43; padding: 24px; border-radius: 6px 6px 0 0; text-align: center;">
@@ -349,6 +350,10 @@ export const sendOrderDeliveredEmail = async (
         <p>Dear <strong>${name}</strong>,</p>
         <p>Your order <strong>#${displayNo}</strong> has been marked as Delivered!</p>
         <p>We hope you are thrilled with your custom apparel. It was a pleasure crafting this order for you.</p>
+
+        <div style="text-align: center; margin: 28px 0;">
+          <a href="${feedbackUrl}" style="background-color: #435b43; color: white; padding: 14px 28px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block; font-size: 15px; letter-spacing: 0.5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Share Your Feedback</a>
+        </div>
         
         <div style="background-color: #f0fdf4; padding: 20px; border-radius: 8px; margin: 24px 0; border-left: 4px solid #16a34a;">
           <p style="margin: 0 0 8px 0; font-size: 14px; color: #166534; text-transform: uppercase; letter-spacing: 1px;">What's Next?</p>

@@ -1,0 +1,235 @@
+.container {
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--tth-offwhite, #f8fafc);
+  padding: 40px 20px;
+  font-family: var(--font-sans, sans-serif);
+}
+
+.card {
+  background: var(--tth-white, #ffffff);
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 48px;
+  width: 100%;
+  max-width: 640px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 40px;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 24px;
+}
+
+.eyebrow {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--tth-gold, #c49d32);
+  margin-bottom: 12px;
+}
+
+.title {
+  font-family: var(--font-serif), serif;
+  font-size: 2.2rem;
+  font-weight: 400;
+  color: var(--tth-black, #000000);
+  margin-bottom: 12px;
+  line-height: 1.2;
+}
+
+.subtitle {
+  font-size: 0.92rem;
+  color: var(--tth-text-muted, #6b6b65);
+  line-height: 1.5;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.ratingSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ratingHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ratingLabel {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tth-black, #000000);
+}
+
+.ratingDescription {
+  font-size: 0.85rem;
+  color: var(--tth-text-muted, #6b6b65);
+  font-style: italic;
+}
+
+.circlesRow {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.circleBtn {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1px solid #cbd5e1;
+  background: var(--tth-white, #ffffff);
+  color: var(--tth-text, #1a1a18);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0;
+}
+
+.circleBtn:hover {
+  border-color: var(--tth-olive, #6b7d60);
+  background: #f1f5f9;
+  transform: scale(1.1);
+}
+
+.circleBtnActive {
+  background: var(--tth-olive-dark, #4a5c3f);
+  border-color: var(--tth-olive-dark, #4a5c3f);
+  color: var(--tth-white, #ffffff);
+  transform: scale(1.08);
+  box-shadow: 0 4px 10px rgba(74, 92, 63, 0.2);
+}
+
+.textareaGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.textareaLabel {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tth-black, #000000);
+}
+
+.textarea {
+  min-height: 120px;
+  padding: 14px 16px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: var(--font-sans), sans-serif;
+  resize: vertical;
+  background: #fafaf9;
+  transition: border-color 0.2s, background-color 0.2s;
+  outline: none;
+}
+
+.textarea:focus {
+  border-color: var(--tth-olive-dark, #4a5c3f);
+  background: var(--tth-white, #ffffff);
+}
+
+.submitBtn {
+  background: var(--tth-olive-dark, #4a5c3f);
+  color: var(--tth-white, #ffffff);
+  border: none;
+  border-radius: 8px;
+  padding: 16px 24px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background-color 0.2s, transform 0.1s;
+  margin-top: 10px;
+}
+
+.submitBtn:hover {
+  background: var(--tth-olive, #6b7d60);
+}
+
+.submitBtn:active {
+  transform: scale(0.98);
+}
+
+.submitBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.successContainer {
+  text-align: center;
+  padding: 40px 0;
+}
+
+.successIcon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 2px solid var(--tth-olive, #6b7d60);
+  color: var(--tth-olive, #6b7d60);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.successTitle {
+  font-family: var(--font-serif), serif;
+  font-size: 2.2rem;
+  font-weight: 400;
+  color: var(--tth-black, #000000);
+  margin-bottom: 16px;
+}
+
+.successText {
+  font-size: 0.95rem;
+  color: var(--tth-text-muted, #6b6b65);
+  line-height: 1.6;
+  max-width: 440px;
+  margin: 0 auto;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .card {
+    padding: 32px 20px;
+  }
+  
+  .title {
+    font-size: 1.8rem;
+  }
+  
+  .circlesRow {
+    gap: 4px;
+  }
+  
+  .circleBtn {
+    font-size: 0.8rem;
+  }
+}
