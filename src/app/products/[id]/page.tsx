@@ -5,6 +5,8 @@ import { allProducts } from "@/lib/products-data";
 import { notFound } from "next/navigation";
 import ProductDetailsClient from "./ProductDetailsClient";
 
+import { cleanCategoryName, cleanProductName } from "@/lib/cleaner";
+
 export const revalidate = 60;
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
@@ -17,10 +19,10 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     if (!product || !product.isActive) {
       const staticProduct = allProducts.find(p => String(p.id) === params.id);
       if (staticProduct) {
-        const title = `${staticProduct.name} | Bulk ${staticProduct.category} Manufacturer India | Tailoring Turba`;
+        const title = `${cleanProductName(staticProduct.name)} | Bulk ${cleanCategoryName(staticProduct.category)} Manufacturer India | Tailoring Turba`;
         return {
           title,
-          description: staticProduct.description || `Premium quality ${staticProduct.name}. Manufacturer and wholesaler in India.`,
+          description: staticProduct.description || `Premium quality ${cleanProductName(staticProduct.name)}. Manufacturer and wholesaler in India.`,
           openGraph: {
             images: [staticProduct.image],
           }
@@ -29,11 +31,11 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
       return { title: "Product Not Found | Tailoring Turba" };
     }
 
-    const categoryName = product.category?.name || "Custom Apparel";
-    const title = `${product.name} | Premium ${categoryName} Bulk Manufacturer India | Tailoring Turba`;
+    const categoryName = cleanCategoryName(product.category?.name || "Custom Apparel");
+    const title = `${cleanProductName(product.name)} | Premium ${categoryName} Bulk Manufacturer India | Tailoring Turba`;
     const description = product.description 
       ? (product.description.length > 160 ? product.description.substring(0, 157) + "..." : product.description)
-      : `High-end manufacturing of ${product.name} in India. Specialized in B2B bulk orders, uniform supplies, and bespoke ${categoryName} for corporate clients.`;
+      : `High-end manufacturing of ${cleanProductName(product.name)} in India. Specialized in B2B bulk orders, uniform supplies, and bespoke ${categoryName} for corporate clients.`;
 
     return {
       title,
@@ -50,7 +52,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
         description,
         images: product.images?.[0] ? [product.images[0]] : [],
       },
-      keywords: [`bulk ${categoryName}`, `${product.name} manufacturer`, "India textile export", "custom uniforms India", "corporate apparel wholesale"],
+      keywords: [`bulk ${categoryName}`, `${cleanProductName(product.name)} manufacturer`, "India textile export", "custom uniforms India", "corporate apparel wholesale"],
     };
   } catch (err) {
     return { title: "Product Details | Tailoring Turba" };
@@ -74,6 +76,8 @@ export default async function ProductDetailsPage({ params }: { params: { id: str
       formattedProduct = {
         ...staticProduct,
         id: String(staticProduct.id),
+        name: cleanProductName(staticProduct.name),
+        category: cleanCategoryName(staticProduct.category || "Uncategorized"),
         gallery: staticProduct.gallery || [staticProduct.image],
         minOrderQuantity: 10,
       };
@@ -81,12 +85,17 @@ export default async function ProductDetailsPage({ params }: { params: { id: str
       formattedRelated = allProducts
         .filter(p => p.category === staticProduct.category && p.id !== staticProduct.id)
         .slice(0, 4)
-        .map(p => ({ ...p, id: String(p.id) }));
+        .map(p => ({
+          ...p,
+          id: String(p.id),
+          name: cleanProductName(p.name),
+          category: cleanCategoryName(p.category || "Uncategorized")
+        }));
     } else {
       formattedProduct = {
         id: dbProduct.id,
-        name: dbProduct.name,
-        category: dbProduct.category?.name || "Uncategorized",
+        name: cleanProductName(dbProduct.name),
+        category: cleanCategoryName(dbProduct.category?.name || "Uncategorized"),
         type: dbProduct.type || "",
         image: dbProduct.images && dbProduct.images.length > 0 ? dbProduct.images[0] : "",
         gallery: dbProduct.images || [],
@@ -105,8 +114,8 @@ export default async function ProductDetailsPage({ params }: { params: { id: str
 
       formattedRelated = relatedDbProducts.map(p => ({
         id: p.id,
-        name: p.name,
-        category: p.category?.name || "Uncategorized",
+        name: cleanProductName(p.name),
+        category: cleanCategoryName(p.category?.name || "Uncategorized"),
         type: p.type || "",
         image: p.images && p.images.length > 0 ? p.images[0] : "",
         price: p.basePrice,
@@ -123,6 +132,8 @@ export default async function ProductDetailsPage({ params }: { params: { id: str
     formattedProduct = {
       ...staticProduct,
       id: String(staticProduct.id),
+      name: cleanProductName(staticProduct.name),
+      category: cleanCategoryName(staticProduct.category || "Uncategorized"),
       gallery: staticProduct.gallery || [staticProduct.image],
       minOrderQuantity: 10,
     };
@@ -130,7 +141,12 @@ export default async function ProductDetailsPage({ params }: { params: { id: str
     formattedRelated = allProducts
       .filter(p => p.category === staticProduct.category && p.id !== staticProduct.id)
       .slice(0, 4)
-      .map(p => ({ ...p, id: String(p.id) }));
+      .map(p => ({
+        ...p,
+        id: String(p.id),
+        name: cleanProductName(p.name),
+        category: cleanCategoryName(p.category || "Uncategorized")
+      }));
   }
 
   return <ProductDetailsClient product={formattedProduct} relatedProducts={formattedRelated} />;

@@ -10,6 +10,8 @@ export const metadata: Metadata = {
   keywords: ["corporate apparel catalogue", "bulk t-shirts manufacturer", "wholesale polo shirts India", "custom uniforms catalogue"],
 };
 
+import { cleanCategoryName, cleanProductName } from "@/lib/cleaner";
+
 export const revalidate = 60;
 
 export default async function ProductsPage() {
@@ -24,8 +26,8 @@ export default async function ProductsPage() {
 
     formattedProducts = dbProducts.map(p => ({
       id: p.id,
-      name: p.name,
-      category: p.category?.name || "Uncategorized",
+      name: cleanProductName(p.name),
+      category: cleanCategoryName(p.category?.name || "Uncategorized"),
       type: p.type || "",
       brand: p.brand || "",
       image: p.images && p.images.length > 0 ? p.images[0] : "",
@@ -42,6 +44,8 @@ export default async function ProductsPage() {
     formattedProducts = allProducts.map(p => ({
       ...p,
       id: String(p.id),
+      name: cleanProductName(p.name),
+      category: cleanCategoryName(p.category || "Uncategorized"),
       gallery: p.gallery || [p.image],
     }));
   }
