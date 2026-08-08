@@ -490,7 +490,8 @@ export default function ProductsClient({ products }: { products: any[] }) {
             {/* Breadcrumb & Toolbar Header */}
             <div className={styles.toolbarHeader}>
               <div className={styles.breadcrumbPath}>
-                <span>Home</span> / <span>Products</span> / <strong className={styles.breadcrumbCurrent}>{activeGender}'s Catalogue</strong>
+                <span className={styles.breadcrumbHomePath}>Home / Products / </span>
+                <strong className={styles.breadcrumbCurrent}>{activeGender}'s Catalogue</strong>
                 <span className={styles.breadcrumbCounter}>({filtered.length} Items)</span>
               </div>
 

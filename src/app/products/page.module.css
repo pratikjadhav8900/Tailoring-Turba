@@ -968,6 +968,9 @@
 .mobileFilterBtn {
   display: none;
 }
+.breadcrumbHomePath {
+  display: inline;
+}
 
 @media (max-width: 1280px) {
   .myntraGrid {
@@ -981,10 +984,35 @@
     gap: 20px;
     padding-top: 20px;
   }
+
+  /* Responsive Toolbar and Breadcrumbs */
+  .toolbarHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding-bottom: 16px;
+    width: 100%;
+  }
+
+  .breadcrumbHomePath {
+    display: none !important;
+  }
+
+  .breadcrumbPath {
+    font-size: 0.85rem;
+    width: 100%;
+  }
+
+  .toolbarRight {
+    width: 100%;
+    display: flex;
+    gap: 8px !important;
+  }
   
   .mobileFilterBtn {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
     font-family: var(--font-sans);
     font-size: 0.83rem;
@@ -996,6 +1024,7 @@
     cursor: pointer;
     transition: all 0.2s;
     position: relative;
+    flex: 1;
   }
   
   .mobileFilterBtn:hover {
@@ -1010,6 +1039,24 @@
     position: absolute;
     top: 6px;
     right: 8px;
+  }
+
+  .sortWrapper {
+    flex: 1;
+  }
+
+  .sortBtn {
+    width: 100%;
+    justify-content: center;
+    padding: 8px 10px;
+  }
+
+  .sortLabelText {
+    font-size: 0.78rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 130px;
   }
 
   .closeDrawerBtn {
