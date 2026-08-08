@@ -391,13 +391,8 @@
 }
 
 @media (max-width: 1024px) {
-  .statsGrid { grid-template-columns: repeat(2, 1fr); }
-  .quickActions { grid-template-columns: repeat(2, 1fr); }
-}
-
-@media (max-width: 1024px) {
   .heroHeader { 
-    padding: 60px 32px 40px; 
+    padding: 60px 24px 40px; 
     height: auto;
     min-height: 400px;
     justify-content: flex-start;
@@ -427,8 +422,8 @@
   }
   
   .statCard {
-    padding: 24px;
-    gap: 16px;
+    padding: 20px;
+    gap: 12px;
   }
   
   .statValue {
@@ -443,9 +438,58 @@
     width: 44px;
     height: 44px;
   }
+
+  .quickActions {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
 }
 
-@media (max-width: 480px) {
-  .title { font-size: 2.25rem; }
-  .sub { font-size: 1rem; }
+@media (max-width: 576px) {
+  .heroHeader {
+    padding: 40px 16px 30px;
+    min-height: 300px;
+  }
+  .title {
+    font-size: 2.25rem;
+  }
+  .sub {
+    font-size: 1rem;
+  }
+  .mainContent {
+    padding: 0 16px;
+    margin-top: 24px;
+    gap: 24px;
+  }
+  .statsGrid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .statCard {
+    padding: 16px;
+    gap: 16px;
+  }
+  .statValue {
+    font-size: 1.6rem;
+  }
+  .quickActions {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .block {
+    padding: 20px;
+  }
+  .blockHeader {
+    margin-bottom: 24px;
+  }
+  .blockHeader h2 {
+    font-size: 1.5rem;
+  }
+  .orderRow, .bookingRow {
+    padding: 12px;
+  }
+  .bookingSlot {
+    margin-right: 8px;
+  }
 }
+
