@@ -112,8 +112,8 @@ export default function FeedbackForm({ orderId, orderNumber, customerName }: Fee
         },
         {
           key: "serviceTimeline" as const,
-          label: "3. Delivery Timeline",
-          text: "Did we deliver your order within the promised timeline?",
+          label: "3. Delivery Punctuality",
+          text: "How satisfied are you with the punctuality and timing of your delivery?",
         },
       ],
     },

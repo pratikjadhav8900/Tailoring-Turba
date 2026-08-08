@@ -1,18 +1,20 @@
 export const dynamic = 'force-dynamic';
 
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/prisma";
+import { prisma, withRetry } from "@/lib/prisma";
 import FeedbackForm from "./FeedbackForm";
 import Navbar from "@/components/layout/Navbar";
 
 export default async function FeedbackPage({ params }: { params: { id: string } }) {
-  const order = await prisma.order.findUnique({
-    where: { id: params.id },
-    include: {
-      user: true,
-      feedback: true,
-    },
-  });
+  const order = await withRetry(() =>
+    prisma.order.findUnique({
+      where: { id: params.id },
+      include: {
+        user: true,
+        feedback: true,
+      },
+    })
+  );
 
   if (!order) {
     return notFound();
