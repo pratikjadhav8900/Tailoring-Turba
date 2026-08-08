@@ -958,6 +958,17 @@
   color: #64748b;
 }
 
+/* Mobile filter drawer helpers */
+.closeDrawerBtn {
+  display: none;
+}
+.drawerBackdrop {
+  display: none;
+}
+.mobileFilterBtn {
+  display: none;
+}
+
 @media (max-width: 1280px) {
   .myntraGrid {
     grid-template-columns: repeat(3, 1fr);
@@ -970,12 +981,89 @@
     gap: 20px;
     padding-top: 20px;
   }
-  .sidebar {
-    position: static;
-    border-right: none;
-    padding-right: 0;
-    max-height: none;
+  
+  .mobileFilterBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-sans);
+    font-size: 0.83rem;
+    color: #0f172a;
+    background: white;
+    border: 1px solid #cbd5e1;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
   }
+  
+  .mobileFilterBtn:hover {
+    border-color: #0f172a;
+  }
+
+  .activeFiltersIndicator {
+    width: 6px;
+    height: 6px;
+    background: #ff3f6c;
+    border-radius: 50%;
+    position: absolute;
+    top: 6px;
+    right: 8px;
+  }
+
+  .closeDrawerBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: #64748b;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 50%;
+  }
+
+  .closeDrawerBtn:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+  }
+  
+  .drawerBackdrop {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(2px);
+    z-index: 999;
+  }
+
+  .sidebar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: white;
+    border-radius: 16px 16px 0 0;
+    padding: 24px;
+    max-height: 75vh;
+    overflow-y: auto;
+    border-top: 1px solid #cbd5e1;
+    border-right: none;
+    padding-right: 24px;
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.15);
+  }
+
+  .sidebarOpen {
+    transform: translateY(0);
+  }
+
   .myntraGrid {
     grid-template-columns: repeat(2, 1fr);
     gap: 16px 12px;

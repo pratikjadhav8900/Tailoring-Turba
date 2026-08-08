@@ -160,6 +160,7 @@ export default function ProductsClient({ products }: { products: any[] }) {
   const [sortBy, setSortBy] = useState("default");
   const [showSort, setShowSort] = useState(false);
   const [hoveredCardId, setHoveredCardId] = useState<string | number | null>(null);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   // Sync URL params on mount
   useEffect(() => {
@@ -317,15 +318,22 @@ export default function ProductsClient({ products }: { products: any[] }) {
         {/* ── Main Layout ── */}
         <section className={`container ${styles.layout}`}>
 
+          {isFilterOpen && <div className={styles.drawerBackdrop} onClick={() => setIsFilterOpen(false)} />}
+
           {/* ── Sidebar ── */}
-          <aside className={styles.sidebar}>
+          <aside className={`${styles.sidebar} ${isFilterOpen ? styles.sidebarOpen : ""}`}>
             <div className={styles.sidebarHeader}>
               <span className={styles.sidebarHeading}>FILTERS</span>
-              {hasActiveFilters && (
-                <button className={styles.clearFiltersBtn} onClick={handleClearFilters}>
-                  <RotateCcw size={12} /> CLEAR ALL
+              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                {hasActiveFilters && (
+                  <button className={styles.clearFiltersBtn} onClick={handleClearFilters}>
+                    <RotateCcw size={12} /> CLEAR ALL
+                  </button>
+                )}
+                <button className={styles.closeDrawerBtn} onClick={() => setIsFilterOpen(false)} type="button">
+                  <X size={18} />
                 </button>
-              )}
+              </div>
             </div>
 
             {/* Search Box */}
@@ -486,7 +494,19 @@ export default function ProductsClient({ products }: { products: any[] }) {
                 <span className={styles.breadcrumbCounter}>({filtered.length} Items)</span>
               </div>
 
-              <div className={styles.toolbarRight}>
+              <div className={styles.toolbarRight} style={{ display: "flex", gap: "10px" }}>
+                <button
+                  className={styles.mobileFilterBtn}
+                  onClick={() => setIsFilterOpen(true)}
+                  type="button"
+                >
+                  <SlidersHorizontal size={14} />
+                  <span>Filters</span>
+                  {hasActiveFilters && (
+                    <span className={styles.activeFiltersIndicator} />
+                  )}
+                </button>
+
                 <div className={styles.sortWrapper}>
                   <button
                     className={styles.sortBtn}
