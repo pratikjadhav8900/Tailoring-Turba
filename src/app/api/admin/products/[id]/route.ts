@@ -48,7 +48,7 @@ export async function PUT(
     }
 
     const body = await req.json();
-    const { name, category, type, price, description, features, colors, badge, imageUrl, imageUrls } = body;
+    const { name, category, type, price, description, features, colors, badge, imageUrl, imageUrls, isActive } = body;
 
     if (!name || !category || !price) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -79,6 +79,7 @@ export async function PUT(
         colors: colors ? parseInt(String(colors)) : null,
         badge: badge || null,
         images: imageUrls || (imageUrl ? [imageUrl] : []),
+        isActive: typeof isActive === 'boolean' ? isActive : undefined,
       }
     });
 

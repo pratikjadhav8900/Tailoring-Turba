@@ -30,6 +30,7 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
     badge: "",
     imageUrl: "",
     imageUrls: [] as string[],
+    isActive: true,
   });
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -111,6 +112,48 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
     }
   };
 
+  const handleToggleActive = async (product: Product) => {
+    const updatedStatus = product.isActive === false ? true : false;
+    
+    // Optimistically update UI
+    setProducts(prev => prev.map(p => p.id === product.id ? { ...p, isActive: updatedStatus } : p));
+    
+    try {
+      const submitData = {
+        name: product.name,
+        category: product.category?.name || "",
+        type: product.type || "",
+        price: String(product.basePrice),
+        description: product.description || "",
+        features: product.features ? product.features.join("\n") : "",
+        colors: product.colors ? String(product.colors) : "",
+        badge: product.badge || "",
+        imageUrl: product.images && product.images[0] ? product.images[0] : "",
+        imageUrls: product.images || [],
+        isActive: updatedStatus,
+      };
+
+      const res = await fetch(`/api/admin/products/${product.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(submitData),
+      });
+
+      if (!res.ok) {
+        // Revert state on error
+        setProducts(prev => prev.map(p => p.id === product.id ? { ...p, isActive: !updatedStatus } : p));
+        toast.error("Failed to update product status");
+      } else {
+        toast.success(`Product is now ${updatedStatus ? "Active" : "Offline"}`);
+      }
+    } catch (error) {
+      // Revert state on error
+      setProducts(prev => prev.map(p => p.id === product.id ? { ...p, isActive: !updatedStatus } : p));
+      console.error(error);
+      toast.error("Error updating product status");
+    }
+  };
+
   const handleAddNewClick = () => {
     if (isAdding || editingProduct) {
       setIsAdding(false);
@@ -129,6 +172,7 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
         badge: "",
         imageUrl: "",
         imageUrls: [],
+        isActive: true,
       });
       setIsAdding(true);
     }
@@ -149,6 +193,7 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
       badge: p.badge || "",
       imageUrl: p.images && p.images[0] ? p.images[0] : "",
       imageUrls: p.images || [],
+      isActive: p.isActive !== false,
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -250,6 +295,17 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
                 <label>Available Colors</label>
                 <input type="number" name="colors" value={formData.colors} onChange={handleChange} placeholder="e.g. 12" />
               </div>
+              <div className={styles.inputGroup}>
+                <label>Status</label>
+                <select 
+                  name="isActive" 
+                  value={formData.isActive ? "true" : "false"} 
+                  onChange={(e) => setFormData({ ...formData, isActive: e.target.value === "true" })}
+                >
+                  <option value="true">Active (Live on website)</option>
+                  <option value="false">Offline (Hidden from website)</option>
+                </select>
+              </div>
             </div>
 
             <div className={styles.inputGroup}>
@@ -320,6 +376,7 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
                 <th>Category</th>
                 <th>Type</th>
                 <th>Price</th>
+                <th>Status</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -344,6 +401,16 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
                   <td>{p.category?.name}</td>
                   <td className={styles.typeText}>{p.type}</td>
                   <td className={styles.price}>₹{p.basePrice}</td>
+                  <td>
+                    <button
+                      type="button"
+                      className={`${styles.statusToggleBtn} ${p.isActive !== false ? styles.activeStatus : styles.offlineStatus}`}
+                      onClick={() => handleToggleActive(p)}
+                      title="Click to toggle product active status"
+                    >
+                      {p.isActive !== false ? "Active" : "Offline"}
+                    </button>
+                  </td>
                   <td>
                     <div className={styles.actionsCell}>
                       <button 

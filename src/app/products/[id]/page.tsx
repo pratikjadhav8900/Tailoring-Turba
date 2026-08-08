@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
       include: { category: true }
     }));
 
-    if (!product) {
+    if (!product || !product.isActive) {
       const staticProduct = allProducts.find(p => String(p.id) === params.id);
       if (staticProduct) {
         const title = `${staticProduct.name} | Bulk ${staticProduct.category} Manufacturer India | Tailoring Turba`;
@@ -67,7 +67,7 @@ export default async function ProductDetailsPage({ params }: { params: { id: str
       include: { category: true }
     }));
 
-    if (!dbProduct) {
+    if (!dbProduct || !dbProduct.isActive) {
       const staticProduct = allProducts.find(p => String(p.id) === params.id);
       if (!staticProduct) return notFound();
 
@@ -98,7 +98,7 @@ export default async function ProductDetailsPage({ params }: { params: { id: str
       };
 
       const relatedDbProducts = await withRetry(() => prisma.product.findMany({
-        where: { categoryId: dbProduct.categoryId, id: { not: dbProduct.id } },
+        where: { categoryId: dbProduct.categoryId, id: { not: dbProduct.id }, isActive: true },
         include: { category: true },
         take: 4
       }));
