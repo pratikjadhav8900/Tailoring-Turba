@@ -16,13 +16,15 @@ import {
   ArrowLeft,
   Mail,
   Home,
-  Briefcase
+  Briefcase,
+  ClipboardList
 } from "lucide-react";
 
 const navItems = [
   { icon: Home, label: "Home", href: "/" },
   { icon: LayoutDashboard, label: "Dashboard", href: "/admin" },
   { icon: Package, label: "Orders", href: "/admin/orders" },
+  { icon: ClipboardList, label: "Leads", href: "/admin/leads" },
   { icon: Users, label: "Users", href: "/admin/users" },
   { icon: Shirt, label: "Products", href: "/admin/products" },
   { icon: Layers, label: "Categories", href: "/admin/categories" },
