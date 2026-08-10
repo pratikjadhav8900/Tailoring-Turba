@@ -724,31 +724,31 @@ export default function ProductsClient({ products }: { products: any[] }) {
                         <span className={styles.ratingDivider}>|</span>
                         <span className={styles.ratingCount}>{ratingCount}</span>
                       </div>
+                    </div>
 
-                      {/* Hover Slide-Up Action Bar */}
-                      <div className={styles.hoverActionBar}>
-                        <button
-                          className={styles.actionBtnPrimary}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            router.push(`/products/${p.id}`);
-                          }}
-                        >
-                          <Eye size={14} /> VIEW PRODUCT
-                        </button>
-                        <a
-                          className={styles.actionBtnSecondary}
-                          href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(`Hi Tailoring Turba! I'm interested in requesting a sample for: ${p.name} (ID: ${p.id}).`)}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                          }}
-                          style={{ textDecoration: 'none' }}
-                        >
-                          <Send size={14} /> SAMPLE
-                        </a>
-                      </div>
+                    {/* Hover Slide-Up Action Bar (outside imageWrapper so mobile can show it below) */}
+                    <div className={styles.hoverActionBar}>
+                      <button
+                        className={styles.actionBtnPrimary}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/products/${p.id}`);
+                        }}
+                      >
+                        <Eye size={14} /> VIEW PRODUCT
+                      </button>
+                      <a
+                        className={styles.actionBtnSecondary}
+                        href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(`Hi Tailoring Turba! I'm interested in requesting a sample for: ${p.name} (ID: ${p.id}).`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                        }}
+                        style={{ textDecoration: 'none' }}
+                      >
+                        <Send size={14} /> SAMPLE
+                      </a>
                     </div>
 
                     {/* Card Content */}
@@ -768,6 +768,7 @@ export default function ProductsClient({ products }: { products: any[] }) {
                       </div>
                     </div>
                   </div>
+
                 );
               })}
 
