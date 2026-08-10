@@ -39,7 +39,9 @@ export async function POST(req: NextRequest) {
   const customerName = booking.user?.name || booking.guestName || "A Customer";
   const customerEmail = booking.user?.email || booking.guestEmail;
 
-  sendOperationsBookingAlert(booking.id, bookingDetailsUrl, customerName, formattedDate, booking.timeSlot).catch(err => {
+  const customerPhone = booking.user?.phone || booking.guestPhone;
+
+  sendOperationsBookingAlert(booking.id, bookingDetailsUrl, customerName, formattedDate, booking.timeSlot, customerEmail, customerPhone).catch(err => {
     console.error("[MAIL_ERROR] Failed to send booking operations alert:", err);
   });
 

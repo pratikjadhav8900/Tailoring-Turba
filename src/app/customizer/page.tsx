@@ -204,7 +204,7 @@ function CustomizerContent() {
         return;
       }
       if (needsProductionAsset) {
-        showToast("Please upload at least one production asset file before proceeding.", "warning");
+        showToast("Please upload at least one production asset file before proceeding.", "info");
         // Scroll the production assets section into view
         document.getElementById("production-assets-section")?.scrollIntoView({ behavior: "smooth", block: "center" });
         return;
@@ -221,7 +221,7 @@ function CustomizerContent() {
         return;
       }
       if (needsProductionAsset) {
-        showToast("Please upload at least one production asset file before adding to cart.", "warning");
+        showToast("Please upload at least one production asset file before adding to cart.", "info");
         setActiveTab("Options");
         setTimeout(() => document.getElementById("production-assets-section")?.scrollIntoView({ behavior: "smooth", block: "center" }), 100);
         return;

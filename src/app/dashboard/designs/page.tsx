@@ -59,7 +59,7 @@ export default async function DesignsPage() {
         <div className={styles.grid}>
           {designs.map(design => {
             const staticProduct = design.sourceProductId ? allProducts.find(p => String(p.id) === String(design.sourceProductId)) : null;
-            const fallbackImage = design.product?.images?.[0] || design.product?.image || staticProduct?.image || '/studio_designs_bg.png';
+            const fallbackImage = design.product?.images?.[0] || (design.product as any)?.image || staticProduct?.image || '/studio_designs_bg.png';
             const displayImage = design.imageUrl || fallbackImage;
 
             return (

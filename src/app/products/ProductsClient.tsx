@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { useCompare } from "@/contexts/CompareContext";
 import { useWishlist } from "@/contexts/WishlistContext";
+import { getProductColors } from "@/lib/customizer-utils";
 
 const faqs = [
   { q: "Who is the best custom apparel manufacturer?", a: "Tailoring Turba is one of the top manufacturers, offering premium quality bases and customizable options for businesses, brands, and bulk buyers." },
@@ -96,6 +97,17 @@ const COLOR_OPTIONS = [
   { label: "Yellow / Gold", hex: "#D97706" },
 ];
 
+const COLOR_MAP: Record<string, string[]> = {
+  "#111111": ["#111111"], // Black
+  "#FFFFFF": ["#FFFFFF"], // White
+  "#1E3A5F": ["#1E3A5F"], // Navy Blue
+  "#4D7C0F": ["#4D7C0F", "#16A34A"], // Olive Green / Forest Green
+  "#7F1D1D": ["#7F1D1D", "#DC2626"], // Red / Maroon
+  "#9CA3AF": ["#9CA3AF"], // Grey
+  "#2563EB": ["#2563EB", "#004b6b", "#38BDF8"], // Royal / Turba / Sky Blue
+  "#D97706": ["#D97706"], // Yellow / Gold
+};
+
 const GSM_RANGES = [
   { id: "all", label: "All Fabric Weights" },
   { id: "light", label: "Light (< 180 GSM)" },
@@ -142,6 +154,7 @@ export default function ProductsClient({ products }: { products: any[] }) {
   const searchParams = useSearchParams();
   const { addToCompare, removeFromCompare, isInCompare } = useCompare();
   const { wishlistItems, toggleWishlist, isInWishlist } = useWishlist();
+  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "919022553346";
 
   const urlCategory = searchParams.get("category");
   const urlGender = searchParams.get("gender") as Gender | null;
@@ -150,7 +163,7 @@ export default function ProductsClient({ products }: { products: any[] }) {
   const [activeGender, setActiveGender] = useState<Gender>(
     urlGender && GENDER_CONFIG[urlGender] ? urlGender : "Men"
   );
-  const [activeCategory, setActiveCategory] = useState("All");
+  const [activeCategories, setActiveCategories] = useState<string[]>(["All"]);
   const [priceRange, setPriceRange] = useState("all");
   const [selectedColor, setSelectedColor] = useState("all");
   const [gsmRange, setGsmRange] = useState("all");
@@ -164,7 +177,7 @@ export default function ProductsClient({ products }: { products: any[] }) {
 
   // Sync URL params on mount
   useEffect(() => {
-    if (urlCategory) setActiveCategory(urlCategory);
+    if (urlCategory) setActiveCategories([urlCategory]);
     if (urlGender && GENDER_CONFIG[urlGender]) setActiveGender(urlGender);
   }, [urlCategory, urlGender]);
 
@@ -177,7 +190,7 @@ export default function ProductsClient({ products }: { products: any[] }) {
   // When gender changes, reset category
   const handleGenderSwitch = (gender: Gender) => {
     setActiveGender(gender);
-    setActiveCategory("All");
+    setActiveCategories(["All"]);
     setSearchTerm("");
     setPriceRange("all");
     setSelectedColor("all");
@@ -185,7 +198,7 @@ export default function ProductsClient({ products }: { products: any[] }) {
   };
 
   const handleClearFilters = () => {
-    setActiveCategory("All");
+    setActiveCategories(["All"]);
     setPriceRange("all");
     setSelectedColor("all");
     setGsmRange("all");
@@ -195,15 +208,29 @@ export default function ProductsClient({ products }: { products: any[] }) {
     }
   };
 
-  const hasActiveFilters = activeCategory !== "All" || priceRange !== "all" || selectedColor !== "all" || gsmRange !== "all" || debouncedSearch !== "" || !!activeBrand;
+  const handleCategoryClick = (c: string) => {
+    if (c === "All") {
+      setActiveCategories(["All"]);
+    } else {
+      setActiveCategories((prev) => {
+        const filteredPrev = prev.filter((item) => item !== "All");
+        if (filteredPrev.includes(c)) {
+          const updated = filteredPrev.filter((item) => item !== c);
+          return updated.length === 0 ? ["All"] : updated;
+        } else {
+          return [...filteredPrev, c];
+        }
+      });
+    }
+  };
+
+  const hasActiveFilters = !activeCategories.includes("All") || priceRange !== "all" || selectedColor !== "all" || gsmRange !== "all" || debouncedSearch !== "" || !!activeBrand;
 
   const genderConfig = GENDER_CONFIG[activeGender];
   const categories = genderConfig.categories;
 
   // Filter + sort
   const filtered = useMemo(() => {
-    const normalizedCategory = activeCategory.toLowerCase().replace(/s$/, "");
-
     let result = products.filter((p) => {
       // Gender match
       const productGender: string = p.gender || "Men";
@@ -213,24 +240,30 @@ export default function ProductsClient({ products }: { products: any[] }) {
           : productGender === activeGender;
 
       // Category match
-      const isTshirtUmbrella =
-        activeCategory === "T-Shirts" &&
-        (p.type?.toLowerCase().includes("polo") ||
-          p.type?.toLowerCase().includes("crewneck") ||
-          p.type?.toLowerCase().includes("v-neck") ||
-          p.name?.toLowerCase().includes("polo") ||
-          p.name?.toLowerCase().includes("crewneck"));
-
       const matchesCategory =
-        activeCategory === "All" ||
-        p.category === activeCategory ||
-        isTshirtUmbrella ||
-        (p.category && p.category.toLowerCase().includes(normalizedCategory)) ||
-        (p.type && p.type.toLowerCase().includes(normalizedCategory)) ||
-        (p.name && p.name.toLowerCase().includes(normalizedCategory)) ||
-        (p.category && p.category.toLowerCase().includes(activeCategory.toLowerCase())) ||
-        (p.type && p.type.toLowerCase().includes(activeCategory.toLowerCase())) ||
-        (p.name && p.name.toLowerCase().includes(activeCategory.toLowerCase()));
+        activeCategories.includes("All") ||
+        activeCategories.length === 0 ||
+        activeCategories.some((cat) => {
+          const normalized = cat.toLowerCase().replace(/s$/, "");
+          const isTshirtUmbrella =
+            cat === "T-Shirts" &&
+            (p.type?.toLowerCase().includes("polo") ||
+              p.type?.toLowerCase().includes("crewneck") ||
+              p.type?.toLowerCase().includes("v-neck") ||
+              p.name?.toLowerCase().includes("polo") ||
+              p.name?.toLowerCase().includes("crewneck"));
+
+          return (
+            p.category === cat ||
+            isTshirtUmbrella ||
+            (p.category && p.category.toLowerCase().includes(normalized)) ||
+            (p.type && p.type.toLowerCase().includes(normalized)) ||
+            (p.name && p.name.toLowerCase().includes(normalized)) ||
+            (p.category && p.category.toLowerCase().includes(cat.toLowerCase())) ||
+            (p.type && p.type.toLowerCase().includes(cat.toLowerCase())) ||
+            (p.name && p.name.toLowerCase().includes(cat.toLowerCase()))
+          );
+        });
 
       // Price filter match
       const price = Number(p.price || 0);
@@ -243,7 +276,11 @@ export default function ProductsClient({ products }: { products: any[] }) {
       // Color filter match
       let matchesColor = true;
       if (selectedColor !== "all") {
-        matchesColor = (p.colors || 1) > 1;
+        const productColors = getProductColors(p.name, p.description, p.features, p.colors);
+        const allowedColors = COLOR_MAP[selectedColor] || [selectedColor];
+        matchesColor = productColors.some((prodColor) =>
+          allowedColors.some((allowed) => allowed.toLowerCase() === prodColor.toLowerCase())
+        );
       }
 
       // GSM filter match
@@ -279,12 +316,12 @@ export default function ProductsClient({ products }: { products: any[] }) {
     });
 
     // Sort
-    if (sortBy === "price_asc") result = [...result].sort((a, b) => (a.price || 0) - (b.price || 0));
-    if (sortBy === "price_desc") result = [...result].sort((a, b) => (b.price || 0) - (a.price || 0));
+    if (sortBy === "price_asc") result = [...result].sort((a, b) => Number(a.price || 0) - Number(b.price || 0));
+    if (sortBy === "price_desc") result = [...result].sort((a, b) => Number(b.price || 0) - Number(a.price || 0));
     if (sortBy === "newest") result = [...result].reverse();
 
     return result;
-  }, [products, activeGender, activeCategory, priceRange, selectedColor, gsmRange, debouncedSearch, sortBy, activeBrand]);
+  }, [products, activeGender, activeCategories, priceRange, selectedColor, gsmRange, debouncedSearch, sortBy, activeBrand]);
 
   return (
     <>
@@ -356,7 +393,7 @@ export default function ProductsClient({ products }: { products: any[] }) {
             {/* Categories Accordion */}
             <div className={styles.filterSection}>
               <div className={styles.filterSectionTitle}>CATEGORIES</div>
-              <div className={styles.categoryList}>
+              <div className={`${styles.categoryList} ${categories.length >= 10 ? styles.categoryListScrollable : ""}`}>
                 {categories.map((c) => {
                   const count = c === "All"
                     ? products.filter(p => activeGender === "Men" ? (!p.gender || p.gender === "Men") : p.gender === activeGender).length
@@ -372,15 +409,17 @@ export default function ProductsClient({ products }: { products: any[] }) {
                         );
                       }).length;
 
+                  const isChecked = activeCategories.includes(c);
+
                   return (
                     <button
                       key={c}
-                      className={`${styles.filterBtn} ${activeCategory === c ? styles.filterActive : ""}`}
-                      onClick={() => setActiveCategory(c)}
+                      className={`${styles.filterBtn} ${isChecked ? styles.filterActive : ""}`}
+                      onClick={() => handleCategoryClick(c)}
                     >
                       <div className={styles.checkboxLabel}>
-                        <span className={`${styles.customCheckbox} ${activeCategory === c ? styles.checkboxChecked : ""}`}>
-                          {activeCategory === c && <Check size={12} strokeWidth={3} />}
+                        <span className={`${styles.customCheckbox} ${isChecked ? styles.checkboxChecked : ""}`}>
+                          {isChecked && <Check size={12} strokeWidth={3} />}
                         </span>
                         <span>{c}</span>
                       </div>
@@ -452,6 +491,19 @@ export default function ProductsClient({ products }: { products: any[] }) {
                 ))}
               </div>
             </div>
+
+            <div className={styles.sidebarSpacer} />
+
+            {/* Mobile Done Button */}
+            <div className={styles.mobileDoneWrapper}>
+              <button
+                className={styles.mobileDoneBtn}
+                onClick={() => setIsFilterOpen(false)}
+                type="button"
+              >
+                Done ✓
+              </button>
+            </div>
           </aside>
 
           {/* ── Product Area ── */}
@@ -522,7 +574,16 @@ export default function ProductsClient({ products }: { products: any[] }) {
                         <button
                           key={opt.value}
                           className={`${styles.sortOption} ${sortBy === opt.value ? styles.sortOptionActive : ""}`}
-                          onClick={() => { setSortBy(opt.value); setShowSort(false); }}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setSortBy(opt.value);
+                            // Delay hiding the dropdown slightly on mobile to prevent click-through (ghost click)
+                            // to underlying elements.
+                            setTimeout(() => {
+                              setShowSort(false);
+                            }, 100);
+                          }}
                         >
                           {opt.label}
                         </button>
@@ -543,12 +604,21 @@ export default function ProductsClient({ products }: { products: any[] }) {
                     <X size={12} className={styles.removePillIcon} onClick={() => router.push("/products")} />
                   </span>
                 )}
-                {activeCategory !== "All" && (
-                  <span className={styles.filterPill}>
-                    Category: {activeCategory}
-                    <X size={12} className={styles.removePillIcon} onClick={() => setActiveCategory("All")} />
+                {!activeCategories.includes("All") && activeCategories.map((cat) => (
+                  <span key={cat} className={styles.filterPill}>
+                    Category: {cat}
+                    <X
+                      size={12}
+                      className={styles.removePillIcon}
+                      onClick={() => {
+                        setActiveCategories((prev) => {
+                          const updated = prev.filter((item) => item !== cat);
+                          return updated.length === 0 ? ["All"] : updated;
+                        });
+                      }}
+                    />
                   </span>
-                )}
+                ))}
                 {priceRange !== "all" && (
                   <span className={styles.filterPill}>
                     Price: {PRICE_RANGES.find(p => p.id === priceRange)?.label}
@@ -563,7 +633,7 @@ export default function ProductsClient({ products }: { products: any[] }) {
                 )}
                 {selectedColor !== "all" && (
                   <span className={styles.filterPill}>
-                    Color Selected
+                    Color: {COLOR_OPTIONS.find(c => c.hex === selectedColor)?.label || "Selected"}
                     <X size={12} className={styles.removePillIcon} onClick={() => setSelectedColor("all")} />
                   </span>
                 )}
@@ -650,7 +720,7 @@ export default function ProductsClient({ products }: { products: any[] }) {
                       {/* Bottom-Left Rating Pill */}
                       <div className={styles.ratingBadge}>
                         <span>{rating}</span>
-                        <Star size={10} fill="#eab308" color="#eab308" />
+                        <Star size={10} fill="#10b981" color="#10b981" />
                         <span className={styles.ratingDivider}>|</span>
                         <span className={styles.ratingCount}>{ratingCount}</span>
                       </div>
@@ -666,15 +736,18 @@ export default function ProductsClient({ products }: { products: any[] }) {
                         >
                           <Eye size={14} /> VIEW PRODUCT
                         </button>
-                        <button
+                        <a
                           className={styles.actionBtnSecondary}
+                          href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(`Hi Tailoring Turba! I'm interested in requesting a sample for: ${p.name} (ID: ${p.id}).`)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           onClick={(e) => {
                             e.stopPropagation();
-                            window.open(`https://wa.me/919876543210?text=Hi,%20I'm%20interested%20in%20requesting%20a%20sample%20for%20${encodeURIComponent(p.name)}%20(ID:%20${p.id})`, "_blank");
                           }}
+                          style={{ textDecoration: 'none' }}
                         >
                           <Send size={14} /> SAMPLE
-                        </button>
+                        </a>
                       </div>
                     </div>
 

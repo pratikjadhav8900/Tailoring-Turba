@@ -461,6 +461,45 @@
   box-shadow: 0 0 15px rgba(107, 125, 96, 0.05);
 }
 
+.quickDateGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.quickDatePill {
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 12px 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1e293b;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.quickDatePill:hover {
+  border-color: #0f172a;
+  background: #f1f5f9;
+}
+
+.quickDatePillActive {
+  background: #0f172a !important;
+  border-color: #0f172a !important;
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+}
+
+@media (max-width: 600px) {
+  .quickDateGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 /* Step 3: Slots Grid */
 .slotsGrid {
   display: grid;

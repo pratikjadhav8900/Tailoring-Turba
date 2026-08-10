@@ -1,5 +1,5 @@
 "use client";
-import { Suspense, useState } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
 import styles from "./page.module.css";
@@ -11,7 +11,19 @@ import { getElementDetails } from "@/lib/customizer-utils";
 function ContactForm() {
   const searchParams = useSearchParams();
   const productName = searchParams.get("product");
+  const mode = searchParams.get("mode");
+  const type = searchParams.get("type");
+  const action = searchParams.get("action");
+  const isSample = mode === "sample" || type === "sample" || action === "sample";
+  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "919022553346";
   const { cart } = useCart();
+
+  useEffect(() => {
+    if (isSample) {
+      const msg = `Hi Tailoring Turba! I'm interested in requesting a sample${productName ? ` for: ${productName}` : ""}.`;
+      window.location.href = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(msg)}`;
+    }
+  }, [isSample, productName, whatsappNumber]);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -35,7 +47,7 @@ function ContactForm() {
 
     try {
       // Calculate cart items & totals for pro-forma
-      let cartItems = [];
+      let cartItems: any[] = [];
       let totalAmount = 0;
       let totalCustomCharge = 0;
       
@@ -172,7 +184,7 @@ function ContactForm() {
                       required
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      placeholder="Priya Sharma"
+                      placeholder=""
                     />
                   </div>
                   <div className={styles.group}>
@@ -183,7 +195,7 @@ function ContactForm() {
                       required
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      placeholder="priya@company.com"
+                      placeholder=""
                     />
                   </div>
                 </div>
@@ -198,7 +210,7 @@ function ContactForm() {
                       pattern="[0-9]{10}"
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      placeholder="9022553346"
+                      placeholder=""
                     />
                   </div>
                   <div className={styles.group}>
@@ -208,7 +220,7 @@ function ContactForm() {
                       type="text"
                       value={formData.company}
                       onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                      placeholder="ABC Corp"
+                      placeholder=""
                     />
                   </div>
                 </div>
@@ -221,7 +233,7 @@ function ContactForm() {
                     min="50"
                     value={formData.quantity}
                     onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                    placeholder="50"
+                    placeholder=""
                   />
                 </div>
 

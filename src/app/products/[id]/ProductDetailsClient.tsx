@@ -29,7 +29,10 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
   const { toggleWishlist, isInWishlist } = useWishlist();
 
   const minQty = Math.max(product.minOrderQuantity || 0, 10);
+  const configKey = `tt_product_config_${product.id}`;
+
   const [qty, setQty] = useState<number | string>(minQty);
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [lightboxImg, setLightboxImg] = useState<string | null>(null);
@@ -38,12 +41,53 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
   const [openAccordion, setOpenAccordion] = useState<string | null>('details');
 
   // E-commerce state additions
-  const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [showSizeChart, setShowSizeChart] = useState(false);
   const [pincode, setPincode] = useState("");
   const [pincodeStatus, setPincodeStatus] = useState<"success" | "error" | null>(null);
   const [deliveryEstimate, setDeliveryEstimate] = useState("");
   const [isCheckingPincode, setIsCheckingPincode] = useState(false);
+
+  // Restore saved config for this specific product on mount/id change
+  useEffect(() => {
+    try {
+      const savedConfig = sessionStorage.getItem(configKey);
+      if (savedConfig) {
+        const parsed = JSON.parse(savedConfig);
+        if (parsed.qty !== undefined) {
+          setQty(Math.max(minQty, Number(parsed.qty) || minQty));
+        }
+        if (parsed.selectedSize !== undefined) {
+          setSelectedSize(parsed.selectedSize);
+        }
+      }
+    } catch (e) {
+      console.error("Failed to load saved product config:", e);
+    }
+  }, [product.id, minQty, configKey]);
+
+  // Save config to sessionStorage when qty or selectedSize changes
+  useEffect(() => {
+    try {
+      const numQty = typeof qty === 'number' ? qty : (parseInt(qty as string) || minQty);
+      sessionStorage.setItem(configKey, JSON.stringify({ qty: numQty, selectedSize }));
+    } catch (e) {
+      console.error("Failed to save product config:", e);
+    }
+  }, [qty, selectedSize, configKey, minQty]);
+
+  const handleDecrementQty = () => {
+    const current = typeof qty === 'number' ? qty : (parseInt(qty as string) || minQty);
+    setQty(Math.max(minQty, current - 1));
+  };
+
+  const handleIncrementQty = () => {
+    const current = typeof qty === 'number' ? qty : (parseInt(qty as string) || minQty);
+    setQty(current + 1);
+  };
+
+  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "919022553346";
+  const sampleMessage = `Hi Tailoring Turba! I'm interested in requesting a sample for: ${product.name} (ID: ${product.id}).${selectedSize ? ` Size: ${selectedSize}.` : ""} Requested Quantity: ${qty || 10}.`;
+  const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(sampleMessage)}`;
 
   const imagesList = product.gallery && product.gallery.length > 0
     ? product.gallery
@@ -168,7 +212,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
       return (
         <span
           key={i}
-          style={{ color: filled ? "#F59E0B" : "#e5e7eb", fontSize: interactive ? "1.75rem" : "1rem", cursor: interactive ? "pointer" : "default", transition: "color 0.1s" }}
+          style={{ color: filled ? "#10b981" : "#e5e7eb", fontSize: interactive ? "1.75rem" : "1rem", cursor: interactive ? "pointer" : "default", transition: "color 0.1s" }}
           onClick={interactive ? () => setFormRating(i + 1) : undefined}
           onMouseEnter={interactive ? () => setFormHoverRating(i + 1) : undefined}
           onMouseLeave={interactive ? () => setFormHoverRating(0) : undefined}
@@ -366,8 +410,17 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
 
             {/* Qty Input & Action Buttons */}
             <div className={styles.actions} style={{ borderTop: "1px solid #f1f5f9", paddingTop: "20px", marginTop: "12px" }}>
-              <div className={styles.qtyRow} style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                <span style={{ fontWeight: 800, fontSize: "0.85rem", color: "#1e293b", letterSpacing: "0.05em", textTransform: "uppercase" }}>Qty:</span>
+              <div className={styles.qtyRow} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ fontWeight: 800, fontSize: "0.85rem", color: "#1e293b", letterSpacing: "0.05em", textTransform: "uppercase", marginRight: "4px" }}>Qty:</span>
+                <button
+                  type="button"
+                  className={styles.qtyStepperBtn}
+                  onClick={handleDecrementQty}
+                  disabled={(typeof qty === 'number' ? qty : (parseInt(qty as string) || minQty)) <= minQty}
+                  aria-label="Decrease quantity"
+                >
+                  −
+                </button>
                 <input 
                   type="number" 
                   value={qty} 
@@ -375,8 +428,15 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
                   onBlur={() => setQty(Math.max(minQty, parseInt(qty as string) || minQty))} 
                   min={minQty} 
                   className={styles.qtyInput} 
-                  style={{ borderRadius: "6px", height: "42px", boxSizing: "border-box" }}
                 />
+                <button
+                  type="button"
+                  className={styles.qtyStepperBtn}
+                  onClick={handleIncrementQty}
+                  aria-label="Increase quantity"
+                >
+                  +
+                </button>
               </div>
 
               {/* Myntra-Style Primary Add to Bag & Wishlist Action Row */}
@@ -397,9 +457,15 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
 
               {/* Design Studio, Sample Request, and Inquiries */}
               <div style={{ display: "grid", gridTemplateColumns: isCustomizable ? "1fr 1fr" : "1fr", gap: "12px", marginTop: "8px" }}>
-                <Link href={`/contact?product=${product.name}&subject=Sample Request`} className={styles.btnSample} style={{ textDecoration: 'none', textAlign: 'center', borderRadius: "6px" }}>
+                <a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.btnSample}
+                  style={{ textDecoration: 'none', textAlign: 'center', borderRadius: "6px" }}
+                >
                   Request Sample
-                </Link>
+                </a>
                 {isCustomizable && (
                   <Link href={`/customizer?id=${product.id}`} className={styles.btnStudio} style={{ textDecoration: 'none', textAlign: 'center', borderRadius: "6px" }}>
                     Design Studio
@@ -595,7 +661,14 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
                       <div className={styles.samplingPromo}>
                         <h4 className={styles.samplingTitle}>QUALITY ASSURANCE</h4>
                         <p className={styles.samplingText}>Request a production-grade sample to verify fit and finish. Sample cost is fully credited against your subsequent bulk order.</p>
-                        <Link href={`/contact?product=${product.name}&subject=Sample Request`} className={styles.btnSampleMinimal}>Request Sample Pack →</Link>
+                        <a
+                          href={whatsappUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={styles.btnSampleMinimal}
+                        >
+                          Request Sample Pack →
+                        </a>
                       </div>
                     </div>
                   </div>
@@ -803,7 +876,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
                     <div key={r.star} style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
                       <span style={{ fontSize: "0.8rem", color: "#64748b", minWidth: "30px" }}>{r.star} ★</span>
                       <div style={{ flex: 1, height: "8px", background: "#f1f5f9", borderRadius: "999px", overflow: "hidden" }}>
-                        <div style={{ width: `${r.pct}%`, height: "100%", background: "#F59E0B", borderRadius: "999px" }} />
+                        <div style={{ width: `${r.pct}%`, height: "100%", background: "#10b981", borderRadius: "999px" }} />
                       </div>
                       <span style={{ fontSize: "0.8rem", color: "#94a3b8", minWidth: "28px" }}>{r.count}</span>
                     </div>

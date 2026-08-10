@@ -142,7 +142,7 @@ export default function CartPage() {
                         <div className={styles.printSummary}>
                           {allEls.map((el, i) => (
                             <div key={i} className={styles.printTag}>
-                              🖨️ {el.side || ''} {el.printLabel || 'Print'} — +₹{el.cost}/u
+                              🖨️ {(el as any).side || ''} {el.printLabel || 'Print'} — +₹{el.cost}/u
                             </div>
                           ))}
                         </div>

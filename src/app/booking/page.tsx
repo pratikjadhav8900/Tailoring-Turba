@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import Navbar from "@/components/layout/Navbar";
 import styles from "./page.module.css";
 import { 
@@ -75,8 +75,17 @@ export default function BookingPage() {
   const [error, setError] = useState("");
   
   const formSectionRef = useRef<HTMLDivElement>(null);
+  const footerRef = useRef<HTMLDivElement>(null);
 
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
+
+  const scrollToNextBtn = () => {
+    setTimeout(() => {
+      if (footerRef.current) {
+        footerRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+    }, 100);
+  };
 
   const nextStep = () => {
     if (step === 0 && !form.purpose) {
@@ -139,10 +148,40 @@ export default function BookingPage() {
     }
   }
 
-  // Get tomorrow's date as minimum
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const minDate = tomorrow.toISOString().split("T")[0];
+  // Compute minimum date safely on client to avoid UTC/timezone hydration errors
+  const [minDate, setMinDate] = useState<string>("");
+
+  useEffect(() => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const y = tomorrow.getFullYear();
+    const m = String(tomorrow.getMonth() + 1).padStart(2, "0");
+    const d = String(tomorrow.getDate()).padStart(2, "0");
+    setMinDate(`${y}-${m}-${d}`);
+  }, []);
+
+  // Compute 6 quick date options (skipping Sundays) for instant single-tap selection on mobile
+  const quickDates = useMemo(() => {
+    const list: { iso: string; label: string; badge?: string }[] = [];
+    const curr = new Date();
+    curr.setDate(curr.getDate() + 1);
+
+    while (list.length < 6) {
+      if (curr.getDay() !== 0) { // Skip Sunday
+        const y = curr.getFullYear();
+        const m = String(curr.getMonth() + 1).padStart(2, "0");
+        const d = String(curr.getDate()).padStart(2, "0");
+        const iso = `${y}-${m}-${d}`;
+        const dayName = curr.toLocaleDateString("en-IN", { weekday: "short" });
+        const monthName = curr.toLocaleDateString("en-IN", { month: "short" });
+        const dayNum = curr.getDate();
+        const badge = list.length === 0 ? "Tomorrow" : undefined;
+        list.push({ iso, label: `${dayName}, ${dayNum} ${monthName}`, badge });
+      }
+      curr.setDate(curr.getDate() + 1);
+    }
+    return list;
+  }, []);
 
   return (
     <div className={styles.bookingContainer}>
@@ -192,7 +231,7 @@ export default function BookingPage() {
               transition={{ duration: 0.8, delay: 0.3 }}
             >
               <button className={styles.primaryCta} onClick={scrollToForm}>
-                Request Access <ArrowRight size={16} />
+                Schedule Visit <ArrowRight size={16} />
               </button>
               <a href="tel:9022553346" className={styles.secondaryCta}>
                 Call Studio
@@ -326,6 +365,7 @@ export default function BookingPage() {
                               onClick={() => {
                                 set("purpose", p.id);
                                 setError("");
+                                scrollToNextBtn();
                               }}
                             >
                               <Icon size={28} className={styles.purposeIcon} strokeWidth={1.2} />
@@ -347,8 +387,32 @@ export default function BookingPage() {
                       transition={{ duration: 0.4 }}
                     >
                       <h3 className={styles.formLabel}>Select your preferred date</h3>
+                      
+                      {/* Quick Date Pills for 1-Tap Mobile Selection */}
                       <div className={styles.datePickerContainer}>
-                        <label className={styles.formInputLabel}>Preferred Date</label>
+                        <label className={styles.formInputLabel} style={{ marginBottom: "10px", display: "block" }}>Quick Options</label>
+                        <div className={styles.quickDateGrid}>
+                          {quickDates.map((qd) => {
+                            const isActive = form.date === qd.iso;
+                            return (
+                              <button
+                                key={qd.iso}
+                                type="button"
+                                className={`${styles.quickDatePill} ${isActive ? styles.quickDatePillActive : ""}`}
+                                onClick={() => {
+                                  set("date", qd.iso);
+                                  setError("");
+                                  scrollToNextBtn();
+                                }}
+                              >
+                                {qd.badge && <span style={{ display: "block", fontSize: "0.68rem", opacity: 0.8, textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "2px" }}>{qd.badge}</span>}
+                                <span>{qd.label}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        <label className={styles.formInputLabel} style={{ marginTop: "16px", marginBottom: "8px", display: "block" }}>Or Pick Custom Date</label>
                         <input 
                           type="date" 
                           className={styles.darkInput} 
@@ -357,10 +421,15 @@ export default function BookingPage() {
                           onChange={e => {
                             set("date", e.target.value);
                             setError("");
+                            scrollToNextBtn();
                           }}
+                          onClick={(e) => {
+                            try { (e.target as HTMLInputElement).showPicker?.(); } catch {}
+                          }}
+                          style={{ minHeight: "52px", fontSize: "16px", cursor: "pointer", background: "#ffffff" }}
                           required 
                         />
-                        <div style={{ fontSize: "0.85rem", color: "#52525b", marginTop: "8px", textAlign: "center" }}>
+                        <div style={{ fontSize: "0.85rem", color: "#52525b", marginTop: "10px", textAlign: "center" }}>
                           Note: Studio visits are closed on Sundays.
                         </div>
                       </div>
@@ -387,6 +456,7 @@ export default function BookingPage() {
                               onClick={() => {
                                 set("timeSlot", slot);
                                 setError("");
+                                scrollToNextBtn();
                               }}
                             >
                               <Clock size={16} /> {slot}
@@ -464,7 +534,7 @@ export default function BookingPage() {
 
             {/* Footer Navigation Actions */}
             {!submitted && (
-              <div className={styles.bookingFooter}>
+              <div ref={footerRef} className={styles.bookingFooter}>
                 {step > 0 ? (
                   <button className={styles.backBtn} onClick={prevStep}>
                     <ArrowLeft size={16} /> Back
@@ -514,7 +584,7 @@ export default function BookingPage() {
                 <div className={styles.locationRow}>
                   <MapPin className={styles.locationIcon} size={22} />
                   <div className={styles.locationText}>
-                    <strong>Pune Studio</strong>
+                    <strong>Visit Us</strong>
                     <p>321/1, Jawaharlal Nehru Road, Mahatma Phule Peth, near HDFC Bank, Pune, Maharashtra 411042, India</p>
                   </div>
                 </div>

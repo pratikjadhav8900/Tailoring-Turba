@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
 interface SendMailOptions {
   to: string;
@@ -12,6 +13,38 @@ interface SendMailOptions {
 }
 
 export const sendMail = async ({ to, subject, html, attachments }: SendMailOptions) => {
+  const from = process.env.EMAIL_FROM || '"Tailoring Turba" <no-reply@tailoringturba.com>';
+
+  // Check if Resend API Key is configured
+  const resendApiKey = process.env.RESEND_API_KEY;
+  if (resendApiKey) {
+    try {
+      const resend = new Resend(resendApiKey);
+      const { data, error } = await resend.emails.send({
+        from,
+        to,
+        subject,
+        html,
+        attachments: attachments?.map(att => ({
+          filename: att.filename,
+          content: att.content,
+        })),
+      });
+
+      if (error) {
+        console.error("Error sending email via Resend: ", error);
+        return { success: false, error };
+      }
+
+      console.log("Email sent via Resend: ", data?.id);
+      return { success: true, messageId: data?.id };
+    } catch (resendError) {
+      console.error("Error invoking Resend SDK: ", resendError);
+      return { success: false, error: resendError };
+    }
+  }
+
+  // Fallback to standard Nodemailer SMTP configuration
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST || "smtp.gmail.com",
     port: parseInt(process.env.SMTP_PORT || "587"),
@@ -23,7 +56,7 @@ export const sendMail = async ({ to, subject, html, attachments }: SendMailOptio
   });
 
   const mailOptions = {
-    from: process.env.EMAIL_FROM || '"Tailoring Turba" <no-reply@tailoringturba.com>',
+    from,
     to,
     subject,
     html,
@@ -39,6 +72,7 @@ export const sendMail = async ({ to, subject, html, attachments }: SendMailOptio
     return { success: false, error };
   }
 };
+
 
 export const sendPasswordResetEmail = async (email: string, otp: string) => {
   const subject = "Your Password Reset OTP - Tailoring Turba";
@@ -80,29 +114,39 @@ export const sendOperationsOrderAlert = async (orderId: string, orderDetailsUrl:
   return sendMail({ to: "tailoringturba@gmail.com", subject, html });
 };
 
-export const sendOperationsBookingAlert = async (bookingId: string, bookingDetailsUrl: string, customerName: string, date: string, timeSlot: string) => {
-  const subject = `[NEW BOOKING] Tailoring Visit Requested - ${date}`;
+export const sendOperationsBookingAlert = async (bookingId: string, bookingDetailsUrl: string, customerName: string, date: string, timeSlot: string, customerEmail?: string | null, customerPhone?: string | null) => {
+  const subject = `[NEW BOOKING] Studio Visit Requested — ${date} at ${timeSlot}`;
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
-      <h2 style="color: #435b43;">New Tailoring Appointment Booked</h2>
-      <p>Hello Operations Team,</p>
-      <p>A new tailoring visit/consultation has been requested by <strong>${customerName}</strong>.</p>
-      <div style="background-color: #f4ebd0; padding: 15px; border-radius: 6px; margin: 20px 0;">
-        <p style="margin: 0 0 10px 0;"><strong>Date:</strong> ${date}</p>
-        <p style="margin: 0;"><strong>Time Slot:</strong> ${timeSlot}</p>
+      <div style="background: #435b43; padding: 24px; border-radius: 6px 6px 0 0; text-align: center;">
+        <h1 style="color: white; margin: 0; font-size: 22px; letter-spacing: 1px;">TAILORING TURBA</h1>
       </div>
-      <p>Please click the button below to view the booking details in the admin portal.</p>
-      <div style="text-align: center; margin: 30px 0;">
-        <a href="${bookingDetailsUrl}" style="display: inline-block; padding: 12px 24px; font-size: 16px; font-weight: bold; background-color: #435b43; color: #ffffff; text-decoration: none; border-radius: 6px;">
-          View All Bookings
-        </a>
+      <div style="padding: 28px 24px;">
+        <h2 style="color: #435b43; margin-top: 0;">📅 New Studio Visit Booked</h2>
+        <p>Hello,</p>
+        <p>A new studio visit has been scheduled. Here are the details:</p>
+        <div style="background-color: #f4ebd0; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #435b43;">
+          <p style="margin: 0 0 6px 0; font-size: 13px; color: #6b6b65; text-transform: uppercase; letter-spacing: 1px;">Appointment Details</p>
+          <p style="margin: 8px 0;"><strong>👤 Client Name:</strong> ${customerName}</p>
+          <p style="margin: 8px 0;"><strong>📅 Date:</strong> ${date}</p>
+          <p style="margin: 8px 0;"><strong>⏰ Time Slot:</strong> ${timeSlot}</p>
+          ${customerEmail ? `<p style="margin: 8px 0;"><strong>📧 Email:</strong> <a href="mailto:${customerEmail}" style="color: #435b43;">${customerEmail}</a></p>` : ""}
+          ${customerPhone ? `<p style="margin: 8px 0;"><strong>📞 Phone:</strong> <a href="tel:${customerPhone}" style="color: #435b43;">${customerPhone}</a></p>` : ""}
+        </div>
+        <p>Please confirm the appointment with the client and ensure the studio is prepared.</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${bookingDetailsUrl}" style="display: inline-block; padding: 12px 24px; font-size: 16px; font-weight: bold; background-color: #435b43; color: #ffffff; text-decoration: none; border-radius: 6px;">
+            View All Bookings in Admin
+          </a>
+        </div>
+        <p style="font-size: 13px; color: #6b6b65;">This is an automated notification from the Tailoring Turba booking system.</p>
       </div>
-      <p>Best regards,<br/>The Tailoring Turba Automated System</p>
     </div>
   `;
 
   return sendMail({ to: "tailoringturba@gmail.com", subject, html });
 };
+
 
 export const sendCustomerBookingConfirmation = async (
   customerEmail: string,
