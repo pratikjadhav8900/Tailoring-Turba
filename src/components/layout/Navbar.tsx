@@ -26,7 +26,8 @@ export default function Navbar({ transparent = false }: { transparent?: boolean 
 
   useEffect(() => {
     if (mounted) {
-      setIsAdmin((session?.user as any)?.role === "ADMIN");
+      const role = (session?.user as any)?.role;
+      setIsAdmin(role === "ADMIN" || role === "SUPER_ADMIN");
     }
   }, [session, mounted]);
 
