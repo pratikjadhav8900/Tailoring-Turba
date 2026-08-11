@@ -12,7 +12,13 @@ import {
   Loader2, 
   X, 
   FileText,
-  AlertCircle
+  AlertCircle,
+  Mail,
+  Phone,
+  ExternalLink,
+  Download,
+  Calendar,
+  User
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -29,9 +35,23 @@ interface Job {
   createdAt: string;
 }
 
+interface Application {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  companyName: string;
+  quantity: number;
+  requirements: string;
+  createdAt: string;
+}
+
 export default function AdminJobsPage() {
+  const [activeTab, setActiveTab] = useState<"listings" | "applications">("listings");
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingApps, setLoadingApps] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingJob, setEditingJob] = useState<Job | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -59,13 +79,63 @@ export default function AdminJobsPage() {
       console.error("Failed to load jobs:", err);
       toast.error("Failed to load jobs.");
     } finally {
-      setLoading(false);
+      if (activeTab === "listings") setLoading(false);
+    }
+  };
+
+  const fetchApplications = async () => {
+    setLoadingApps(true);
+    try {
+      const res = await fetch("/api/admin/jobs/applications");
+      if (res.ok) {
+        const data = await res.json();
+        setApplications(data);
+      }
+    } catch (err) {
+      console.error("Failed to load applications:", err);
+      toast.error("Failed to load applications.");
+    } finally {
+      setLoadingApps(false);
     }
   };
 
   useEffect(() => {
     fetchJobs();
+    fetchApplications();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === "applications") {
+      fetchApplications();
+    } else {
+      fetchJobs();
+    }
+  }, [activeTab]);
+
+  // Helper to parse application requirements string
+  const parseApplicationDetails = (requirements: string) => {
+    const lines = requirements.split("\n");
+    let position = "N/A";
+    let resumeName = "resume.pdf";
+    let resumeUrl = "";
+    let coverLetter = "";
+
+    lines.forEach(line => {
+      if (line.startsWith("Applied Position: ")) {
+        position = line.substring("Applied Position: ".length);
+      } else if (line.startsWith("Resume File Name: ")) {
+        resumeName = line.substring("Resume File Name: ".length);
+      } else if (line.startsWith("Resume Link: ")) {
+        resumeUrl = line.substring("Resume Link: ".length);
+      } else if (line.startsWith("Cover Letter: ")) {
+        coverLetter = line.substring("Cover Letter: ".length);
+      } else if (coverLetter) {
+        coverLetter += "\n" + line;
+      }
+    });
+
+    return { position, resumeName, resumeUrl, coverLetter };
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setForm({
@@ -174,89 +244,211 @@ export default function AdminJobsPage() {
   return (
     <div style={{ padding: "clamp(16px, 5vw, 40px)" }} className="bg-slate-50 min-h-screen text-[#0f172a]">
       {/* Title Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
           <h1 className="text-3xl font-bold font-serif text-[#0f172a] flex items-center gap-2.5">
-            <Briefcase className="w-8 h-8 text-[#6b7d60]" /> Job Postings
+            <Briefcase className="w-8 h-8 text-[#6b7d60]" /> Careers & Jobs
           </h1>
-          <p className="text-gray-500 mt-1.5 font-light">Manage and update active job listings for the Careers page.</p>
+          <p className="text-gray-500 mt-1.5 font-light">
+            {activeTab === "listings"
+              ? "Manage and update active job listings for the Careers page."
+              : "Review and track candidate job applications and resume files."}
+          </p>
         </div>
+        {activeTab === "listings" && (
+          <button
+            onClick={openCreateModal}
+            className="inline-flex items-center gap-2 bg-[#6b7d60] hover:bg-[#4a5c3f] text-white px-5 py-3 rounded-lg font-semibold shadow-sm transition-all duration-200 self-start sm:self-auto cursor-pointer"
+          >
+            <Plus size={18} /> Add Job Posting
+          </button>
+        )}
+      </div>
+
+      {/* Tabs Menu */}
+      <div className="flex border-b border-gray-200 mb-8">
         <button
-          onClick={openCreateModal}
-          className="inline-flex items-center gap-2 bg-[#6b7d60] hover:bg-[#4a5c3f] text-white px-5 py-3 rounded-lg font-semibold shadow-sm transition-all duration-200 self-start sm:self-auto cursor-pointer"
+          onClick={() => setActiveTab("listings")}
+          className={`py-3 px-6 font-semibold text-sm border-b-2 transition-all cursor-pointer ${
+            activeTab === "listings"
+              ? "border-[#6b7d60] text-[#6b7d60]"
+              : "border-transparent text-gray-500 hover:text-gray-700"
+          }`}
         >
-          <Plus size={18} /> Add Job Posting
+          Job Postings ({jobs.length})
+        </button>
+        <button
+          onClick={() => setActiveTab("applications")}
+          className={`py-3 px-6 font-semibold text-sm border-b-2 transition-all cursor-pointer ${
+            activeTab === "applications"
+              ? "border-[#6b7d60] text-[#6b7d60]"
+              : "border-transparent text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          Job Applications ({applications.length})
         </button>
       </div>
 
-      {/* Main Table */}
-      {loading ? (
-        <div className="bg-white rounded-xl border border-gray-200 p-16 text-center flex flex-col items-center justify-center gap-3">
-          <Loader2 className="w-8 h-8 animate-spin text-[#6b7d60]" />
-          <p className="text-sm text-gray-500 font-light">Loading job listings...</p>
-        </div>
-      ) : jobs.length === 0 ? (
-        <div className="bg-white rounded-xl border border-gray-200 p-16 text-center">
-          <AlertCircle className="w-10 h-10 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-bold text-gray-800">No Job Postings Found</h3>
-          <p className="text-gray-500 text-sm mt-1 max-w-sm mx-auto font-light">
-            You don&apos;t have any active careers listed. Click &quot;Add Job Posting&quot; to create your first opening.
-          </p>
-        </div>
-      ) : (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-200 text-xs font-bold uppercase tracking-wider text-gray-500">
-                  <th className="py-4 px-6">Job Title</th>
-                  <th className="py-4 px-6">Department</th>
-                  <th className="py-4 px-6">Location</th>
-                  <th className="py-4 px-6">Type</th>
-                  <th className="py-4 px-6">Salary Range</th>
-                  <th className="py-4 px-6 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 text-sm">
-                {jobs.map((job) => (
-                  <tr key={job.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="py-4 px-6 font-semibold text-[#0f172a]">{job.title}</td>
-                    <td className="py-4 px-6">
-                      <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#6b7d60]/10 text-[#6b7d60]">
-                        {job.department}
-                      </span>
-                    </td>
-                    <td className="py-4 px-6 text-gray-600 flex items-center gap-1.5 mt-1">
-                      <MapPin size={14} className="text-gray-400" /> {job.location}
-                    </td>
-                    <td className="py-4 px-6 text-gray-600">
-                      <span className="flex items-center gap-1.5">
-                        <Clock size={14} className="text-gray-400" /> {job.type}
-                      </span>
-                    </td>
-                    <td className="py-4 px-6 text-gray-600 font-medium">{job.salaryRange || "—"}</td>
-                    <td className="py-4 px-6 text-right space-x-3">
-                      <button
-                        onClick={() => openEditModal(job)}
-                        className="inline-flex items-center justify-center p-2 rounded-lg border border-gray-200 text-gray-500 hover:text-[#6b7d60] hover:bg-[#6b7d60]/5 hover:border-[#6b7d60]/30 transition-all cursor-pointer"
-                        title="Edit Job"
-                      >
-                        <Edit2 size={15} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(job.id)}
-                        className="inline-flex items-center justify-center p-2 rounded-lg border border-gray-200 text-gray-500 hover:text-red-600 hover:bg-red-50 hover:border-red-100 transition-all cursor-pointer"
-                        title="Delete Job"
-                      >
-                        <Trash2 size={15} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {/* Listings Tab */}
+      {activeTab === "listings" && (
+        loading ? (
+          <div className="bg-white rounded-xl border border-gray-200 p-16 text-center flex flex-col items-center justify-center gap-3">
+            <Loader2 className="w-8 h-8 animate-spin text-[#6b7d60]" />
+            <p className="text-sm text-gray-500 font-light">Loading job listings...</p>
           </div>
-        </div>
+        ) : jobs.length === 0 ? (
+          <div className="bg-white rounded-xl border border-gray-200 p-16 text-center">
+            <AlertCircle className="w-10 h-10 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-bold text-gray-800">No Job Postings Found</h3>
+            <p className="text-gray-500 text-sm mt-1 max-w-sm mx-auto font-light">
+              You don&apos;t have any active careers listed. Click &quot;Add Job Posting&quot; to create your first opening.
+            </p>
+          </div>
+        ) : (
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-200 text-xs font-bold uppercase tracking-wider text-gray-500">
+                    <th className="py-4 px-6">Job Title</th>
+                    <th className="py-4 px-6">Department</th>
+                    <th className="py-4 px-6">Location</th>
+                    <th className="py-4 px-6">Type</th>
+                    <th className="py-4 px-6">Salary Range</th>
+                    <th className="py-4 px-6 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 text-sm">
+                  {jobs.map((job) => (
+                    <tr key={job.id} className="hover:bg-gray-50/50 transition-colors">
+                      <td className="py-4 px-6 font-semibold text-[#0f172a]">{job.title}</td>
+                      <td className="py-4 px-6">
+                        <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#6b7d60]/10 text-[#6b7d60]">
+                          {job.department}
+                        </span>
+                      </td>
+                      <td className="py-4 px-6 text-gray-600 flex items-center gap-1.5 mt-1">
+                        <MapPin size={14} className="text-gray-400" /> {job.location}
+                      </td>
+                      <td className="py-4 px-6 text-gray-600">
+                        <span className="flex items-center gap-1.5">
+                          <Clock size={14} className="text-gray-400" /> {job.type}
+                        </span>
+                      </td>
+                      <td className="py-4 px-6 text-gray-600 font-medium">{job.salaryRange || "—"}</td>
+                      <td className="py-4 px-6 text-right space-x-3">
+                        <button
+                          onClick={() => openEditModal(job)}
+                          className="inline-flex items-center justify-center p-2 rounded-lg border border-gray-200 text-gray-500 hover:text-[#6b7d60] hover:bg-[#6b7d60]/5 hover:border-[#6b7d60]/30 transition-all cursor-pointer"
+                          title="Edit Job"
+                        >
+                          <Edit2 size={15} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(job.id)}
+                          className="inline-flex items-center justify-center p-2 rounded-lg border border-gray-200 text-gray-500 hover:text-red-600 hover:bg-red-50 hover:border-red-100 transition-all cursor-pointer"
+                          title="Delete Job"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )
+      )}
+
+      {/* Applications Tab */}
+      {activeTab === "applications" && (
+        loadingApps ? (
+          <div className="bg-white rounded-xl border border-gray-200 p-16 text-center flex flex-col items-center justify-center gap-3">
+            <Loader2 className="w-8 h-8 animate-spin text-[#6b7d60]" />
+            <p className="text-sm text-gray-500 font-light">Loading job applications...</p>
+          </div>
+        ) : applications.length === 0 ? (
+          <div className="bg-white rounded-xl border border-gray-200 p-16 text-center">
+            <AlertCircle className="w-10 h-10 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-bold text-gray-800">No Applications Found</h3>
+            <p className="text-gray-500 text-sm mt-1 max-w-sm mx-auto font-light">
+              There are no job applications submitted yet. Active listings are published on the Careers portal.
+            </p>
+          </div>
+        ) : (
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-200 text-xs font-bold uppercase tracking-wider text-gray-500">
+                    <th className="py-4 px-6">Candidate Details</th>
+                    <th className="py-4 px-6">Applied Position</th>
+                    <th className="py-4 px-6">Applied Date</th>
+                    <th className="py-4 px-6">Resume Attachment</th>
+                    <th className="py-4 px-6">Cover Letter</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 text-sm">
+                  {applications.map((app) => {
+                    const { position, resumeName, resumeUrl, coverLetter } = parseApplicationDetails(app.requirements);
+                    return (
+                      <tr key={app.id} className="hover:bg-gray-50/50 transition-colors">
+                        <td className="py-4 px-6">
+                          <div className="font-semibold text-[#0f172a]">{app.name}</div>
+                          <div className="text-xs text-gray-500 flex items-center gap-1.5 mt-1">
+                            <Mail size={12} className="text-gray-400" />
+                            <a href={`mailto:${app.email}`} className="text-[#6b7d60] hover:underline font-medium">{app.email}</a>
+                          </div>
+                          {app.phone && (
+                            <div className="text-xs text-gray-500 flex items-center gap-1.5 mt-1">
+                              <Phone size={12} className="text-gray-400" />
+                              <a href={`tel:${app.phone}`} className="hover:underline">{app.phone}</a>
+                            </div>
+                          )}
+                        </td>
+                        <td className="py-4 px-6">
+                          <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#6b7d60]/10 text-[#6b7d60]">
+                            {position}
+                          </span>
+                        </td>
+                        <td className="py-4 px-6 text-gray-600">
+                          <span className="flex items-center gap-1.5">
+                            <Calendar size={14} className="text-gray-400" />
+                            {new Date(app.createdAt).toLocaleDateString("en-IN", {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric"
+                            })}
+                          </span>
+                        </td>
+                        <td className="py-4 px-6">
+                          {resumeUrl && resumeUrl.startsWith("http") ? (
+                            <a
+                              href={resumeUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 text-[#c49d32] hover:text-[#a37e22] font-semibold text-xs hover:underline cursor-pointer"
+                            >
+                              <FileText size={14} /> Download Resume
+                            </a>
+                          ) : (
+                            <span className="text-gray-400 text-xs italic">Attached in Email</span>
+                          )}
+                        </td>
+                        <td className="py-4 px-6 max-w-xs">
+                          <p className="text-gray-600 line-clamp-3 text-xs font-light" title={coverLetter}>
+                            {coverLetter || "No cover letter provided."}
+                          </p>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )
       )}
 
       {/* popup Modal */}

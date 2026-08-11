@@ -5,6 +5,11 @@ import InquiryTable from "@/components/admin/InquiryTable";
 
 export default async function InquiriesPage() {
   const inquiries = await prisma.inquiry.findMany({
+    where: {
+      NOT: {
+        companyName: "Career Application",
+      },
+    },
     orderBy: { createdAt: "desc" },
   });
 
