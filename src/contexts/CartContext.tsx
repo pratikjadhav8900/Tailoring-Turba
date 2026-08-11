@@ -1,6 +1,7 @@
 "use client";
 import React, { createContext, useContext, useState, useEffect } from "react";
 import toast from "react-hot-toast";
+import { useSession } from "next-auth/react";
 
 import { CustomizerState } from "@/types/customizer";
 
@@ -30,34 +31,72 @@ type CartContextType = {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
+  const { data: session, status } = useSession();
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
 
-  // Load cart from localStorage
+  const userEmail = session?.user?.email;
+  const storageKey = userEmail
+    ? `tailoring_turba_cart_${userEmail}`
+    : "tailoring_turba_cart_anonymous";
+
+  // Load cart from localStorage based on active user session
   useEffect(() => {
-    const savedCart = localStorage.getItem("tailoring_turba_cart");
+    if (status === "loading") return;
+
+    const savedCart = localStorage.getItem(storageKey);
+    let loadedCart: CartItem[] = [];
+
     if (savedCart) {
       try {
         const parsed = JSON.parse(savedCart);
-        // Heal cart: if productId is missing, try to restore it
-        const healed = parsed.map((item: any) => {
-          if (!item.productId) {
-            // For older items, sometimes 'id' was the productId
-            // or we just need a placeholder to prevent API crashes
-            return { ...item, productId: item.productId || item.id };
-          }
-          return item;
-        });
-        setCart(healed);
+        loadedCart = parsed.map((item: any) => ({
+          ...item,
+          productId: item.productId || item.id,
+        }));
       } catch (e) {
         console.error("Failed to parse cart", e);
       }
     }
-  }, []);
 
-  // Save cart to localStorage
+    // Merge guest cart if user logged in
+    if (userEmail) {
+      const guestCart = localStorage.getItem("tailoring_turba_cart_anonymous");
+      if (guestCart) {
+        try {
+          const guestParsed = JSON.parse(guestCart) as CartItem[];
+          if (guestParsed.length > 0) {
+            const merged = [...loadedCart];
+            guestParsed.forEach((guestItem) => {
+              const existingIdx = merged.findIndex((item) => item.id === guestItem.id);
+              if (existingIdx > -1) {
+                merged[existingIdx].quantity += guestItem.quantity;
+              } else {
+                merged.push({
+                  ...guestItem,
+                  productId: guestItem.productId || guestItem.id,
+                });
+              }
+            });
+            loadedCart = merged;
+            localStorage.removeItem("tailoring_turba_cart_anonymous");
+            toast.success("Merged your guest cart items ✓", { duration: 2500 });
+          }
+        } catch (e) {
+          console.error("Failed to parse guest cart", e);
+        }
+      }
+    }
+
+    setCart(loadedCart);
+    setIsLoaded(true);
+  }, [userEmail, status, storageKey]);
+
+  // Save cart to localStorage under user/anonymous key
   useEffect(() => {
-    localStorage.setItem("tailoring_turba_cart", JSON.stringify(cart));
-  }, [cart]);
+    if (!isLoaded || status === "loading") return;
+    localStorage.setItem(storageKey, JSON.stringify(cart));
+  }, [cart, storageKey, isLoaded, status]);
 
   const addToCart = (newItem: CartItem) => {
     setCart((prev) => {
