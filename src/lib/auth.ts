@@ -50,4 +50,26 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
+  callbacks: {
+    ...authConfig.callbacks,
+    async signIn({ user }) {
+      if (user.email === "tailoringturba@gmail.com") {
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { email: user.email },
+          });
+          if (dbUser && dbUser.role !== "SUPER_ADMIN") {
+            await prisma.user.update({
+              where: { email: user.email },
+              data: { role: "SUPER_ADMIN" },
+            });
+            console.log("Database: Promoted tailoringturba@gmail.com to SUPER_ADMIN");
+          }
+        } catch (error) {
+          console.error("Error promoting admin in database:", error);
+        }
+      }
+      return true;
+    },
+  },
 });

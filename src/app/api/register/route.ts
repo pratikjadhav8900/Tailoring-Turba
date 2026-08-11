@@ -31,15 +31,17 @@ export async function POST(req: NextRequest) {
 
     const hashed = await bcrypt.hash(password, 12);
 
+    const isOwnerAdmin = sEmail.toLowerCase() === "tailoringturba@gmail.com";
     const user = await prisma.user.create({
       data: {
         name: sName,
         email: sEmail,
         phone: sPhone,
         password: hashed,
+        role: isOwnerAdmin ? "SUPER_ADMIN" : "USER",
         companyName: isB2B ? sCompanyName : null,
         gstNumber: isB2B ? sGstNumber : null,
-        isB2BApproved: false,
+        isB2BApproved: isOwnerAdmin ? true : false,
       },
     });
 

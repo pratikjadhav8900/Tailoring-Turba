@@ -16,13 +16,18 @@ export const authConfig: NextAuthConfig = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.email = user.email;
         token.role = (user as { role?: string }).role;
+      }
+      if (token.email === "tailoringturba@gmail.com") {
+        token.role = "SUPER_ADMIN";
       }
       return token;
     },
     async session({ session, token }) {
       if (token && session.user) {
         session.user.id = token.id as string;
+        session.user.email = token.email as string;
         (session.user as { role?: string }).role = token.role as string;
       }
       return session;
