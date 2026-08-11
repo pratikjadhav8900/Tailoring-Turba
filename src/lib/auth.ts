@@ -12,18 +12,24 @@ let lastGoogleAccount: { providerAccountId: string; time: number } | null = null
 const customAdapter = {
   ...prismaAdapter,
   async getUserByAccount(providerAndId: { provider: string; providerAccountId: string }) {
+    console.log("[ADAPTER] getUserByAccount called with:", JSON.stringify(providerAndId));
     if (providerAndId.provider === "google") {
       lastGoogleAccount = {
         providerAccountId: providerAndId.providerAccountId,
         time: Date.now(),
       };
+      console.log("[ADAPTER] Set lastGoogleAccount:", JSON.stringify(lastGoogleAccount));
     }
-    return prismaAdapter.getUserByAccount(providerAndId);
+    const res = await prismaAdapter.getUserByAccount(providerAndId);
+    console.log("[ADAPTER] getUserByAccount returned:", JSON.stringify(res));
+    return res;
   },
   async getUserByEmail(email: string) {
+    console.log("[ADAPTER] getUserByEmail called with:", email);
     const user = await prismaAdapter.getUserByEmail(email);
+    console.log("[ADAPTER] getUserByEmail found user:", JSON.stringify(user));
     
-    if (user && lastGoogleAccount && (Date.now() - lastGoogleAccount.time < 3000)) {
+    if (user && lastGoogleAccount && (Date.now() - lastGoogleAccount.time < 5000)) {
       try {
         const existingAccount = await prisma.account.findFirst({
           where: {
@@ -31,9 +37,10 @@ const customAdapter = {
             providerAccountId: lastGoogleAccount.providerAccountId,
           },
         });
+        console.log("[ADAPTER] checked existing account:", JSON.stringify(existingAccount));
         
         if (!existingAccount) {
-          await prisma.account.create({
+          const newAccountLink = await prisma.account.create({
             data: {
               userId: user.id,
               type: "oidc",
@@ -41,16 +48,30 @@ const customAdapter = {
               providerAccountId: lastGoogleAccount.providerAccountId,
             },
           });
-          console.log(`Auto-linked Google account (${lastGoogleAccount.providerAccountId}) to existing credentials user: ${email}`);
+          console.log("[ADAPTER] successfully created account link in DB:", JSON.stringify(newAccountLink));
         }
-      } catch (err) {
-        console.error("Failed to auto-link account in custom getUserByEmail adapter:", err);
+      } catch (err: any) {
+        console.error("[ADAPTER] failed to auto-link account in custom getUserByEmail:", err.message);
       }
       lastGoogleAccount = null;
     }
     
-    return prismaAdapter.getUserByEmail(email);
+    const finalUser = await prismaAdapter.getUserByEmail(email);
+    console.log("[ADAPTER] getUserByEmail returning:", JSON.stringify(finalUser));
+    return finalUser;
   },
+  async createUser(user: any) {
+    console.log("[ADAPTER] createUser called with:", JSON.stringify(user));
+    const res = await prismaAdapter.createUser(user);
+    console.log("[ADAPTER] createUser returned:", JSON.stringify(res));
+    return res;
+  },
+  async linkAccount(account: any) {
+    console.log("[ADAPTER] linkAccount called with:", JSON.stringify(account));
+    const res = await prismaAdapter.linkAccount(account);
+    console.log("[ADAPTER] linkAccount returned:", JSON.stringify(res));
+    return res;
+  }
 };
 
 /**
