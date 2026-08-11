@@ -6,13 +6,60 @@ import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { authConfig } from "@/lib/auth.config";
 
+const prismaAdapter = PrismaAdapter(prisma);
+let lastGoogleAccount: { providerAccountId: string; time: number } | null = null;
+
+const customAdapter = {
+  ...prismaAdapter,
+  async getUserByAccount(providerAndId: { provider: string; providerAccountId: string }) {
+    if (providerAndId.provider === "google") {
+      lastGoogleAccount = {
+        providerAccountId: providerAndId.providerAccountId,
+        time: Date.now(),
+      };
+    }
+    return prismaAdapter.getUserByAccount(providerAndId);
+  },
+  async getUserByEmail(email: string) {
+    const user = await prismaAdapter.getUserByEmail(email);
+    
+    if (user && lastGoogleAccount && (Date.now() - lastGoogleAccount.time < 3000)) {
+      try {
+        const existingAccount = await prisma.account.findFirst({
+          where: {
+            provider: "google",
+            providerAccountId: lastGoogleAccount.providerAccountId,
+          },
+        });
+        
+        if (!existingAccount) {
+          await prisma.account.create({
+            data: {
+              userId: user.id,
+              type: "oidc",
+              provider: "google",
+              providerAccountId: lastGoogleAccount.providerAccountId,
+            },
+          });
+          console.log(`Auto-linked Google account (${lastGoogleAccount.providerAccountId}) to existing credentials user: ${email}`);
+        }
+      } catch (err) {
+        console.error("Failed to auto-link account in custom getUserByEmail adapter:", err);
+      }
+      lastGoogleAccount = null;
+    }
+    
+    return prismaAdapter.getUserByEmail(email);
+  },
+};
+
 /**
  * Full auth config — Node.js only (includes Prisma adapter + providers).
  * Do NOT import this in middleware.ts; use auth.config.ts there instead.
  */
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
-  adapter: PrismaAdapter(prisma) as any,
+  adapter: customAdapter as any,
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || "",
@@ -52,7 +99,45 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     ...authConfig.callbacks,
-    async signIn({ user }) {
+    async signIn({ user, account }) {
+      if (account && account.provider === "google" && user.email) {
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { email: user.email },
+            include: { accounts: true },
+          });
+
+          if (dbUser) {
+            // Check if Google account is already linked
+            const hasGoogleLink = dbUser.accounts.some(
+              (acc) => acc.provider === "google"
+            );
+
+            if (!hasGoogleLink) {
+              // Manually link the Google account to the existing credentials user
+              await prisma.account.create({
+                data: {
+                  userId: dbUser.id,
+                  type: account.type,
+                  provider: account.provider,
+                  providerAccountId: account.providerAccountId,
+                  refresh_token: account.refresh_token,
+                  access_token: account.access_token,
+                  expires_at: account.expires_at,
+                  token_type: account.token_type,
+                  scope: account.scope,
+                  id_token: account.id_token,
+                  session_state: account.session_state,
+                },
+              });
+              console.log(`Manually linked Google account for existing user: ${user.email}`);
+            }
+          }
+        } catch (error) {
+          console.error("Error linking Google account to existing user:", error);
+        }
+      }
+
       if (user.email === "tailoringturba@gmail.com") {
         try {
           const dbUser = await prisma.user.findUnique({
