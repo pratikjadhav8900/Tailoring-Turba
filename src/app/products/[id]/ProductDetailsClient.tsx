@@ -32,6 +32,13 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
   const configKey = `tt_product_config_${product.id}`;
 
   const [qty, setQty] = useState<number | string>(minQty);
+
+  const basePresets = [10, 20, 30, 40, 50, 75, 100, 150, 200, 250, 300, 400, 500, 750, 1000, 1500, 2000, 2500, 5000];
+  const quickQuantities = Array.from(new Set([
+    minQty,
+    ...basePresets.filter(q => q > minQty)
+  ])).sort((a, b) => a - b);
+
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [showForm, setShowForm] = useState(false);
@@ -437,6 +444,28 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
                 >
                   +
                 </button>
+              </div>
+
+              {/* Quick Qty Scroller */}
+              <div className={styles.qtyScrollerContainer}>
+                <div className={styles.qtyScrollerHeader}>
+                  <span className={styles.qtyScrollerLabel}>Quick Select Qty:</span>
+                </div>
+                <div className={styles.qtyScroller}>
+                  {quickQuantities.map((q) => {
+                    const isActive = Number(qty) === q;
+                    return (
+                      <button
+                        key={q}
+                        type="button"
+                        className={`${styles.qtyPill} ${isActive ? styles.qtyPillActive : ""}`}
+                        onClick={() => setQty(q)}
+                      >
+                        {q}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Myntra-Style Primary Add to Bag & Wishlist Action Row */}

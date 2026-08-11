@@ -1409,3 +1409,67 @@
   background: #f8fafc;
 }
 
+/* Quick Qty Scroller Styles */
+.qtyScrollerContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+  width: 100%;
+}
+
+.qtyScrollerHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.qtyScrollerLabel {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.qtyScroller {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 2px;
+  scrollbar-width: none; /* Hide scrollbar for Firefox */
+  -ms-overflow-style: none;  /* Hide scrollbar for IE/Edge */
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+.qtyScroller::-webkit-scrollbar {
+  display: none; /* Hide scrollbar for Chrome/Safari/Opera */
+}
+
+.qtyPill {
+  flex: 0 0 auto;
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1px solid #cbd5e1;
+  background: white;
+  color: #1e293b;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.qtyPill:hover {
+  border-color: #0f172a;
+  background: #f8fafc;
+}
+
+.qtyPillActive {
+  background: #0f172a;
+  border-color: #0f172a;
+  color: white;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.15);
+}
+
