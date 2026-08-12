@@ -1,5 +1,5 @@
 interface HubSpotContact {
-  email: string;
+  email?: string;
   firstname?: string;
   lastname?: string;
   phone?: string;
@@ -15,9 +15,9 @@ export async function pushContactToHubSpot(contact: HubSpotContact) {
   }
 
   const properties: Record<string, string> = {
-    email: contact.email,
     hs_lead_status: contact.hs_lead_status ?? "NEW",
   };
+  if (contact.email) properties.email = contact.email;
   if (contact.firstname) properties.firstname = contact.firstname;
   if (contact.lastname) properties.lastname = contact.lastname;
   if (contact.phone) properties.phone = contact.phone;

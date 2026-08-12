@@ -1,24 +1,39 @@
-import NextAuth from "next-auth";
+import NextAuth, { CredentialsSignin } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
+import AppleProvider from "next-auth/providers/apple";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { authConfig } from "@/lib/auth.config";
+import { parsePhoneNumberFromString } from "libphonenumber-js";
+
+export class EmailNotVerifiedError extends CredentialsSignin {
+  code = "email_not_verified"
+}
+
+export class PhoneNotVerifiedError extends CredentialsSignin {
+  code = "phone_not_verified"
+}
+
+export class InvalidCredentialsError extends CredentialsSignin {
+  code = "invalid_credentials"
+}
 
 const prismaAdapter = PrismaAdapter(prisma);
-let lastGoogleAccount: { providerAccountId: string; time: number } | null = null;
+let lastSocialAccount: { provider: string; providerAccountId: string; time: number } | null = null;
 
 const customAdapter = {
   ...prismaAdapter,
   async getUserByAccount(providerAndId: { provider: string; providerAccountId: string }) {
     console.log("[ADAPTER] getUserByAccount called with:", JSON.stringify(providerAndId));
-    if (providerAndId.provider === "google") {
-      lastGoogleAccount = {
+    if (providerAndId.provider === "google" || providerAndId.provider === "apple") {
+      lastSocialAccount = {
+        provider: providerAndId.provider,
         providerAccountId: providerAndId.providerAccountId,
         time: Date.now(),
       };
-      console.log("[ADAPTER] Set lastGoogleAccount:", JSON.stringify(lastGoogleAccount));
+      console.log("[ADAPTER] Set lastSocialAccount:", JSON.stringify(lastSocialAccount));
     }
     const res = await prismaAdapter.getUserByAccount(providerAndId);
     console.log("[ADAPTER] getUserByAccount returned:", JSON.stringify(res));
@@ -29,12 +44,18 @@ const customAdapter = {
     const user = await prismaAdapter.getUserByEmail(email);
     console.log("[ADAPTER] getUserByEmail found user:", JSON.stringify(user));
     
-    if (user && lastGoogleAccount && (Date.now() - lastGoogleAccount.time < 5000)) {
+    if (user && lastSocialAccount && (Date.now() - lastSocialAccount.time < 5000)) {
+      // SECURITY: If credentials account is NOT verified, reject linking
+      if (user.password && !user.emailVerified) {
+        lastSocialAccount = null;
+        throw new Error("VerificationRequiredToLink");
+      }
+
       try {
         const existingAccount = await prisma.account.findFirst({
           where: {
-            provider: "google",
-            providerAccountId: lastGoogleAccount.providerAccountId,
+            provider: lastSocialAccount.provider,
+            providerAccountId: lastSocialAccount.providerAccountId,
           },
         });
         console.log("[ADAPTER] checked existing account:", JSON.stringify(existingAccount));
@@ -44,16 +65,17 @@ const customAdapter = {
             data: {
               userId: user.id,
               type: "oidc",
-              provider: "google",
-              providerAccountId: lastGoogleAccount.providerAccountId,
+              provider: lastSocialAccount.provider,
+              providerAccountId: lastSocialAccount.providerAccountId,
             },
           });
           console.log("[ADAPTER] successfully created account link in DB:", JSON.stringify(newAccountLink));
         }
       } catch (err: any) {
         console.error("[ADAPTER] failed to auto-link account in custom getUserByEmail:", err.message);
+        throw err;
       }
-      lastGoogleAccount = null;
+      lastSocialAccount = null;
     }
     
     const finalUser = await prismaAdapter.getUserByEmail(email);
@@ -68,11 +90,108 @@ const customAdapter = {
   },
   async linkAccount(account: any) {
     console.log("[ADAPTER] linkAccount called with:", JSON.stringify(account));
+    // SECURITY: Double guard, verify user email is verified before linking
+    const user = await prisma.user.findUnique({
+      where: { id: account.userId },
+    });
+    if (user && user.password && !user.emailVerified) {
+      throw new Error("VerificationRequiredToLink");
+    }
     const res = await prismaAdapter.linkAccount(account);
     console.log("[ADAPTER] linkAccount returned:", JSON.stringify(res));
     return res;
   }
 };
+
+const providersList = [
+  GoogleProvider({
+    clientId: process.env.GOOGLE_CLIENT_ID || "",
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+    allowDangerousEmailAccountLinking: true,
+  }),
+  CredentialsProvider({
+    name: "credentials",
+    credentials: {
+      email: { label: "Email", type: "email" },
+      password: { label: "Password", type: "password" },
+    },
+    async authorize(credentials) {
+      if (!credentials?.email || !credentials?.password) {
+        throw new InvalidCredentialsError();
+      }
+
+      let searchIdentifier = (credentials.email as string).trim();
+      const parsedPhone = parsePhoneNumberFromString(searchIdentifier, "IN");
+      if (parsedPhone && parsedPhone.isValid()) {
+        searchIdentifier = parsedPhone.number;
+      }
+
+      const user = await prisma.user.findFirst({
+        where: {
+          OR: [
+            { email: { equals: searchIdentifier, mode: "insensitive" } },
+            { phone: searchIdentifier }
+          ]
+        }
+      });
+
+      if (!user || !user.password) {
+        throw new InvalidCredentialsError();
+      }
+
+      const isValid = await bcrypt.compare(
+        credentials.password as string,
+        user.password
+      );
+
+      if (!isValid) {
+        throw new InvalidCredentialsError();
+      }
+
+      // SECURITY: Block unverified login attempts
+      if (user.email && !user.emailVerified) {
+        throw new EmailNotVerifiedError();
+      }
+      if (user.phone && !user.phoneVerified && !user.email) {
+        throw new PhoneNotVerifiedError();
+      }
+
+      return {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+      };
+    },
+  }),
+];
+
+const isAppleConfigured = !!(
+  process.env.APPLE_CLIENT_ID &&
+  process.env.APPLE_TEAM_ID &&
+  process.env.APPLE_TEAM_ID !== "YOUR_APPLE_TEAM_ID" &&
+  process.env.APPLE_KEY_ID &&
+  process.env.APPLE_KEY_ID !== "YOUR_APPLE_KEY_ID" &&
+  process.env.APPLE_PRIVATE_KEY &&
+  process.env.APPLE_PRIVATE_KEY !== "YOUR_APPLE_PRIVATE_KEY"
+);
+
+if (isAppleConfigured) {
+  providersList.push(
+    AppleProvider({
+      clientId: process.env.APPLE_CLIENT_ID || "",
+      clientSecret: {
+        appleId: process.env.APPLE_CLIENT_ID || "",
+        teamId: process.env.APPLE_TEAM_ID || "",
+        keyId: process.env.APPLE_KEY_ID || "",
+        privateKey: process.env.APPLE_PRIVATE_KEY?.replace(/\\n/g, "\n") || "",
+      },
+      allowDangerousEmailAccountLinking: true,
+    })
+  );
+} else {
+  console.warn("[AUTH] Apple Sign In is not fully configured in environment variables. Skipping AppleProvider initialization.");
+}
 
 /**
  * Full auth config — Node.js only (includes Prisma adapter + providers).
@@ -81,47 +200,29 @@ const customAdapter = {
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   adapter: customAdapter as any,
-  providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID || "",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
-      allowDangerousEmailAccountLinking: true,
-    }),
-    CredentialsProvider({
-      name: "credentials",
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
-      },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
-
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email as string },
-        });
-
-        if (!user || !user.password) return null;
-
-        const isValid = await bcrypt.compare(
-          credentials.password as string,
-          user.password
-        );
-
-        if (!isValid) return null;
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-        };
-      },
-    }),
-  ],
+  providers: providersList,
   callbacks: {
     ...authConfig.callbacks,
-    async signIn({ user, account }) {
-      if (account && account.provider === "google" && user.email) {
+    async signIn({ user, account, profile }) {
+      if (account && (account.provider === "google" || account.provider === "apple") && user.email) {
+        // Enforce Google email_verified validation
+        if (account.provider === "google") {
+          const googleProfile = profile as { email_verified?: boolean } | undefined;
+          const isGoogleVerified = googleProfile?.email_verified === true;
+          if (!isGoogleVerified) {
+            console.log(`[AUTH] Rejecting Google sign-in: email is not verified.`);
+            return `/login?error=OAuthSignin`;
+          }
+        }
+
+        // Validate Apple identity
+        if (account.provider === "apple") {
+          if (!user.email) {
+            console.log(`[AUTH] Rejecting Apple sign-in: email is missing.`);
+            return `/login?error=OAuthSignin`;
+          }
+        }
+
         try {
           const dbUser = await prisma.user.findUnique({
             where: { email: user.email },
@@ -129,13 +230,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           });
 
           if (dbUser) {
-            // Check if Google account is already linked
-            const hasGoogleLink = dbUser.accounts.some(
-              (acc) => acc.provider === "google"
+            // Check if this provider is already linked
+            const hasLink = dbUser.accounts.some(
+              (acc) => acc.provider === account.provider
             );
 
-            if (!hasGoogleLink) {
-              // Manually link the Google account to the existing credentials user
+            if (!hasLink) {
+              // SECURITY: If credentials account is NOT verified, block account linking
+              if (dbUser.password && !dbUser.emailVerified) {
+                console.log(`[AUTH] Rejecting auto-link of ${account.provider} because user ${user.email} is unverified credentials user.`);
+                return `/login?error=VerificationRequiredToLink`;
+              }
+
+              // Manually link the social account to the existing verified user
               await prisma.account.create({
                 data: {
                   userId: dbUser.id,
@@ -151,11 +258,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                   session_state: account.session_state,
                 },
               });
-              console.log(`Manually linked Google account for existing user: ${user.email}`);
+              console.log(`Manually linked ${account.provider} account for existing user: ${user.email}`);
             }
           }
         } catch (error) {
-          console.error("Error linking Google account to existing user:", error);
+          console.error(`Error linking ${account.provider} account to existing user:`, error);
+          if (error instanceof Error && error.message === "VerificationRequiredToLink") {
+            return `/login?error=VerificationRequiredToLink`;
+          }
         }
       }
 

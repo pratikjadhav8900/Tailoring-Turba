@@ -413,3 +413,31 @@ export const sendOrderDeliveredEmail = async (
 
   return sendMail({ to: email, subject, html });
 };
+
+export const sendVerificationEmail = async (email: string, token: string, name: string) => {
+  const firstName = name.trim().split(" ")[0];
+  const subject = "Verify your Tailoring Turba account";
+  const verificationUrl = `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/verify-email?token=${token}`;
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+      <div style="background: #435b43; padding: 24px; border-radius: 6px 6px 0 0; text-align: center;">
+        <h1 style="color: white; margin: 0; font-size: 22px; letter-spacing: 1px;">TAILORING TURBA</h1>
+      </div>
+      <div style="padding: 28px 24px; color: #1a1a1a; line-height: 1.6;">
+        <p>Hi ${firstName},</p>
+        <p>Thanks for creating your Tailoring Turba account.</p>
+        <p>Please verify your email address to activate your account.</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${verificationUrl}" style="display: inline-block; padding: 12px 24px; font-size: 16px; font-weight: bold; background-color: #435b43; color: #ffffff; text-decoration: none; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.05em;">
+            Verify My Email
+          </a>
+        </div>
+        <p>This verification link expires in 24 hours.</p>
+        <p>If you did not create this account, you can safely ignore this email.</p>
+        <p>Best regards,<br/>The Tailoring Turba Team</p>
+      </div>
+    </div>
+  `;
+
+  return sendMail({ to: email, subject, html });
+};
