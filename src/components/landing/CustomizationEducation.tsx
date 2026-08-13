@@ -202,14 +202,14 @@ export default function CustomizationEducation() {
 
             <div className={styles.proTipCard}>
               <div className={styles.proTipHeader}>
-                <Coins size={18} className={styles.proTipIcon} />
+                <Sparkles size={16} className={styles.proTipIcon} />
                 <span>Expert Recommendation</span>
               </div>
               <p className={styles.proTipText}>{selectedMethod.proTip}</p>
             </div>
 
             <div className={styles.educationalNote}>
-              💡 <strong>Still unsure?</strong> Don&apos;t worry. Once you submit a quote or design, our team will review your logo and fabric choice to recommend the best, most budget-friendly printing method before production.
+              Our master tailors and print specialists review your artwork and fabric selection with every quote to recommend the optimal process for durability and finish.
             </div>
           </div>
         </div>
