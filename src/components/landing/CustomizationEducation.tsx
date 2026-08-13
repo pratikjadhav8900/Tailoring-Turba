@@ -180,11 +180,8 @@ export default function CustomizationEducation() {
             </div>
 
             <div className={styles.actions}>
-              <Link href="/customizer" className={styles.primaryAction}>
-                Try in Design Studio <ArrowRight size={16} />
-              </Link>
-              <Link href={`/contact?subject=Customization Inquiry&message=I would like to inquire about ${selectedMethod.name} customization.`} className={styles.secondaryAction}>
-                Get Bulk Quote
+              <Link href={`/contact?subject=Customization Inquiry&message=I would like to inquire about ${selectedMethod.name} customization.`} className={styles.primaryAction}>
+                Get Bulk Quote <ArrowRight size={16} />
               </Link>
             </div>
           </div>
