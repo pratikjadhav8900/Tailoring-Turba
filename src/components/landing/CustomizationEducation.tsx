@@ -134,6 +134,7 @@ export default function CustomizationEducation() {
             return (
               <button
                 key={m.id}
+                type="button"
                 className={`${styles.tabBtn} ${activeTab === m.id ? styles.tabBtnActive : ""}`}
                 onClick={() => setActiveTab(m.id)}
               >
@@ -145,7 +146,7 @@ export default function CustomizationEducation() {
         </div>
 
         {/* Active Content Showcase */}
-        <div className={styles.showcaseGrid}>
+        <div key={selectedMethod.id} className={styles.showcaseGrid}>
           {/* Left Panel: Specifications */}
           <div className={styles.detailsCard}>
             <div className={styles.methodHeader}>
@@ -192,7 +193,7 @@ export default function CustomizationEducation() {
               <h4 className={styles.cardSectionTitle}>Key Highlights</h4>
               <ul className={styles.checkList}>
                 {selectedMethod.details.map((detail, idx) => (
-                  <li key={idx} className={styles.checkItem}>
+                  <li key={`${selectedMethod.id}-${idx}`} className={styles.checkItem}>
                     <CheckCircle size={16} className={styles.checkIcon} />
                     <span>{detail}</span>
                   </li>
