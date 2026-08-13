@@ -1,4 +1,4 @@
-.section {
+﻿.section {
   padding: 80px 0;
   background-color: #f8fafc;
   border-top: 1px solid #e2e8f0;
@@ -28,7 +28,7 @@
 }
 
 .title {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-ui);
   font-size: 2.25rem;
   font-weight: 800;
   color: #0f172a;
@@ -115,7 +115,7 @@
 }
 
 .methodTitle {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-ui);
   font-size: 1.35rem;
   font-weight: 800;
   color: #0f172a;
@@ -375,3 +375,4 @@
     padding: 24px;
   }
 }
+

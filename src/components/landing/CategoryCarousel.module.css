@@ -1,4 +1,4 @@
-.section {
+﻿.section {
   padding: 40px 0;
   background: #fff;
   overflow: hidden;
@@ -58,7 +58,7 @@
 }
 .arrow {
   background: white;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border);
   width: 44px;
   height: 44px;
   border-radius: 50%;
@@ -138,7 +138,7 @@
 .imageWrap {
   position: absolute;
   inset: 0;
-  background: #f1f5f9;
+  background: var(--color-surface-alt);
 }
 .img {
   object-fit: cover;
@@ -176,3 +176,4 @@
     font-size: 1.25rem;
   }
 }
+

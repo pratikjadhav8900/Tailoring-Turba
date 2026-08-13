@@ -1,4 +1,4 @@
-.modalOverlay {
+﻿.modalOverlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -126,11 +126,11 @@
 }
 
 .error {
-  background: #fff5f5;
-  color: #c53030;
+  background: var(--color-error-light);
+  color: var(--color-error);
   padding: 14px;
   font-size: 0.85rem;
-  border-left: 3px solid #c53030;
+  border-left: 3px solid var(--color-error);
   font-weight: 500;
 }
 
@@ -316,3 +316,4 @@
     padding: 16px 20px;
   }
 }
+

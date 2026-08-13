@@ -1,4 +1,4 @@
-.tabContentInner {
+﻿.tabContentInner {
   max-width: 800px;
   width: 100%;
 }
@@ -17,8 +17,8 @@
 }
 
 .sizeCard {
-  background: #f8fafc;
-  border: 2px solid #e2e8f0;
+  background: var(--color-background);
+  border: 2px solid var(--color-border);
   border-radius: 12px;
   padding: 16px 12px;
   text-align: center;
@@ -26,44 +26,45 @@
 }
 
 .sizeCardActive {
-  background: #f0fdf4 !important;
-  border-color: #86efac !important;
+  background: var(--color-success-light) !important;
+  border-color: rgba(58,107,58,0.3) !important;
 }
 
 .sizeLabel {
   font-size: 0.75rem;
   font-weight: 700;
-  color: #94a3b8;
+  color: var(--color-text-muted);
   margin-bottom: 12px;
 }
 
 .sizeQty {
   font-size: 1.5rem;
   font-weight: 800;
-  color: #1e293b;
+  color: var(--color-text-primary);
   margin: 8px 0;
   line-height: 1;
 }
 
 .sizeQtyActive {
-  color: #166534 !important;
+  color: var(--color-success) !important;
 }
 
 .qtyBtn {
   width: 28px;
   height: 28px;
   border-radius: 6px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border);
   background: white;
   cursor: pointer;
   font-size: 1rem;
-  color: #64748b;
+  color: var(--color-text-muted);
 }
 
 .progressBarContainer {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   padding: 20px 24px;
   margin-bottom: 28px;
 }
+

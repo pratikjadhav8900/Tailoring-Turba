@@ -1,4 +1,4 @@
-.sidebar {
+﻿.sidebar {
   width: 280px;
   background: white;
   border-right: 1px solid var(--tth-beige-light);
@@ -127,12 +127,12 @@
 }
 
 .logout {
-  color: #c53030;
+  color: var(--color-error);
 }
 
 .logout:hover {
-  background: #fff5f5;
-  color: #9b2c2c;
+  background: var(--color-error-light);
+  color: var(--color-error);
 }
 
 @media (max-width: 1024px) {
@@ -212,3 +212,4 @@
     display: none;
   }
 }
+

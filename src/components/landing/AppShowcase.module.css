@@ -1,4 +1,4 @@
-.section {
+﻿.section {
   background: linear-gradient(90deg, #d3c4ad 50%, #6b846e 50%);
   color: white;
   overflow: hidden;
@@ -60,7 +60,7 @@
 }
 
 .heading {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-ui);
   font-size: 3.5rem;
   font-weight: 800;
   line-height: 1.1;
@@ -124,3 +124,4 @@
     background: #d3c4ad;
   }
 }
+
