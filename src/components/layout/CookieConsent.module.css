@@ -223,11 +223,17 @@
 /* ========================
    Responsive
    ======================== */
-@media (max-width: 768px) {
+@media (max-width: 991px) {
+  .banner {
+    bottom: calc(56px + env(safe-area-inset-bottom, 8px));
+    border-bottom: 1px solid #e0e0e0;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 0, 0, 0.08);
+  }
+
   .inner {
     flex-direction: column;
     gap: 14px;
-    padding: 16px 20px calc(16px + env(safe-area-inset-bottom));
+    padding: 16px 20px;
   }
 
   .body {
