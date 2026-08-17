@@ -735,7 +735,7 @@ export default function ProductsClient({ products }: { products: any[] }) {
                           router.push(`/products/${p.id}`);
                         }}
                       >
-                        <Eye size={14} /> VIEW PRODUCT
+                        <Eye size={14} /> VIEW
                       </button>
                       <a
                         className={styles.actionBtnSecondary}
