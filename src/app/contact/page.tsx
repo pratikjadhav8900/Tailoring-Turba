@@ -42,6 +42,15 @@ function ContactForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Custom email validation (requires a TLD like .com, .in, etc.)
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(formData.email)) {
+      setError("Please enter a valid email address (e.g. name@company.com)");
+      toast.error("Invalid email address format");
+      return;
+    }
+
     setIsLoading(true);
     setError("");
 
@@ -193,9 +202,11 @@ function ContactForm() {
                       className={styles.input}
                       type="email"
                       required
+                      pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
+                      title="Please enter a valid email address (e.g. name@company.com)"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      placeholder=""
+                      placeholder="name@company.com"
                     />
                   </div>
                 </div>
