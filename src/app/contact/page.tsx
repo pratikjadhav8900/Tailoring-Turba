@@ -43,11 +43,26 @@ function ContactForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Custom email validation (requires a TLD like .com, .in, etc.)
+    // 1. Name validation
+    if (!formData.name || !formData.name.trim()) {
+      setError("Full Name is a compulsory field.");
+      toast.error("Full Name is required");
+      return;
+    }
+
+    // 2. Email validation (requires a TLD like .com, .in, etc.)
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(formData.email)) {
       setError("Please enter a valid email address (e.g. name@company.com)");
       toast.error("Invalid email address format");
+      return;
+    }
+
+    // 3. Phone validation (requires exactly 10 digits)
+    const phoneRegex = /^[0-9]{10}$/;
+    if (!phoneRegex.test(formData.phone)) {
+      setError("Phone Number is a compulsory field and must be exactly 10 digits.");
+      toast.error("Valid 10-digit Phone Number is required");
       return;
     }
 
