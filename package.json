@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "node scripts/build.js",
     "start": "next start",
     "lint": "next lint",
     "test": "vitest",
@@ -76,6 +76,6 @@
     "vitest": "^1.6.0"
   },
   "prisma": {
-    "seed": "npx ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
+    "seed": "npx tsx prisma/seed.ts"
   }
 }
