@@ -1,4 +1,4 @@
-﻿.mobileNav {
+.mobileNav {
   position: fixed;
   bottom: 0;
   left: 0;
@@ -7,7 +7,8 @@
   backdrop-filter: blur(10px);
   border-top: 1px solid rgba(0, 0, 0, 0.05);
   z-index: 99999;
-  padding: 8px 0 env(safe-area-inset-bottom, 8px);
+  padding: 8px 0 16px; /* Fallback for browsers that don't support env() inside padding */
+  padding: 8px 0 env(safe-area-inset-bottom); /* Clean env() call without fallback parameter */
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
   display: none;
 }

@@ -225,7 +225,10 @@
    ======================== */
 @media (max-width: 991px) {
   .banner {
-    bottom: calc(56px + env(safe-area-inset-bottom, 8px));
+    bottom: 72px; /* Fallback for browsers that don't support env() inside calc() */
+    bottom: calc(68px + env(safe-area-inset-bottom)); /* Clean env() call without fallback parameter */
+    z-index: 999999;
+    transform: translate3d(0, 0, 0); /* Fix iOS WebKit stacking/compositing issues */
     border-bottom: 1px solid #e0e0e0;
     box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 0, 0, 0.08);
   }
