@@ -1,495 +1,702 @@
-.page {
-  display: flex;
-  flex-direction: column;
-  padding-bottom: 80px;
-}
-
-.heroHeader {
-  position: relative;
-  width: 100%;
-  height: 420px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 0 80px;
-  overflow: hidden;
-}
-
-.heroBg {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-}
-
-.heroBg img {
-  object-fit: cover;
-  width: 100%;
-  height: 100%;
-}
-
-.heroOverlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(15, 23, 42, 0.4) 0%, rgba(15, 23, 42, 0.8) 100%);
-  z-index: 1;
-}
-
-.heroContent {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  width: 100%;
+.container {
   max-width: 1200px;
   margin: 0 auto;
-}
-
-.heroLabel {
-  font-family: var(--font-sans);
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--tth-olive);
-  letter-spacing: 0.3em;
-  margin-bottom: 24px;
-}
-
-.title {
-  font-family: var(--font-serif);
-  font-size: 4rem;
-  font-weight: 400;
-  color: white;
-  margin-bottom: 16px;
-  letter-spacing: -0.01em;
-  line-height: 1.1;
-}
-
-.sub {
-  font-family: var(--font-sans);
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 1.25rem;
-  max-width: 500px;
-  line-height: 1.6;
-  font-weight: 300;
-}
-
-.primaryBtn {
-  background: white;
-  color: var(--color-neutral-900);
-  padding: 14px 28px;
-  border-radius: 8px;
-  font-family: var(--font-sans);
-  font-weight: 600;
-  font-size: 0.95rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.3s ease;
-  text-decoration: none;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-}
-
-.primaryBtn:hover {
-  transform: translateY(-2px);
+  padding: 40px 24px 80px;
   background: var(--color-neutral-100);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+  min-height: 100vh;
 }
 
-.mainContent {
-  position: relative;
-  z-index: 10;
-  max-width: 1200px;
-  margin: -60px auto 0;
-  width: 100%;
-  padding: 0 60px;
-  display: flex;
-  flex-direction: column;
-  gap: 40px;
-}
-
-.statsGrid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 24px;
-}
-
-.statCard {
-  background: white;
-  padding: 32px;
-  border-radius: 2px;
-  display: flex;
-  align-items: center;
-  gap: 24px;
-  transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
-  border: 1px solid #f1f5f9;
-}
-
-.statCard:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 20px 40px rgba(0,0,0,0.04);
-  border-color: #e2e8f0;
-}
-
-.statIcon {
-  width: 56px;
-  height: 56px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f8fafc;
-  border-radius: 50%;
-  transition: all 0.3s ease;
-  position: static;
-}
-
-.statCard:hover .statIcon {
-  background: var(--tth-olive-light);
-  color: white !important;
-}
-
-.statContent {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.statValue {
-  font-family: var(--font-serif);
-  font-size: 2.2rem;
-  font-weight: 400;
-  color: #0f172a;
-  line-height: 1;
-}
-
-.statLabel {
-  font-family: var(--font-sans);
-  font-size: 0.75rem;
-  color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  font-weight: 600;
-}
-
-.grid2 {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 32px;
-}
-
-.block {
-  background: white;
-  padding: 40px;
-  border-radius: 2px;
-  border: 1px solid #f1f5f9;
-}
-
-.blockHeader {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  margin-bottom: 40px;
-}
-
-.blockHeader h2 {
-  font-family: var(--font-serif);
-  font-size: 2rem;
-  font-weight: 400;
-  color: #0f172a;
-}
-
-.seeAll {
-  font-family: var(--font-sans);
-  font-size: 0.85rem;
-  color: var(--tth-olive);
-  font-weight: 600;
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  transition: opacity 0.2s;
-}
-
-.seeAll:hover {
-  opacity: 0.7;
-}
-
-.empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  color: var(--color-neutral-500);
-  font-family: var(--font-sans);
-  font-size: 0.95rem;
-  padding: 48px 24px;
-  text-align: center;
-  background: var(--color-neutral-50);
-  border-radius: 12px;
-  border: 1px dashed var(--color-neutral-300);
-}
-
-.empty a {
-  color: var(--tth-olive);
-  font-weight: 500;
-  text-decoration: none;
-  border-bottom: 1px solid transparent;
-  transition: border-color 0.2s;
-}
-
-.empty a:hover {
-  border-color: var(--tth-olive);
-}
-
-.orderList, .bookingList {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.orderRow, .bookingRow {
+/* 1. Header Section */
+.header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 16px;
-  background: var(--color-neutral-0);
-  border: 1px solid var(--color-neutral-100);
-  border-radius: 12px;
-  transition: all 0.2s ease;
-}
-
-.orderRow:hover, .bookingRow:hover {
-  border-color: var(--color-neutral-300);
-  background: var(--color-neutral-50);
-}
-
-.orderInfo {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.orderId {
-  color: var(--color-neutral-900);
-  font-family: var(--font-sans);
-  font-size: 0.95rem;
-  font-weight: 600;
-}
-
-.orderMeta {
-  color: var(--color-neutral-500);
-  font-family: var(--font-sans);
-  font-size: 0.85rem;
-}
-
-.orderValue {
-  display: flex;
-  flex-direction: column;
   align-items: flex-end;
-  gap: 6px;
+  border-bottom: 1px solid var(--color-neutral-200);
+  padding-bottom: 24px;
+  margin-bottom: 32px;
+  gap: 20px;
 }
 
-.orderAmount {
-  color: var(--color-neutral-900);
-  font-weight: 600;
-  font-size: 1rem;
-  font-family: var(--font-sans);
-}
-
-.bookingDate {
-  color: var(--color-neutral-900);
-  font-family: var(--font-sans);
-  font-size: 0.95rem;
-  font-weight: 600;
+.headerWelcome {
   flex: 1;
 }
 
-.bookingSlot {
+.welcomeTitle {
+  font-family: var(--font-serif);
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--color-neutral-900);
+  margin: 0 0 6px;
+  letter-spacing: -0.02em;
+}
+
+.welcomeSub {
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
   color: var(--color-neutral-500);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.startDesigningCta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: var(--tth-olive);
+  color: var(--color-neutral-0);
   font-family: var(--font-sans);
   font-size: 0.85rem;
-  font-weight: 500;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  border-radius: 2px;
+  transition: background-color 0.2s;
+  flex-shrink: 0;
+}
+
+.startDesigningCta:hover {
+  background: #55634c;
+}
+
+/* 2. Quick Actions Grid */
+.quickActions {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 40px;
+}
+
+.actionCard {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+  background: var(--color-neutral-0);
+  border: 1px solid var(--color-neutral-200);
+  border-radius: 4px;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.2s ease;
+}
+
+.actionCard:hover {
+  border-color: var(--color-neutral-400);
+  background: #fcfcfc;
+}
+
+.actionIcon {
+  color: var(--tth-olive);
+  flex-shrink: 0;
+}
+
+.actionInfo h4 {
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-neutral-800);
+  margin: 0 0 2px;
+}
+
+.actionInfo p {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  color: var(--color-neutral-400);
+  margin: 0;
+}
+
+/* 3. Section Styling */
+.section {
+  margin-bottom: 48px;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--color-neutral-200);
+  padding-bottom: 10px;
+}
+
+.sectionTitle {
+  font-family: var(--font-serif);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--color-neutral-900);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.sectionLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--tth-olive);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.sectionLink:hover {
+  color: #55634c;
+}
+
+/* 4. Empty State Box */
+.emptyBox {
+  padding: 40px;
+  background: var(--color-neutral-0);
+  border: 1px solid var(--color-neutral-200);
+  border-radius: 4px;
+  text-align: center;
+}
+
+.emptyText {
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  color: var(--color-neutral-500);
+  margin: 0 0 20px;
+}
+
+.emptyCtas {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.emptyBtnPrimary {
+  padding: 8px 20px;
+  background: var(--tth-olive);
+  color: var(--color-neutral-0);
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  border-radius: 2px;
+  transition: background-color 0.2s;
+}
+
+.emptyBtnPrimary:hover {
+  background: #55634c;
+}
+
+.emptyBtnSecondary {
+  padding: 8px 20px;
+  background: transparent;
+  color: var(--color-neutral-800);
+  border: 1px solid var(--color-neutral-300);
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-decoration: none;
+  border-radius: 2px;
+  transition: all 0.2s;
+}
+
+.emptyBtnSecondary:hover {
+  border-color: var(--color-neutral-800);
+  background: var(--color-neutral-50);
+}
+
+/* 5. Orders Layout */
+.ordersList {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.orderItem {
+  background: var(--color-neutral-0);
+  border: 1px solid var(--color-neutral-200);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.orderMetaRow {
+  background: var(--color-neutral-50);
+  border-bottom: 1px solid var(--color-neutral-200);
+  padding: 14px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.orderNumber {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--color-neutral-900);
   margin-right: 16px;
 }
 
-.badge {
-  padding: 4px 10px;
-  border-radius: 6px;
+.orderDate {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  color: var(--color-neutral-400);
+}
+
+.statusBadge {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  letter-spacing: 0.05em;
+  border-radius: 2px;
+}
+
+/* Status Colors matching current app states */
+.pending, .requested {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.processing {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.shipped {
+  background: #fae8ff;
+  color: #c084fc;
+}
+
+.delivered, .confirmed {
+  background: #d1fae5;
+  color: #10b981;
+}
+
+.cancelled {
+  background: #fee2e2;
+  color: #ef4444;
+}
+
+.orderProducts {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.orderProductRow {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.orderProductThumb {
+  width: 50px;
+  height: 65px;
+  position: relative;
+  background: var(--color-neutral-100);
+  border: 1px solid var(--color-neutral-200);
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.noThumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-size: 0.6rem;
+  color: var(--color-neutral-400);
+  font-family: var(--font-sans);
+}
+
+.orderProductInfo {
+  flex: 1;
+}
+
+.orderProductInfo h5 {
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-neutral-800);
+  margin: 0 0 4px;
+}
+
+.orderProductSpecs {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  color: var(--color-neutral-400);
+  margin: 0;
+}
+
+.orderProductPrice {
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-neutral-900);
+}
+
+.orderFooter {
+  border-top: 1px solid var(--color-neutral-100);
+  padding: 14px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.orderTotal {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  color: var(--color-neutral-500);
+}
+
+.orderTotal span {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-neutral-900);
+}
+
+.viewOrderBtn {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--tth-olive);
+  text-decoration: none;
+  border: 1px solid var(--color-neutral-200);
+  padding: 6px 12px;
+  border-radius: 2px;
+  transition: all 0.2s;
+}
+
+.viewOrderBtn:hover {
+  border-color: var(--tth-olive);
+  background: var(--color-neutral-50);
+}
+
+/* 6. Designs Grid */
+.designsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.designCard {
+  background: var(--color-neutral-0);
+  border: 1px solid var(--color-neutral-200);
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.designImageWrapper {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  background: var(--color-neutral-50);
+  border-bottom: 1px solid var(--color-neutral-100);
+  overflow: hidden;
+  padding: 10px;
+}
+
+.designContent {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.designName {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-neutral-800);
+  margin: 0 0 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.designMeta {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  color: var(--color-neutral-400);
+  margin: 0 0 12px;
+}
+
+.designActions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.designEditBtn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 0;
+  background: var(--tth-olive);
+  color: var(--color-neutral-0);
   font-family: var(--font-sans);
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.badge-pending, .badge-requested {
-  background: var(--color-neutral-100);
-  color: var(--color-neutral-600);
-}
-
-.badge-confirmed, .badge-processing {
-  background: var(--color-accent-50);
-  color: var(--color-accent-700);
-}
-
-.badge-completed, .badge-delivered {
-  background: var(--color-neutral-900);
-  color: var(--color-neutral-0);
-}
-
-.quickActions {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 24px;
-}
-
-.quickAction {
-  padding: 32px 24px;
-  background: white;
-  border: 1px solid var(--color-neutral-200);
-  border-radius: 16px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  text-align: center;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   text-decoration: none;
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.04);
+  border-radius: 2px;
+  transition: background-color 0.2s;
 }
 
-.quickAction:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.08);
-  border-color: var(--tth-olive);
+.designEditBtn:hover {
+  background: #55634c;
 }
 
-.qaIcon {
-  color: var(--color-neutral-900);
-  background: var(--color-neutral-50);
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
+.designDeleteBtn {
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
+  background: transparent;
+  border: 1px solid var(--color-neutral-200);
+  color: var(--color-neutral-400);
+  border-radius: 2px;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.2s;
 }
 
-.quickAction:hover .qaIcon {
-  background: var(--tth-olive);
-  color: white;
-  transform: scale(1.05);
+.designDeleteBtn:hover {
+  color: #ef4444;
+  border-color: #fca5a5;
+  background: #fef2f2;
 }
 
-.quickAction span {
-  color: var(--color-neutral-900);
+/* 7. Product Cards Grid (Wishlist & Recommendations) */
+.productsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+/* 8. Bookings layout */
+.bookingsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.bookingCard {
+  background: var(--color-neutral-0);
+  border: 1px solid var(--color-neutral-200);
+  border-radius: 4px;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.bookingIcon {
+  color: var(--tth-olive);
+  flex-shrink: 0;
+}
+
+.bookingInfo {
+  flex: 1;
+}
+
+.bookingInfo h5 {
   font-family: var(--font-sans);
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 600;
-  letter-spacing: 0.01em;
+  color: var(--color-neutral-800);
+  margin: 0 0 2px;
+}
+
+.bookingInfo p {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  color: var(--color-neutral-400);
+  margin: 0;
+}
+
+.bookingStatus {
+  font-family: var(--font-sans);
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 3px 6px;
+  letter-spacing: 0.05em;
+  border-radius: 2px;
+}
+
+/* 9. Support Grid */
+.accountSupport {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  margin-top: 56px;
+  border-top: 1px solid var(--color-neutral-200);
+  padding-top: 40px;
+}
+
+.supportCard {
+  background: var(--color-neutral-0);
+  border: 1px solid var(--color-neutral-200);
+  border-radius: 4px;
+  padding: 30px;
+}
+
+.supportCard h3 {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-neutral-900);
+  margin: 0 0 16px;
+}
+
+.address, .timings {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  color: var(--color-neutral-600);
+  line-height: 1.5;
+  margin: 0 0 12px;
+}
+
+.address svg, .timings svg {
+  color: var(--tth-olive);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.supportLinks {
+  margin-top: 20px;
+}
+
+.supportCta {
+  display: inline-flex;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--tth-olive);
+  text-decoration: none;
+  border-bottom: 1.5px solid var(--tth-olive);
+  padding-bottom: 2px;
+  transition: all 0.2s;
+}
+
+.supportCta:hover {
+  color: #55634c;
+  border-color: #55634c;
+}
+
+.supportDesc {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  color: var(--color-neutral-500);
+  line-height: 1.5;
+  margin: 0 0 20px;
+}
+
+.contactDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.contactItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  color: var(--color-neutral-800);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.contactItem:hover {
+  color: var(--tth-olive);
+}
+
+.contactItem svg {
+  color: var(--tth-olive);
+}
+
+/* 10. Responsive Design Constraints */
+@media (max-width: 1200px) {
+  .quickActions {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .designsGrid, .productsGrid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 @media (max-width: 1024px) {
-  .heroHeader { 
-    padding: 60px 24px 40px; 
-    height: auto;
-    min-height: 400px;
-    justify-content: flex-start;
+  /* IMPORTANT: Safe padding bottom on tablet to not get covered by bottom navigation */
+  .container {
+    padding: 32px 20px calc(80px + env(safe-area-inset-bottom));
   }
-  .heroContent { 
-    align-items: flex-start; 
-    text-align: left;
-    transform: none;
-  }
-  .title {
-    font-size: 3rem;
-    margin-bottom: 12px;
-  }
-  .sub {
-    font-size: 1.1rem;
-    opacity: 0.8;
-  }
-  .mainContent { 
-    padding: 0 24px; 
-    margin-top: 40px; 
-  }
-  .grid2 { grid-template-columns: 1fr; gap: 40px; }
-  
-  .statsGrid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
-  }
-  
-  .statCard {
-    padding: 20px;
-    gap: 12px;
-  }
-  
-  .statValue {
+  .welcomeTitle {
     font-size: 1.8rem;
   }
-  
-  .statLabel {
-    font-size: 0.65rem;
-  }
+}
 
-  .statIcon {
-    width: 44px;
-    height: 44px;
-  }
-
-  .quickActions {
+@media (max-width: 768px) {
+  .designsGrid, .productsGrid {
     grid-template-columns: repeat(2, 1fr);
+  }
+  .bookingsGrid, .accountSupport {
+    grid-template-columns: 1fr;
+  }
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
     gap: 16px;
+  }
+  .startDesigningCta {
+    width: 100%;
+    justify-content: center;
   }
 }
 
-@media (max-width: 576px) {
-  .heroHeader {
-    padding: 40px 16px 30px;
-    min-height: 300px;
+@media (max-width: 480px) {
+  /* Safe padding bottom on mobile screens */
+  .container {
+    padding: 24px 16px calc(110px + env(safe-area-inset-bottom));
   }
-  .title {
-    font-size: 2.25rem;
-  }
-  .sub {
-    font-size: 1rem;
-  }
-  .mainContent {
-    padding: 0 16px;
-    margin-top: 24px;
-    gap: 24px;
-  }
-  .statsGrid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-  .statCard {
-    padding: 16px;
-    gap: 16px;
-  }
-  .statValue {
-    font-size: 1.6rem;
-  }
-  .quickActions {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-  .block {
-    padding: 20px;
-  }
-  .blockHeader {
-    margin-bottom: 24px;
-  }
-  .blockHeader h2 {
+  .welcomeTitle {
     font-size: 1.5rem;
   }
-  .orderRow, .bookingRow {
-    padding: 12px;
+  .quickActions {
+    grid-template-columns: 1fr;
+    gap: 12px;
   }
-  .bookingSlot {
-    margin-right: 8px;
+  .designsGrid, .productsGrid {
+    grid-template-columns: 1fr;
+  }
+  .orderMetaRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .orderFooter {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .viewOrderBtn {
+    width: 100%;
+    text-align: center;
   }
 }
-

@@ -19,3 +19,16 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     return NextResponse.json({ error: "Failed to fetch design" }, { status: 500 });
   }
 }
+
+export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+  try {
+    await prisma.design.delete({
+      where: { id: params.id }
+    });
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Error deleting design:", error);
+    return NextResponse.json({ error: "Failed to delete design" }, { status: 500 });
+  }
+}
+
