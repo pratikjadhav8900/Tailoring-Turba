@@ -134,9 +134,9 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({ success: true });
-  } catch (err) {
+  } catch (err: any) {
     console.error("[CONTACT_FORM]", err);
-    return NextResponse.json({ error: "Failed to send enquiry." }, { status: 500 });
+    return NextResponse.json({ error: `Failed to send enquiry: ${err.message || err}` }, { status: 500 });
   }
 }
 
