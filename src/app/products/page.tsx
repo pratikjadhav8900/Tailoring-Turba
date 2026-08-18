@@ -19,7 +19,10 @@ export default async function ProductsPage() {
 
   try {
     const dbProducts = await withRetry(() => prisma.product.findMany({
-      where: { isActive: true },
+      where: {
+        isActive: true,
+        name: { not: "Custom Design" },
+      },
       include: { category: true },
       orderBy: { createdAt: 'desc' },
     }));

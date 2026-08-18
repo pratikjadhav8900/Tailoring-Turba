@@ -107,7 +107,12 @@ export default async function ProductDetailsPage({ params }: { params: { id: str
       };
 
       const relatedDbProducts = await withRetry(() => prisma.product.findMany({
-        where: { categoryId: dbProduct.categoryId, id: { not: dbProduct.id }, isActive: true },
+        where: {
+          categoryId: dbProduct.categoryId,
+          id: { not: dbProduct.id },
+          isActive: true,
+          name: { not: "Custom Design" },
+        },
         include: { category: true },
         take: 4
       }));
