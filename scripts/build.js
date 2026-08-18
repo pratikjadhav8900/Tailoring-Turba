@@ -7,10 +7,10 @@ try {
   console.log('📦 Generating Prisma Client...');
   execSync('npx prisma generate', { stdio: 'inherit' });
 
-  // 2. Conditionally run migrations and seeding
+  // 2. Conditionally run database schema sync and seeding
   if (process.env.DATABASE_URL) {
-    console.log('🔗 DATABASE_URL detected. Applying database migrations...');
-    execSync('npx prisma migrate deploy', { stdio: 'inherit' });
+    console.log('🔗 DATABASE_URL detected. Syncing database schema (db push)...');
+    execSync('npx prisma db push --accept-data-loss', { stdio: 'inherit' });
 
     console.log('🌱 Seeding database initial catalogue...');
     execSync('npx prisma db seed', { stdio: 'inherit' });
