@@ -427,6 +427,18 @@
   color: var(--tth-text-muted);
 }
 
+.counterGuidance {
+  font-size: 0.72rem;
+  color: var(--tth-text-muted);
+}
+
+.counterNotice {
+  font-size: 0.75rem;
+  color: #b45309;
+  margin-top: 3px;
+  font-weight: 500;
+}
+
 .counterWarning {
   color: #c53030;
   font-weight: 600;

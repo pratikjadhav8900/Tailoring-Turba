@@ -7,6 +7,7 @@ import Image from "next/image";
 import styles from "./page.module.css";
 import { getResizedCloudinaryUrl } from "@/lib/cloudinary-client";
 import { generateSlug } from "@/lib/slug";
+import { generateProductSeo } from "@/lib/seo-generator";
 
 type Product = any; // We can type this properly later
 type Category = any;
@@ -192,70 +193,33 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
     }
   };
 
-  const buildOptimizedSeoTitle = (name: string, categoryName: string): string => {
-    const brand = "Tailoring Turba";
-    const shortCategory = categoryName.replace(/Tailoring Turba\s*/i, "").trim();
-
-    // Option 1: "2-in-1 Zipper Hoodie | Custom Hoodie | Tailoring Turba"
-    let title = shortCategory 
-      ? `${name} | Custom ${shortCategory} | ${brand}`
-      : `${name} | ${brand}`;
-
-    if (title.length <= 60) return title;
-
-    // Option 2: "2-in-1 Zipper Hoodie | Premium | Tailoring Turba"
-    title = shortCategory 
-      ? `${name} | ${shortCategory} | ${brand}`
-      : `${name} | ${brand}`;
-
-    if (title.length <= 60) return title;
-
-    // Option 3: "2-in-1 Zipper Hoodie | Tailoring Turba"
-    title = `${name} | ${brand}`;
-    if (title.length <= 65) return title;
-
-    // Option 4: Clean truncation <= 65 chars
-    return title.substring(0, 65).trim();
-  };
-
-  const buildOptimizedSeoDescription = (name: string, categoryName: string, customDesc?: string): string => {
-    const shortCategory = categoryName.replace(/Tailoring Turba\s*/i, "").trim() || "apparel";
-    
-    if (customDesc && customDesc.trim().length >= 40 && customDesc.trim().length <= 155) {
-      return customDesc.trim();
-    }
-
-    let desc = `Shop custom ${name} from Tailoring Turba. Premium ${shortCategory.toLowerCase()} with custom embroidery, printing, and bulk corporate pricing.`;
-    if (desc.length <= 155) return desc;
-
-    desc = `Shop custom ${name} from Tailoring Turba. High-quality customizable ${shortCategory.toLowerCase()} with bulk corporate ordering.`;
-    if (desc.length <= 155) return desc;
-
-    return desc.substring(0, 155).trim();
-  };
-
   const handleAutoGenerateSeo = () => {
     const name = formData.name.trim();
     if (!name) {
       toast.error("Please enter a product name first.");
       return;
     }
-    const rawCat = formData.category === "NEW" ? formData.newCategory : (formData.category || "Apparel");
-    const autoTitle = buildOptimizedSeoTitle(name, rawCat);
-    const autoDesc = buildOptimizedSeoDescription(name, rawCat, formData.description);
-    const autoSlug = generateSlug(name);
-    const shortCat = rawCat.replace(/Tailoring Turba\s*/i, "").trim() || "apparel";
-    const autoKeywords = `${name.toLowerCase()}, custom ${name.toLowerCase()}, ${shortCat.toLowerCase()}, tailoring turba, corporate uniform, b2b apparel`;
+
+    const generated = generateProductSeo({
+      name: formData.name,
+      category: formData.category === "NEW" ? formData.newCategory : formData.category,
+      type: formData.type,
+      badge: formData.badge,
+      description: formData.description,
+      features: formData.features,
+      colors: formData.colors,
+      price: formData.price,
+    });
 
     setFormData(prev => ({
       ...prev,
-      seoTitle: autoTitle,
-      seoDescription: autoDesc,
-      slug: autoSlug,
-      seoKeywords: autoKeywords,
+      seoTitle: generated.seoTitle,
+      seoDescription: generated.seoDescription,
+      slug: generated.slug,
+      seoKeywords: generated.seoKeywords,
     }));
     setIsSlugManuallyEdited(true);
-    toast.success("SEO fields auto-generated!");
+    toast.success("SEO fields auto-generated from product data!");
   };
 
   const handleEditClick = (p: Product) => {
@@ -264,30 +228,23 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
     setIsSlugManuallyEdited(!!p.slug);
     setSlugConflictError("");
 
-    const rawCat = p.category?.name || "Apparel";
-    const defaultTitle = p.seoTitle || (p.name ? buildOptimizedSeoTitle(p.name, rawCat) : "");
-    const defaultDesc = p.seoDescription || (p.name ? buildOptimizedSeoDescription(p.name, rawCat, p.description) : "");
-    const shortCat = rawCat.replace(/Tailoring Turba\s*/i, "").trim() || "apparel";
-    const defaultKeywords = p.seoKeywords || (p.name ? `${p.name.toLowerCase()}, custom ${p.name.toLowerCase()}, ${shortCat.toLowerCase()}, tailoring turba` : "");
-    const defaultSlug = p.slug || generateSlug(p.name);
-
     setFormData({
-      name: p.name,
+      name: p.name || "",
       category: p.category?.name || "",
       newCategory: "",
       type: p.type || "",
-      price: String(p.basePrice),
+      price: String(p.basePrice || ""),
       description: p.description || "",
-      features: p.features ? p.features.join("\n") : "",
+      features: p.features ? (Array.isArray(p.features) ? p.features.join("\n") : p.features) : "",
       colors: p.colors ? String(p.colors) : "",
       badge: p.badge || "",
       imageUrl: p.images && p.images[0] ? p.images[0] : "",
       imageUrls: p.images || [],
       isActive: p.isActive !== false,
-      seoTitle: defaultTitle,
-      seoDescription: defaultDesc,
-      seoKeywords: defaultKeywords,
-      slug: defaultSlug,
+      seoTitle: p.seoTitle || "",
+      seoDescription: p.seoDescription || "",
+      seoKeywords: p.seoKeywords || "",
+      slug: p.slug || generateSlug(p.name || ""),
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -543,7 +500,7 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <label>Page Title</label>
                 <span className={styles.counterText}>
-                  {formData.seoTitle.length} of 500 characters used
+                  {formData.seoTitle.length} characters
                 </span>
               </div>
               <input 
@@ -553,13 +510,23 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
                 onChange={handleChange} 
                 placeholder={formData.name || "Enter custom title for search engine listing..."} 
               />
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '3px' }}>
+                <span className={styles.counterGuidance}>
+                  Recommended: 50–60 characters · Max guidance: 70 characters
+                </span>
+              </div>
+              {formData.seoTitle.length > 70 && (
+                <p className={styles.counterNotice}>
+                  Notice: Title exceeds 70 characters and may be truncated by search engines.
+                </p>
+              )}
             </div>
 
             <div className={styles.inputGroup}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <label>Meta Description</label>
                 <span className={styles.counterText}>
-                  {formData.seoDescription.length} of 1000 characters used
+                  {formData.seoDescription.length} characters
                 </span>
               </div>
               <textarea 
@@ -569,6 +536,16 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
                 rows={3} 
                 placeholder={formData.description || "Enter custom description for search engine listing..."}
               />
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '3px' }}>
+                <span className={styles.counterGuidance}>
+                  Recommended: 150–160 characters
+                </span>
+              </div>
+              {formData.seoDescription.length > 160 && (
+                <p className={styles.counterNotice}>
+                  Notice: Description exceeds 160 characters and may be truncated in search snippets.
+                </p>
+              )}
             </div>
 
             <div className={styles.inputGroup}>

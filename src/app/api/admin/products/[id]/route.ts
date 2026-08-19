@@ -83,11 +83,11 @@ export async function PUT(
         .join(", ");
     }
 
-    if (trimmedSeoTitle && trimmedSeoTitle.length > 200) {
-      return NextResponse.json({ error: "SEO Title cannot exceed 200 characters." }, { status: 400 });
+    if (trimmedSeoTitle && trimmedSeoTitle.length > 1000) {
+      return NextResponse.json({ error: "SEO Title cannot exceed 1000 characters." }, { status: 400 });
     }
-    if (trimmedSeoDescription && trimmedSeoDescription.length > 500) {
-      return NextResponse.json({ error: "SEO Description cannot exceed 500 characters." }, { status: 400 });
+    if (trimmedSeoDescription && trimmedSeoDescription.length > 2000) {
+      return NextResponse.json({ error: "SEO Description cannot exceed 2000 characters." }, { status: 400 });
     }
 
     let finalSlug = slug?.trim() || null;
