@@ -542,8 +542,8 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
             <div className={styles.inputGroup}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <label>Page Title</label>
-                <span className={`${styles.counterText} ${formData.seoTitle.length > 70 ? styles.counterWarning : ''}`}>
-                  {formData.seoTitle.length} of 70 characters used
+                <span className={styles.counterText}>
+                  {formData.seoTitle.length} of 500 characters used
                 </span>
               </div>
               <input 
@@ -553,18 +553,13 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
                 onChange={handleChange} 
                 placeholder={formData.name || "Enter custom title for search engine listing..."} 
               />
-              {formData.seoTitle.length > 70 && (
-                <p className={styles.counterWarning} style={{ fontSize: '0.75rem', marginTop: '2px' }}>
-                  Warning: Title exceeds recommended 70 characters. It may get truncated in search results.
-                </p>
-              )}
             </div>
 
             <div className={styles.inputGroup}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <label>Meta Description</label>
-                <span className={`${styles.counterText} ${formData.seoDescription.length > 160 ? styles.counterWarning : ''}`}>
-                  {formData.seoDescription.length} of 160 characters used
+                <span className={styles.counterText}>
+                  {formData.seoDescription.length} of 1000 characters used
                 </span>
               </div>
               <textarea 
@@ -574,11 +569,6 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
                 rows={3} 
                 placeholder={formData.description || "Enter custom description for search engine listing..."}
               />
-              {formData.seoDescription.length > 160 && (
-                <p className={styles.counterWarning} style={{ fontSize: '0.75rem', marginTop: '2px' }}>
-                  Warning: Description exceeds recommended 160 characters. It may get truncated in search results.
-                </p>
-              )}
             </div>
 
             <div className={styles.inputGroup}>
