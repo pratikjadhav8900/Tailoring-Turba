@@ -48,6 +48,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
   const [openAccordion, setOpenAccordion] = useState<string | null>('details');
 
   // E-commerce state additions
+  const [currentMobileSlide, setCurrentMobileSlide] = useState(0);
   const [showSizeChart, setShowSizeChart] = useState(false);
   const [pincode, setPincode] = useState("");
   const [pincodeStatus, setPincodeStatus] = useState<"success" | "error" | null>(null);
@@ -311,29 +312,55 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
                 {product.badge}
               </span>
             )}
-            <div className={styles.imageGrid}>
-              {imagesList.map((img: string, i: number) => (
-                <div 
-                  key={i} 
-                  className={styles.gridImageWrap}
-                  onClick={() => {
-                    setLightboxImg(img);
-                    setLightboxZoomed(false);
-                  }}
-                  style={{ cursor: "zoom-in" }}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={getResizedCloudinaryUrl(img, 800, 1000)}
-                    alt={`${product.name} view ${i + 1}`}
-                    style={{ 
-                      width: '100%', 
-                      height: '100%', 
-                      objectFit: 'cover'
+            <div className={styles.mobileSliderWrapper}>
+              <div 
+                className={styles.imageGrid}
+                onScroll={(e) => {
+                  const target = e.currentTarget;
+                  if (target.clientWidth > 0) {
+                    const index = Math.round(target.scrollLeft / target.clientWidth);
+                    setCurrentMobileSlide(index);
+                  }
+                }}
+              >
+                {imagesList.map((img: string, i: number) => (
+                  <div 
+                    key={i} 
+                    className={styles.gridImageWrap}
+                    onClick={() => {
+                      setLightboxImg(img);
+                      setLightboxZoomed(false);
                     }}
-                  />
-                </div>
-              ))}
+                    style={{ cursor: "zoom-in" }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={getResizedCloudinaryUrl(img, 800, 1000)}
+                      alt={`${product.name} view ${i + 1}`}
+                      style={{ 
+                        width: '100%', 
+                        height: '100%', 
+                        objectFit: 'cover'
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+              {imagesList.length > 1 && (
+                <>
+                  <div className={styles.mobileSlideBadge}>
+                    {currentMobileSlide + 1} / {imagesList.length}
+                  </div>
+                  <div className={styles.mobileSliderDots}>
+                    {imagesList.map((_: any, i: number) => (
+                      <span 
+                        key={i} 
+                        className={`${styles.sliderDot} ${currentMobileSlide === i ? styles.activeDot : ""}`} 
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
