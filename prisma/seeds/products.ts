@@ -4,7 +4,15 @@ import { allProducts } from '../../src/lib/products-data';
 const prisma = new PrismaClient();
 
 export async function seedProducts() {
-  console.log('Seeding Master Products and Categories...');
+  console.log('Checking database product records...');
+
+  const existingCount = await prisma.product.count();
+  if (existingCount > 0) {
+    console.log(`Database already contains ${existingCount} products. Skipping seeding to preserve live data.`);
+    return;
+  }
+
+  console.log('Database is empty. Seeding initial products and categories...');
 
   // 1. Extract unique categories
   const categoryNames = Array.from(new Set(allProducts.map(p => p.category)));

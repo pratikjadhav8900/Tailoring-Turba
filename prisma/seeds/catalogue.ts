@@ -4,11 +4,15 @@ import { CATALOGUE_CATEGORIES } from '../../src/lib/catalogue-data';
 const prisma = new PrismaClient();
 
 export async function seedCatalogue() {
-  console.log('Seeding Master Corporate Gifts Catalogue 2026-2027...');
+  console.log('Checking database catalogue records...');
 
-  // Reset existing catalogue data
-  await prisma.catalogueProduct.deleteMany({});
-  await prisma.catalogueCategory.deleteMany({});
+  const existingCount = await prisma.catalogueCategory.count();
+  if (existingCount > 0) {
+    console.log(`Database already contains ${existingCount} catalogue categories. Skipping seeding to preserve live data.`);
+    return;
+  }
+
+  console.log('Database is empty. Seeding initial catalogue categories & products...');
 
   for (const catData of (CATALOGUE_CATEGORIES as any[])) {
     const category = await prisma.catalogueCategory.create({
