@@ -76,6 +76,12 @@ model Product {
   designs          Design[]
   orderItems       OrderItem[]
   category         Category    @relation(fields: [categoryId], references: [id])
+  
+  // SEO optimization fields
+  seoTitle         String?
+  seoDescription   String?
+  seoKeywords      String?
+  slug             String?     @unique
 }
 
 model Design {

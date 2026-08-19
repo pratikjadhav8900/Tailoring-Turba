@@ -40,6 +40,10 @@ export default async function ProductsPage() {
       badge: p.badge || "",
       description: p.description,
       features: p.features,
+      seoTitle: p.seoTitle || "",
+      seoDescription: p.seoDescription || "",
+      seoKeywords: p.seoKeywords || "",
+      slug: p.slug || "",
     }));
   } catch (err) {
     console.error("[ProductsPage] DB unreachable, falling back to static data:", err);

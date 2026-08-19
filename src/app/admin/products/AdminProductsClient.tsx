@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import Image from "next/image";
 import styles from "./page.module.css";
 import { getResizedCloudinaryUrl } from "@/lib/cloudinary-client";
+import { generateSlug } from "@/lib/slug";
 
 type Product = any; // We can type this properly later
 type Category = any;
@@ -17,6 +18,9 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+
+  const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false);
+  const [slugConflictError, setSlugConflictError] = useState("");
 
   const [formData, setFormData] = useState({
     name: "",
@@ -31,6 +35,10 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
     imageUrl: "",
     imageUrls: [] as string[],
     isActive: true,
+    seoTitle: "",
+    seoDescription: "",
+    seoKeywords: "",
+    slug: "",
   });
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -155,6 +163,8 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
   };
 
   const handleAddNewClick = () => {
+    setIsSlugManuallyEdited(false);
+    setSlugConflictError("");
     if (isAdding || editingProduct) {
       setIsAdding(false);
       setEditingProduct(null);
@@ -173,6 +183,10 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
         imageUrl: "",
         imageUrls: [],
         isActive: true,
+        seoTitle: "",
+        seoDescription: "",
+        seoKeywords: "",
+        slug: "",
       });
       setIsAdding(true);
     }
@@ -181,6 +195,8 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
   const handleEditClick = (p: Product) => {
     setEditingProduct(p);
     setIsAdding(false);
+    setIsSlugManuallyEdited(!!p.slug);
+    setSlugConflictError("");
     setFormData({
       name: p.name,
       category: p.category?.name || "",
@@ -194,17 +210,37 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
       imageUrl: p.images && p.images[0] ? p.images[0] : "",
       imageUrls: p.images || [],
       isActive: p.isActive !== false,
+      seoTitle: p.seoTitle || "",
+      seoDescription: p.seoDescription || "",
+      seoKeywords: p.seoKeywords || "",
+      slug: p.slug || "",
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate and clean slug one final time
+    const finalSlug = generateSlug(formData.slug);
+    if (!finalSlug) {
+      toast.error("URL handle cannot be empty.");
+      return;
+    }
+    const isDuplicate = products.some(
+      p => p.slug === finalSlug && (!editingProduct || p.id !== editingProduct.id)
+    );
+    if (isDuplicate) {
+      toast.error("URL handle is already in use by another product.");
+      return;
+    }
+
     setIsSubmitting(true);
     
     try {
       const submitData = {
         ...formData,
+        slug: finalSlug,
         category: formData.category === "NEW" ? formData.newCategory : formData.category,
       };
 
@@ -234,7 +270,46 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    if (name === "name") {
+      setFormData(prev => {
+        const nextData = { ...prev, name: value };
+        if (!isSlugManuallyEdited) {
+          const newSlug = generateSlug(value);
+          nextData.slug = newSlug;
+          const isDuplicate = products.some(
+            p => p.slug === newSlug && (!editingProduct || p.id !== editingProduct.id)
+          );
+          if (isDuplicate && newSlug) {
+            setSlugConflictError("Suggested URL handle is already in use.");
+          } else {
+            setSlugConflictError("");
+          }
+        }
+        return nextData;
+      });
+    } else if (name === "slug") {
+      setIsSlugManuallyEdited(true);
+      const looserSlug = value.toLowerCase().replace(/[^a-z0-9-]/g, "");
+      setFormData(prev => ({ ...prev, slug: looserSlug }));
+      
+      if (!looserSlug) {
+        setSlugConflictError("URL handle cannot be empty.");
+      } else if (!/^[a-z0-9-]+$/.test(looserSlug)) {
+        setSlugConflictError("URL handle can only contain lowercase letters, numbers, and hyphens.");
+      } else {
+        const isDuplicate = products.some(
+          p => p.slug === looserSlug && (!editingProduct || p.id !== editingProduct.id)
+        );
+        if (isDuplicate) {
+          setSlugConflictError("URL handle is already in use.");
+        } else {
+          setSlugConflictError("");
+        }
+      }
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
 
   return (
@@ -358,6 +433,106 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
             <div className={styles.inputGroup}>
               <label>Features (One per line)</label>
               <textarea name="features" value={formData.features} onChange={handleChange} rows={4} placeholder="180 GSM Super Cotton&#10;Biowash finish"></textarea>
+            </div>
+
+            {/* Search Engine Listing / SEO Section */}
+            <div className={styles.seoSectionHeader}>
+              <h3 className={styles.formTitle} style={{ marginBottom: '8px' }}>Search engine listing</h3>
+              <p className={styles.hint} style={{ margin: '0 0 20px 0' }}>
+                Add a title and description to see how this product might appear in a search engine listing.
+              </p>
+            </div>
+
+            <div className={styles.seoPreviewCard}>
+              <span className={styles.seoPreviewTitle}>
+                {formData.seoTitle || formData.name || "Product Name"}
+              </span>
+              <span className={styles.seoPreviewUrl}>
+                tailoringturba.com/products/{formData.slug || generateSlug(formData.name) || "slug"}
+              </span>
+              <p className={styles.seoPreviewSnippet}>
+                {formData.seoDescription || formData.description || "Enter a description to see how it will appear in search results."}
+              </p>
+            </div>
+
+            <div className={styles.inputGroup}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <label>Page Title</label>
+                <span className={`${styles.counterText} ${formData.seoTitle.length > 70 ? styles.counterWarning : ''}`}>
+                  {formData.seoTitle.length} of 70 characters used
+                </span>
+              </div>
+              <input 
+                type="text" 
+                name="seoTitle" 
+                value={formData.seoTitle} 
+                onChange={handleChange} 
+                placeholder={formData.name || "Enter custom title for search engine listing..."} 
+              />
+              {formData.seoTitle.length > 70 && (
+                <p className={styles.counterWarning} style={{ fontSize: '0.75rem', marginTop: '2px' }}>
+                  Warning: Title exceeds recommended 70 characters. It may get truncated in search results.
+                </p>
+              )}
+            </div>
+
+            <div className={styles.inputGroup}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <label>Meta Description</label>
+                <span className={`${styles.counterText} ${formData.seoDescription.length > 160 ? styles.counterWarning : ''}`}>
+                  {formData.seoDescription.length} of 160 characters used
+                </span>
+              </div>
+              <textarea 
+                name="seoDescription" 
+                value={formData.seoDescription} 
+                onChange={handleChange} 
+                rows={3} 
+                placeholder={formData.description || "Enter custom description for search engine listing..."}
+              />
+              {formData.seoDescription.length > 160 && (
+                <p className={styles.counterWarning} style={{ fontSize: '0.75rem', marginTop: '2px' }}>
+                  Warning: Description exceeds recommended 160 characters. It may get truncated in search results.
+                </p>
+              )}
+            </div>
+
+            <div className={styles.inputGroup}>
+              <label>URL Handle</label>
+              <div className={styles.slugInputWrapper}>
+                <span className={styles.slugPrefix}>tailoringturba.com/products/</span>
+                <input 
+                  type="text" 
+                  name="slug" 
+                  value={formData.slug} 
+                  onChange={handleChange} 
+                  placeholder={generateSlug(formData.name) || "url-handle"}
+                  className={styles.slugInput}
+                />
+              </div>
+              {slugConflictError ? (
+                <p className={styles.counterWarning} style={{ fontSize: '0.75rem', marginTop: '2px' }}>
+                  {slugConflictError}
+                </p>
+              ) : (
+                <p className={styles.hint} style={{ marginTop: '4px' }}>
+                  This is the unique URL handle (slug) for this product page.
+                </p>
+              )}
+            </div>
+
+            <div className={styles.inputGroup}>
+              <label>SEO Keywords (Internal Search)</label>
+              <input 
+                type="text" 
+                name="seoKeywords" 
+                value={formData.seoKeywords} 
+                onChange={handleChange} 
+                placeholder="e.g. corporate polo, custom cotton t-shirt, wholesale hoodies"
+              />
+              <p className={styles.hint} style={{ marginTop: '4px' }}>
+                Comma-separated keywords/tags. These keywords are primarily used for search optimization on Tailoring Turba.
+              </p>
             </div>
 
             <button type="submit" className={styles.submitBtn} disabled={isSubmitting}>

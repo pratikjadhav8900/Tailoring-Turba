@@ -11,8 +11,13 @@ export const revalidate = 60;
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   try {
-    const product = await withRetry(() => prisma.product.findUnique({
-      where: { id: params.id },
+    const product = await withRetry(() => prisma.product.findFirst({
+      where: {
+        OR: [
+          { id: params.id },
+          { slug: params.id }
+        ]
+      },
       include: { category: true }
     }));
 
@@ -32,17 +37,30 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
     }
 
     const categoryName = cleanCategoryName(product.category?.name || "Custom Apparel");
-    const title = `${cleanProductName(product.name)} | Premium ${categoryName} Bulk Manufacturer India | Tailoring Turba`;
-    const description = product.description 
+    const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://tailoringturba.com";
+    const productUrl = `${siteUrl}/products/${product.slug || product.id}`;
+    
+    // Prioritize SEO custom title, description, and keywords
+    const title = product.seoTitle || `${cleanProductName(product.name)} | Premium ${categoryName} Bulk Manufacturer India | Tailoring Turba`;
+    const description = product.seoDescription || (product.description 
       ? (product.description.length > 160 ? product.description.substring(0, 157) + "..." : product.description)
-      : `High-end manufacturing of ${cleanProductName(product.name)} in India. Specialized in B2B bulk orders, uniform supplies, and bespoke ${categoryName} for corporate clients.`;
+      : `High-end manufacturing of ${cleanProductName(product.name)} in India. Specialized in B2B bulk orders, uniform supplies, and bespoke ${categoryName} for corporate clients.`);
+
+    let keywords = [`bulk ${categoryName}`, `${cleanProductName(product.name)} manufacturer`, "India textile export", "custom uniforms India", "corporate apparel wholesale"];
+    if (product.seoKeywords) {
+      keywords = product.seoKeywords.split(",").map((k: string) => k.trim()).filter(Boolean);
+    }
 
     return {
       title,
       description,
+      alternates: {
+        canonical: productUrl,
+      },
       openGraph: {
         title,
         description,
+        url: productUrl,
         images: product.images?.[0] ? [{ url: product.images[0] }] : [],
         type: 'article',
       },
@@ -52,7 +70,7 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
         description,
         images: product.images?.[0] ? [product.images[0]] : [],
       },
-      keywords: [`bulk ${categoryName}`, `${cleanProductName(product.name)} manufacturer`, "India textile export", "custom uniforms India", "corporate apparel wholesale"],
+      keywords,
     };
   } catch (err) {
     return { title: "Product Details | Tailoring Turba" };
@@ -64,8 +82,13 @@ export default async function ProductDetailsPage({ params }: { params: { id: str
   let formattedRelated: any[] = [];
 
   try {
-    const dbProduct = await withRetry(() => prisma.product.findUnique({
-      where: { id: params.id },
+    const dbProduct = await withRetry(() => prisma.product.findFirst({
+      where: {
+        OR: [
+          { id: params.id },
+          { slug: params.id }
+        ]
+      },
       include: { category: true }
     }));
 

@@ -11,6 +11,12 @@ export type Product = {
   features?: string[];
   badge?: string;
   gallery?: string[];
+  minOrderQuantity?: number;
+  brand?: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  seoKeywords?: string;
+  slug?: string;
 };
 
 const IMG_POLO = "https://images.unsplash.com/photo-1586363104862-3a5e2ab60d99?auto=format&fit=crop&w=800&q=80";

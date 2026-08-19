@@ -304,7 +304,11 @@ export default function ProductsClient({ products }: { products: any[] }) {
         (p.name && p.name.toLowerCase().includes(searchLower)) ||
         (p.type && p.type.toLowerCase().includes(searchLower)) ||
         (p.description && p.description.toLowerCase().includes(searchLower)) ||
-        (p.category && p.category.toLowerCase().includes(searchLower));
+        (p.category && p.category.toLowerCase().includes(searchLower)) ||
+        (p.seoTitle && p.seoTitle.toLowerCase().includes(searchLower)) ||
+        (p.seoDescription && p.seoDescription.toLowerCase().includes(searchLower)) ||
+        (p.seoKeywords && p.seoKeywords.toLowerCase().includes(searchLower)) ||
+        (p.slug && p.slug.toLowerCase().includes(searchLower));
 
       // Brand match
       let matchesBrand = true;

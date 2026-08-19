@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { generateSlug, generateUniqueSlug } from "@/lib/slug";
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,10 +13,61 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { name, category, type, price, description, features, colors, badge, imageUrl, imageUrls, isActive } = body;
+    const { 
+      name, 
+      category, 
+      type, 
+      price, 
+      description, 
+      features, 
+      colors, 
+      badge, 
+      imageUrl, 
+      imageUrls, 
+      isActive,
+      seoTitle,
+      seoDescription,
+      seoKeywords,
+      slug
+    } = body;
 
     if (!name || !category || !price) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
+
+    // Validate SEO fields
+    const trimmedSeoTitle = seoTitle?.trim() || null;
+    const trimmedSeoDescription = seoDescription?.trim() || null;
+    let trimmedSeoKeywords = seoKeywords?.trim() || null;
+    if (trimmedSeoKeywords) {
+      trimmedSeoKeywords = trimmedSeoKeywords
+        .split(",")
+        .map((k: string) => k.trim())
+        .filter(Boolean)
+        .join(", ");
+    }
+
+    if (trimmedSeoTitle && trimmedSeoTitle.length > 200) {
+      return NextResponse.json({ error: "SEO Title cannot exceed 200 characters." }, { status: 400 });
+    }
+    if (trimmedSeoDescription && trimmedSeoDescription.length > 500) {
+      return NextResponse.json({ error: "SEO Description cannot exceed 500 characters." }, { status: 400 });
+    }
+
+    let finalSlug = slug?.trim() || null;
+    if (!finalSlug) {
+      finalSlug = await generateUniqueSlug(name.trim());
+    } else {
+      finalSlug = generateSlug(finalSlug);
+      if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(finalSlug)) {
+        return NextResponse.json({ error: "Invalid URL handle format." }, { status: 400 });
+      }
+      const existingSlug = await prisma.product.findUnique({
+        where: { slug: finalSlug }
+      });
+      if (existingSlug) {
+        return NextResponse.json({ error: "URL handle is already in use." }, { status: 400 });
+      }
     }
 
     // Ensure category exists
@@ -24,15 +76,15 @@ export async function POST(req: NextRequest) {
     });
 
     if (!categoryRecord) {
-      const slug = category.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+      const catSlug = category.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
       categoryRecord = await prisma.category.create({
-        data: { name: category, slug }
+        data: { name: category, slug: catSlug }
       });
     }
 
     const product = await prisma.product.create({
       data: {
-        name,
+        name: name.trim(),
         categoryId: categoryRecord.id,
         type: type || null,
         basePrice: parseFloat(price.replace(/[^0-9.]/g, '') || "0"),
@@ -43,6 +95,10 @@ export async function POST(req: NextRequest) {
         images: imageUrls || (imageUrl ? [imageUrl] : []),
         isActive: typeof isActive === 'boolean' ? isActive : true,
         minOrderQuantity: 1,
+        seoTitle: trimmedSeoTitle,
+        seoDescription: trimmedSeoDescription,
+        seoKeywords: trimmedSeoKeywords,
+        slug: finalSlug,
       }
     });
 

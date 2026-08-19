@@ -38,3 +38,9 @@ next-env.d.ts
 
 # scratch files
 /scratch/
+.env*
+
+# user uploads
+/public/uploads/*
+!/public/uploads/.gitkeep
+
