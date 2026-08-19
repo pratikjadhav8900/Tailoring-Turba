@@ -1179,33 +1179,9 @@
     background: var(--color-primary-hover, #2e2e2c);
   }
 
-  /* On mobile: pull action bar OUT of the image overlay,
-     show it as a normal flex row below the image */
+  /* On mobile: Hide action bar overlay so product details and full image remain clean */
   .hoverActionBar {
-    position: static;
-    transform: none;
-    background: transparent;
-    padding: 8px 10px 4px;
-    gap: 6px;
-    order: 1;   /* sits between imageWrapper and cardContent */
-  }
-
-  .actionBtnPrimary, .actionBtnSecondary {
-    padding: 9px 4px;
-    font-size: 0.65rem;
-    min-height: 36px;
-    letter-spacing: 0.02em;
-  }
-
-  .actionBtnPrimary {
-    background: var(--color-primary, #1a1a18);
-    color: white;
-  }
-
-  .actionBtnSecondary {
-    background: var(--color-background, #f7f6f2);
-    color: var(--color-text-primary, #1a1a18);
-    border: 1px solid var(--color-border, #e2e0d8);
+    display: none !important;
   }
 }
 
