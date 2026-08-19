@@ -192,19 +192,60 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
     }
   };
 
+  const buildOptimizedSeoTitle = (name: string, categoryName: string): string => {
+    const brand = "Tailoring Turba";
+    const shortCategory = categoryName.replace(/Tailoring Turba\s*/i, "").trim();
+
+    // Option 1: "2-in-1 Zipper Hoodie | Custom Hoodie | Tailoring Turba"
+    let title = shortCategory 
+      ? `${name} | Custom ${shortCategory} | ${brand}`
+      : `${name} | ${brand}`;
+
+    if (title.length <= 60) return title;
+
+    // Option 2: "2-in-1 Zipper Hoodie | Premium | Tailoring Turba"
+    title = shortCategory 
+      ? `${name} | ${shortCategory} | ${brand}`
+      : `${name} | ${brand}`;
+
+    if (title.length <= 60) return title;
+
+    // Option 3: "2-in-1 Zipper Hoodie | Tailoring Turba"
+    title = `${name} | ${brand}`;
+    if (title.length <= 65) return title;
+
+    // Option 4: Clean truncation <= 65 chars
+    return title.substring(0, 65).trim();
+  };
+
+  const buildOptimizedSeoDescription = (name: string, categoryName: string, customDesc?: string): string => {
+    const shortCategory = categoryName.replace(/Tailoring Turba\s*/i, "").trim() || "apparel";
+    
+    if (customDesc && customDesc.trim().length >= 40 && customDesc.trim().length <= 155) {
+      return customDesc.trim();
+    }
+
+    let desc = `Shop custom ${name} from Tailoring Turba. Premium ${shortCategory.toLowerCase()} with custom embroidery, printing, and bulk corporate pricing.`;
+    if (desc.length <= 155) return desc;
+
+    desc = `Shop custom ${name} from Tailoring Turba. High-quality customizable ${shortCategory.toLowerCase()} with bulk corporate ordering.`;
+    if (desc.length <= 155) return desc;
+
+    return desc.substring(0, 155).trim();
+  };
+
   const handleAutoGenerateSeo = () => {
     const name = formData.name.trim();
     if (!name) {
       toast.error("Please enter a product name first.");
       return;
     }
-    const catName = formData.category === "NEW" ? formData.newCategory : (formData.category || "Apparel");
-    const autoTitle = `${name} | Custom ${catName} | TAILORING TURBA`;
-    const autoDesc = formData.description?.trim() 
-      ? `Shop custom ${name} from Tailoring Turba. ${formData.description.trim()}`
-      : `Shop custom ${name} from Tailoring Turba. Premium ${catName.toLowerCase()} with custom embroidery, printing, and bulk corporate pricing.`;
+    const rawCat = formData.category === "NEW" ? formData.newCategory : (formData.category || "Apparel");
+    const autoTitle = buildOptimizedSeoTitle(name, rawCat);
+    const autoDesc = buildOptimizedSeoDescription(name, rawCat, formData.description);
     const autoSlug = generateSlug(name);
-    const autoKeywords = `${name.toLowerCase()}, custom ${name.toLowerCase()}, ${catName.toLowerCase()}, tailoring turba, corporate uniform, b2b apparel`;
+    const shortCat = rawCat.replace(/Tailoring Turba\s*/i, "").trim() || "apparel";
+    const autoKeywords = `${name.toLowerCase()}, custom ${name.toLowerCase()}, ${shortCat.toLowerCase()}, tailoring turba, corporate uniform, b2b apparel`;
 
     setFormData(prev => ({
       ...prev,
@@ -223,10 +264,11 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
     setIsSlugManuallyEdited(!!p.slug);
     setSlugConflictError("");
 
-    const catName = p.category?.name || "Apparel";
-    const defaultTitle = p.seoTitle || (p.name ? `${p.name} | Custom ${catName} | TAILORING TURBA` : "");
-    const defaultDesc = p.seoDescription || (p.description ? p.description : (p.name ? `Shop custom ${p.name} at Tailoring Turba. Premium customizable corporate wear.` : ""));
-    const defaultKeywords = p.seoKeywords || (p.name ? `${p.name.toLowerCase()}, custom ${p.name.toLowerCase()}, ${catName.toLowerCase()}, tailoring turba` : "");
+    const rawCat = p.category?.name || "Apparel";
+    const defaultTitle = p.seoTitle || (p.name ? buildOptimizedSeoTitle(p.name, rawCat) : "");
+    const defaultDesc = p.seoDescription || (p.name ? buildOptimizedSeoDescription(p.name, rawCat, p.description) : "");
+    const shortCat = rawCat.replace(/Tailoring Turba\s*/i, "").trim() || "apparel";
+    const defaultKeywords = p.seoKeywords || (p.name ? `${p.name.toLowerCase()}, custom ${p.name.toLowerCase()}, ${shortCat.toLowerCase()}, tailoring turba` : "");
     const defaultSlug = p.slug || generateSlug(p.name);
 
     setFormData({
