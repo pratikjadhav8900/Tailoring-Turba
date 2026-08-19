@@ -177,5 +177,32 @@ export default async function ProductDetailsPage({ params }: { params: { id: str
       }));
   }
 
-  return <ProductDetailsClient product={formattedProduct} relatedProducts={formattedRelated} />;
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: formattedProduct.name,
+    image: formattedProduct.gallery || [formattedProduct.image],
+    description: formattedProduct.description || `${formattedProduct.name} by Tailoring Turba`,
+    brand: {
+      "@type": "Brand",
+      name: "Tailoring Turba",
+    },
+    offers: {
+      "@type": "Offer",
+      priceCurrency: "INR",
+      price: formattedProduct.price,
+      availability: "https://schema.org/InStock",
+      url: `https://tailoringturba.com/products/${params.id}`,
+    },
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <ProductDetailsClient product={formattedProduct} relatedProducts={formattedRelated} />
+    </>
+  );
 }
