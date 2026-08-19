@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Trash2, Loader2, Edit2, Image as ImageIcon } from "lucide-react";
+import { Plus, Trash2, Loader2, Edit2, Image as ImageIcon, Sparkles } from "lucide-react";
 import toast from "react-hot-toast";
 import Image from "next/image";
 import styles from "./page.module.css";
@@ -192,11 +192,43 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
     }
   };
 
+  const handleAutoGenerateSeo = () => {
+    const name = formData.name.trim();
+    if (!name) {
+      toast.error("Please enter a product name first.");
+      return;
+    }
+    const catName = formData.category === "NEW" ? formData.newCategory : (formData.category || "Apparel");
+    const autoTitle = `${name} | Custom ${catName} | TAILORING TURBA`;
+    const autoDesc = formData.description?.trim() 
+      ? `Shop custom ${name} from Tailoring Turba. ${formData.description.trim()}`
+      : `Shop custom ${name} from Tailoring Turba. Premium ${catName.toLowerCase()} with custom embroidery, printing, and bulk corporate pricing.`;
+    const autoSlug = generateSlug(name);
+    const autoKeywords = `${name.toLowerCase()}, custom ${name.toLowerCase()}, ${catName.toLowerCase()}, tailoring turba, corporate uniform, b2b apparel`;
+
+    setFormData(prev => ({
+      ...prev,
+      seoTitle: autoTitle,
+      seoDescription: autoDesc,
+      slug: autoSlug,
+      seoKeywords: autoKeywords,
+    }));
+    setIsSlugManuallyEdited(true);
+    toast.success("SEO fields auto-generated!");
+  };
+
   const handleEditClick = (p: Product) => {
     setEditingProduct(p);
     setIsAdding(false);
     setIsSlugManuallyEdited(!!p.slug);
     setSlugConflictError("");
+
+    const catName = p.category?.name || "Apparel";
+    const defaultTitle = p.seoTitle || (p.name ? `${p.name} | Custom ${catName} | TAILORING TURBA` : "");
+    const defaultDesc = p.seoDescription || (p.description ? p.description : (p.name ? `Shop custom ${p.name} at Tailoring Turba. Premium customizable corporate wear.` : ""));
+    const defaultKeywords = p.seoKeywords || (p.name ? `${p.name.toLowerCase()}, custom ${p.name.toLowerCase()}, ${catName.toLowerCase()}, tailoring turba` : "");
+    const defaultSlug = p.slug || generateSlug(p.name);
+
     setFormData({
       name: p.name,
       category: p.category?.name || "",
@@ -210,10 +242,10 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
       imageUrl: p.images && p.images[0] ? p.images[0] : "",
       imageUrls: p.images || [],
       isActive: p.isActive !== false,
-      seoTitle: p.seoTitle || "",
-      seoDescription: p.seoDescription || "",
-      seoKeywords: p.seoKeywords || "",
-      slug: p.slug || "",
+      seoTitle: defaultTitle,
+      seoDescription: defaultDesc,
+      seoKeywords: defaultKeywords,
+      slug: defaultSlug,
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -437,9 +469,19 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
 
             {/* Search Engine Listing / SEO Section */}
             <div className={styles.seoSectionHeader}>
-              <h3 className={styles.formTitle} style={{ marginBottom: '8px' }}>Search engine listing</h3>
-              <p className={styles.hint} style={{ margin: '0 0 20px 0' }}>
-                Add a title and description to see how this product might appear in a search engine listing.
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <h3 className={styles.formTitle} style={{ margin: 0 }}>Search engine listing</h3>
+                <button 
+                  type="button" 
+                  onClick={handleAutoGenerateSeo} 
+                  className={styles.autoSeoBtn}
+                  title="Auto-fill recommended SEO title, description, and keywords based on product details"
+                >
+                  <Sparkles size={14} /> Auto-Generate SEO
+                </button>
+              </div>
+              <p className={styles.hint} style={{ margin: '0 0 16px 0' }}>
+                Add a title and description to customize how this product appears in Google search results.
               </p>
             </div>
 
