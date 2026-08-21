@@ -91,13 +91,25 @@ function CustomizerContent() {
     fetchProduct();
   }, [productId, designId]);
 
-  // Map product category to garment type
-  const categoryToGarment = (category: string, name?: string): string => {
+  // Map product type/category/name to design studio garment type.
+  // Priority: type field (most precise) → name → category → default.
+  const categoryToGarment = (category: string, name?: string, type?: string): string => {
+    const lowerType = (type || '').toLowerCase();
     const lowerName = (name || '').toLowerCase();
+
+    // 1. Check the product's type field first — most reliable
+    if (lowerType.includes('round neck') || lowerType.includes('crew neck') || lowerType.includes('crewneck')) return 'round-neck';
+    if (lowerType.startsWith('polo') || lowerType.includes('· polo') || lowerType.includes('polo ·')) return 'polo';
+    if (lowerType.includes('hoodie')) return 'hoodie';
+    if (lowerType.includes('jacket')) return 'hoodie';
+
+    // 2. Fall back to product name
     if (lowerName.includes('polo')) return 'polo';
     if (lowerName.includes('hoodie')) return 'hoodie';
     if (lowerName.includes('jacket')) return 'hoodie';
-    
+    if (lowerName.includes('round neck') || lowerName.includes('crew neck') || lowerName.includes('crewneck')) return 'round-neck';
+
+    // 3. Fall back to category
     const map: Record<string, string> = {
       'Crewnecks': 'round-neck',
       'Hoodies': 'hoodie',
@@ -116,7 +128,7 @@ function CustomizerContent() {
     const garment = searchParams.get('garment');
     const fabricId = searchParams.get('fabricId');
     const derivedGarment = dbProduct 
-      ? categoryToGarment(dbProduct.category?.name || dbProduct.category, dbProduct.name) 
+      ? categoryToGarment(dbProduct.category?.name || dbProduct.category, dbProduct.name, dbProduct.type) 
       : (garment || 'round-neck');
     
     // Only set initial state once
