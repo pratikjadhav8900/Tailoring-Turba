@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -543,6 +544,81 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
               <span className={styles.hint} style={{ margin: "-2px 0 14px 0", display: "block" }}>
                 Add the exact available colors for this product. Use the color picker or enter a HEX code. Optionally map each color to a product photo for the product page.
               </span>
+
+              {/* Sticky Product Photos Reference Toolbar */}
+              {formData.imageUrls && formData.imageUrls.length > 0 && (
+                <div className={styles.stickyPhotoRefToolbar}>
+                  <div className={styles.stickyPhotoRefHeader}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <ImageIcon size={14} color="var(--tth-navy)" />
+                      <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--tth-navy)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                        Product Photos Reference
+                      </span>
+                    </div>
+                    <span style={{ fontSize: "0.72rem", color: "var(--tth-text-muted)" }}>
+                      {formData.imageUrls.length} {formData.imageUrls.length === 1 ? "photo" : "photos"} • Hover thumbnail to inspect
+                    </span>
+                  </div>
+
+                  <div className={styles.stickyPhotoRefList}>
+                    {formData.imageUrls.map((url, imgIdx) => {
+                      // Find which color(s) this image is mapped to
+                      const mappedColors = (formData.colorsJson || []).filter(c => (c.imageUrls || []).includes(url) || c.image === url);
+
+                      return (
+                        <div key={imgIdx} className={styles.stickyPhotoRefItem}>
+                          <div className={styles.stickyPhotoThumbWrap}>
+                            <img
+                              src={getResizedCloudinaryUrl(url, 100, 100)}
+                              alt={`Photo ${imgIdx + 1}`}
+                              className={styles.stickyPhotoThumb}
+                            />
+                            {/* Hover Large Preview Tooltip */}
+                            <div className={styles.stickyPhotoPreviewTooltip}>
+                              <div className={styles.tooltipHeader}>
+                                <span>Photo {imgIdx + 1}</span>
+                                {imgIdx === 0 && <span className={styles.tooltipMainBadge}>Main</span>}
+                              </div>
+                              <img
+                                src={getResizedCloudinaryUrl(url, 400, 400)}
+                                alt={`Photo ${imgIdx + 1} Preview`}
+                                className={styles.tooltipImg}
+                              />
+                              {mappedColors.length > 0 && (
+                                <div className={styles.tooltipAssignedColors}>
+                                  <span style={{ fontSize: "0.7rem", color: "#64748b" }}>Mapped to:</span>
+                                  {mappedColors.map((mc, mci) => (
+                                    <span key={mci} className={styles.tooltipColorPill}>
+                                      <span style={{ width: "8px", height: "8px", borderRadius: "50%", backgroundColor: mc.value || "#000", display: "inline-block" }} />
+                                      {mc.name || `Color #${mci + 1}`}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className={styles.stickyPhotoMeta}>
+                            <span className={styles.stickyPhotoLabel}>Photo {imgIdx + 1}</span>
+                            {mappedColors.length > 0 ? (
+                              <div className={styles.stickyPhotoAssignedList}>
+                                {mappedColors.map((mc, mci) => (
+                                  <span key={mci} className={styles.assignedBadge} title={`Mapped to ${mc.name}`}>
+                                    <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: mc.value || "#000", display: "inline-block", flexShrink: 0 }} />
+                                    {mc.name}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className={styles.unassignedBadge}>Unmapped</span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
               
               <div style={{ display: "flex", flexDirection: "column", gap: "12px", width: "100%" }}>
                 {formData.colorsJson?.map((color, index) => {

@@ -496,6 +496,203 @@
   transform: translateY(-1px);
 }
 
+/* Sticky Photo Reference Toolbar */
+.stickyPhotoRefToolbar {
+  position: sticky;
+  top: 12px;
+  z-index: 25;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  border: 1px solid var(--tth-beige-light);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.stickyPhotoRefHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.stickyPhotoRefList {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.stickyPhotoRefList::-webkit-scrollbar {
+  height: 4px;
+}
+
+.stickyPhotoRefList::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.stickyPhotoRefItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--tth-offwhite);
+  border: 1px solid var(--tth-beige-light);
+  border-radius: 6px;
+  padding: 4px 8px 4px 4px;
+  flex-shrink: 0;
+  position: relative;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.stickyPhotoRefItem:hover {
+  background: #ffffff;
+  border-color: var(--tth-olive-dark);
+}
+
+.stickyPhotoThumbWrap {
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  overflow: visible;
+  position: relative;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.stickyPhotoThumb {
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  object-fit: cover;
+  border: 1px solid #e2e8f0;
+  display: block;
+}
+
+/* Larger Preview Tooltip on Hover */
+.stickyPhotoPreviewTooltip {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) scale(0.95);
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 4px 8px rgba(0, 0, 0, 0.06);
+  z-index: 50;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
+  width: 170px;
+}
+
+.stickyPhotoThumbWrap:hover .stickyPhotoPreviewTooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) scale(1);
+  pointer-events: auto;
+}
+
+.tooltipHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.tooltipMainBadge {
+  background: var(--tth-olive-dark);
+  color: #ffffff;
+  font-size: 0.6rem;
+  padding: 1px 5px;
+  border-radius: 3px;
+  text-transform: uppercase;
+}
+
+.tooltipImg {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+  display: block;
+}
+
+.tooltipAssignedColors {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed #e2e8f0;
+}
+
+.tooltipColorPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.stickyPhotoMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stickyPhotoLabel {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #0f172a;
+  white-space: nowrap;
+}
+
+.stickyPhotoAssignedList {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  max-width: 130px;
+}
+
+.assignedBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #0f172a;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  padding: 1px 5px;
+  border-radius: 3px;
+  white-space: nowrap;
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.unassignedBadge {
+  font-size: 0.65rem;
+  color: #94a3b8;
+  font-style: italic;
+  white-space: nowrap;
+}
+
 @media (max-width: 768px) {
   .page {
     gap: 20px;
@@ -546,6 +743,33 @@
   .formRow {
     grid-template-columns: 1fr !important;
     gap: 16px !important;
+  }
+
+  .stickyPhotoRefToolbar {
+    top: 0;
+    padding: 8px 10px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+  }
+
+  .stickyPhotoRefItem {
+    padding: 3px 6px 3px 3px;
+    gap: 6px;
+  }
+
+  .stickyPhotoThumbWrap,
+  .stickyPhotoThumb {
+    width: 32px;
+    height: 32px;
+  }
+
+  .stickyPhotoLabel {
+    font-size: 0.7rem;
+  }
+
+  .assignedBadge {
+    font-size: 0.6rem;
+    padding: 1px 4px;
   }
 
   .imageThumbnailSlot,

@@ -120,19 +120,27 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
 
   const structuredColors = getProductStructuredColors(product);
 
-  let imagesList: string[] = [];
+  const baseGallery: string[] = product.gallery && product.gallery.length > 0
+    ? [...product.gallery]
+    : (product.image ? [product.image] : []);
+
+  let mappedUrls: string[] = [];
   if (selectedColor && Array.isArray(selectedColor.imageUrls) && selectedColor.imageUrls.length > 0) {
-    imagesList = selectedColor.imageUrls.filter(Boolean);
+    mappedUrls = selectedColor.imageUrls.filter(Boolean);
   } else if (selectedColor && (selectedColor.image || selectedColor.imageUrl)) {
     const single = String(selectedColor.image || selectedColor.imageUrl).trim();
-    if (single) imagesList = [single];
+    if (single) mappedUrls = [single];
   }
 
-  // Fallback to complete product gallery if no mapped images exist for selected color
-  if (imagesList.length === 0) {
-    imagesList = product.gallery && product.gallery.length > 0
-      ? [...product.gallery]
-      : [product.image];
+  // Prepend selected color's mapped image(s) to the front, followed by remaining product images
+  let imagesList: string[] = [...baseGallery];
+  if (mappedUrls.length > 0) {
+    const remaining = baseGallery.filter(url => !mappedUrls.includes(url));
+    imagesList = [...mappedUrls, ...remaining];
+  }
+
+  if (imagesList.length === 0 && product.image) {
+    imagesList = [product.image];
   }
 
   const availableSizes = product.category?.toLowerCase().includes("shirt") || product.name?.toLowerCase().includes("shirt")
