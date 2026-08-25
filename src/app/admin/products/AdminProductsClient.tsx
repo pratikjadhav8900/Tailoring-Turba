@@ -8,6 +8,7 @@ import styles from "./page.module.css";
 import { getResizedCloudinaryUrl } from "@/lib/cloudinary-client";
 import { generateSlug } from "@/lib/slug";
 import { generateProductSeo } from "@/lib/seo-generator";
+import { isValidHex, normalizeHex, suggestColorName } from "@/lib/customizer-utils";
 
 type Product = any; // We can type this properly later
 type Category = any;
@@ -32,6 +33,7 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
     description: "",
     features: "",
     colors: "",
+    colorsJson: [] as { name: string; value: string; hex?: string; imageUrls: string[]; image?: string }[],
     badge: "",
     imageUrl: "",
     imageUrls: [] as string[],
@@ -92,11 +94,19 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
   };
 
   const handleRemoveImage = (indexToRemove: number) => {
+    const removedUrl = formData.imageUrls[indexToRemove];
     const updatedUrls = formData.imageUrls.filter((_, idx) => idx !== indexToRemove);
+    const updatedColors = formData.colorsJson?.map(c => ({
+      ...c,
+      imageUrls: (c.imageUrls || []).filter(u => u !== removedUrl),
+      image: c.image === removedUrl ? "" : c.image
+    })) || [];
+
     setFormData({
       ...formData,
       imageUrls: updatedUrls,
       imageUrl: updatedUrls[0] || "",
+      colorsJson: updatedColors,
     });
   };
 
@@ -180,6 +190,7 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
         description: "",
         features: "",
         colors: "",
+        colorsJson: [],
         badge: "",
         imageUrl: "",
         imageUrls: [],
@@ -237,6 +248,24 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
       description: p.description || "",
       features: p.features ? (Array.isArray(p.features) ? p.features.join("\n") : p.features) : "",
       colors: p.colors ? String(p.colors) : "",
+      colorsJson: (() => {
+        const rawColors = p.colorsJson ? (typeof p.colorsJson === 'string' ? JSON.parse(p.colorsJson) : p.colorsJson) : [];
+        return Array.isArray(rawColors) ? rawColors.map((c: any) => {
+          let urls: string[] = [];
+          if (Array.isArray(c.imageUrls)) {
+            urls = c.imageUrls.filter(Boolean);
+          } else if (c.image || c.imageUrl) {
+            urls = [c.image || c.imageUrl];
+          }
+          return {
+            name: c.name || "",
+            value: c.value || c.hex || "#000000",
+            hex: c.value || c.hex || "#000000",
+            imageUrls: urls,
+            image: urls[0] || ""
+          };
+        }) : [];
+      })(),
       badge: p.badge || "",
       imageUrl: p.images && p.images[0] ? p.images[0] : "",
       imageUrls: p.images || [],
@@ -264,6 +293,50 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
     if (isDuplicate) {
       toast.error("URL handle is already in use by another product.");
       return;
+    }
+
+    if (formData.colorsJson && formData.colorsJson.length > 0) {
+      const seenNames = new Set<string>();
+      const normalizedColors = [];
+
+      for (let i = 0; i < formData.colorsJson.length; i++) {
+        const color = formData.colorsJson[i];
+        const name = (color.name || "").trim();
+        const rawHex = (color.value || "").trim();
+
+        if (!name) {
+          toast.error(`Color #${i + 1} name cannot be blank.`);
+          return;
+        }
+        if (!isValidHex(rawHex)) {
+          toast.error(`Color "${name}" has an invalid hex value "${rawHex}". Use #RGB or #RRGGBB.`);
+          return;
+        }
+
+        const normalizedHex = normalizeHex(rawHex);
+        if (seenNames.has(name.toLowerCase())) {
+          toast.error(`Duplicate color name found: "${name}".`);
+          return;
+        }
+        seenNames.add(name.toLowerCase());
+
+        // Validate and clean mapped image URLs against uploaded product images
+        const validUrls = Array.from(new Set(
+          (color.imageUrls || []).filter(u => formData.imageUrls.includes(u))
+        ));
+
+        normalizedColors.push({
+          name,
+          value: normalizedHex,
+          hex: normalizedHex,
+          imageUrls: validUrls,
+          image: validUrls[0] || "",
+          imageUrl: validUrls[0] || ""
+        });
+      }
+
+      // Update formData with cleaned colors
+      formData.colorsJson = normalizedColors;
     }
 
     setIsSubmitting(true);
@@ -397,8 +470,11 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
                 <label>Badge (Optional)</label>
                 <input type="text" name="badge" value={formData.badge} onChange={handleChange} placeholder="e.g. Premium, B2B" />
               </div>
+            </div>
+
+            <div className={styles.formRow}>
               <div className={styles.inputGroup}>
-                <label>Available Colors</label>
+                <label>Available Colors Count</label>
                 <input type="number" name="colors" value={formData.colors} onChange={handleChange} placeholder="e.g. 12" />
               </div>
               <div className={styles.inputGroup}>
@@ -454,6 +530,309 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
                 )}
               </div>
               <p className={styles.hint}>Supported formats: JPG, PNG, WEBP. First image will be used as the primary display image. Double check that images show correctly.</p>
+            </div>
+
+            {/* AVAILABLE COLORS SECTION */}
+            <div className={styles.inputGroup} style={{ borderTop: "1px solid var(--tth-beige-light)", paddingTop: "24px", marginTop: "12px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "4px" }}>
+                <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--tth-text-muted)" }}>Available Colors</label>
+                <span style={{ fontSize: "0.75rem", color: "var(--tth-text-muted)" }}>
+                  {formData.colorsJson?.length || 0} {formData.colorsJson?.length === 1 ? "color configured" : "colors configured"}
+                </span>
+              </div>
+              <span className={styles.hint} style={{ margin: "-2px 0 14px 0", display: "block" }}>
+                Add the exact available colors for this product. Use the color picker or enter a HEX code. Optionally map each color to a product photo for the product page.
+              </span>
+              
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px", width: "100%" }}>
+                {formData.colorsJson?.map((color, index) => {
+                  const isHexValid = isValidHex(color.value);
+                  const normalizedValue = isHexValid ? normalizeHex(color.value) : "#000000";
+
+                  return (
+                    <div 
+                      key={index} 
+                      style={{ 
+                        display: "flex", 
+                        flexDirection: "column",
+                        gap: "6px", 
+                        background: "var(--tth-offwhite)", 
+                        padding: "12px", 
+                        borderRadius: "6px",
+                        border: isHexValid ? "1px solid var(--tth-beige-light)" : "1px solid #fca5a5"
+                      }}
+                    >                      <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", width: "100%" }}>
+                        {/* Color Swatch / Native Color Picker */}
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
+                          <div 
+                            style={{ 
+                              position: "relative",
+                              width: "36px", 
+                              height: "36px", 
+                              borderRadius: "50%", 
+                              border: "2px solid #cbd5e1",
+                              boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.1)",
+                              backgroundColor: isHexValid ? normalizedValue : "#e2e8f0",
+                              overflow: "hidden",
+                              cursor: "pointer",
+                              flexShrink: 0
+                            }}
+                            title="Click to open color picker"
+                          >
+                            <input 
+                              type="color" 
+                              value={normalizedValue} 
+                              onChange={(e) => {
+                                const newHex = e.target.value.toUpperCase();
+                                const updated = [...formData.colorsJson];
+                                updated[index].value = newHex;
+                                // If color name is currently empty or matches previous auto-suggestion, suggest new name
+                                if (!updated[index].name.trim()) {
+                                  updated[index].name = suggestColorName(newHex);
+                                }
+                                setFormData({ ...formData, colorsJson: updated });
+                              }}
+                              style={{ 
+                                position: "absolute", 
+                                top: "-50%", 
+                                left: "-50%", 
+                                width: "200%", 
+                                height: "200%", 
+                                opacity: 0, 
+                                cursor: "pointer" 
+                              }}
+                              title="Choose color swatch"
+                            />
+                          </div>
+
+                          {/* HEX Value Input */}
+                          <input 
+                            type="text" 
+                            value={color.value} 
+                            onChange={(e) => {
+                              const updated = [...formData.colorsJson];
+                              updated[index].value = e.target.value;
+                              setFormData({ ...formData, colorsJson: updated });
+                            }}
+                            onBlur={() => {
+                              if (isValidHex(color.value)) {
+                                const updated = [...formData.colorsJson];
+                                updated[index].value = normalizeHex(color.value);
+                                setFormData({ ...formData, colorsJson: updated });
+                              }
+                            }}
+                            placeholder="#000000"
+                            style={{ 
+                              width: "85px", 
+                              padding: "8px 8px", 
+                              fontSize: "0.85rem", 
+                              fontFamily: "monospace",
+                              fontWeight: 600,
+                              border: isHexValid ? "1px solid var(--tth-beige-light)" : "1px solid #ef4444", 
+                              borderRadius: "4px",
+                              backgroundColor: "white",
+                              color: "var(--tth-navy)",
+                              boxSizing: "border-box"
+                            }}
+                          />
+                        </div>
+
+                        {/* Color Name Input + Suggest Name Button */}
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px", flex: "1 1 180px", minWidth: 0 }}>
+                          <input 
+                            type="text" 
+                            value={color.name} 
+                            onChange={(e) => {
+                              const updated = [...formData.colorsJson];
+                              updated[index].name = e.target.value;
+                              setFormData({ ...formData, colorsJson: updated });
+                            }}
+                            placeholder="Color Name (e.g. Maroon, Navy Blue)"
+                            style={{ 
+                              flex: 1, 
+                              minWidth: 0,
+                              width: "100%",
+                              padding: "8px 10px", 
+                              fontSize: "0.85rem", 
+                              border: "1px solid var(--tth-beige-light)", 
+                              borderRadius: "4px", 
+                              backgroundColor: "white",
+                              boxSizing: "border-box"
+                            }}
+                            required
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const suggested = suggestColorName(color.value);
+                              const updated = [...formData.colorsJson];
+                              updated[index].name = suggested;
+                              setFormData({ ...formData, colorsJson: updated });
+                              toast.success(`Suggested name: ${suggested}`, { duration: 1500 });
+                            }}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "4px",
+                              padding: "8px 8px",
+                              fontSize: "0.75rem",
+                              fontWeight: 600,
+                              background: "#f1f5f9",
+                              border: "1px solid #cbd5e1",
+                              borderRadius: "4px",
+                              color: "#334155",
+                              cursor: "pointer",
+                              whiteSpace: "nowrap",
+                              flexShrink: 0
+                            }}
+                            title="Suggest Color Name from HEX"
+                          >
+                            <Sparkles size={13} color="#6366f1" />
+                            Suggest
+                          </button>
+                        </div>
+
+                        {/* Remove button */}
+                        <button 
+                          type="button" 
+                          onClick={() => {
+                            const updated = formData.colorsJson.filter((_, idx) => idx !== index);
+                            setFormData({ ...formData, colorsJson: updated });
+                          }}
+                          style={{ 
+                            background: "none", 
+                            border: "none", 
+                            color: "#ef4444", 
+                            cursor: "pointer", 
+                            fontSize: "1.3rem", 
+                            padding: "2px 6px",
+                            lineHeight: 1,
+                            flexShrink: 0
+                          }}
+                          title="Remove Color"
+                        >
+                          ×
+                        </button>
+                      </div>
+
+                      {/* Multi-image selection section */}
+                      <div style={{ marginTop: "4px", paddingTop: "8px", borderTop: "1px dashed #cbd5e1" }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
+                          <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#334155" }}>
+                            Mapped Gallery Photos ({(color.imageUrls || []).length} selected):
+                          </span>
+                          {(color.imageUrls || []).length > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const updated = [...formData.colorsJson];
+                                updated[index].imageUrls = [];
+                                updated[index].image = "";
+                                setFormData({ ...formData, colorsJson: updated });
+                              }}
+                              style={{ fontSize: "0.7rem", color: "#64748b", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}
+                            >
+                              Clear selection
+                            </button>
+                          )}
+                        </div>
+
+                        {formData.imageUrls && formData.imageUrls.length > 0 ? (
+                          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                            {formData.imageUrls.map((url, imgIdx) => {
+                              const isSelected = (color.imageUrls || []).includes(url);
+                              return (
+                                <button
+                                  key={imgIdx}
+                                  type="button"
+                                  onClick={() => {
+                                    const updated = [...formData.colorsJson];
+                                    const currentUrls = updated[index].imageUrls || [];
+                                    let nextUrls: string[];
+                                    if (isSelected) {
+                                      nextUrls = currentUrls.filter(u => u !== url);
+                                    } else {
+                                      nextUrls = [...currentUrls, url];
+                                    }
+                                    updated[index].imageUrls = nextUrls;
+                                    updated[index].image = nextUrls[0] || "";
+                                    setFormData({ ...formData, colorsJson: updated });
+                                  }}
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "6px",
+                                    padding: "4px 8px 4px 4px",
+                                    borderRadius: "6px",
+                                    border: isSelected ? "2px solid #0f172a" : "1px solid #cbd5e1",
+                                    background: isSelected ? "#e2e8f0" : "white",
+                                    cursor: "pointer",
+                                    transition: "all 0.15s ease",
+                                    boxShadow: isSelected ? "0 1px 2px rgba(0,0,0,0.1)" : "none"
+                                  }}
+                                  title={isSelected ? `Photo ${imgIdx + 1} selected (Click to unassign)` : `Click to assign Photo ${imgIdx + 1}`}
+                                >
+                                  <div style={{ width: "26px", height: "26px", borderRadius: "4px", overflow: "hidden", position: "relative", flexShrink: 0, border: "1px solid #cbd5e1" }}>
+                                    <img
+                                      src={getResizedCloudinaryUrl(url, 80, 80)}
+                                      alt={`Photo ${imgIdx + 1}`}
+                                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                    />
+                                  </div>
+                                  <span style={{ fontSize: "0.75rem", fontWeight: isSelected ? 700 : 500, color: isSelected ? "#0f172a" : "#475569" }}>
+                                    {isSelected ? "✓ " : ""}Photo {imgIdx + 1}
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <span style={{ fontSize: "0.75rem", color: "#94a3b8", fontStyle: "italic" }}>
+                            Upload product photos above to map them to this color.
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Inline Validation message if invalid HEX */}
+                      {!isHexValid && color.value.trim().length > 0 && (
+                        <div style={{ fontSize: "0.75rem", color: "#ef4444", fontWeight: 500 }}>
+                          Invalid color value. Use #RGB or #RRGGBB.
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+
+                <div>
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      const updated = [...(formData.colorsJson || [])];
+                      const defaultHex = "#000000";
+                      updated.push({ 
+                        name: suggestColorName(defaultHex), 
+                        value: defaultHex, 
+                        imageUrls: [] 
+                      });
+                      setFormData({ ...formData, colorsJson: updated });
+                    }}
+                    style={{ 
+                      background: "white", 
+                      border: "1px solid var(--tth-beige-light)", 
+                      padding: "8px 16px", 
+                      borderRadius: "4px", 
+                      fontSize: "0.85rem", 
+                      fontWeight: 600, 
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px"
+                    }}
+                  >
+                    <Plus size={16} /> Add Color
+                  </button>
+                </div>
+              </div>
             </div>
 
             <div className={styles.inputGroup}>

@@ -126,6 +126,8 @@ export default async function ProductDetailsPage({ params }: { params: { id: str
         badge: dbProduct.badge || "",
         description: dbProduct.description,
         features: dbProduct.features,
+        colors: dbProduct.colors,
+        colorsJson: dbProduct.colorsJson,
         minOrderQuantity: Math.max(dbProduct.minOrderQuantity || 0, 10),
       };
 

@@ -9,7 +9,7 @@ import { useCart } from "@/contexts/CartContext";
 import SizeBreakdown from "@/components/customizer/SizeBreakdown";
 import OrderSummary from "@/components/customizer/OrderSummary";
 import { allProducts } from "@/lib/products-data";
-import { getProductColors } from "@/lib/customizer-utils";
+import { getProductColors, getProductStructuredColors, isValidHex, normalizeHex } from "@/lib/customizer-utils";
 import Image from "next/image";
 
 function CustomizerContent() {
@@ -30,10 +30,17 @@ function CustomizerContent() {
   const [dbProduct, setDbProduct] = useState<any>(null);
   const [isLoadingProduct, setIsLoadingProduct] = useState(true);
 
+  const structuredColors = useMemo(() => {
+    return getProductStructuredColors(dbProduct);
+  }, [dbProduct]);
+
   const synchronizedColors = useMemo(() => {
     if (!dbProduct) return undefined;
+    if (structuredColors && structuredColors.length > 0) {
+      return structuredColors.map(c => c.value);
+    }
     return dbProduct.availableColors || getProductColors(dbProduct.name, dbProduct.description, dbProduct.features || [], dbProduct.colors);
-  }, [dbProduct]);
+  }, [dbProduct, structuredColors]);
 
   const productId = searchParams.get('id') || searchParams.get('productId');
   const designId = searchParams.get('designId');
@@ -125,6 +132,10 @@ function CustomizerContent() {
   };
 
   useEffect(() => {
+    if (designId && !customizerState) {
+      return;
+    }
+
     const garment = searchParams.get('garment');
     const fabricId = searchParams.get('fabricId');
     const derivedGarment = dbProduct 
@@ -133,9 +144,11 @@ function CustomizerContent() {
     
     // Only set initial state once
     if (!customizerState) {
+      const rawColor = searchParams.get('colorValue');
+      const initialColor = rawColor && isValidHex(rawColor) ? normalizeHex(rawColor) : (rawColor || 'transparent');
       setCustomizerState({
         garmentType: derivedGarment,
-        bodyColor: 'transparent',
+        bodyColor: initialColor,
         frontElements: [],
         backElements: [],
         leftElements: [],
@@ -147,7 +160,7 @@ function CustomizerContent() {
       // Update garment type if it changes from product selection
       setCustomizerState(prev => prev ? ({ ...prev, garmentType: derivedGarment }) : null);
     }
-  }, [searchParams, dbProduct]);
+  }, [searchParams, dbProduct, designId]);
 
   useEffect(() => {
     // Mark as unsaved whenever customizerState changes after initial load
@@ -533,6 +546,7 @@ function CustomizerContent() {
             onSideChange={setActiveSide}
             garmentType={customizerState?.garmentType as any}
             availableColors={synchronizedColors}
+            colorsJson={structuredColors}
           />
         )}
         
@@ -666,6 +680,7 @@ function CustomizerContent() {
                         activeSide="front" 
                         mockupId="review-mockup-front" 
                         availableColors={synchronizedColors}
+                        colorsJson={structuredColors}
                       />
                     </div>
                   </div>
@@ -678,6 +693,7 @@ function CustomizerContent() {
                         activeSide="back" 
                         mockupId="review-mockup-back" 
                         availableColors={synchronizedColors}
+                        colorsJson={structuredColors}
                       />
                     </div>
                   </div>
@@ -691,6 +707,7 @@ function CustomizerContent() {
                         activeSide="left" 
                         mockupId="review-mockup-left" 
                         availableColors={synchronizedColors}
+                        colorsJson={structuredColors}
                       />
                     </div>
                   </div>
@@ -705,6 +722,7 @@ function CustomizerContent() {
                         activeSide="right" 
                         mockupId="review-mockup-right" 
                         availableColors={synchronizedColors}
+                        colorsJson={structuredColors}
                       />
                     </div>
                   </div>

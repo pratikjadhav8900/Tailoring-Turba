@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
   Type, UploadCloud, Shirt, X, Plus, ArrowUpRight, Smartphone, Trash2, LogIn, HelpCircle,
   Sliders, ArrowLeft, LayoutTemplate, Bold, Underline, AlignLeft, Copy, ChevronUp, ChevronDown, Link2
@@ -9,7 +9,7 @@ import styles from "./PoloCustomizer.module.css";
 import { COLOR_PRESETS, GARMENTS } from "@/lib/fabric-data";
 import { ALL_PRESETS as TEXT_PRESETS } from "@/lib/presets";
 import { DesignElement } from "@/types/customizer";
-import { getElementDetails, getPrintableAreaDimensionsPx, SIZE_SCALES } from "@/lib/customizer-utils";
+import { getElementDetails, getPrintableAreaDimensionsPx, SIZE_SCALES, getColorName } from "@/lib/customizer-utils";
 
 type ActiveTool = "Text" | "Uploads" | "Colors" | "Presets" | "Guide" | "Properties" | null;
 
@@ -30,6 +30,7 @@ interface ToolPanelProps {
   onUploadClick: () => void;
   onAddLogoUrl?: (url: string) => void;
   availableColors?: string[];
+  colorsJson?: any;
   textElements?: DesignElement[];
   onUpdateTextElement?: (id: string, value: string) => void;
   onRemoveElement?: (id: string) => void;
@@ -77,28 +78,11 @@ const TEXT_COLORS = [
   { name: "Teal",       hex: "#0D9488" }
 ];
 
-const COLOR_NAME_MAP: Record<string, string> = {
-  "#FFFFFF": "White",
-  "#111111": "Jet Black",
-  "#004b6b": "Turba Blue",
-  "#1E3A5F": "Navy",
-  "#2563EB": "Royal Blue",
-  "#38BDF8": "Sky Blue",
-  "#16A34A": "Forest Green",
-  "#4D7C0F": "Olive",
-  "#DC2626": "Independence Red",
-  "#7F1D1D": "Maroon",
-  "#D97706": "Gold",
-  "#9CA3AF": "Grey Melange",
-};
-function getColorName(hex: string): string {
-  return COLOR_NAME_MAP[hex.toUpperCase()] || COLOR_NAME_MAP[hex] || hex;
-}
 
 export default function ToolPanel({
   activeTool, bodyColor, isUploading,
   onToolSelect, onColorSelect, onAddText, onAddPreset, onUploadClick, onAddLogoUrl,
-  availableColors, textElements = [], onUpdateTextElement, onRemoveElement,
+  availableColors, colorsJson, textElements = [], onUpdateTextElement, onRemoveElement,
   activeElement, onUpdateElement, onCopyElement, garmentType, activeSide,
   previewSize = "M", onPreviewSizeChange,
 }: ToolPanelProps) {
@@ -323,8 +307,27 @@ export default function ToolPanel({
   const currentColorName = TEXT_COLORS.find(c => c.hex.toLowerCase() === currentColor.toLowerCase())?.name || "Color";
   const currentPrintType = activeElement?.printType || "dtf";
 
-  const colorList = availableColors?.map(hex => ({ hex, name: getColorName(hex) })) || COLOR_PRESETS;
-  const colorName = getColorName(bodyColor);
+  const structuredColorsMap = useMemo(() => {
+    if (!colorsJson) return {};
+    let parsed = colorsJson;
+    if (typeof parsed === 'string') {
+      try { parsed = JSON.parse(parsed); } catch { parsed = []; }
+    }
+    if (Array.isArray(parsed)) {
+      return Object.fromEntries(
+        parsed.map(c => [String(c.value || c.hex || "").toUpperCase(), String(c.name || "")])
+      );
+    }
+    return {};
+  }, [colorsJson]);
+
+  const colorList = availableColors?.map(hex => {
+    const upper = hex.toUpperCase();
+    const customName = structuredColorsMap[upper];
+    return { hex, name: customName || getColorName(hex) };
+  }) || COLOR_PRESETS;
+  
+  const colorName = structuredColorsMap[bodyColor.toUpperCase()] || getColorName(bodyColor);
 
   return (
     <>

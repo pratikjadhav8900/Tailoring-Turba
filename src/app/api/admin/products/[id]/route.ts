@@ -32,6 +32,79 @@ export async function DELETE(
   }
 }
 
+import { isValidHex, normalizeHex } from "@/lib/customizer-utils";
+
+function validateColorsJson(colorsJson: any, imageUrls: string[]): any[] | null {
+  if (!colorsJson) return null;
+  let parsed = colorsJson;
+  if (typeof parsed === 'string') {
+    try {
+      parsed = JSON.parse(parsed);
+    } catch (e) {
+      throw new Error("Colors data is not a valid JSON string.");
+    }
+  }
+  if (!Array.isArray(parsed)) {
+    throw new Error("Colors data must be an array.");
+  }
+  if (parsed.length === 0) return null;
+
+  const validated: any[] = [];
+  const seenNames = new Set<string>();
+
+  for (const item of parsed) {
+    if (typeof item !== 'object' || item === null) {
+      throw new Error("Invalid color item format.");
+    }
+    const name = String(item.name || "").trim();
+    const rawValue = String(item.value || item.hex || "").trim();
+    
+    // Extract array of imageUrls with fallback to single image / imageUrl
+    let rawUrls: string[] = [];
+    if (Array.isArray(item.imageUrls)) {
+      rawUrls = item.imageUrls.map((u: any) => String(u || "").trim()).filter(Boolean);
+    } else if (item.image || item.imageUrl) {
+      const single = String(item.image || item.imageUrl || "").trim();
+      if (single) rawUrls = [single];
+    }
+
+    // Remove duplicates within the same color
+    const cleanImageUrls = Array.from(new Set(rawUrls));
+
+    if (!name) {
+      throw new Error("Color name cannot be empty.");
+    }
+    if (!isValidHex(rawValue)) {
+      throw new Error(`Color "${name}" has an invalid hex code "${rawValue}". Use #RGB or #RRGGBB.`);
+    }
+
+    const value = normalizeHex(rawValue);
+
+    if (seenNames.has(name.toLowerCase())) {
+      throw new Error(`Duplicate color name: "${name}".`);
+    }
+    seenNames.add(name.toLowerCase());
+
+    if (imageUrls.length > 0) {
+      for (const img of cleanImageUrls) {
+        if (!imageUrls.includes(img)) {
+          throw new Error(`Image for color "${name}" does not belong to the uploaded product images.`);
+        }
+      }
+    }
+
+    validated.push({
+      name,
+      value,
+      hex: value,
+      imageUrls: cleanImageUrls,
+      image: cleanImageUrls[0] || null,
+      imageUrl: cleanImageUrls[0] || null
+    });
+  }
+  return validated;
+}
+
 export async function PUT(
   req: NextRequest,
   { params }: { params: { id: string } }
@@ -57,6 +130,7 @@ export async function PUT(
       description, 
       features, 
       colors, 
+      colorsJson,
       badge, 
       imageUrl, 
       imageUrls, 
@@ -69,6 +143,13 @@ export async function PUT(
 
     if (!name || !category || !price) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    }
+
+    let validatedColorsJson = null;
+    try {
+      validatedColorsJson = validateColorsJson(colorsJson, imageUrls || (imageUrl ? [imageUrl] : []));
+    } catch (err: any) {
+      return NextResponse.json({ error: err.message }, { status: 400 });
     }
 
     // Validate SEO fields
@@ -132,6 +213,7 @@ export async function PUT(
         description: description || "",
         features: features ? features.split('\n').filter((f: string) => f.trim()) : [],
         colors: colors ? parseInt(String(colors)) : null,
+        colorsJson: validatedColorsJson || null,
         badge: badge || null,
         images: imageUrls || (imageUrl ? [imageUrl] : []),
         isActive: typeof isActive === 'boolean' ? isActive : undefined,

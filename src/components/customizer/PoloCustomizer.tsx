@@ -19,6 +19,7 @@ interface Props {
   mockupId?: string;
   garmentType?: any;
   availableColors?: string[];
+  colorsJson?: any;
 }
 
 export default function PoloCustomizer({
@@ -30,6 +31,7 @@ export default function PoloCustomizer({
   mockupId = "customizer-mockup-area",
   garmentType: propGarmentType,
   availableColors,
+  colorsJson,
 }: Props) {
   const garmentType = propGarmentType || initialState?.garmentType || "round-neck";
   const [internalSide, setInternalSide] = useState<Side>("front");
@@ -488,6 +490,7 @@ export default function PoloCustomizer({
           onUploadClick={() => fileInputRef.current?.click()}
           onAddLogoUrl={addLogoFromUrl}
           availableColors={availableColors}
+          colorsJson={colorsJson}
           textElements={elements.filter(e => e.type === "text")}
           onUpdateTextElement={(id, val) => updateElement(id, { value: val })}
           onRemoveElement={(id) => removeElement(id)}
@@ -525,6 +528,7 @@ export default function PoloCustomizer({
           onDragStart={() => setIsDragging(true)}
           onDragStop={() => setIsDragging(false)}
           previewSize={previewSize}
+          colorsJson={colorsJson}
         >
           {/* Side Switcher Thumbnails & Preview Size Selector */}
           {!isPreviewMode && (

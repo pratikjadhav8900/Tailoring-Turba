@@ -10,6 +10,7 @@ import { Receipt, RotateCcw, Brush, Truck, Package, ShieldCheck, Lock, Award, Ar
 import { useCompare } from "@/contexts/CompareContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { getResizedCloudinaryUrl } from "@/lib/cloudinary-client";
+import { getProductStructuredColors } from "@/lib/customizer-utils";
 import toast from "react-hot-toast";
 
 type Review = {
@@ -32,6 +33,26 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
   const configKey = `tt_product_config_${product.id}`;
 
   const [qty, setQty] = useState<number | string>(minQty);
+  const [selectedColor, setSelectedColor] = useState<any>(null);
+  const imageGridRef = useRef<HTMLDivElement>(null);
+
+  // Initialize selectedColor on product change
+  useEffect(() => {
+    const structuredColors = getProductStructuredColors(product);
+    if (structuredColors && structuredColors.length > 0) {
+      setSelectedColor(structuredColors[0]);
+    } else {
+      setSelectedColor(null);
+    }
+  }, [product]);
+
+  // Scroll to start of images gallery on selected color change
+  useEffect(() => {
+    if (imageGridRef.current) {
+      imageGridRef.current.scrollLeft = 0;
+    }
+    setCurrentMobileSlide(0);
+  }, [selectedColor]);
 
   const basePresets = [10, 20, 30, 40, 50, 75, 100, 150, 200, 250, 300, 400, 500, 750, 1000, 1500, 2000, 2500, 5000];
   const quickQuantities = Array.from(new Set([
@@ -97,9 +118,22 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
   const sampleMessage = `Hi Tailoring Turba! I'm interested in requesting a sample for: ${product.name} (ID: ${product.id}).${selectedSize ? ` Size: ${selectedSize}.` : ""} Requested Quantity: ${qty || 10}.`;
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(sampleMessage)}`;
 
-  const imagesList = product.gallery && product.gallery.length > 0
-    ? product.gallery
-    : [product.image];
+  const structuredColors = getProductStructuredColors(product);
+
+  let imagesList: string[] = [];
+  if (selectedColor && Array.isArray(selectedColor.imageUrls) && selectedColor.imageUrls.length > 0) {
+    imagesList = selectedColor.imageUrls.filter(Boolean);
+  } else if (selectedColor && (selectedColor.image || selectedColor.imageUrl)) {
+    const single = String(selectedColor.image || selectedColor.imageUrl).trim();
+    if (single) imagesList = [single];
+  }
+
+  // Fallback to complete product gallery if no mapped images exist for selected color
+  if (imagesList.length === 0) {
+    imagesList = product.gallery && product.gallery.length > 0
+      ? [...product.gallery]
+      : [product.image];
+  }
 
   const availableSizes = product.category?.toLowerCase().includes("shirt") || product.name?.toLowerCase().includes("shirt")
     ? ["38", "40", "42", "44", "46", "48"]
@@ -314,6 +348,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
             )}
             <div className={styles.mobileSliderWrapper}>
               <div 
+                ref={imageGridRef}
                 className={styles.imageGrid}
                 onScroll={(e) => {
                   const target = e.currentTarget;
@@ -415,6 +450,46 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
                 <span>500+ Units Ready for Dispatch</span>
               </div>
             </div>
+
+            {/* Structured Color Swatch Selector */}
+            {structuredColors && structuredColors.length > 0 && (
+              <div style={{ marginBottom: "20px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                  <span style={{ fontSize: "0.85rem", fontWeight: 800, color: "#1e293b", letterSpacing: "0.05em", textTransform: "uppercase" }}>
+                    Select Color: <span style={{ fontWeight: 500, color: "#64748b" }}>{selectedColor?.name || ""}</span>
+                  </span>
+                </div>
+                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                  {structuredColors.map((color: any) => {
+                    const isSelected = (selectedColor?.value && color.value && selectedColor.value.toUpperCase() === color.value.toUpperCase()) || 
+                      (selectedColor?.name && color.name && selectedColor.name.toLowerCase() === color.name.toLowerCase());
+                    const isWhite = color.value?.toUpperCase() === "#FFFFFF" || color.value?.toUpperCase() === "#FFF";
+
+                    return (
+                      <button
+                        key={`${color.name}-${color.value}`}
+                        type="button"
+                        onClick={() => setSelectedColor(color)}
+                        style={{
+                          width: "36px",
+                          height: "36px",
+                          borderRadius: "50%",
+                          backgroundColor: color.value,
+                          border: isSelected 
+                            ? "2px solid #000" 
+                            : (isWhite ? "1px solid #cbd5e1" : "1px solid rgba(0,0,0,0.15)"),
+                          boxShadow: isSelected ? "0 0 0 2px #fff, 0 0 0 4px #000" : "inset 0 0 0 1px rgba(0,0,0,0.05)",
+                          cursor: "pointer",
+                          transition: "all 0.15s ease",
+                          padding: 0
+                        }}
+                        title={`${color.name} (${color.value})`}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Circular Size Selector */}
             <div className={styles.sizeContainer}>
@@ -522,11 +597,15 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
                 >
                   Request Sample
                 </a>
-                {isCustomizable && (
-                  <Link href={`/customizer?id=${product.id}`} className={styles.btnStudio} style={{ textDecoration: 'none', textAlign: 'center', borderRadius: "6px" }}>
-                    Design Studio
-                  </Link>
-                )}
+                {isCustomizable && (() => {
+                  const studioUrl = `/customizer?id=${product.id}` + 
+                    (selectedColor ? `&colorName=${encodeURIComponent(selectedColor.name)}&colorValue=${encodeURIComponent(selectedColor.value)}` : "");
+                  return (
+                    <Link href={studioUrl} className={styles.btnStudio} style={{ textDecoration: 'none', textAlign: 'center', borderRadius: "6px" }}>
+                      Design Studio
+                    </Link>
+                  );
+                })()}
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginTop: "8px" }}>

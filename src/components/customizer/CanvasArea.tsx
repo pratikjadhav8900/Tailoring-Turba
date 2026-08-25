@@ -5,7 +5,7 @@ import { Move, RotateCw, Trash2, Minus, Plus, Settings, Copy } from "lucide-reac
 import styles from "./PoloCustomizer.module.css";
 import { DesignElement, Side } from "@/types/customizer";
 import { GARMENTS } from "@/lib/fabric-data";
-import { SIZE_SCALES } from "@/lib/customizer-utils";
+import { SIZE_SCALES, isValidHex, normalizeHex } from "@/lib/customizer-utils";
 import { ALL_PRESETS as TEXT_PRESETS } from "@/lib/presets";
 import { motion, AnimatePresence } from "framer-motion";
 interface CanvasAreaProps {
@@ -27,6 +27,7 @@ interface CanvasAreaProps {
   onDragStop: () => void;
   previewSize?: "S" | "M" | "L" | "XL" | "XXL";
   children?: React.ReactNode;
+  colorsJson?: any;
 }
 
 export default function CanvasArea({
@@ -35,6 +36,7 @@ export default function CanvasArea({
   onElementClick, onUpdateElement, onRemoveElement, onCopyElement, onDragStart, onDragStop,
   previewSize = "M",
   children,
+  colorsJson,
 }: CanvasAreaProps) {
   const currentGarment = GARMENTS[garmentType as keyof typeof GARMENTS] || GARMENTS["round-neck"];
   const currentImg = (currentGarment as any)[activeSide] || currentGarment["front"];
@@ -436,7 +438,8 @@ export default function CanvasArea({
             {/* Color Dye Tint overlays: Rendered with blend modes directly on top of the base image */}
             {(() => {
               const isTransparent = bodyColor === "transparent";
-              const effectiveColor = isTransparent ? "#ffffff" : bodyColor;
+              const rawColor = isTransparent ? "#ffffff" : bodyColor;
+              const effectiveColor = isValidHex(rawColor) ? normalizeHex(rawColor) : rawColor;
               
               // Calculate luminance to scale overlay values naturally
               const hex = effectiveColor.replace("#", "");
