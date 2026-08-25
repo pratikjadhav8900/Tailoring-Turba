@@ -61,6 +61,7 @@ model Product {
   id               String      @id @default(cuid())
   name             String
   description      String
+  shortDescription String?
   basePrice        Float
   minOrderQuantity Int         @default(10)
   categoryId       String
@@ -74,6 +75,31 @@ model Product {
   type             String?
   brand            String?
   isActive         Boolean     @default(true)
+
+  // Classification fields
+  sku              String?
+  department       String?
+  productType      String?
+  style            String?
+  gender           String?
+  qualityTier      String?
+  collection       String?
+
+  // Fabric & Specifications
+  fabric           String?
+  fabricComposition String?
+  gsm              Int?
+  fit              String?
+  neckType         String?
+  sleeveType       String?
+  pattern          String?
+  careInstructions String?
+  countryOfOrigin  String?     @default("India")
+
+  // Sizes & Media Metadata
+  sizes            String[]    @default([])
+  mediaMetadata    Json?
+
   designs          Design[]
   orderItems       OrderItem[]
   category         Category    @relation(fields: [categoryId], references: [id])

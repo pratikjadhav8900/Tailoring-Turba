@@ -143,9 +143,11 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
     imagesList = [product.image];
   }
 
-  const availableSizes = product.category?.toLowerCase().includes("shirt") || product.name?.toLowerCase().includes("shirt")
-    ? ["38", "40", "42", "44", "46", "48"]
-    : ["S", "M", "L", "XL", "XXL", "3XL"];
+  const availableSizes = Array.isArray(product.sizes) && product.sizes.length > 0
+    ? product.sizes
+    : (product.category?.toLowerCase().includes("shirt") || product.name?.toLowerCase().includes("shirt")
+        ? ["38", "40", "42", "44", "46", "48"]
+        : ["S", "M", "L", "XL", "2XL", "3XL"]);
 
   const handleCheckPincode = (e: React.FormEvent) => {
     e.preventDefault();
@@ -322,13 +324,16 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
   };
 
   const specs = [
-    { label: "Fabric", value: product.fabric || (product.features?.[0]?.includes("GSM") ? product.features[0].split(" ").slice(2).join(" ") : product.features?.[0]) || "Premium Fabric" },
-    { label: "GSM / Weight", value: product.features?.find((f: string) => f.includes("GSM"))?.split(" ")?.[0] || product.gsm || "220 GSM" },
-    { label: "Fit", value: product.name?.toLowerCase().includes("oversize") ? "Oversized Fit" : "Regular Fit" },
-    { label: "Sleeve Length", value: product.name?.toLowerCase().includes("t-shirt") || product.name?.toLowerCase().includes("polo") ? "Short Sleeves" : "Full Sleeves" },
-    { label: "Collar / Neck", value: product.name?.toLowerCase().includes("polo") ? "Polo Collar" : product.name?.toLowerCase().includes("hood") ? "Hooded" : "Spread Collar" },
-    { label: "Occasion", value: "Corporate / Casual" },
-    { label: "Country of Origin", value: "India" }
+    { label: "Product Type", value: product.productType || "Corporate Garment" },
+    { label: "Quality Tier", value: product.qualityTier || "Standard Commercial" },
+    { label: "Fabric", value: product.fabric || product.fabricComposition || (product.features?.[0]?.includes("GSM") ? product.features[0].split(" ").slice(2).join(" ") : product.features?.[0]) || "100% Combed Cotton" },
+    { label: "Fabric Weight", value: product.gsm ? `${product.gsm} GSM` : (product.features?.find((f: string) => f.includes("GSM"))?.split(" ")?.[0] || "220 GSM") },
+    { label: "Fit", value: product.fit || (product.name?.toLowerCase().includes("oversize") ? "Oversized Fit" : "Regular Fit") },
+    { label: "Collar / Neck", value: product.neckType || (product.name?.toLowerCase().includes("polo") ? "Polo Collar" : product.name?.toLowerCase().includes("hood") ? "Hooded" : "Round Neck") },
+    { label: "Sleeve Type", value: product.sleeveType || (product.name?.toLowerCase().includes("t-shirt") || product.name?.toLowerCase().includes("polo") ? "Half Sleeve" : "Full Sleeve") },
+    { label: "Pattern", value: product.pattern || "Solid / Plain" },
+    { label: "Occasion", value: product.collection || "Corporate / Casual" },
+    { label: "Country of Origin", value: product.countryOfOrigin || "India" }
   ];
 
   return (
@@ -606,7 +611,8 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
                   Request Sample
                 </a>
                 {isCustomizable && (() => {
-                  const studioUrl = `/customizer?id=${product.id}` + 
+                  const studioUrl = `/customizer?id=${product.id}` +
+                    (product.productType ? `&productType=${encodeURIComponent(product.productType)}` : "") +
                     (selectedColor ? `&colorName=${encodeURIComponent(selectedColor.name)}&colorValue=${encodeURIComponent(selectedColor.value)}` : "");
                   return (
                     <Link href={studioUrl} className={styles.btnStudio} style={{ textDecoration: 'none', textAlign: 'center', borderRadius: "6px" }}>

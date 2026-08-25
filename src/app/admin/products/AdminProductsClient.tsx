@@ -1,8 +1,7 @@
-
 "use client";
 
 import { useState } from "react";
-import { Plus, Trash2, Loader2, Edit2, Image as ImageIcon, Sparkles } from "lucide-react";
+import { Plus, Trash2, Loader2, Edit2, Image as ImageIcon, Sparkles, ArrowLeft, ArrowRight, Check, X } from "lucide-react";
 import toast from "react-hot-toast";
 import Image from "next/image";
 import styles from "./page.module.css";
@@ -10,9 +9,39 @@ import { getResizedCloudinaryUrl } from "@/lib/cloudinary-client";
 import { generateSlug } from "@/lib/slug";
 import { generateProductSeo } from "@/lib/seo-generator";
 import { isValidHex, normalizeHex, suggestColorName } from "@/lib/customizer-utils";
+import {
+  DEPARTMENTS,
+  CATEGORIES_BY_DEPARTMENT,
+  PRODUCT_TYPES_BY_CATEGORY,
+  STYLES_BY_PRODUCT_TYPE,
+  ALL_PRODUCT_TYPES,
+  ALL_STYLES,
+  GENDERS,
+  QUALITY_TIERS,
+  FITS,
+  NECK_TYPES,
+  SLEEVE_TYPES,
+  FABRICS,
+  PATTERNS,
+  STANDARD_SIZES,
+  IMAGE_VIEW_TYPES,
+  ImageViewType,
+  ProductMediaItem,
+  deriveProductType,
+  deriveGender,
+  deriveQualityTier
+} from "@/lib/catalog-config";
 
-type Product = any; // We can type this properly later
+type Product = any;
 type Category = any;
+
+interface ColorVariantForm {
+  name: string;
+  value: string;
+  hex?: string;
+  imageUrls: string[];
+  image?: string;
+}
 
 export default function AdminProductsClient({ initialProducts, categories }: { initialProducts: Product[], categories: Category[] }) {
   const [products, setProducts] = useState<Product[]>(initialProducts);
@@ -24,26 +53,65 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
 
   const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false);
   const [slugConflictError, setSlugConflictError] = useState("");
+  const [customSizeInput, setCustomSizeInput] = useState("");
 
   const [formData, setFormData] = useState({
+    // Section 1: Basic Information
     name: "",
-    category: "",
-    newCategory: "",
-    type: "",
+    sku: "",
+    brand: "Tailoring Turba",
     price: "",
+    minOrderQuantity: 10,
+    isActive: true,
+    badge: "",
+    shortDescription: "",
     description: "",
     features: "",
-    colors: "",
-    colorsJson: [] as { name: string; value: string; hex?: string; imageUrls: string[]; image?: string }[],
-    badge: "",
+
+    // Section 2: Product Classification
+    department: "Apparel",
+    category: "Tops",
+    newCategory: "",
+    productType: "Polo",
+    style: "Classic Polo Collar",
+    gender: "Men",
+    qualityTier: "Standard",
+    collection: "Core Essentials",
+
+    // Section 3: Fabric & Specifications
+    fabric: "100% Combed Cotton",
+    fabricComposition: "100% Combed Cotton",
+    gsm: "220",
+    fit: "Regular",
+    neckType: "Polo Collar",
+    sleeveType: "Half Sleeve",
+    pattern: "Solid / Plain",
+    careInstructions: "Machine wash cold with like colors. Do not bleach. Tumble dry low. Warm iron if needed.",
+    countryOfOrigin: "India",
+
+    // Section 4: Available Sizes
+    sizes: ["S", "M", "L", "XL", "2XL"] as string[],
+
+    // Section 5: Product Media
     imageUrl: "",
     imageUrls: [] as string[],
-    isActive: true,
+    mediaMetadata: [] as ProductMediaItem[],
+
+    // Section 6: Available Colors
+    colors: "",
+    colorsJson: [] as ColorVariantForm[],
+
+    // Section 7: SEO
     seoTitle: "",
     seoDescription: "",
     seoKeywords: "",
     slug: "",
   });
+
+  // Dependent dropdown helpers
+  const availableCategories = CATEGORIES_BY_DEPARTMENT[formData.department] || CATEGORIES_BY_DEPARTMENT["Apparel"] || [];
+  const availableProductTypes = PRODUCT_TYPES_BY_CATEGORY[formData.category] || ALL_PRODUCT_TYPES;
+  const availableStyles = STYLES_BY_PRODUCT_TYPE[formData.productType] || ALL_STYLES;
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -84,10 +152,22 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
     }
 
     if (uploadedUrls.length > 0) {
+      const newUrls = [...formData.imageUrls, ...uploadedUrls];
+      const newMeta: ProductMediaItem[] = [
+        ...formData.mediaMetadata,
+        ...uploadedUrls.map((url, idx) => ({
+          url,
+          sortOrder: formData.mediaMetadata.length + idx,
+          isMain: formData.mediaMetadata.length === 0 && idx === 0,
+          viewType: (idx === 0 && formData.mediaMetadata.length === 0 ? "Front" : "Detail") as ImageViewType,
+        }))
+      ];
+
       setFormData(prev => ({
         ...prev,
-        imageUrl: prev.imageUrl || uploadedUrls[0],
-        imageUrls: [...prev.imageUrls, ...uploadedUrls]
+        imageUrl: prev.imageUrl || newUrls[0],
+        imageUrls: newUrls,
+        mediaMetadata: newMeta
       }));
     }
 
@@ -97,6 +177,13 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
   const handleRemoveImage = (indexToRemove: number) => {
     const removedUrl = formData.imageUrls[indexToRemove];
     const updatedUrls = formData.imageUrls.filter((_, idx) => idx !== indexToRemove);
+    const updatedMeta = formData.mediaMetadata.filter((_, idx) => idx !== indexToRemove).map((m, idx) => ({
+      ...m,
+      sortOrder: idx,
+      isMain: idx === 0
+    }));
+
+    // Auto-remove the deleted photo from all color mappings
     const updatedColors = formData.colorsJson?.map(c => ({
       ...c,
       imageUrls: (c.imageUrls || []).filter(u => u !== removedUrl),
@@ -107,8 +194,101 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
       ...formData,
       imageUrls: updatedUrls,
       imageUrl: updatedUrls[0] || "",
+      mediaMetadata: updatedMeta,
       colorsJson: updatedColors,
     });
+  };
+
+  const handleMoveImage = (index: number, direction: 'left' | 'right') => {
+    const targetIndex = direction === 'left' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= formData.imageUrls.length) return;
+
+    const updatedUrls = [...formData.imageUrls];
+    const tempUrl = updatedUrls[index];
+    updatedUrls[index] = updatedUrls[targetIndex];
+    updatedUrls[targetIndex] = tempUrl;
+
+    const updatedMeta = [...formData.mediaMetadata];
+    if (updatedMeta[index] && updatedMeta[targetIndex]) {
+      const tempMeta = updatedMeta[index];
+      updatedMeta[index] = updatedMeta[targetIndex];
+      updatedMeta[targetIndex] = tempMeta;
+      updatedMeta.forEach((m, idx) => {
+        m.sortOrder = idx;
+        m.isMain = idx === 0;
+      });
+    }
+
+    setFormData({
+      ...formData,
+      imageUrls: updatedUrls,
+      imageUrl: updatedUrls[0] || "",
+      mediaMetadata: updatedMeta,
+    });
+  };
+
+  const handleSetMainImage = (index: number) => {
+    if (index === 0) return;
+    const selectedUrl = formData.imageUrls[index];
+    const updatedUrls = [selectedUrl, ...formData.imageUrls.filter((_, idx) => idx !== index)];
+    
+    let updatedMeta = [...formData.mediaMetadata];
+    if (updatedMeta[index]) {
+      const selectedMeta = updatedMeta[index];
+      updatedMeta = [selectedMeta, ...updatedMeta.filter((_, idx) => idx !== index)];
+      updatedMeta.forEach((m, idx) => {
+        m.sortOrder = idx;
+        m.isMain = idx === 0;
+      });
+    }
+
+    setFormData({
+      ...formData,
+      imageUrls: updatedUrls,
+      imageUrl: updatedUrls[0] || "",
+      mediaMetadata: updatedMeta,
+    });
+  };
+
+  const handleUpdateViewType = (index: number, viewType: ImageViewType) => {
+    const updatedMeta = [...formData.mediaMetadata];
+    if (updatedMeta[index]) {
+      updatedMeta[index].viewType = viewType;
+      setFormData({ ...formData, mediaMetadata: updatedMeta });
+    } else {
+      // Create if missing
+      const url = formData.imageUrls[index];
+      if (url) {
+        updatedMeta[index] = {
+          url,
+          sortOrder: index,
+          isMain: index === 0,
+          viewType
+        };
+        setFormData({ ...formData, mediaMetadata: updatedMeta });
+      }
+    }
+  };
+
+  const handleToggleSize = (size: string) => {
+    const currentSizes = formData.sizes || [];
+    if (currentSizes.includes(size)) {
+      setFormData({ ...formData, sizes: currentSizes.filter(s => s !== size) });
+    } else {
+      setFormData({ ...formData, sizes: [...currentSizes, size] });
+    }
+  };
+
+  const handleAddCustomSize = (e: React.FormEvent) => {
+    e.preventDefault();
+    const clean = customSizeInput.trim().toUpperCase();
+    if (!clean) return;
+    if (formData.sizes.includes(clean)) {
+      toast.error(`Size ${clean} is already added.`);
+      return;
+    }
+    setFormData({ ...formData, sizes: [...formData.sizes, clean] });
+    setCustomSizeInput("");
   };
 
   const handleDelete = async (id: string) => {
@@ -121,6 +301,7 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
       });
       if (res.ok) {
         setProducts(products.filter(p => p.id !== id));
+        toast.success("Product deleted successfully");
       } else {
         toast.error("Failed to delete product");
       }
@@ -139,35 +320,24 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
     setProducts(prev => prev.map(p => p.id === product.id ? { ...p, isActive: updatedStatus } : p));
     
     try {
-      const submitData = {
-        name: product.name,
-        category: product.category?.name || "",
-        type: product.type || "",
-        price: String(product.basePrice),
-        description: product.description || "",
-        features: product.features ? product.features.join("\n") : "",
-        colors: product.colors ? String(product.colors) : "",
-        badge: product.badge || "",
-        imageUrl: product.images && product.images[0] ? product.images[0] : "",
-        imageUrls: product.images || [],
-        isActive: updatedStatus,
-      };
-
       const res = await fetch(`/api/admin/products/${product.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(submitData),
+        body: JSON.stringify({
+          name: product.name,
+          category: product.category?.name || "Tops",
+          price: String(product.basePrice),
+          isActive: updatedStatus,
+        }),
       });
 
       if (!res.ok) {
-        // Revert state on error
         setProducts(prev => prev.map(p => p.id === product.id ? { ...p, isActive: !updatedStatus } : p));
         toast.error("Failed to update product status");
       } else {
         toast.success(`Product is now ${updatedStatus ? "Active" : "Offline"}`);
       }
     } catch (error) {
-      // Revert state on error
       setProducts(prev => prev.map(p => p.id === product.id ? { ...p, isActive: !updatedStatus } : p));
       console.error(error);
       toast.error("Error updating product status");
@@ -184,18 +354,38 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
       setEditingProduct(null);
       setFormData({
         name: "",
-        category: "",
-        newCategory: "",
-        type: "",
+        sku: "",
+        brand: "Tailoring Turba",
         price: "",
+        minOrderQuantity: 10,
+        isActive: true,
+        badge: "",
+        shortDescription: "",
         description: "",
         features: "",
-        colors: "",
-        colorsJson: [],
-        badge: "",
+        department: "Apparel",
+        category: "Tops",
+        newCategory: "",
+        productType: "Polo",
+        style: "Classic Polo Collar",
+        gender: "Men",
+        qualityTier: "Standard",
+        collection: "Core Essentials",
+        fabric: "100% Combed Cotton",
+        fabricComposition: "100% Combed Cotton",
+        gsm: "220",
+        fit: "Regular",
+        neckType: "Polo Collar",
+        sleeveType: "Half Sleeve",
+        pattern: "Solid / Plain",
+        careInstructions: "Machine wash cold with like colors. Do not bleach. Tumble dry low. Warm iron if needed.",
+        countryOfOrigin: "India",
+        sizes: ["S", "M", "L", "XL", "2XL"],
         imageUrl: "",
         imageUrls: [],
-        isActive: true,
+        mediaMetadata: [],
+        colors: "",
+        colorsJson: [],
         seoTitle: "",
         seoDescription: "",
         seoKeywords: "",
@@ -214,12 +404,12 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
 
     const generated = generateProductSeo({
       name: formData.name,
-      category: formData.category === "NEW" ? formData.newCategory : formData.category,
-      type: formData.type,
+      category: formData.category,
+      type: `${formData.productType} · ${formData.gsm} GSM`,
       badge: formData.badge,
       description: formData.description,
       features: formData.features,
-      colors: formData.colors,
+      colors: String(formData.colorsJson.length),
       price: formData.price,
     });
 
@@ -231,7 +421,7 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
       seoKeywords: generated.seoKeywords,
     }));
     setIsSlugManuallyEdited(true);
-    toast.success("SEO fields auto-generated from product data!");
+    toast.success("SEO fields auto-generated!");
   };
 
   const handleEditClick = (p: Product) => {
@@ -240,50 +430,90 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
     setIsSlugManuallyEdited(!!p.slug);
     setSlugConflictError("");
 
+    const derivedPType = deriveProductType(p);
+    const derivedG = deriveGender(p);
+    const derivedQ = deriveQualityTier(p);
+
+    const rawColors = p.colorsJson ? (typeof p.colorsJson === 'string' ? JSON.parse(p.colorsJson) : p.colorsJson) : [];
+    const parsedColors: ColorVariantForm[] = Array.isArray(rawColors) ? rawColors.map((c: any) => {
+      let urls: string[] = [];
+      if (Array.isArray(c.imageUrls)) {
+        urls = c.imageUrls.filter(Boolean);
+      } else if (c.image || c.imageUrl) {
+        urls = [c.image || c.imageUrl];
+      }
+      return {
+        name: c.name || "",
+        value: c.value || c.hex || "#000000",
+        hex: c.value || c.hex || "#000000",
+        imageUrls: urls,
+        image: urls[0] || ""
+      };
+    }) : [];
+
+    const rawMeta = p.mediaMetadata ? (typeof p.mediaMetadata === 'string' ? JSON.parse(p.mediaMetadata) : p.mediaMetadata) : [];
+    const parsedMeta: ProductMediaItem[] = Array.isArray(rawMeta) && rawMeta.length > 0
+      ? rawMeta
+      : (p.images || []).map((url: string, idx: number) => ({
+          url,
+          sortOrder: idx,
+          isMain: idx === 0,
+          viewType: (idx === 0 ? "Front" : "Detail") as ImageViewType
+        }));
+
     setFormData({
       name: p.name || "",
-      category: p.category?.name || "",
-      newCategory: "",
-      type: p.type || "",
+      sku: p.sku || "",
+      brand: p.brand || "Tailoring Turba",
       price: String(p.basePrice || ""),
+      minOrderQuantity: p.minOrderQuantity || 10,
+      isActive: p.isActive !== false,
+      badge: p.badge || "",
+      shortDescription: p.shortDescription || "",
       description: p.description || "",
       features: p.features ? (Array.isArray(p.features) ? p.features.join("\n") : p.features) : "",
-      colors: p.colors ? String(p.colors) : "",
-      colorsJson: (() => {
-        const rawColors = p.colorsJson ? (typeof p.colorsJson === 'string' ? JSON.parse(p.colorsJson) : p.colorsJson) : [];
-        return Array.isArray(rawColors) ? rawColors.map((c: any) => {
-          let urls: string[] = [];
-          if (Array.isArray(c.imageUrls)) {
-            urls = c.imageUrls.filter(Boolean);
-          } else if (c.image || c.imageUrl) {
-            urls = [c.image || c.imageUrl];
-          }
-          return {
-            name: c.name || "",
-            value: c.value || c.hex || "#000000",
-            hex: c.value || c.hex || "#000000",
-            imageUrls: urls,
-            image: urls[0] || ""
-          };
-        }) : [];
-      })(),
-      badge: p.badge || "",
+      
+      department: p.department || "Apparel",
+      category: p.category?.name || "Tops",
+      newCategory: "",
+      productType: p.productType || derivedPType || "Polo",
+      style: p.style || "Classic Polo Collar",
+      gender: p.gender || derivedG || "Men",
+      qualityTier: p.qualityTier || derivedQ || "Standard",
+      collection: p.collection || "Core Essentials",
+
+      fabric: p.fabric || "100% Combed Cotton",
+      fabricComposition: p.fabricComposition || "100% Combed Cotton",
+      gsm: p.gsm ? String(p.gsm) : "220",
+      fit: p.fit || "Regular",
+      neckType: p.neckType || "Polo Collar",
+      sleeveType: p.sleeveType || "Half Sleeve",
+      pattern: p.pattern || "Solid / Plain",
+      careInstructions: p.careInstructions || "Machine wash cold with like colors. Do not bleach. Tumble dry low. Warm iron if needed.",
+      countryOfOrigin: p.countryOfOrigin || "India",
+
+      sizes: Array.isArray(p.sizes) && p.sizes.length > 0 ? p.sizes : ["S", "M", "L", "XL", "2XL"],
+
       imageUrl: p.images && p.images[0] ? p.images[0] : "",
       imageUrls: p.images || [],
-      isActive: p.isActive !== false,
+      mediaMetadata: parsedMeta,
+
+      colors: p.colors ? String(p.colors) : "",
+      colorsJson: parsedColors,
+
       seoTitle: p.seoTitle || "",
       seoDescription: p.seoDescription || "",
       seoKeywords: p.seoKeywords || "",
       slug: p.slug || generateSlug(p.name || ""),
     });
+
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate and clean slug one final time
-    const finalSlug = generateSlug(formData.slug);
+    const finalSlug = generateSlug(formData.slug || formData.name);
     if (!finalSlug) {
       toast.error("URL handle cannot be empty.");
       return;
@@ -321,7 +551,6 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
         }
         seenNames.add(name.toLowerCase());
 
-        // Validate and clean mapped image URLs against uploaded product images
         const validUrls = Array.from(new Set(
           (color.imageUrls || []).filter(u => formData.imageUrls.includes(u))
         ));
@@ -336,7 +565,6 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
         });
       }
 
-      // Update formData with cleaned colors
       formData.colorsJson = normalizedColors;
     }
 
@@ -349,204 +577,580 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
         category: formData.category === "NEW" ? formData.newCategory : formData.category,
       };
 
-      const url = editingProduct 
-        ? `/api/admin/products/${editingProduct.id}`
-        : "/api/admin/products";
-      const method = editingProduct ? "PUT" : "POST";
-
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(submitData),
-      });
+      let res;
+      if (editingProduct) {
+        res = await fetch(`/api/admin/products/${editingProduct.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(submitData),
+        });
+      } else {
+        res = await fetch("/api/admin/products", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(submitData),
+        });
+      }
 
       if (res.ok) {
-        window.location.reload();
+        const updatedProduct = await res.json();
+        if (editingProduct) {
+          setProducts(products.map(p => p.id === editingProduct.id ? updatedProduct : p));
+          toast.success("Product updated successfully!");
+        } else {
+          setProducts([updatedProduct, ...products]);
+          toast.success("Product created successfully!");
+        }
+        setIsAdding(false);
+        setEditingProduct(null);
       } else {
-        const errorData = await res.json();
-        toast.error(`Failed to save product: ${errorData.error}`);
-        setIsSubmitting(false);
+        const err = await res.json();
+        toast.error(err.error || "Failed to save product");
       }
-    } catch (error) {
-      console.error(error);
+    } catch (e) {
+      console.error(e);
       toast.error("An error occurred");
+    } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    if (name === "name") {
-      setFormData(prev => {
-        const nextData = { ...prev, name: value };
-        if (!isSlugManuallyEdited) {
-          const newSlug = generateSlug(value);
-          nextData.slug = newSlug;
-          const isDuplicate = products.some(
-            p => p.slug === newSlug && (!editingProduct || p.id !== editingProduct.id)
-          );
-          if (isDuplicate && newSlug) {
-            setSlugConflictError("Suggested URL handle is already in use.");
-          } else {
-            setSlugConflictError("");
-          }
-        }
-        return nextData;
-      });
-    } else if (name === "slug") {
-      setIsSlugManuallyEdited(true);
-      const looserSlug = value.toLowerCase().replace(/[^a-z0-9-]/g, "");
-      setFormData(prev => ({ ...prev, slug: looserSlug }));
-      
-      if (!looserSlug) {
-        setSlugConflictError("URL handle cannot be empty.");
-      } else if (!/^[a-z0-9-]+$/.test(looserSlug)) {
-        setSlugConflictError("URL handle can only contain lowercase letters, numbers, and hyphens.");
-      } else {
-        const isDuplicate = products.some(
-          p => p.slug === looserSlug && (!editingProduct || p.id !== editingProduct.id)
-        );
-        if (isDuplicate) {
-          setSlugConflictError("URL handle is already in use.");
-        } else {
-          setSlugConflictError("");
-        }
-      }
-    } else {
-      setFormData({ ...formData, [name]: value });
-    }
-  };
-
   return (
-    <div className={styles.container}>
+    <div className={styles.page}>
+      <div className={styles.header}>
+        <div>
+          <h1 className={styles.title}>Product Catalog & Inventory</h1>
+          <p className={styles.sub}>Manage product classifications, fabrics, size charts, media, and color variants</p>
+        </div>
+      </div>
+
       <div className={styles.actions}>
         <button 
           className={styles.addBtn}
           onClick={handleAddNewClick}
         >
-          {(isAdding || editingProduct) ? "Cancel" : <><Plus size={16} /> Add New Product</>}
+          <Plus size={16} />
+          {isAdding || editingProduct ? "Close Product Form" : "Add New Product"}
         </button>
       </div>
 
       {(isAdding || editingProduct) && (
-        <div className={`${styles.formCard} glass-card`}>
+        <div className={styles.formCard}>
           <h2 className={styles.formTitle}>
             {editingProduct ? `Edit Product: ${editingProduct.name}` : "Add New Product"}
           </h2>
+
           <form onSubmit={handleSubmit} className={styles.form}>
-            <div className={styles.formRow}>
-              <div className={styles.inputGroup}>
-                <label>Product Name *</label>
-                <input required type="text" name="name" value={formData.name} onChange={handleChange} placeholder="e.g. Turba Bio (Men)" />
-              </div>
-              <div className={styles.inputGroup}>
-                <label>Price *</label>
-                <input required type="number" step="0.01" min="0" name="price" value={formData.price} onChange={handleChange} placeholder="e.g. 195" />
-              </div>
-            </div>
-
-            <div className={styles.formRow}>
-              <div className={styles.inputGroup}>
-                <label>Category *</label>
-                <select required name="category" value={formData.category} onChange={handleChange}>
-                  <option value="">Select Category</option>
-                  {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
-                  <option value="NEW">+ Create New Category</option>
-                </select>
-              </div>
-              {formData.category === "NEW" && (
-                <div className={styles.inputGroup}>
-                  <label>New Category Name *</label>
-                  <input required type="text" name="newCategory" value={formData.newCategory} onChange={handleChange} placeholder="e.g. Summer Collection" />
+            
+            {/* SECTION 1: BASIC INFORMATION */}
+            <div className={styles.formSection}>
+              <div className={styles.formSectionHeader}>
+                <div className={styles.formSectionTitleGroup}>
+                  <span className={styles.formSectionNumber}>1</span>
+                  <h3 className={styles.formSectionTitle}>Basic Information</h3>
                 </div>
-              )}
+                <p className={styles.formSectionDesc}>Core product identity, pricing, and descriptions</p>
+              </div>
+
+              <div className={styles.formRow}>
+                <div className={styles.inputGroup}>
+                  <label>Product Name *</label>
+                  <input 
+                    type="text" 
+                    required 
+                    placeholder="e.g. Classic Polo (PIMA Cotton)"
+                    value={formData.name}
+                    onChange={(e) => {
+                      const newName = e.target.value;
+                      setFormData(prev => ({
+                        ...prev,
+                        name: newName,
+                        slug: isSlugManuallyEdited ? prev.slug : generateSlug(newName)
+                      }));
+                    }}
+                  />
+                </div>
+                <div className={styles.inputGroup}>
+                  <label>SKU (Stock Keeping Unit)</label>
+                  <input 
+                    type="text" 
+                    placeholder="e.g. TT-POLO-PIMA-01"
+                    value={formData.sku}
+                    onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className={styles.formRow3}>
+                <div className={styles.inputGroup}>
+                  <label>Base Price (₹) *</label>
+                  <input 
+                    type="text" 
+                    required 
+                    placeholder="e.g. 475"
+                    value={formData.price}
+                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                  />
+                </div>
+                <div className={styles.inputGroup}>
+                  <label>Min Order Qty (MOQ)</label>
+                  <input 
+                    type="number" 
+                    min="1"
+                    placeholder="10"
+                    value={formData.minOrderQuantity}
+                    onChange={(e) => setFormData({ ...formData, minOrderQuantity: parseInt(e.target.value) || 10 })}
+                  />
+                </div>
+                <div className={styles.inputGroup}>
+                  <label>Brand</label>
+                  <input 
+                    type="text" 
+                    placeholder="Tailoring Turba"
+                    value={formData.brand}
+                    onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className={styles.formRow}>
+                <div className={styles.inputGroup}>
+                  <label>Status</label>
+                  <select 
+                    value={formData.isActive ? "active" : "offline"}
+                    onChange={(e) => setFormData({ ...formData, isActive: e.target.value === "active" })}
+                  >
+                    <option value="active">Active (Live on Website)</option>
+                    <option value="offline">Offline (Draft / Hidden)</option>
+                  </select>
+                </div>
+                <div className={styles.inputGroup}>
+                  <label>Badge / Highlight (Optional)</label>
+                  <input 
+                    type="text" 
+                    placeholder="e.g. B2B Best Seller, Premium Quality, New"
+                    value={formData.badge}
+                    onChange={(e) => setFormData({ ...formData, badge: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className={styles.inputGroup}>
+                <label>Short Description (Catalog Summary)</label>
+                <input 
+                  type="text" 
+                  placeholder="e.g. Luxury heavyweight 220 GSM PIMA cotton polo designed for corporate teams."
+                  value={formData.shortDescription}
+                  onChange={(e) => setFormData({ ...formData, shortDescription: e.target.value })}
+                />
+              </div>
+
+              <div className={styles.inputGroup}>
+                <label>Full Description</label>
+                <textarea 
+                  rows={3} 
+                  placeholder="Detailed product story, craftsmanship, and benefits..."
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                />
+              </div>
+
+              <div className={styles.inputGroup}>
+                <label>Bullet Features (One per line)</label>
+                <textarea 
+                  rows={3} 
+                  placeholder="100% PIMA Combed Cotton&#10;Bio-Washed & Silicon Softened&#10;Reinforced Collar & 3-Button Placket&#10;Pre-Shrunk Fabric"
+                  value={formData.features}
+                  onChange={(e) => setFormData({ ...formData, features: e.target.value })}
+                />
+              </div>
             </div>
 
-            <div className={styles.formRow}>
-              <div className={styles.inputGroup}>
-                <label>Type / Subtitle</label>
-                <input type="text" name="type" value={formData.type} onChange={handleChange} placeholder="e.g. Round Neck · Cotton" />
+            {/* SECTION 2: PRODUCT CLASSIFICATION */}
+            <div className={styles.formSection}>
+              <div className={styles.formSectionHeader}>
+                <div className={styles.formSectionTitleGroup}>
+                  <span className={styles.formSectionNumber}>2</span>
+                  <h3 className={styles.formSectionTitle}>Product Classification</h3>
+                </div>
+                <p className={styles.formSectionDesc}>Categorization for Amazon/Myntra style multi-filtering</p>
               </div>
-              <div className={styles.inputGroup}>
-                <label>Badge (Optional)</label>
-                <input type="text" name="badge" value={formData.badge} onChange={handleChange} placeholder="e.g. Premium, B2B" />
+
+              <div className={styles.formRow4}>
+                <div className={styles.inputGroup}>
+                  <label>Department *</label>
+                  <select 
+                    value={formData.department}
+                    onChange={(e) => {
+                      const newDept = e.target.value;
+                      const nextCats = CATEGORIES_BY_DEPARTMENT[newDept] || ["Tops"];
+                      setFormData(prev => ({
+                        ...prev,
+                        department: newDept,
+                        category: nextCats[0] || "Tops"
+                      }));
+                    }}
+                  >
+                    {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
+                  </select>
+                </div>
+
+                <div className={styles.inputGroup}>
+                  <label>Category *</label>
+                  <select 
+                    value={formData.category}
+                    onChange={(e) => {
+                      const newCat = e.target.value;
+                      const nextPtypes = PRODUCT_TYPES_BY_CATEGORY[newCat] || ALL_PRODUCT_TYPES;
+                      setFormData(prev => ({
+                        ...prev,
+                        category: newCat,
+                        productType: nextPtypes[0] || "Polo"
+                      }));
+                    }}
+                  >
+                    {availableCategories.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+
+                <div className={styles.inputGroup}>
+                  <label>Product Type *</label>
+                  <select 
+                    value={formData.productType}
+                    onChange={(e) => {
+                      const newPt = e.target.value;
+                      const nextStyles = STYLES_BY_PRODUCT_TYPE[newPt] || ALL_STYLES;
+                      setFormData(prev => ({
+                        ...prev,
+                        productType: newPt,
+                        style: nextStyles[0] || "Classic"
+                      }));
+                    }}
+                  >
+                    {availableProductTypes.map(pt => <option key={pt} value={pt}>{pt}</option>)}
+                  </select>
+                </div>
+
+                <div className={styles.inputGroup}>
+                  <label>Style / Cut</label>
+                  <select 
+                    value={formData.style}
+                    onChange={(e) => setFormData({ ...formData, style: e.target.value })}
+                  >
+                    {availableStyles.map(st => <option key={st} value={st}>{st}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div className={styles.formRow3}>
+                <div className={styles.inputGroup}>
+                  <label>Gender *</label>
+                  <select 
+                    value={formData.gender}
+                    onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                  >
+                    {GENDERS.map(g => <option key={g} value={g}>{g}</option>)}
+                  </select>
+                </div>
+
+                <div className={styles.inputGroup}>
+                  <label>Quality Tier</label>
+                  <select 
+                    value={formData.qualityTier}
+                    onChange={(e) => setFormData({ ...formData, qualityTier: e.target.value })}
+                  >
+                    {QUALITY_TIERS.map(q => <option key={q} value={q}>{q}</option>)}
+                  </select>
+                </div>
+
+                <div className={styles.inputGroup}>
+                  <label>Collection / Season</label>
+                  <input 
+                    type="text" 
+                    placeholder="e.g. Core Essentials, Summer 2026, Luxe Line"
+                    value={formData.collection}
+                    onChange={(e) => setFormData({ ...formData, collection: e.target.value })}
+                  />
+                </div>
               </div>
             </div>
 
-            <div className={styles.formRow}>
-              <div className={styles.inputGroup}>
-                <label>Available Colors Count</label>
-                <input type="number" name="colors" value={formData.colors} onChange={handleChange} placeholder="e.g. 12" />
+            {/* SECTION 3: FABRIC & SPECIFICATIONS */}
+            <div className={styles.formSection}>
+              <div className={styles.formSectionHeader}>
+                <div className={styles.formSectionTitleGroup}>
+                  <span className={styles.formSectionNumber}>3</span>
+                  <h3 className={styles.formSectionTitle}>Fabric & Specifications</h3>
+                </div>
+                <p className={styles.formSectionDesc}>Technical garment specifications and care parameters</p>
               </div>
-              <div className={styles.inputGroup}>
-                <label>Status</label>
-                <select 
-                  name="isActive" 
-                  value={formData.isActive ? "true" : "false"} 
-                  onChange={(e) => setFormData({ ...formData, isActive: e.target.value === "true" })}
-                >
-                  <option value="true">Active (Live on website)</option>
-                  <option value="false">Offline (Hidden from website)</option>
-                </select>
+
+              <div className={styles.formRow3}>
+                <div className={styles.inputGroup}>
+                  <label>Fabric Type</label>
+                  <select 
+                    value={formData.fabric}
+                    onChange={(e) => setFormData({ ...formData, fabric: e.target.value })}
+                  >
+                    {FABRICS.map(f => <option key={f} value={f}>{f}</option>)}
+                  </select>
+                </div>
+
+                <div className={styles.inputGroup}>
+                  <label>Fabric Composition</label>
+                  <input 
+                    type="text" 
+                    placeholder="e.g. 100% Combed Cotton or 95% Cotton, 5% Lycra"
+                    value={formData.fabricComposition}
+                    onChange={(e) => setFormData({ ...formData, fabricComposition: e.target.value })}
+                  />
+                </div>
+
+                <div className={styles.inputGroup}>
+                  <label>GSM (Fabric Weight)</label>
+                  <input 
+                    type="number" 
+                    placeholder="220"
+                    value={formData.gsm}
+                    onChange={(e) => setFormData({ ...formData, gsm: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className={styles.formRow4}>
+                <div className={styles.inputGroup}>
+                  <label>Fit</label>
+                  <select 
+                    value={formData.fit}
+                    onChange={(e) => setFormData({ ...formData, fit: e.target.value })}
+                  >
+                    {FITS.map(fit => <option key={fit} value={fit}>{fit}</option>)}
+                  </select>
+                </div>
+
+                <div className={styles.inputGroup}>
+                  <label>Neck Type</label>
+                  <select 
+                    value={formData.neckType}
+                    onChange={(e) => setFormData({ ...formData, neckType: e.target.value })}
+                  >
+                    {NECK_TYPES.map(n => <option key={n} value={n}>{n}</option>)}
+                  </select>
+                </div>
+
+                <div className={styles.inputGroup}>
+                  <label>Sleeve Type</label>
+                  <select 
+                    value={formData.sleeveType}
+                    onChange={(e) => setFormData({ ...formData, sleeveType: e.target.value })}
+                  >
+                    {SLEEVE_TYPES.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+
+                <div className={styles.inputGroup}>
+                  <label>Pattern</label>
+                  <select 
+                    value={formData.pattern}
+                    onChange={(e) => setFormData({ ...formData, pattern: e.target.value })}
+                  >
+                    {PATTERNS.map(p => <option key={p} value={p}>{p}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div className={styles.formRow}>
+                <div className={styles.inputGroup}>
+                  <label>Care Instructions</label>
+                  <input 
+                    type="text" 
+                    value={formData.careInstructions}
+                    onChange={(e) => setFormData({ ...formData, careInstructions: e.target.value })}
+                  />
+                </div>
+                <div className={styles.inputGroup}>
+                  <label>Country of Origin</label>
+                  <input 
+                    type="text" 
+                    value={formData.countryOfOrigin}
+                    onChange={(e) => setFormData({ ...formData, countryOfOrigin: e.target.value })}
+                  />
+                </div>
               </div>
             </div>
 
-            <div className={styles.inputGroup}>
-              <label>Product Images (Max 6)</label>
-              <div className={styles.imagesGrid}>
-                {formData.imageUrls?.map((url, index) => (
-                  <div key={index} className={styles.imageThumbnailSlot}>
-                    <Image src={getResizedCloudinaryUrl(url, 200, 200)} alt={`Preview ${index + 1}`} fill style={{ objectFit: "contain" }} />
-                    <button 
-                      type="button" 
-                      className={styles.removeThumbnail}
-                      onClick={() => handleRemoveImage(index)}
-                      title="Remove Image"
+            {/* SECTION 4: AVAILABLE SIZES */}
+            <div className={styles.formSection}>
+              <div className={styles.formSectionHeader}>
+                <div className={styles.formSectionTitleGroup}>
+                  <span className={styles.formSectionNumber}>4</span>
+                  <h3 className={styles.formSectionTitle}>Available Sizes</h3>
+                </div>
+                <p className={styles.formSectionDesc}>Select which sizes are available for order on this product</p>
+              </div>
+
+              <div className={styles.sizeChipsContainer}>
+                {STANDARD_SIZES.map(size => {
+                  const isSelected = formData.sizes.includes(size);
+                  return (
+                    <button
+                      key={size}
+                      type="button"
+                      className={`${styles.sizeChipBtn} ${isSelected ? styles.sizeChipBtnActive : ""}`}
+                      onClick={() => handleToggleSize(size)}
                     >
-                      ×
+                      {isSelected ? <Check size={14} /> : null}
+                      {size}
                     </button>
-                    {index === 0 && <span className={styles.mainBadge}>Main</span>}
-                  </div>
+                  );
+                })}
+                {/* Custom sizes already selected */}
+                {formData.sizes.filter(s => !(STANDARD_SIZES as readonly string[]).includes(s)).map(custom => (
+                  <button
+                    key={custom}
+                    type="button"
+                    className={`${styles.sizeChipBtn} ${styles.sizeChipBtnActive}`}
+                    onClick={() => handleToggleSize(custom)}
+                  >
+                    <Check size={14} />
+                    {custom}
+                  </button>
                 ))}
-                
-                {formData.imageUrls?.length < 6 && (
-                  <label className={styles.uploadSlot}>
+              </div>
+
+              <div style={{ display: "flex", gap: "8px", alignItems: "center", maxWidth: "320px", marginTop: "8px" }}>
+                <input 
+                  type="text"
+                  placeholder="Custom size (e.g. 5XL, Free Size)"
+                  value={customSizeInput}
+                  onChange={(e) => setCustomSizeInput(e.target.value)}
+                  style={{ padding: "8px 12px", fontSize: "0.85rem" }}
+                />
+                <button 
+                  type="button"
+                  onClick={handleAddCustomSize}
+                  className={styles.mediaReorderBtn}
+                  style={{ padding: "8px 14px", height: "100%", whiteSpace: "nowrap" }}
+                >
+                  + Add Size
+                </button>
+              </div>
+            </div>
+
+            {/* SECTION 5: PRODUCT MEDIA (MAX 6) */}
+            <div className={styles.formSection}>
+              <div className={styles.formSectionHeader}>
+                <div className={styles.formSectionTitleGroup}>
+                  <span className={styles.formSectionNumber}>5</span>
+                  <h3 className={styles.formSectionTitle}>Product Media & Gallery</h3>
+                </div>
+                <p className={styles.formSectionDesc}>
+                  Upload up to 6 high-res product photos ({formData.imageUrls.length}/6 uploaded)
+                </p>
+              </div>
+
+              <div className={styles.mediaGrid}>
+                {formData.imageUrls.map((url, idx) => {
+                  const meta = formData.mediaMetadata[idx] || { viewType: idx === 0 ? "Front" : "Detail" };
+                  return (
+                    <div key={idx} className={styles.mediaCard}>
+                      <div className={styles.mediaCardImgWrap}>
+                        <img 
+                          src={getResizedCloudinaryUrl(url, 200, 200)}
+                          alt={`Photo ${idx + 1}`}
+                          className={styles.mediaCardImg}
+                        />
+                        {idx === 0 && <span className={styles.mediaMainBadge}>MAIN</span>}
+                        <button 
+                          type="button"
+                          className={styles.mediaDeleteBtn}
+                          onClick={() => handleRemoveImage(idx)}
+                          title="Delete image"
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+
+                      <div className={styles.mediaCardControls}>
+                        <span style={{ fontSize: "0.7rem", fontWeight: 700, color: "#0f172a" }}>Photo {idx + 1}</span>
+                        <select 
+                          className={styles.mediaViewSelect}
+                          value={meta.viewType || "Detail"}
+                          onChange={(e) => handleUpdateViewType(idx, e.target.value as ImageViewType)}
+                        >
+                          {IMAGE_VIEW_TYPES.map(vt => <option key={vt} value={vt}>{vt}</option>)}
+                        </select>
+
+                        <div className={styles.mediaReorderRow}>
+                          <button
+                            type="button"
+                            className={styles.mediaReorderBtn}
+                            disabled={idx === 0}
+                            onClick={() => handleMoveImage(idx, 'left')}
+                            title="Move Left"
+                          >
+                            <ArrowLeft size={12} />
+                          </button>
+                          {idx !== 0 && (
+                            <button
+                              type="button"
+                              className={styles.mediaSetMainBtn}
+                              onClick={() => handleSetMainImage(idx)}
+                            >
+                              Make Main
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            className={styles.mediaReorderBtn}
+                            disabled={idx === formData.imageUrls.length - 1}
+                            onClick={() => handleMoveImage(idx, 'right')}
+                            title="Move Right"
+                          >
+                            <ArrowRight size={12} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {formData.imageUrls.length < 6 && (
+                  <label className={styles.uploadSlot} style={{ minHeight: "190px" }}>
                     <input 
                       type="file" 
                       accept="image/*" 
-                      multiple
-                      onChange={handleUpload} 
-                      style={{ display: "none" }} 
+                      multiple 
+                      onChange={handleUpload}
                       disabled={isUploading}
                     />
                     {isUploading ? (
-                      <Loader2 size={24} className={styles.spin} />
+                      <Loader2 className={styles.spinner} size={24} />
                     ) : (
                       <>
-                        <Plus size={20} />
-                        <span style={{ fontSize: '0.75rem', marginTop: '4px' }}>Add Image</span>
+                        <Plus size={24} />
+                        <span>Upload Photo</span>
                       </>
                     )}
                   </label>
                 )}
               </div>
-              <p className={styles.hint}>Supported formats: JPG, PNG, WEBP. First image will be used as the primary display image. Double check that images show correctly.</p>
             </div>
 
-            {/* AVAILABLE COLORS SECTION */}
-            <div className={styles.inputGroup} style={{ borderTop: "1px solid var(--tth-beige-light)", paddingTop: "24px", marginTop: "12px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "4px" }}>
-                <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--tth-text-muted)" }}>Available Colors</label>
-                <span style={{ fontSize: "0.75rem", color: "var(--tth-text-muted)" }}>
-                  {formData.colorsJson?.length || 0} {formData.colorsJson?.length === 1 ? "color configured" : "colors configured"}
-                </span>
+            {/* SECTION 6: AVAILABLE COLORS & MULTI-PHOTO MAPPING */}
+            <div className={styles.formSection}>
+              <div className={styles.formSectionHeader}>
+                <div className={styles.formSectionTitleGroup}>
+                  <span className={styles.formSectionNumber}>6</span>
+                  <h3 className={styles.formSectionTitle}>Available Colors & Variant Mapping</h3>
+                </div>
+                <p className={styles.formSectionDesc}>
+                  {formData.colorsJson.length} {formData.colorsJson.length === 1 ? "color" : "colors"} configured
+                </p>
               </div>
-              <span className={styles.hint} style={{ margin: "-2px 0 14px 0", display: "block" }}>
-                Add the exact available colors for this product. Use the color picker or enter a HEX code. Optionally map each color to a product photo for the product page.
-              </span>
 
-              {/* Sticky Product Photos Reference Toolbar */}
-              {formData.imageUrls && formData.imageUrls.length > 0 && (
+              {/* Sticky Photo Reference Bar */}
+              {formData.imageUrls.length > 0 && (
                 <div className={styles.stickyPhotoRefToolbar}>
                   <div className={styles.stickyPhotoRefHeader}>
                     <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
@@ -556,15 +1160,13 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
                       </span>
                     </div>
                     <span style={{ fontSize: "0.72rem", color: "var(--tth-text-muted)" }}>
-                      {formData.imageUrls.length} {formData.imageUrls.length === 1 ? "photo" : "photos"} • Hover thumbnail to inspect
+                      {formData.imageUrls.length} photos available • Hover thumbnail to inspect
                     </span>
                   </div>
 
                   <div className={styles.stickyPhotoRefList}>
                     {formData.imageUrls.map((url, imgIdx) => {
-                      // Find which color(s) this image is mapped to
                       const mappedColors = (formData.colorsJson || []).filter(c => (c.imageUrls || []).includes(url) || c.image === url);
-
                       return (
                         <div key={imgIdx} className={styles.stickyPhotoRefItem}>
                           <div className={styles.stickyPhotoThumbWrap}>
@@ -573,7 +1175,6 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
                               alt={`Photo ${imgIdx + 1}`}
                               className={styles.stickyPhotoThumb}
                             />
-                            {/* Hover Large Preview Tooltip */}
                             <div className={styles.stickyPhotoPreviewTooltip}>
                               <div className={styles.tooltipHeader}>
                                 <span>Photo {imgIdx + 1}</span>
@@ -619,7 +1220,8 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
                   </div>
                 </div>
               )}
-              
+
+              {/* Color rows */}
               <div style={{ display: "flex", flexDirection: "column", gap: "12px", width: "100%" }}>
                 {formData.colorsJson?.map((color, index) => {
                   const isHexValid = isValidHex(color.value);
@@ -631,495 +1233,434 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
                       style={{ 
                         display: "flex", 
                         flexDirection: "column",
-                        gap: "6px", 
+                        gap: "8px", 
                         background: "var(--tth-offwhite)", 
-                        padding: "12px", 
-                        borderRadius: "6px",
-                        border: isHexValid ? "1px solid var(--tth-beige-light)" : "1px solid #fca5a5"
+                        padding: "14px", 
+                        borderRadius: "8px",
+                        border: isHexValid ? "1px solid var(--tth-beige-light)" : "1.5px solid #fca5a5"
                       }}
-                    >                      <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", width: "100%" }}>
-                        {/* Color Swatch / Native Color Picker */}
-                        <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
-                          <div 
-                            style={{ 
-                              position: "relative",
-                              width: "36px", 
-                              height: "36px", 
-                              borderRadius: "50%", 
-                              border: "2px solid #cbd5e1",
-                              boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.1)",
-                              backgroundColor: isHexValid ? normalizedValue : "#e2e8f0",
-                              overflow: "hidden",
-                              cursor: "pointer",
-                              flexShrink: 0
-                            }}
-                            title="Click to open color picker"
-                          >
-                            <input 
-                              type="color" 
-                              value={normalizedValue} 
-                              onChange={(e) => {
-                                const newHex = e.target.value.toUpperCase();
-                                const updated = [...formData.colorsJson];
-                                updated[index].value = newHex;
-                                // If color name is currently empty or matches previous auto-suggestion, suggest new name
-                                if (!updated[index].name.trim()) {
-                                  updated[index].name = suggestColorName(newHex);
-                                }
-                                setFormData({ ...formData, colorsJson: updated });
-                              }}
-                              style={{ 
-                                position: "absolute", 
-                                top: "-50%", 
-                                left: "-50%", 
-                                width: "200%", 
-                                height: "200%", 
-                                opacity: 0, 
-                                cursor: "pointer" 
-                              }}
-                              title="Choose color swatch"
-                            />
-                          </div>
-
-                          {/* HEX Value Input */}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", width: "100%" }}>
+                        {/* Native Color Picker Swatch */}
+                        <div style={{ position: "relative", width: "36px", height: "36px", flexShrink: 0 }}>
                           <input 
-                            type="text" 
-                            value={color.value} 
+                            type="color"
+                            value={normalizedValue}
                             onChange={(e) => {
-                              const updated = [...formData.colorsJson];
-                              updated[index].value = e.target.value;
-                              setFormData({ ...formData, colorsJson: updated });
-                            }}
-                            onBlur={() => {
-                              if (isValidHex(color.value)) {
-                                const updated = [...formData.colorsJson];
-                                updated[index].value = normalizeHex(color.value);
-                                setFormData({ ...formData, colorsJson: updated });
-                              }
-                            }}
-                            placeholder="#000000"
-                            style={{ 
-                              width: "85px", 
-                              padding: "8px 8px", 
-                              fontSize: "0.85rem", 
-                              fontFamily: "monospace",
-                              fontWeight: 600,
-                              border: isHexValid ? "1px solid var(--tth-beige-light)" : "1px solid #ef4444", 
-                              borderRadius: "4px",
-                              backgroundColor: "white",
-                              color: "var(--tth-navy)",
-                              boxSizing: "border-box"
-                            }}
-                          />
-                        </div>
-
-                        {/* Color Name Input + Suggest Name Button */}
-                        <div style={{ display: "flex", alignItems: "center", gap: "6px", flex: "1 1 180px", minWidth: 0 }}>
-                          <input 
-                            type="text" 
-                            value={color.name} 
-                            onChange={(e) => {
-                              const updated = [...formData.colorsJson];
-                              updated[index].name = e.target.value;
-                              setFormData({ ...formData, colorsJson: updated });
-                            }}
-                            placeholder="Color Name (e.g. Maroon, Navy Blue)"
-                            style={{ 
-                              flex: 1, 
-                              minWidth: 0,
-                              width: "100%",
-                              padding: "8px 10px", 
-                              fontSize: "0.85rem", 
-                              border: "1px solid var(--tth-beige-light)", 
-                              borderRadius: "4px", 
-                              backgroundColor: "white",
-                              boxSizing: "border-box"
-                            }}
-                            required
-                          />
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const suggested = suggestColorName(color.value);
-                              const updated = [...formData.colorsJson];
-                              updated[index].name = suggested;
-                              setFormData({ ...formData, colorsJson: updated });
-                              toast.success(`Suggested name: ${suggested}`, { duration: 1500 });
+                              const newHex = e.target.value.toUpperCase();
+                              const newColors = [...formData.colorsJson];
+                              const oldName = newColors[index].name;
+                              const suggested = suggestColorName(newHex);
+                              newColors[index] = {
+                                ...newColors[index],
+                                value: newHex,
+                                hex: newHex,
+                                name: (!oldName || oldName.startsWith("Color #")) ? suggested : oldName
+                              };
+                              setFormData({ ...formData, colorsJson: newColors });
                             }}
                             style={{
+                              position: "absolute",
+                              top: 0,
+                              left: 0,
+                              width: "100%",
+                              height: "100%",
+                              opacity: 0,
+                              cursor: "pointer",
+                              zIndex: 2,
+                            }}
+                            title="Click to open color picker"
+                          />
+                          <div 
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              borderRadius: "6px",
+                              backgroundColor: normalizedValue,
+                              border: "2px solid #ffffff",
+                              boxShadow: "0 0 0 1px #cbd5e1",
+                              cursor: "pointer",
                               display: "flex",
                               alignItems: "center",
-                              gap: "4px",
-                              padding: "8px 8px",
-                              fontSize: "0.75rem",
-                              fontWeight: 600,
-                              background: "#f1f5f9",
-                              border: "1px solid #cbd5e1",
-                              borderRadius: "4px",
-                              color: "#334155",
-                              cursor: "pointer",
-                              whiteSpace: "nowrap",
-                              flexShrink: 0
+                              justifyContent: "center"
                             }}
-                            title="Suggest Color Name from HEX"
-                          >
-                            <Sparkles size={13} color="#6366f1" />
-                            Suggest
-                          </button>
+                          />
                         </div>
 
-                        {/* Remove button */}
+                        {/* HEX input */}
+                        <div style={{ display: "flex", flexDirection: "column", gap: "2px", width: "110px" }}>
+                          <input 
+                            type="text" 
+                            placeholder="#000000"
+                            value={color.value}
+                            onChange={(e) => {
+                              const newColors = [...formData.colorsJson];
+                              const rawInput = e.target.value;
+                              newColors[index] = {
+                                ...newColors[index],
+                                value: rawInput,
+                                hex: isValidHex(rawInput) ? normalizeHex(rawInput) : rawInput
+                              };
+                              setFormData({ ...formData, colorsJson: newColors });
+                            }}
+                            style={{ 
+                              padding: "8px 10px", 
+                              fontSize: "0.85rem",
+                              fontFamily: "monospace",
+                              textTransform: "uppercase",
+                              background: isHexValid ? "white" : "#fff1f2",
+                              borderColor: isHexValid ? "var(--tth-beige-light)" : "#f43f5e"
+                            }}
+                          />
+                        </div>
+
+                        {/* Color Name */}
+                        <div style={{ display: "flex", flexDirection: "column", gap: "2px", flex: 1, minWidth: "150px" }}>
+                          <input 
+                            type="text" 
+                            placeholder="Color Name (e.g. Navy Blue)"
+                            value={color.name}
+                            onChange={(e) => {
+                              const newColors = [...formData.colorsJson];
+                              newColors[index].name = e.target.value;
+                              setFormData({ ...formData, colorsJson: newColors });
+                            }}
+                            style={{ padding: "8px 10px", fontSize: "0.85rem", background: "white" }}
+                          />
+                        </div>
+
+                        {/* Auto-suggest button */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (isHexValid) {
+                              const suggested = suggestColorName(color.value);
+                              const newColors = [...formData.colorsJson];
+                              newColors[index].name = suggested;
+                              setFormData({ ...formData, colorsJson: newColors });
+                              toast.success(`Name set to "${suggested}"`);
+                            }
+                          }}
+                          style={{
+                            background: "none",
+                            border: "1px solid #cbd5e1",
+                            borderRadius: "4px",
+                            padding: "6px 8px",
+                            fontSize: "0.75rem",
+                            cursor: "pointer",
+                            color: "#475569",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "4px"
+                          }}
+                          title="Auto-detect color name from HEX"
+                        >
+                          <Sparkles size={12} /> Name
+                        </button>
+
+                        {/* Delete color row */}
                         <button 
                           type="button" 
                           onClick={() => {
-                            const updated = formData.colorsJson.filter((_, idx) => idx !== index);
-                            setFormData({ ...formData, colorsJson: updated });
+                            const newColors = formData.colorsJson.filter((_, i) => i !== index);
+                            setFormData({ ...formData, colorsJson: newColors });
                           }}
                           style={{ 
                             background: "none", 
                             border: "none", 
                             color: "#ef4444", 
                             cursor: "pointer", 
-                            fontSize: "1.3rem", 
-                            padding: "2px 6px",
-                            lineHeight: 1,
-                            flexShrink: 0
+                            padding: "6px",
+                            borderRadius: "4px",
+                            display: "flex",
+                            alignItems: "center"
                           }}
                           title="Remove Color"
                         >
-                          ×
+                          <Trash2 size={16} />
                         </button>
                       </div>
 
-                      {/* Multi-image selection section */}
-                      <div style={{ marginTop: "4px", paddingTop: "8px", borderTop: "1px dashed #cbd5e1" }}>
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
-                          <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#334155" }}>
-                            Mapped Gallery Photos ({(color.imageUrls || []).length} selected):
-                          </span>
-                          {(color.imageUrls || []).length > 0 && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const updated = [...formData.colorsJson];
-                                updated[index].imageUrls = [];
-                                updated[index].image = "";
-                                setFormData({ ...formData, colorsJson: updated });
-                              }}
-                              style={{ fontSize: "0.7rem", color: "#64748b", background: "none", border: "none", cursor: "pointer", textDecoration: "underline" }}
-                            >
-                              Clear selection
-                            </button>
-                          )}
-                        </div>
+                      {/* Multi-Photo Mapping Chips */}
+                      {formData.imageUrls.length > 0 && (
+                        <div style={{ marginTop: "4px", borderTop: "1px dashed rgba(0,0,0,0.08)", paddingTop: "8px" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                            <span style={{ fontSize: "0.72rem", fontWeight: 700, color: "#475569" }}>
+                              Mapped Gallery Photos ({color.imageUrls?.length || 0} selected):
+                            </span>
+                            <span style={{ fontSize: "0.7rem", color: "#94a3b8" }}>
+                              Click photos to assign to {color.name || "this color"}
+                            </span>
+                          </div>
 
-                        {formData.imageUrls && formData.imageUrls.length > 0 ? (
-                          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                          <div className={styles.photoMapChips}>
                             {formData.imageUrls.map((url, imgIdx) => {
-                              const isSelected = (color.imageUrls || []).includes(url);
+                              const isMapped = (color.imageUrls || []).includes(url) || color.image === url;
                               return (
                                 <button
                                   key={imgIdx}
                                   type="button"
+                                  className={`${styles.photoMapChip} ${isMapped ? styles.photoMapChipSelected : ""}`}
                                   onClick={() => {
-                                    const updated = [...formData.colorsJson];
-                                    const currentUrls = updated[index].imageUrls || [];
-                                    let nextUrls: string[];
-                                    if (isSelected) {
-                                      nextUrls = currentUrls.filter(u => u !== url);
-                                    } else {
-                                      nextUrls = [...currentUrls, url];
-                                    }
-                                    updated[index].imageUrls = nextUrls;
-                                    updated[index].image = nextUrls[0] || "";
-                                    setFormData({ ...formData, colorsJson: updated });
+                                    const currentMapped = color.imageUrls || [];
+                                    const newMapped = isMapped
+                                      ? currentMapped.filter(u => u !== url)
+                                      : [...currentMapped, url];
+                                    
+                                    const newColors = [...formData.colorsJson];
+                                    newColors[index] = {
+                                      ...newColors[index],
+                                      imageUrls: newMapped,
+                                      image: newMapped[0] || "",
+                                      imageUrl: newMapped[0] || ""
+                                    };
+                                    setFormData({ ...formData, colorsJson: newColors });
                                   }}
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "6px",
-                                    padding: "4px 8px 4px 4px",
-                                    borderRadius: "6px",
-                                    border: isSelected ? "2px solid #0f172a" : "1px solid #cbd5e1",
-                                    background: isSelected ? "#e2e8f0" : "white",
-                                    cursor: "pointer",
-                                    transition: "all 0.15s ease",
-                                    boxShadow: isSelected ? "0 1px 2px rgba(0,0,0,0.1)" : "none"
-                                  }}
-                                  title={isSelected ? `Photo ${imgIdx + 1} selected (Click to unassign)` : `Click to assign Photo ${imgIdx + 1}`}
                                 >
-                                  <div style={{ width: "26px", height: "26px", borderRadius: "4px", overflow: "hidden", position: "relative", flexShrink: 0, border: "1px solid #cbd5e1" }}>
-                                    <img
-                                      src={getResizedCloudinaryUrl(url, 80, 80)}
-                                      alt={`Photo ${imgIdx + 1}`}
-                                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                                    />
-                                  </div>
-                                  <span style={{ fontSize: "0.75rem", fontWeight: isSelected ? 700 : 500, color: isSelected ? "#0f172a" : "#475569" }}>
-                                    {isSelected ? "✓ " : ""}Photo {imgIdx + 1}
-                                  </span>
+                                  <img 
+                                    src={getResizedCloudinaryUrl(url, 50, 50)} 
+                                    alt={`Photo ${imgIdx + 1}`}
+                                    className={styles.photoMapChipThumb}
+                                  />
+                                  <span>{isMapped ? `✓ Photo ${imgIdx + 1}` : `Photo ${imgIdx + 1}`}</span>
                                 </button>
                               );
                             })}
                           </div>
-                        ) : (
-                          <span style={{ fontSize: "0.75rem", color: "#94a3b8", fontStyle: "italic" }}>
-                            Upload product photos above to map them to this color.
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Inline Validation message if invalid HEX */}
-                      {!isHexValid && color.value.trim().length > 0 && (
-                        <div style={{ fontSize: "0.75rem", color: "#ef4444", fontWeight: 500 }}>
-                          Invalid color value. Use #RGB or #RRGGBB.
                         </div>
                       )}
                     </div>
                   );
                 })}
-
-                <div>
-                  <button 
-                    type="button" 
-                    onClick={() => {
-                      const updated = [...(formData.colorsJson || [])];
-                      const defaultHex = "#000000";
-                      updated.push({ 
-                        name: suggestColorName(defaultHex), 
-                        value: defaultHex, 
-                        imageUrls: [] 
-                      });
-                      setFormData({ ...formData, colorsJson: updated });
-                    }}
-                    style={{ 
-                      background: "white", 
-                      border: "1px solid var(--tth-beige-light)", 
-                      padding: "8px 16px", 
-                      borderRadius: "4px", 
-                      fontSize: "0.85rem", 
-                      fontWeight: 600, 
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "6px"
-                    }}
-                  >
-                    <Plus size={16} /> Add Color
-                  </button>
-                </div>
               </div>
+
+              {/* Add Color Button */}
+              <button 
+                type="button" 
+                onClick={() => {
+                  const defaultHex = "#000000";
+                  const suggested = suggestColorName(defaultHex);
+                  setFormData({
+                    ...formData,
+                    colorsJson: [
+                      ...(formData.colorsJson || []),
+                      { name: suggested, value: defaultHex, hex: defaultHex, imageUrls: [], image: "" }
+                    ]
+                  });
+                }}
+                style={{
+                  background: "#ffffff",
+                  border: "1.5px dashed var(--tth-olive-dark)",
+                  borderRadius: "6px",
+                  padding: "10px",
+                  color: "var(--tth-olive-dark)",
+                  fontWeight: 700,
+                  fontSize: "0.8rem",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "6px",
+                  transition: "background 0.2s"
+                }}
+              >
+                <Plus size={14} /> Add Color Variant
+              </button>
             </div>
 
-            <div className={styles.inputGroup}>
-              <label>Description</label>
-              <textarea name="description" value={formData.description} onChange={handleChange} rows={2} placeholder="Brief product description..."></textarea>
-            </div>
-
-            <div className={styles.inputGroup}>
-              <label>Features (One per line)</label>
-              <textarea name="features" value={formData.features} onChange={handleChange} rows={4} placeholder="180 GSM Super Cotton&#10;Biowash finish"></textarea>
-            </div>
-
-            {/* Search Engine Listing / SEO Section */}
-            <div className={styles.seoSectionHeader}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <h3 className={styles.formTitle} style={{ margin: 0 }}>Search engine listing</h3>
-                <button 
-                  type="button" 
-                  onClick={handleAutoGenerateSeo} 
+            {/* SECTION 7: SEO OPTIMIZATION */}
+            <div className={styles.formSection}>
+              <div className={styles.formSectionHeader}>
+                <div className={styles.formSectionTitleGroup}>
+                  <span className={styles.formSectionNumber}>7</span>
+                  <h3 className={styles.formSectionTitle}>Search Engine Optimization (SEO)</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleAutoGenerateSeo}
                   className={styles.autoSeoBtn}
-                  title="Auto-fill recommended SEO title, description, and keywords based on product details"
                 >
                   <Sparkles size={14} /> Auto-Generate SEO
                 </button>
               </div>
-              <p className={styles.hint} style={{ margin: '0 0 16px 0' }}>
-                Add a title and description to customize how this product appears in Google search results.
-              </p>
-            </div>
 
-            <div className={styles.seoPreviewCard}>
-              <span className={styles.seoPreviewTitle}>
-                {formData.seoTitle || formData.name || "Product Name"}
-              </span>
-              <span className={styles.seoPreviewUrl}>
-                tailoringturba.com/products/{formData.slug || generateSlug(formData.name) || "slug"}
-              </span>
-              <p className={styles.seoPreviewSnippet}>
-                {formData.seoDescription || formData.description || "Enter a description to see how it will appear in search results."}
-              </p>
-            </div>
-
-            <div className={styles.inputGroup}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <label>Page Title</label>
-                <span className={styles.counterText}>
-                  {formData.seoTitle.length} characters
-                </span>
-              </div>
-              <input 
-                type="text" 
-                name="seoTitle" 
-                value={formData.seoTitle} 
-                onChange={handleChange} 
-                placeholder={formData.name || "Enter custom title for search engine listing..."} 
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '3px' }}>
-                <span className={styles.counterGuidance}>
-                  Recommended: 50–60 characters · Max guidance: 70 characters
-                </span>
-              </div>
-              {formData.seoTitle.length > 70 && (
-                <p className={styles.counterNotice}>
-                  Notice: Title exceeds 70 characters and may be truncated by search engines.
-                </p>
-              )}
-            </div>
-
-            <div className={styles.inputGroup}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <label>Meta Description</label>
-                <span className={styles.counterText}>
-                  {formData.seoDescription.length} characters
-                </span>
-              </div>
-              <textarea 
-                name="seoDescription" 
-                value={formData.seoDescription} 
-                onChange={handleChange} 
-                rows={3} 
-                placeholder={formData.description || "Enter custom description for search engine listing..."}
-              />
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '3px' }}>
-                <span className={styles.counterGuidance}>
-                  Recommended: 150–160 characters
-                </span>
-              </div>
-              {formData.seoDescription.length > 160 && (
-                <p className={styles.counterNotice}>
-                  Notice: Description exceeds 160 characters and may be truncated in search snippets.
-                </p>
-              )}
-            </div>
-
-            <div className={styles.inputGroup}>
-              <label>URL Handle</label>
-              <div className={styles.slugInputWrapper}>
-                <span className={styles.slugPrefix}>tailoringturba.com/products/</span>
+              <div className={styles.inputGroup}>
+                <label>Page Meta Title</label>
                 <input 
                   type="text" 
-                  name="slug" 
-                  value={formData.slug} 
-                  onChange={handleChange} 
-                  placeholder={generateSlug(formData.name) || "url-handle"}
-                  className={styles.slugInput}
+                  value={formData.seoTitle}
+                  placeholder="e.g. Classic Polo | Bulk PIMA Cotton Manufacturer India | Tailoring Turba"
+                  onChange={(e) => setFormData({ ...formData, seoTitle: e.target.value })}
                 />
               </div>
-              {slugConflictError ? (
-                <p className={styles.counterWarning} style={{ fontSize: '0.75rem', marginTop: '2px' }}>
-                  {slugConflictError}
-                </p>
-              ) : (
-                <p className={styles.hint} style={{ marginTop: '4px' }}>
-                  This is the unique URL handle (slug) for this product page.
-                </p>
-              )}
+
+              <div className={styles.inputGroup}>
+                <label>Meta Description</label>
+                <textarea 
+                  rows={2}
+                  value={formData.seoDescription}
+                  placeholder="Compelling search summary under 160 characters..."
+                  onChange={(e) => setFormData({ ...formData, seoDescription: e.target.value })}
+                />
+              </div>
+
+              <div className={styles.inputGroup}>
+                <label>Keywords (Comma separated)</label>
+                <input 
+                  type="text" 
+                  value={formData.seoKeywords}
+                  placeholder="bulk polo manufacturer, corporate apparel India, wholesale uniforms"
+                  onChange={(e) => setFormData({ ...formData, seoKeywords: e.target.value })}
+                />
+              </div>
+
+              <div className={styles.inputGroup}>
+                <label>URL Slug / Handle *</label>
+                <div className={styles.slugInputWrapper}>
+                  <span className={styles.slugPrefix}>/products/</span>
+                  <input 
+                    type="text" 
+                    required 
+                    value={formData.slug}
+                    onChange={(e) => {
+                      setIsSlugManuallyEdited(true);
+                      setFormData({ ...formData, slug: e.target.value });
+                    }}
+                    className={styles.slugInput}
+                  />
+                </div>
+              </div>
             </div>
 
-            <div className={styles.inputGroup}>
-              <label>SEO Keywords (Internal Search)</label>
-              <input 
-                type="text" 
-                name="seoKeywords" 
-                value={formData.seoKeywords} 
-                onChange={handleChange} 
-                placeholder="e.g. corporate polo, custom cotton t-shirt, wholesale hoodies"
-              />
-              <p className={styles.hint} style={{ marginTop: '4px' }}>
-                Comma-separated keywords/tags. These keywords are primarily used for search optimization on Tailoring Turba.
-              </p>
-            </div>
-
-            <button type="submit" className={styles.submitBtn} disabled={isSubmitting}>
-              {isSubmitting ? <><Loader2 size={16} className={styles.spin} /> Saving...</> : (editingProduct ? "Save Changes" : "Save Product")}
+            <button type="submit" disabled={isSubmitting} className={styles.submitBtn}>
+              {isSubmitting ? "Saving Product..." : editingProduct ? "Update Product" : "Publish Product"}
             </button>
           </form>
         </div>
       )}
 
-      <div className={`${styles.tableBlock} glass-card`}>
+      {/* PRODUCTS TABLE */}
+      <div className={styles.tableBlock}>
         <div className={styles.tableWrap}>
           <table className={styles.table}>
             <thead>
               <tr>
                 <th>Product</th>
-                <th>Category</th>
-                <th>Type</th>
+                <th>Classification</th>
+                <th>Fabric & GSM</th>
                 <th>Price</th>
+                <th>Colors</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {products.map(p => (
-                <tr key={p.id}>
-                  <td>
-                    <div className={styles.productCell}>
+              {products.map((p) => {
+                const productType = deriveProductType(p);
+                const gender = deriveGender(p);
+                const quality = deriveQualityTier(p);
+                const colorsCount = p.colorsJson 
+                  ? (Array.isArray(p.colorsJson) ? p.colorsJson.length : (typeof p.colorsJson === 'string' ? JSON.parse(p.colorsJson).length : (p.colors || 0)))
+                  : (p.colors || 0);
+
+                return (
+                  <tr key={p.id}>
+                    <td className={styles.productCell}>
                       <div className={styles.imageThumbnail}>
                         {p.images && p.images[0] ? (
-                          <Image src={getResizedCloudinaryUrl(p.images[0], 100, 100)} alt={p.name} fill style={{objectFit:'cover'}} />
+                          <img
+                            src={getResizedCloudinaryUrl(p.images[0], 100, 100)}
+                            alt={p.name}
+                            className={styles.image}
+                          />
                         ) : (
-                          <ImageIcon size={16} color="#aaa" />
+                          <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#f1f5f9" }}>
+                            <ImageIcon size={18} color="#94a3b8" />
+                          </div>
                         )}
                       </div>
                       <div>
-                        <div className={styles.productName}>{p.name}</div>
-                        {p.badge && <span className={styles.badge}>{p.badge}</span>}
+                        <div style={{ fontWeight: 700, color: "#0f172a", fontSize: "0.9rem" }}>{p.name}</div>
+                        <div style={{ fontSize: "0.75rem", color: "#64748b" }}>SKU: {p.sku || `TT-${p.id}`}</div>
                       </div>
-                    </div>
-                  </td>
-                  <td>{p.category?.name}</td>
-                  <td className={styles.typeText}>{p.type}</td>
-                  <td className={styles.price}>₹{p.basePrice}</td>
-                  <td>
-                    <button
-                      type="button"
-                      className={`${styles.statusToggleBtn} ${p.isActive !== false ? styles.activeStatus : styles.offlineStatus}`}
-                      onClick={() => handleToggleActive(p)}
-                      title="Click to toggle product active status"
-                    >
-                      {p.isActive !== false ? "Active" : "Offline"}
-                    </button>
-                  </td>
-                  <td>
-                    <div className={styles.actionsCell}>
-                      <button 
-                        className={styles.editBtn} 
-                        onClick={() => handleEditClick(p)}
-                        title="Edit Product"
+                    </td>
+                    <td>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                        <span style={{ fontWeight: 600, fontSize: "0.8rem", color: "#1e293b" }}>{productType} • {gender}</span>
+                        <span style={{ fontSize: "0.72rem", color: "#64748b" }}>{p.category?.name || "Tops"} • {quality}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <div style={{ fontSize: "0.8rem", color: "#334155" }}>
+                        <div>{p.fabric || "Cotton"}</div>
+                        <div style={{ fontSize: "0.72rem", color: "#64748b" }}>{p.gsm ? `${p.gsm} GSM` : "Standard Weight"}</div>
+                      </div>
+                    </td>
+                    <td style={{ fontWeight: 700, color: "#0f172a", fontSize: "0.9rem" }}>
+                      ₹{p.basePrice}
+                    </td>
+                    <td>
+                      <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "#334155" }}>
+                        {colorsCount} {colorsCount === 1 ? "color" : "colors"}
+                      </span>
+                    </td>
+                    <td>
+                      <button
+                        onClick={() => handleToggleActive(p)}
+                        style={{
+                          background: p.isActive !== false ? "#dcfce7" : "#fee2e2",
+                          color: p.isActive !== false ? "#15803d" : "#b91c1c",
+                          border: "none",
+                          padding: "4px 8px",
+                          borderRadius: "4px",
+                          fontSize: "0.75rem",
+                          fontWeight: 700,
+                          cursor: "pointer"
+                        }}
                       >
-                        <Edit2 size={14} />
+                        {p.isActive !== false ? "Active" : "Offline"}
                       </button>
-                      <button 
-                        className={styles.deleteBtn} 
-                        onClick={() => handleDelete(p.id)}
-                        disabled={isDeleting === p.id}
-                        title="Delete Product"
-                      >
-                        {isDeleting === p.id ? <Loader2 size={14} className={styles.spin} /> : <Trash2 size={14} />}
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {products.length === 0 && (
-                <tr>
-                  <td colSpan={5} style={{textAlign:'center', padding:'40px', color:'var(--tth-text-muted)'}}>
-                    No products found.
-                  </td>
-                </tr>
-              )}
+                    </td>
+                    <td>
+                      <div style={{ display: "flex", gap: "8px" }}>
+                        <button
+                          onClick={() => handleEditClick(p)}
+                          style={{
+                            background: "none",
+                            border: "1px solid #cbd5e1",
+                            padding: "6px 10px",
+                            borderRadius: "4px",
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "4px",
+                            fontSize: "0.75rem",
+                            fontWeight: 600,
+                            color: "#334155"
+                          }}
+                        >
+                          <Edit2 size={12} /> Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(p.id)}
+                          disabled={isDeleting === p.id}
+                          style={{
+                            background: "none",
+                            border: "1px solid #fca5a5",
+                            padding: "6px",
+                            borderRadius: "4px",
+                            cursor: "pointer",
+                            color: "#dc2626"
+                          }}
+                          title="Delete Product"
+                        >
+                          {isDeleting === p.id ? <Loader2 className={styles.spinner} size={14} /> : <Trash2 size={14} />}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

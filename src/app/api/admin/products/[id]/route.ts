@@ -128,26 +128,63 @@ export async function PUT(
       type, 
       price, 
       description, 
+      shortDescription,
       features, 
       colors, 
       colorsJson,
       badge, 
+      brand,
+      minOrderQuantity,
       imageUrl, 
       imageUrls, 
+      mediaMetadata,
       isActive,
+      // Structured Classification
+      sku,
+      department,
+      productType,
+      style,
+      gender,
+      qualityTier,
+      collection,
+      // Fabric & Specifications
+      fabric,
+      fabricComposition,
+      gsm,
+      fit,
+      neckType,
+      sleeveType,
+      pattern,
+      careInstructions,
+      countryOfOrigin,
+      // Sizes
+      sizes,
+      // SEO
       seoTitle,
       seoDescription,
       seoKeywords,
       slug
     } = body;
 
-    if (!name || !category || !price) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    if (!name || !name.trim()) {
+      return NextResponse.json({ error: "Product Name is required." }, { status: 400 });
     }
+
+    if (!price || isNaN(parseFloat(String(price).replace(/[^0-9.]/g, '')))) {
+      return NextResponse.json({ error: "Valid base price is required." }, { status: 400 });
+    }
+
+    const cleanCategory = (category || "").trim() || "Tops";
+    const cleanPrice = parseFloat(String(price).replace(/[^0-9.]/g, '') || "0");
+    const cleanMoq = minOrderQuantity ? parseInt(String(minOrderQuantity)) || 10 : 10;
+    const cleanGsm = gsm !== undefined && gsm !== "" && gsm !== null ? parseInt(String(gsm)) || null : null;
+    const cleanImages = Array.isArray(imageUrls) && imageUrls.length > 0
+      ? imageUrls.slice(0, 6)
+      : (imageUrl ? [imageUrl] : []);
 
     let validatedColorsJson = null;
     try {
-      validatedColorsJson = validateColorsJson(colorsJson, imageUrls || (imageUrl ? [imageUrl] : []));
+      validatedColorsJson = validateColorsJson(colorsJson, cleanImages);
     } catch (err: any) {
       return NextResponse.json({ error: err.message }, { status: 400 });
     }
@@ -192,15 +229,18 @@ export async function PUT(
 
     // Ensure category exists
     let categoryRecord = await prisma.category.findUnique({
-      where: { name: category }
+      where: { name: cleanCategory }
     });
 
     if (!categoryRecord) {
-      const catSlug = category.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+      const catSlug = cleanCategory.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
       categoryRecord = await prisma.category.create({
-        data: { name: category, slug: catSlug }
+        data: { name: cleanCategory, slug: catSlug }
       });
     }
+
+    // Determine backward-compatible type subtitle
+    const derivedType = (type || "").trim() || (productType ? `${productType}${cleanGsm ? ` · ${cleanGsm} GSM` : ''}` : null);
 
     // Update product
     const product = await prisma.product.update({
@@ -208,15 +248,44 @@ export async function PUT(
       data: {
         name: name.trim(),
         categoryId: categoryRecord.id,
-        type: type || null,
-        basePrice: typeof price === 'number' ? price : parseFloat(String(price).replace(/[^0-9.]/g, '') || "0"),
+        type: derivedType,
+        brand: brand?.trim() || null,
+        basePrice: cleanPrice,
         description: description || "",
-        features: features ? features.split('\n').filter((f: string) => f.trim()) : [],
-        colors: colors ? parseInt(String(colors)) : null,
+        shortDescription: shortDescription?.trim() || null,
+        features: Array.isArray(features) ? features : (features ? String(features).split('\n').filter((f: string) => f.trim()) : []),
+        colors: validatedColorsJson ? validatedColorsJson.length : (colors ? parseInt(String(colors)) : null),
         colorsJson: validatedColorsJson || null,
-        badge: badge || null,
-        images: imageUrls || (imageUrl ? [imageUrl] : []),
+        badge: badge?.trim() || null,
+        images: cleanImages,
+        mediaMetadata: mediaMetadata || null,
         isActive: typeof isActive === 'boolean' ? isActive : undefined,
+        minOrderQuantity: cleanMoq,
+
+        // Structured Classification
+        sku: sku?.trim() || null,
+        department: department?.trim() || "Apparel",
+        productType: productType?.trim() || derivedType || null,
+        style: style?.trim() || null,
+        gender: gender?.trim() || "Men",
+        qualityTier: qualityTier?.trim() || "Standard",
+        collection: collection?.trim() || null,
+
+        // Fabric & Specifications
+        fabric: fabric?.trim() || null,
+        fabricComposition: fabricComposition?.trim() || null,
+        gsm: cleanGsm,
+        fit: fit?.trim() || null,
+        neckType: neckType?.trim() || null,
+        sleeveType: sleeveType?.trim() || null,
+        pattern: pattern?.trim() || null,
+        careInstructions: careInstructions?.trim() || null,
+        countryOfOrigin: countryOfOrigin?.trim() || "India",
+
+        // Sizes
+        sizes: Array.isArray(sizes) ? sizes : [],
+
+        // SEO
         seoTitle: trimmedSeoTitle,
         seoDescription: trimmedSeoDescription,
         seoKeywords: trimmedSeoKeywords,

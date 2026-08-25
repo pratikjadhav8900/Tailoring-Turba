@@ -10,6 +10,7 @@ import SizeBreakdown from "@/components/customizer/SizeBreakdown";
 import OrderSummary from "@/components/customizer/OrderSummary";
 import { allProducts } from "@/lib/products-data";
 import { getProductColors, getProductStructuredColors, isValidHex, normalizeHex } from "@/lib/customizer-utils";
+import { deriveGarmentTypeForCustomizer } from "@/lib/catalog-config";
 import Image from "next/image";
 
 function CustomizerContent() {
@@ -44,6 +45,7 @@ function CustomizerContent() {
 
   const productId = searchParams.get('id') || searchParams.get('productId');
   const designId = searchParams.get('designId');
+  const productTypeParam = searchParams.get('productType');
 
   useEffect(() => {
     if (designId) {
@@ -98,37 +100,9 @@ function CustomizerContent() {
     fetchProduct();
   }, [productId, designId]);
 
-  // Map product type/category/name to design studio garment type.
-  // Priority: type field (most precise) → name → category → default.
+  // Map product type/category/name to design studio garment mockup
   const categoryToGarment = (category: string, name?: string, type?: string): string => {
-    const lowerType = (type || '').toLowerCase();
-    const lowerName = (name || '').toLowerCase();
-
-    // 1. Check the product's type field first — most reliable
-    if (lowerType.includes('round neck') || lowerType.includes('crew neck') || lowerType.includes('crewneck')) return 'round-neck';
-    if (lowerType.startsWith('polo') || lowerType.includes('· polo') || lowerType.includes('polo ·')) return 'polo';
-    if (lowerType.includes('hoodie')) return 'hoodie';
-    if (lowerType.includes('jacket')) return 'hoodie';
-
-    // 2. Fall back to product name
-    if (lowerName.includes('polo')) return 'polo';
-    if (lowerName.includes('hoodie')) return 'hoodie';
-    if (lowerName.includes('jacket')) return 'hoodie';
-    if (lowerName.includes('round neck') || lowerName.includes('crew neck') || lowerName.includes('crewneck')) return 'round-neck';
-
-    // 3. Fall back to category
-    const map: Record<string, string> = {
-      'Crewnecks': 'round-neck',
-      'Hoodies': 'hoodie',
-      'Jackets': 'hoodie',
-      'Polos': 'polo',
-      'Crop Tops': 'round-neck',
-      'Oversized': 'round-neck',
-      'T-Shirts': 'round-neck',
-      'Uniforms': 'polo',
-      'Formal Wear': 'polo',
-    };
-    return map[category || ''] || 'round-neck';
+    return deriveGarmentTypeForCustomizer({ category, name, type, productType: productTypeParam || type });
   };
 
   useEffect(() => {
@@ -139,8 +113,8 @@ function CustomizerContent() {
     const garment = searchParams.get('garment');
     const fabricId = searchParams.get('fabricId');
     const derivedGarment = dbProduct 
-      ? categoryToGarment(dbProduct.category?.name || dbProduct.category, dbProduct.name, dbProduct.type) 
-      : (garment || 'round-neck');
+      ? deriveGarmentTypeForCustomizer(dbProduct) 
+      : (productTypeParam ? deriveGarmentTypeForCustomizer({ productType: productTypeParam }) : (garment || 'round-neck'));
     
     // Only set initial state once
     if (!customizerState) {
@@ -160,7 +134,7 @@ function CustomizerContent() {
       // Update garment type if it changes from product selection
       setCustomizerState(prev => prev ? ({ ...prev, garmentType: derivedGarment }) : null);
     }
-  }, [searchParams, dbProduct, designId]);
+  }, [searchParams, dbProduct, designId, productTypeParam]);
 
   useEffect(() => {
     // Mark as unsaved whenever customizerState changes after initial load

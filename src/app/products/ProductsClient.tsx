@@ -24,6 +24,14 @@ import {
 import { useCompare } from "@/contexts/CompareContext";
 import { useWishlist } from "@/contexts/WishlistContext";
 import { getProductColors } from "@/lib/customizer-utils";
+import {
+  deriveProductType,
+  deriveGender,
+  deriveQualityTier,
+  ALL_PRODUCT_TYPES,
+  QUALITY_TIERS,
+  FITS
+} from "@/lib/catalog-config";
 
 const faqs = [
   { q: "Who is the best custom apparel manufacturer?", a: "Tailoring Turba is one of the top manufacturers, offering premium quality bases and customizable options for businesses, brands, and bulk buyers." },
@@ -98,14 +106,14 @@ const COLOR_OPTIONS = [
 ];
 
 const COLOR_MAP: Record<string, string[]> = {
-  "#111111": ["#111111"], // Black
-  "#FFFFFF": ["#FFFFFF"], // White
-  "#1E3A5F": ["#1E3A5F"], // Navy Blue
-  "#4D7C0F": ["#4D7C0F", "#16A34A"], // Olive Green / Forest Green
-  "#7F1D1D": ["#7F1D1D", "#DC2626"], // Red / Maroon
-  "#9CA3AF": ["#9CA3AF"], // Grey
-  "#2563EB": ["#2563EB", "#004b6b", "#38BDF8"], // Royal / Turba / Sky Blue
-  "#D97706": ["#D97706"], // Yellow / Gold
+  "#111111": ["#111111", "#272228", "#13191E"], // Black
+  "#FFFFFF": ["#FFFFFF", "#F8FAFC"], // White
+  "#1E3A5F": ["#1E3A5F", "#222433", "#194057", "#3756AE"], // Navy Blue / Ocean Blue
+  "#4D7C0F": ["#4D7C0F", "#16A34A", "#3E5552"], // Olive Green / Forest Green / Sea Green
+  "#7F1D1D": ["#7F1D1D", "#DC2626", "#662028", "#6C1820", "#F73D30"], // Red / Maroon / Orange
+  "#9CA3AF": ["#9CA3AF", "#64748B"], // Grey
+  "#2563EB": ["#2563EB", "#004b6b", "#38BDF8", "#3756AE"], // Royal / Turba / Sky Blue
+  "#D97706": ["#D97706", "#FFEC6F"], // Yellow / Gold
 };
 
 const GSM_RANGES = [
@@ -117,6 +125,7 @@ const GSM_RANGES = [
 ];
 
 function getGsmValue(p: any): number | null {
+  if (p.gsm) return Number(p.gsm);
   const text = `${p.type || ""} ${p.description || ""} ${(p.features || []).join(" ")}`;
   const match = text.match(/(\d{3})\s*gsm/i);
   return match ? parseInt(match[1], 10) : null;
@@ -158,12 +167,17 @@ export default function ProductsClient({ products }: { products: any[] }) {
 
   const urlCategory = searchParams.get("category");
   const urlGender = searchParams.get("gender") as Gender | null;
+  const urlProductType = searchParams.get("productType") || searchParams.get("type");
   const activeBrand = searchParams.get("brand");
 
   const [activeGender, setActiveGender] = useState<Gender>(
     urlGender && GENDER_CONFIG[urlGender] ? urlGender : "Men"
   );
   const [activeCategories, setActiveCategories] = useState<string[]>(["All"]);
+  const [selectedProductTypes, setSelectedProductTypes] = useState<string[]>(
+    urlProductType ? [urlProductType] : ["All"]
+  );
+  const [selectedQualityTier, setSelectedQualityTier] = useState<string>("all");
   const [priceRange, setPriceRange] = useState("all");
   const [selectedColor, setSelectedColor] = useState("all");
   const [gsmRange, setGsmRange] = useState("all");
@@ -179,7 +193,8 @@ export default function ProductsClient({ products }: { products: any[] }) {
   useEffect(() => {
     if (urlCategory) setActiveCategories([urlCategory]);
     if (urlGender && GENDER_CONFIG[urlGender]) setActiveGender(urlGender);
-  }, [urlCategory, urlGender]);
+    if (urlProductType) setSelectedProductTypes([urlProductType]);
+  }, [urlCategory, urlGender, urlProductType]);
 
   // Debounce search
   useEffect(() => {
@@ -191,6 +206,8 @@ export default function ProductsClient({ products }: { products: any[] }) {
   const handleGenderSwitch = (gender: Gender) => {
     setActiveGender(gender);
     setActiveCategories(["All"]);
+    setSelectedProductTypes(["All"]);
+    setSelectedQualityTier("all");
     setSearchTerm("");
     setPriceRange("all");
     setSelectedColor("all");
@@ -199,6 +216,8 @@ export default function ProductsClient({ products }: { products: any[] }) {
 
   const handleClearFilters = () => {
     setActiveCategories(["All"]);
+    setSelectedProductTypes(["All"]);
+    setSelectedQualityTier("all");
     setPriceRange("all");
     setSelectedColor("all");
     setGsmRange("all");
@@ -224,66 +243,105 @@ export default function ProductsClient({ products }: { products: any[] }) {
     }
   };
 
-  const hasActiveFilters = !activeCategories.includes("All") || priceRange !== "all" || selectedColor !== "all" || gsmRange !== "all" || debouncedSearch !== "" || !!activeBrand;
+  const handleProductTypeClick = (pt: string) => {
+    if (pt === "All") {
+      setSelectedProductTypes(["All"]);
+    } else {
+      setSelectedProductTypes((prev) => {
+        const filteredPrev = prev.filter((item) => item !== "All");
+        if (filteredPrev.includes(pt)) {
+          const updated = filteredPrev.filter((item) => item !== pt);
+          return updated.length === 0 ? ["All"] : updated;
+        } else {
+          return [...filteredPrev, pt];
+        }
+      });
+    }
+  };
+
+  const hasActiveFilters = 
+    !activeCategories.includes("All") || 
+    !selectedProductTypes.includes("All") ||
+    selectedQualityTier !== "all" ||
+    priceRange !== "all" || 
+    selectedColor !== "all" || 
+    gsmRange !== "all" || 
+    debouncedSearch !== "" || 
+    !!activeBrand;
 
   const genderConfig = GENDER_CONFIG[activeGender];
   const categories = genderConfig.categories;
 
-  // Filter + sort
+  // Filter + sort with strict AND matching
   const filtered = useMemo(() => {
     let result = products.filter((p) => {
-      // Gender match
-      const productGender: string = p.gender || "Men";
+      // 1. Gender Match
+      const productGender: string = p.gender || deriveGender(p);
       const matchesGender =
         activeGender === "Men"
-          ? productGender === "Men" || !p.gender
-          : productGender === activeGender;
+          ? productGender === "Men" || productGender === "Unisex" || !p.gender
+          : productGender === activeGender || productGender === "Unisex";
 
-      // Category match
+      // 2. Product Type Match
+      const productType = (p.productType || deriveProductType(p)).toLowerCase();
+      let matchesProductType = selectedProductTypes.includes("All") || selectedProductTypes.length === 0;
+      if (!matchesProductType) {
+        matchesProductType = selectedProductTypes.some(pt => {
+          const normPt = pt.toLowerCase().trim();
+          return productType.includes(normPt) || 
+            (p.name && p.name.toLowerCase().includes(normPt)) ||
+            (p.type && p.type.toLowerCase().includes(normPt));
+        });
+      }
+
+      // 3. Quality Tier Match
+      const quality = (p.qualityTier || deriveQualityTier(p)).toLowerCase();
+      let matchesQuality = selectedQualityTier === "all";
+      if (!matchesQuality) {
+        matchesQuality = quality === selectedQualityTier.toLowerCase();
+      }
+
+      // 4. Category Match
       const matchesCategory =
         activeCategories.includes("All") ||
         activeCategories.length === 0 ||
         activeCategories.some((cat) => {
           const normalized = cat.toLowerCase().replace(/s$/, "");
-          const isTshirtUmbrella =
-            cat === "T-Shirts" &&
-            (p.type?.toLowerCase().includes("polo") ||
-              p.type?.toLowerCase().includes("crewneck") ||
-              p.type?.toLowerCase().includes("v-neck") ||
-              p.name?.toLowerCase().includes("polo") ||
-              p.name?.toLowerCase().includes("crewneck"));
-
           return (
             p.category === cat ||
-            isTshirtUmbrella ||
             (p.category && p.category.toLowerCase().includes(normalized)) ||
             (p.type && p.type.toLowerCase().includes(normalized)) ||
-            (p.name && p.name.toLowerCase().includes(normalized)) ||
-            (p.category && p.category.toLowerCase().includes(cat.toLowerCase())) ||
-            (p.type && p.type.toLowerCase().includes(cat.toLowerCase())) ||
-            (p.name && p.name.toLowerCase().includes(cat.toLowerCase()))
+            (p.name && p.name.toLowerCase().includes(normalized))
           );
         });
 
-      // Price filter match
-      const price = Number(p.price || 0);
+      // 5. Price Match
+      const price = Number(p.price || p.basePrice || 0);
       let matchesPrice = true;
       if (priceRange === "under200") matchesPrice = price < 200;
       else if (priceRange === "200-350") matchesPrice = price >= 200 && price <= 350;
       else if (priceRange === "350-500") matchesPrice = price >= 350 && price <= 500;
       else if (priceRange === "above500") matchesPrice = price > 500;
 
-      // Color filter match
+      // 6. Color Match
       let matchesColor = true;
       if (selectedColor !== "all") {
         const productColors = getProductColors(p.name, p.description, p.features, p.colors);
         const allowedColors = COLOR_MAP[selectedColor] || [selectedColor];
+        
+        // Also check colorsJson hex codes if present
+        let jsonHexes: string[] = [];
+        if (p.colorsJson) {
+          const cArray = Array.isArray(p.colorsJson) ? p.colorsJson : (typeof p.colorsJson === 'string' ? JSON.parse(p.colorsJson) : []);
+          jsonHexes = cArray.map((cj: any) => cj.hex || cj.value).filter(Boolean);
+        }
+
         matchesColor = productColors.some((prodColor) =>
           allowedColors.some((allowed) => allowed.toLowerCase() === prodColor.toLowerCase())
-        );
+        ) || jsonHexes.some(h => allowedColors.some(a => a.toLowerCase() === h.toLowerCase()));
       }
 
-      // GSM filter match
+      // 7. GSM Match
       let matchesGsm = true;
       if (gsmRange !== "all") {
         const gsm = getGsmValue(p);
@@ -297,26 +355,36 @@ export default function ProductsClient({ products }: { products: any[] }) {
         }
       }
 
-      // Search match
+      // 8. Search Match
       const searchLower = debouncedSearch.toLowerCase().trim();
       const matchesSearch =
         searchLower === "" ||
         (p.name && p.name.toLowerCase().includes(searchLower)) ||
+        (p.productType && p.productType.toLowerCase().includes(searchLower)) ||
         (p.type && p.type.toLowerCase().includes(searchLower)) ||
+        (p.fabric && p.fabric.toLowerCase().includes(searchLower)) ||
         (p.description && p.description.toLowerCase().includes(searchLower)) ||
         (p.category && p.category.toLowerCase().includes(searchLower)) ||
-        (p.seoTitle && p.seoTitle.toLowerCase().includes(searchLower)) ||
-        (p.seoDescription && p.seoDescription.toLowerCase().includes(searchLower)) ||
-        (p.seoKeywords && p.seoKeywords.toLowerCase().includes(searchLower)) ||
+        (p.sku && p.sku.toLowerCase().includes(searchLower)) ||
         (p.slug && p.slug.toLowerCase().includes(searchLower));
 
-      // Brand match
+      // 9. Brand Match
       let matchesBrand = true;
       if (activeBrand) {
         matchesBrand = p.brand?.toLowerCase() === activeBrand.toLowerCase();
       }
 
-      return matchesGender && matchesCategory && matchesPrice && matchesColor && matchesGsm && matchesSearch && matchesBrand;
+      return (
+        matchesGender &&
+        matchesProductType &&
+        matchesQuality &&
+        matchesCategory &&
+        matchesPrice &&
+        matchesColor &&
+        matchesGsm &&
+        matchesSearch &&
+        matchesBrand
+      );
     });
 
     // Sort
@@ -325,7 +393,19 @@ export default function ProductsClient({ products }: { products: any[] }) {
     if (sortBy === "newest") result = [...result].reverse();
 
     return result;
-  }, [products, activeGender, activeCategories, priceRange, selectedColor, gsmRange, debouncedSearch, sortBy, activeBrand]);
+  }, [
+    products,
+    activeGender,
+    selectedProductTypes,
+    selectedQualityTier,
+    activeCategories,
+    priceRange,
+    selectedColor,
+    gsmRange,
+    debouncedSearch,
+    sortBy,
+    activeBrand
+  ]);
 
   return (
     <>
@@ -392,6 +472,64 @@ export default function ProductsClient({ products }: { products: any[] }) {
                   <X size={14} />
                 </button>
               )}
+            </div>
+
+            {/* Product Type Filter */}
+            <div className={styles.filterSection}>
+              <div className={styles.filterSectionTitle}>PRODUCT TYPE</div>
+              <div className={`${styles.categoryList} ${styles.categoryListScrollable}`}>
+                {["All", "Polo", "Crewneck", "Hoodie", "T-Shirt", "Shirt", "Trouser", "Jacket", "Sweatshirt", "Lab Coat"].map((pt) => {
+                  const isChecked = selectedProductTypes.includes(pt);
+                  const count = pt === "All"
+                    ? products.filter(p => activeGender === "Men" ? (!p.gender || p.gender === "Men" || p.gender === "Unisex") : (p.gender === activeGender || p.gender === "Unisex")).length
+                    : products.filter(p => {
+                        const productType = (p.productType || deriveProductType(p)).toLowerCase();
+                        const normPt = pt.toLowerCase().trim();
+                        const pGender = p.gender || deriveGender(p);
+                        const matchGen = activeGender === "Men" ? (!p.gender || pGender === "Men" || pGender === "Unisex") : (pGender === activeGender || pGender === "Unisex");
+                        return matchGen && (productType.includes(normPt) || (p.name && p.name.toLowerCase().includes(normPt)));
+                      }).length;
+
+                  return (
+                    <button
+                      key={pt}
+                      className={`${styles.filterBtn} ${isChecked ? styles.filterActive : ""}`}
+                      onClick={() => handleProductTypeClick(pt)}
+                    >
+                      <div className={styles.checkboxLabel}>
+                        <span className={`${styles.customCheckbox} ${isChecked ? styles.checkboxChecked : ""}`}>
+                          {isChecked && <Check size={12} strokeWidth={3} />}
+                        </span>
+                        <span>{pt}</span>
+                      </div>
+                      <span className={styles.filterCount}>{count}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Quality Tier Filter */}
+            <div className={styles.filterSection}>
+              <div className={styles.filterSectionTitle}>QUALITY TIER</div>
+              <div className={styles.priceList}>
+                {[
+                  { id: "all", label: "All Tiers" },
+                  { id: "Basic", label: "Basic / Value" },
+                  { id: "Standard", label: "Standard Commercial" },
+                  { id: "Premium", label: "Premium (PIMA / Combed)" },
+                  { id: "Luxury", label: "Luxury / TT Luxe" }
+                ].map((tier) => (
+                  <button
+                    key={tier.id}
+                    className={`${styles.priceFilterBtn} ${selectedQualityTier === tier.id ? styles.priceFilterActive : ""}`}
+                    onClick={() => setSelectedQualityTier(tier.id)}
+                  >
+                    <span className={`${styles.customRadio} ${selectedQualityTier === tier.id ? styles.radioChecked : ""}`} />
+                    <span>{tier.label}</span>
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Categories Accordion */}
