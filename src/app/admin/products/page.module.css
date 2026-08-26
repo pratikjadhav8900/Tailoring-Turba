@@ -548,6 +548,10 @@
   color: var(--tth-text-muted);
 }
 
+.uploadSlot input[type="file"] {
+  display: none;
+}
+
 .uploadSlot:hover {
   border-color: var(--tth-olive-dark);
   background: var(--tth-offwhite);
