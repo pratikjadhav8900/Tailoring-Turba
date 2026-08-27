@@ -1019,6 +1019,17 @@
     gap: 16px !important;
   }
 
+  .formRow3,
+  .formRow4 {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  .formSection {
+    padding: 16px;
+    gap: 12px;
+  }
+
   .stickyPhotoRefToolbar {
     top: 0;
     padding: 8px 10px;
