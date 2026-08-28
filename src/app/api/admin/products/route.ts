@@ -144,7 +144,7 @@ export async function POST(req: NextRequest) {
     const cleanMoq = minOrderQuantity ? parseInt(String(minOrderQuantity)) || 10 : 10;
     const cleanGsm = gsm ? parseInt(String(gsm)) || null : null;
     const cleanImages = Array.isArray(imageUrls) && imageUrls.length > 0
-      ? imageUrls.slice(0, 6)
+      ? imageUrls.slice(0, 50)
       : (imageUrl ? [imageUrl] : []);
 
     let validatedColorsJson = null;
@@ -215,7 +215,7 @@ export async function POST(req: NextRequest) {
         shortDescription: shortDescription?.trim() || null,
         features: Array.isArray(features) ? features : (features ? String(features).split('\n').filter((f: string) => f.trim()) : []),
         colors: validatedColorsJson ? validatedColorsJson.length : (colors ? parseInt(String(colors)) : null),
-        colorsJson: validatedColorsJson || null,
+        colorsJson: (validatedColorsJson || null) as any,
         badge: badge?.trim() || null,
         images: cleanImages,
         mediaMetadata: mediaMetadata || null,

@@ -41,6 +41,7 @@ interface ColorVariantForm {
   hex?: string;
   imageUrls: string[];
   image?: string;
+  imageUrl?: string;
 }
 
 export default function AdminProductsClient({ initialProducts, categories }: { initialProducts: Product[], categories: Category[] }) {
@@ -118,9 +119,9 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
     if (!files || files.length === 0) return;
 
     const currentCount = formData.imageUrls.length;
-    const allowedCount = 6 - currentCount;
+    const allowedCount = 50 - currentCount;
     if (allowedCount <= 0) {
-      toast.error("You can only upload up to 6 images.");
+      toast.error("You can only upload up to 50 images.");
       return;
     }
 
