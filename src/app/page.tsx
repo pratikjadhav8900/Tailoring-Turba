@@ -34,8 +34,8 @@ export default function Home() {
       {/* 6. Features / USPs */}
       <FeaturesGrid />
 
-      {/* 7. Who we serve */}
-      <TargetAudienceGrid />
+      {/* 7. Who we serve — commented out for now */}
+      {/* <TargetAudienceGrid /> */}
 
       {/* 7.5 Customization Printing Education Section */}
       <CustomizationEducation />
