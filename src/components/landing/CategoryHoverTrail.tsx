@@ -12,7 +12,7 @@ const CATEGORIES = [
     name: "POLOS",
     count: "40+ STYLES",
     href: "/products?category=Essential Polo & T-Shirts",
-    image: "https://images.unsplash.com/photo-1586363104862-3a5e2ab60d99?auto=format&fit=crop&w=800&q=80",
+    image: "https://res.cloudinary.com/dkn3usjpn/image/upload/v1784897815/turba_products/prod_8_BLACK-1.jpg",
   },
   {
     id: "tshirts",
@@ -33,28 +33,28 @@ const CATEGORIES = [
     name: "CREWNECKS",
     count: "16+ STYLES",
     href: "/products?category=Winter Wear Collection",
-    image: "/images/categories/men_crewneck.png",
+    image: "https://res.cloudinary.com/dkn3usjpn/image/upload/v1784897589/turba_products/prod_3_MB02-White_biowash.jpg",
   },
   {
     id: "shirts",
     name: "SHIRTS",
     count: "10+ STYLES",
     href: "/products?category=Dazzle Edition",
-    image: "https://images.unsplash.com/photo-1620012253295-c15cc3e65df4?auto=format&fit=crop&w=800&q=80",
+    image: "https://res.cloudinary.com/dkn3usjpn/image/upload/v1784897998/turba_products/prod_14_MAGIC_IO.jpg",
   },
   {
     id: "trousers",
     name: "TROUSERS",
     count: "08+ STYLES",
     href: "/products",
-    image: "https://images.unsplash.com/photo-1473966968600-fa801b869a1a?auto=format&fit=crop&w=800&q=80",
+    image: "https://res.cloudinary.com/dkn3usjpn/image/upload/v1784897486/turba_products/prod_2_MDP_All.jpg",
   },
   {
     id: "jackets",
     name: "JACKETS",
     count: "06+ STYLES",
     href: "/products?category=Winter Wear Collection",
-    image: "https://res.cloudinary.com/dkn3usjpn/image/upload/v1784898149/turba_products/prod_20__Ruffty_Jacket_ShadeCard.png",
+    image: "https://res.cloudinary.com/dkn3usjpn/image/upload/v1784898152/turba_products/prod_20_Black-Blue_HighNeck_Front.jpg",
   },
 ];
 
