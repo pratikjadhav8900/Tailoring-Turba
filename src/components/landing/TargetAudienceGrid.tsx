@@ -5,32 +5,32 @@ import styles from "./TargetAudienceGrid.module.css";
 const targets = [
   {
     title: "College / NGO Merch",
-    image: "/images/targets/college.png",
+    image: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&q=80&w=1200",
     gridArea: "a"
   },
   {
     title: "Event Merchandise",
-    image: "/images/targets/events.png",
+    image: "https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&q=80&w=1200",
     gridArea: "b"
   },
   {
     title: "Retail Apparel Stores",
-    image: "/images/targets/retail.png",
+    image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=1200",
     gridArea: "c"
   },
   {
     title: "Market Place",
-    image: "/images/targets/marketplace.png",
+    image: "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?auto=format&fit=crop&q=80&w=1200",
     gridArea: "d"
   },
   {
     title: "Instagram",
-    image: "/images/targets/instagram.png",
+    image: "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?auto=format&fit=crop&q=80&w=1200",
     gridArea: "e"
   },
   {
     title: "Local Clothing",
-    image: "/images/targets/clothing.png",
+    image: "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&q=80&w=1200",
     gridArea: "f"
   }
 ];
