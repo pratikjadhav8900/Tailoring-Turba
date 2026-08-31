@@ -10,27 +10,27 @@ const categories = [
     id: "men",
     label: "For Men",
     items: [
-      { name: "Crewnecks", image: "https://res.cloudinary.com/dkn3usjpn/image/upload/v1784897586/turba_products/prod_3_MB01-Black_biowash.jpg", href: "/products?category=Essential Polo & T-Shirts" },
-      { name: "Hoodies", image: "https://res.cloudinary.com/dkn3usjpn/image/upload/v1784898117/turba_products/prod_17_BLACK_1.jpg", href: "/products?category=Winter Wear Collection" },
-      { name: "Jackets", image: "https://res.cloudinary.com/dkn3usjpn/image/upload/v1784898152/turba_products/prod_20_Black-Blue_HighNeck_Front.jpg", href: "/products?category=Winter Wear Collection" },
-      { name: "Polos", image: "https://res.cloudinary.com/dkn3usjpn/image/upload/v1784898049/turba_products/prod_16_BLACK-1.webp", href: "/products?category=Essential Polo & T-Shirts" },
+      { name: "Crewnecks", image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&q=80&w=1200", href: "/products?category=Essential Polo & T-Shirts" },
+      { name: "Hoodies", image: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&q=80&w=1200", href: "/products?category=Winter Wear Collection" },
+      { name: "Jackets", image: "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&q=80&w=1200", href: "/products?category=Winter Wear Collection" },
+      { name: "Polos", image: "https://images.unsplash.com/photo-1625910513413-5fc28340d8ee?auto=format&fit=crop&q=80&w=1200", href: "/products?category=Essential Polo & T-Shirts" },
     ]
   },
   {
     id: "women",
     label: "For Women",
     items: [
-      { name: "Crop Tops", image: "https://res.cloudinary.com/dkn3usjpn/image/upload/v1784897699/turba_products/prod_4_MBF01-Black_biowash.jpg", href: "/products?category=Essential Polo & T-Shirts" },
-      { name: "Oversized", image: "https://res.cloudinary.com/dkn3usjpn/image/upload/v1784897589/turba_products/prod_3_MB02-White_biowash.jpg", href: "/products?category=Essential Polo & T-Shirts" },
-      { name: "Hoodies", image: "https://res.cloudinary.com/dkn3usjpn/image/upload/v1784898130/turba_products/prod_17_GREY_1.jpg", href: "/products?category=Winter Wear Collection" },
+      { name: "Crop Tops", image: "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&q=80&w=1200", href: "/products?category=Essential Polo & T-Shirts" },
+      { name: "Oversized", image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=1200", href: "/products?category=Essential Polo & T-Shirts" },
+      { name: "Hoodies", image: "https://images.unsplash.com/photo-1529374255404-311a2a4f1fd9?auto=format&fit=crop&q=80&w=1200", href: "/products?category=Winter Wear Collection" },
     ]
   },
   {
     id: "kids",
     label: "For Kids",
     items: [
-      { name: "T-Shirts", image: "https://res.cloudinary.com/dkn3usjpn/image/upload/v1784897729/turba_products/prod_5_BIO_KIDS_ALL.jpg", href: "/products?category=Essential Polo & T-Shirts" },
-      { name: "School Uniforms", image: "https://res.cloudinary.com/dkn3usjpn/image/upload/v1784897486/turba_products/prod_2_MDP_All.jpg", href: "/products?category=Essential Polo & T-Shirts" },
+      { name: "T-Shirts", image: "https://images.unsplash.com/photo-1519238263530-99abad672f69?auto=format&fit=crop&q=80&w=1200", href: "/products?category=Essential Polo & T-Shirts" },
+      { name: "School Uniforms", image: "https://images.unsplash.com/photo-1503919545889-aef636e10ad4?auto=format&fit=crop&q=80&w=1200", href: "/products?category=Essential Polo & T-Shirts" },
     ]
   }
 ];
