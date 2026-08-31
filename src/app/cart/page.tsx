@@ -42,14 +42,16 @@ export default function CartPage() {
     return total + (itemPrintingCost * (item.quantity || 0));
   }, 0);
 
-  const customItemsCount = cart.filter(item => {
+  const customItemsWithEmbroideryCount = cart.filter(item => {
     if (!item.customDesign) return false;
-    return (item.customDesign.frontElements?.length || 0) > 0 ||
-           (item.customDesign.backElements?.length || 0) > 0 ||
-           (item.uploadedAssets?.length || 0) > 0;
+    const elements = [
+      ...(item.customDesign.frontElements || []),
+      ...(item.customDesign.backElements || [])
+    ];
+    return elements.some(el => el.printType === "embroidery");
   }).length;
-  
-  const designCharge = customItemsCount * 300; 
+
+  const designCharge = customItemsWithEmbroideryCount * 300; 
   const totalCustomCharge = printingCharge + designCharge;
   const subtotalVal = isNaN(subtotal) ? 0 : subtotal;
   const gst = Math.round((subtotalVal + totalCustomCharge) * 0.05);

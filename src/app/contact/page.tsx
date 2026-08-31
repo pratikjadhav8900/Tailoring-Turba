@@ -94,8 +94,15 @@ function ContactForm() {
           return t + (printCost * (item.quantity || 0));
         }, 0);
         
-        const customItemsCount = cart.filter(i => i.customDesign).length;
-        const designCharge = customItemsCount * 300;
+        const customItemsWithEmbroideryCount = cart.filter(i => {
+          if (!i.customDesign) return false;
+          const elements = [
+            ...(i.customDesign.frontElements || []),
+            ...(i.customDesign.backElements || [])
+          ];
+          return elements.some(el => el.printType === "embroidery");
+        }).length;
+        const designCharge = customItemsWithEmbroideryCount * 300;
         totalCustomCharge = printingCharge + designCharge;
         
         const gst = Math.round((subtotal + totalCustomCharge) * 0.05);

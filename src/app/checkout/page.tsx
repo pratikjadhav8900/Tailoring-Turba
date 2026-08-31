@@ -107,10 +107,11 @@ export default function CheckoutPage() {
 
   const designCharge = cart.filter(item => {
     if (!item.customDesign) return false;
-    const hasFrontElements = (item.customDesign.frontElements?.length || 0) > 0;
-    const hasBackElements = (item.customDesign.backElements?.length || 0) > 0;
-    const hasAssets = (item.uploadedAssets?.length || 0) > 0;
-    return hasFrontElements || hasBackElements || hasAssets;
+    const elements = [
+      ...(item.customDesign.frontElements || []),
+      ...(item.customDesign.backElements || [])
+    ];
+    return elements.some(el => el.printType === "embroidery");
   }).length * 300;
   
   const totalCustomCharge = printingCharge + designCharge;

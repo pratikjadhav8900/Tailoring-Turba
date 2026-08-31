@@ -1,3 +1,6 @@
+@import url('https://api.fontshare.com/v2/css?f[]=boska@400,500,700,401,501,701&f[]=general-sans@300,400,500,600,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -7,47 +10,50 @@
    Phase 1: Typography + Color + Spacing Tokens
    ============================================================ */
 
-/* ── FONTS ──────────────────────────────────────────────────
-   Two families only.
-   DM Serif Display  → display / headings
-   Manrope           → body / UI / labels / buttons
-   ──────────────────────────────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Manrope:wght@300;400;500;600;700&display=swap');
-
 /* ── DESIGN TOKENS ───────────────────────────────────────────
    Single source of truth. All components consume these.
    ──────────────────────────────────────────────────────────── */
 :root {
   /* ── Typography ── */
-  --font-display: 'DM Serif Display', Georgia, serif;
-  --font-ui:      'Manrope', system-ui, sans-serif;
+  --font-display: 'Boska', Georgia, serif;
+  --font-ui:      'General Sans', system-ui, -apple-system, sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
 
   /* Legacy aliases — existing components keep working */
   --font-serif: var(--font-display);
   --font-sans:  var(--font-ui);
 
+  /* ── Core Brand Palette ── */
+  --color-warm-bone:      #F3F0E8;
+  --color-ink:            #171916;
+  --color-tailor-green:   #294238;
+  --color-sage:           #829386;
+  --color-muted-clay:     #B88970;
+  --color-soft-white:     #FAF9F5;
+  --color-natural-thread: #D5C49A;
+
   /* ── Color: Backgrounds ── */
-  --color-background:    #f7f6f2;   /* Warm off-white — main page bg */
+  --color-background:    #FAF9F5;   /* Soft White — main page bg */
   --color-surface:       #ffffff;   /* Pure white — cards, modals */
-  --color-surface-alt:   #f0efe9;   /* Warmer — alternate card bg */
-  --color-surface-dark:  #0d0d0b;   /* Near-black — footer, dark sections */
-  --color-surface-ink:   #1a1a18;   /* Ink — hero overlays, dark CTAs */
+  --color-surface-alt:   #F3F0E8;   /* Warm Bone — alternate card bg */
+  --color-surface-dark:  #171916;   /* Ink — footer, dark sections */
+  --color-surface-ink:   #171916;   /* Ink — hero overlays, dark CTAs */
 
   /* ── Color: Text ── */
-  --color-text-primary:  #1a1a18;   /* Near-black — headings, primary text */
+  --color-text-primary:  #171916;   /* Ink — headings, primary text */
   --color-text-secondary:#4a4a45;   /* Dark grey — body paragraphs */
-  --color-text-muted:    #7a7a72;   /* Mid grey — captions, metadata */
-  --color-text-inverse:  #f7f6f2;   /* Light text on dark surfaces */
+  --color-text-muted:    #829386;   /* Sage — captions, metadata */
+  --color-text-inverse:  #F3F0E8;   /* Light text on dark surfaces */
   --color-text-disabled: #b0b0aa;   /* Disabled states */
 
   /* ── Color: Interactive ── */
-  --color-primary:       #1a1a18;   /* Ink — primary buttons */
-  --color-primary-hover: #2e2e2c;   /* Lifted on hover */
+  --color-primary:       #171916;   /* Ink — primary buttons */
+  --color-primary-hover: #294238;   /* Tailor Green on hover */
 
-  /* ── Color: Accent (olive) ── */
-  --color-accent:        #3d5235;   /* Deep olive */
-  --color-accent-hover:  #4a5c3f;   /* Lighter olive on hover */
-  --color-accent-subtle: #eef0eb;   /* Tinted bg for accent sections */
+  /* ── Color: Accent ── */
+  --color-accent:        #294238;   /* Tailor Green */
+  --color-accent-hover:  #1f332b;   /* Hover state */
+  --color-accent-subtle: #F3F0E8;   /* Warm bone bg for accent sections */
 
   /* ── Color: Border ── */
   --color-border:        #e2e0d8;   /* Warm light grey — default */
@@ -156,12 +162,20 @@ html, body {
 
 /* ── TYPOGRAPHY HIERARCHY ─────────────────────────────────── */
 
-h1, h2, h3, h4, h5, h6 {
+h1, h2, .type-hero, .font-display {
   font-family: var(--font-display);
-  font-weight: 400;          /* DM Serif reads best at regular weight */
+  font-weight: 400;
   line-height: 1.1;
   letter-spacing: -0.02em;
-  color: var(--color-text-primary);
+  color: inherit;
+  margin: 0;
+}
+
+h3, h4, h5, h6 {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  line-height: 1.25;
+  color: inherit;
   margin: 0;
 }
 
@@ -188,16 +202,16 @@ h2 {
 
 /* Sub-heading (h3) */
 h3 {
-  font-size: 1.4rem;
+  font-size: 1.35rem;
   letter-spacing: -0.01em;
-  line-height: 1.2;
+  line-height: 1.3;
 }
 
 /* Card / product names (h4) */
 h4 {
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   letter-spacing: -0.01em;
-  line-height: 1.3;
+  line-height: 1.35;
 }
 
 h5 {
@@ -210,9 +224,15 @@ h6 {
   font-size: 0.875rem;
   font-family: var(--font-ui);
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   line-height: 1.4;
+}
+
+/* Technical metadata (SKU, GSM, MOQ, specs) */
+.type-technical, .font-mono {
+  font-family: var(--font-mono);
+  letter-spacing: 0.03em;
 }
 
 /* Body text */
@@ -220,7 +240,7 @@ p {
   font-family: var(--font-ui);
   font-size: 1rem;
   line-height: 1.75;
-  color: var(--color-text-secondary);
+  color: inherit;
   margin: 0;
 }
 

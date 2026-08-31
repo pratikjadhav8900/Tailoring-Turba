@@ -35,7 +35,8 @@ export default function OrderSummary({
   const unitPrintingCharge = allCustomElements.reduce((sum, item) => sum + item.cost, 0);
   const printingCharge = unitPrintingCharge * totalQuantity;
   const hasCustomization = allCustomElements.length > 0;
-  const designCharge = hasCustomization ? 300 : 0;
+  const hasEmbroidery = allCustomElements.some(item => item.printType === "embroidery");
+  const designCharge = hasEmbroidery ? 300 : 0;
   const totalCustomCharge = printingCharge + designCharge;
   const gst = (subtotal + totalCustomCharge) * 0.05;
   const total = subtotal + totalCustomCharge + gst;

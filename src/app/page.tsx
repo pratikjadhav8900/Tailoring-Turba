@@ -8,6 +8,9 @@ import TargetAudienceGrid from "@/components/landing/TargetAudienceGrid";
 import CustomizationEducation from "@/components/landing/CustomizationEducation";
 import AppShowcase from "@/components/landing/AppShowcase";
 
+// Preserved for future reuse — temporarily commented out
+// import CategoryHoverTrail from "@/components/landing/CategoryHoverTrail";
+
 export default function Home() {
   return (
     <>
@@ -25,6 +28,9 @@ export default function Home() {
 
       {/* 5. Category carousel */}
       <CategoryCarousel />
+
+      {/* Preserved interaction section for future reuse */}
+      {/* <CategoryHoverTrail /> */}
 
       {/* 6. Features / USPs */}
       <FeaturesGrid />
