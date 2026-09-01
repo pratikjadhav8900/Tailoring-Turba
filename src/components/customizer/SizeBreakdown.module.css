@@ -1,70 +1,308 @@
-﻿.tabContentInner {
+.container {
   max-width: 800px;
   width: 100%;
+  margin-bottom: 24px;
 }
 
-.sizeGrid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
+/* ── Header ── */
+.header {
+  margin-bottom: 24px;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
   gap: 12px;
-  margin-bottom: 28px;
+  margin-bottom: 6px;
 }
 
-@media (max-width: 600px) {
-  .sizeGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-.sizeCard {
-  background: var(--color-background);
-  border: 2px solid var(--color-border);
-  border-radius: 12px;
-  padding: 16px 12px;
-  text-align: center;
-  transition: all 0.2s;
-}
-
-.sizeCardActive {
-  background: var(--color-success-light) !important;
-  border-color: rgba(58,107,58,0.3) !important;
-}
-
-.sizeLabel {
-  font-size: 0.75rem;
+.title {
+  font-size: 1.4rem;
   font-weight: 700;
-  color: var(--color-text-muted);
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  margin: 0;
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+.moqBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 6px;
+  letter-spacing: 0.02em;
+  line-height: 1.3;
+}
+
+.moqBadgeSuccess {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.moqBadgePending {
+  background: #fefce8;
+  color: #a16207;
+  border: 1px solid #fef08a;
+}
+
+.badgeIcon {
+  flex-shrink: 0;
+}
+
+.subtitle {
+  color: #64748b;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ── Section Label ── */
+.sectionLabel {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #64748b;
   margin-bottom: 12px;
 }
 
-.sizeQty {
+/* ── Stepper Grid (2 columns on desktop, 1 on mobile) ── */
+.stepperGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px 16px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 640px) {
+  .stepperGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Individual Size Row Item ── */
+.sizeRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 14px;
+  transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.sizeRow:hover {
+  border-color: #cbd5e1;
+}
+
+.sizeRowActive {
+  border-color: #94a3b8;
+  background: #f8fafc;
+}
+
+.sizeMeta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sizeBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 28px;
+  padding: 0 8px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 5px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #1e293b;
+  letter-spacing: 0.02em;
+  font-family: var(--font-sans), monospace;
+}
+
+.sizeName {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #64748b;
+}
+
+/* ── Stepper / NumberField Control ── */
+.stepperControl {
+  display: inline-flex;
+  align-items: center;
+  height: 38px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.stepperControl:focus-within {
+  border-color: #0f172a;
+  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.08);
+}
+
+.stepBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 100%;
+  background: #ffffff;
+  border: none;
+  color: #475569;
+  cursor: pointer;
+  padding: 0;
+  transition: background-color 0.12s ease, color 0.12s ease;
+  user-select: none;
+}
+
+.stepBtn:first-child {
+  border-right: 1px solid #e2e8f0;
+}
+
+.stepBtn:last-child {
+  border-left: 1px solid #e2e8f0;
+}
+
+.stepBtn:hover:not(:disabled) {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.stepBtn:active:not(:disabled) {
+  background: #e2e8f0;
+}
+
+.stepBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  background: #fafafa;
+}
+
+.qtyInput {
+  width: 48px;
+  height: 100%;
+  border: none;
+  background: transparent;
+  text-align: center;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #0f172a;
+  padding: 0;
+  outline: none;
+  font-family: inherit;
+  -moz-appearance: textfield;
+}
+
+.qtyInput::-webkit-outer-spin-button,
+.qtyInput::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* ── Summary Panel ── */
+.summaryPanel {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.summaryHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.summaryInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.summaryTitle {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.01em;
+}
+
+.summarySub {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.totalValue {
   font-size: 1.5rem;
   font-weight: 800;
-  color: var(--color-text-primary);
-  margin: 8px 0;
+  color: #0f172a;
   line-height: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-variant-numeric: tabular-nums;
 }
 
-.sizeQtyActive {
-  color: var(--color-success) !important;
+.totalValueSuccess {
+  color: #15803d;
 }
 
-.qtyBtn {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  border: 1px solid var(--color-border);
-  background: white;
-  cursor: pointer;
-  font-size: 1rem;
-  color: var(--color-text-muted);
+.unitText {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
 }
 
-.progressBarContainer {
-  background: var(--color-background);
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  padding: 20px 24px;
-  margin-bottom: 28px;
+/* ── Progress Bar ── */
+.progressBarTrack {
+  height: 6px;
+  background: #f1f5f9;
+  border-radius: 99px;
+  overflow: hidden;
+  margin-bottom: 8px;
 }
 
+.progressBarFill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.progressFillSuccess {
+  background: #16a34a;
+}
+
+.progressFillPending {
+  background: #eab308;
+}
+
+.summaryFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.progressStatusText {
+  font-weight: 500;
+}
+
+.progressRatio {
+  font-weight: 600;
+  color: #475569;
+  font-variant-numeric: tabular-nums;
+}
