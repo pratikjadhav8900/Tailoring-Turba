@@ -277,6 +277,17 @@ export default function AuthForm({ initialMode }: AuthFormProps) {
     }
   }
 
+  const getTargetUrl = () => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const cb = params.get("callbackUrl");
+      if (cb && (cb.startsWith("/") || cb.startsWith("http"))) {
+        return cb;
+      }
+    }
+    return "/dashboard";
+  };
+
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
@@ -297,7 +308,7 @@ export default function AuthForm({ initialMode }: AuthFormProps) {
         setError("Invalid credentials. Please try again.");
       }
     } else {
-      router.push("/dashboard");
+      router.push(getTargetUrl());
     }
   }
 
@@ -362,7 +373,7 @@ export default function AuthForm({ initialMode }: AuthFormProps) {
           setError("Account created successfully. Please login manually.");
           setMode("login");
         } else {
-          router.push("/dashboard");
+          router.push(getTargetUrl());
         }
       }
     }
@@ -494,7 +505,7 @@ export default function AuthForm({ initialMode }: AuthFormProps) {
           <div className={styles.socialGrid}>
             <button
               type="button"
-              onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
+              onClick={() => signIn('google', { callbackUrl: getTargetUrl() })}
               className={styles.socialBtn}
             >
               <Image src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" width={18} height={18} />

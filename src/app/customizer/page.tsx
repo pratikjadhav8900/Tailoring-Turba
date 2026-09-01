@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useRef, Suspense, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import PoloCustomizer from "@/components/customizer/PoloCustomizer";
 import { CustomizerState, Side } from "@/types/customizer";
 import styles from "./page.module.css";
@@ -16,6 +17,15 @@ import Image from "next/image";
 function CustomizerContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { data: session, status } = useSession();
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      const fullPath = window.location.pathname + window.location.search;
+      router.replace(`/login?callbackUrl=${encodeURIComponent(fullPath)}`);
+    }
+  }, [status, router]);
+
   const [activeTab, setActiveTab] = useState<"Design" | "Options" | "Review">("Design");
   const [customizerState, setCustomizerState] = useState<CustomizerState | null>(null);
   const [activeSide, setActiveSide] = useState<Side>("front");

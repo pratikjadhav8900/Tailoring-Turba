@@ -29,8 +29,8 @@ const categories = [
     id: "kids",
     label: "For Kids",
     items: [
-      { name: "T-Shirts", image: "https://res.cloudinary.com/dkn3usjpn/image/upload/v1784897732/turba_products/prod_5_MBK01-Black-Biowash.jpg", href: "/products?category=Essential Polo & T-Shirts" },
-      { name: "School Uniforms", image: "https://res.cloudinary.com/dkn3usjpn/image/upload/v1784897511/turba_products/prod_2_MDP03-Navy_2.jpg", href: "/products?category=Essential Polo & T-Shirts" },
+      { name: "T-Shirts", image: "/images/categories/kids_tshirt.jpg", href: "/products?category=Essential Polo & T-Shirts" },
+      { name: "School Uniforms", image: "/images/categories/kids_uniform.jpg", href: "/products?category=Essential Polo & T-Shirts" },
     ]
   }
 ];

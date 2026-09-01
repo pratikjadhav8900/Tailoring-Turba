@@ -1,8 +1,10 @@
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from "next/server";
 import sharp from "sharp";
 import satori from "satori";
 import { Resvg } from "@resvg/resvg-js";
 import { DesignElement } from "@/types/customizer";
+import { auth } from "@/lib/auth";
 
 // Helper to fetch images or fonts
 async function fetchAsset(url: string) {
@@ -13,6 +15,11 @@ async function fetchAsset(url: string) {
 
 export async function POST(req: NextRequest) {
   try {
+    const session = await auth();
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized. Please log in first." }, { status: 401 });
+    }
+
     const { elements, baseImage, width = 1000, height = 1000 } = await req.json();
 
     if (!baseImage) {
