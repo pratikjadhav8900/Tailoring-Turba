@@ -41,12 +41,12 @@
 }
 
 .heading {
-  font-family: var(--font-serif);
-  font-size: 3rem;
-  font-weight: 600;
+  font-family: var(--font-ui, sans-serif);
+  font-size: clamp(2rem, 3.8vw, 3rem);
+  font-weight: 700;
   color: var(--tth-text, #1a1a18);
   line-height: 1.15;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
   margin-bottom: 16px;
 }
 
@@ -195,9 +195,9 @@
 }
 
 .footerStat {
-  font-family: var(--font-serif);
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-family: var(--font-mono, monospace);
+  font-size: 1.15rem;
+  font-weight: 600;
   color: var(--tth-text, #1a1a18);
 }
 

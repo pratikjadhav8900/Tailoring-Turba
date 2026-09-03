@@ -29,11 +29,11 @@
 }
 
 .headline {
-  font-family: var(--font-display, Georgia, serif);
-  font-size: clamp(2.6rem, 4.5vw, 4rem);
-  font-weight: 400;
-  letter-spacing: -0.02em;
-  line-height: 1.05;
+  font-family: var(--font-ui, sans-serif);
+  font-size: clamp(2.2rem, 3.8vw, 3.25rem);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
   color: var(--color-ink, #171916);
   margin: 0;
 }
@@ -142,10 +142,10 @@
 }
 
 .materialTitle {
-  font-family: var(--font-display, Georgia, serif);
-  font-size: 1.6rem;
-  font-weight: 400;
-  line-height: 1.15;
+  font-family: var(--font-ui, sans-serif);
+  font-size: 1.4rem;
+  font-weight: 600;
+  line-height: 1.2;
   margin: 0;
 }
 

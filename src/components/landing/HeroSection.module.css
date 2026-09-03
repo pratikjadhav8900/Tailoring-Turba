@@ -95,11 +95,11 @@
 }
 
 .headline {
-  font-family: var(--font-display, Georgia, serif);
-  font-size: clamp(3.4rem, 6.5vw, 5.8rem);
-  font-weight: 400;
+  font-family: var(--font-ui, sans-serif);
+  font-size: clamp(3rem, 5.8vw, 5.2rem);
+  font-weight: 700;
   line-height: 0.98;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.035em;
   color: var(--color-ink, #171916);
   margin: 0;
 }
@@ -109,7 +109,8 @@
 }
 
 .headlineItalic {
-  font-style: italic;
+  font-style: normal;
+  font-weight: 700;
   color: var(--color-tailor-green, #294238);
 }
 

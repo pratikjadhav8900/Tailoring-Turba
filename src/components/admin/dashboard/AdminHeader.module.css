@@ -1,0 +1,214 @@
+.workspaceHeader {
+  background: #ffffff;
+  border: 1px solid var(--color-border, #e2e0d8);
+  border-radius: 3px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+}
+
+.headerMain {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.contextLeft {
+  flex: 1;
+  min-width: 280px;
+}
+
+.salutation {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-sage, #829386);
+  margin-bottom: 4px;
+}
+
+.headline {
+  font-family: var(--font-ui, 'General Sans', sans-serif);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-ink, #171916);
+  line-height: 1.15;
+  margin: 0 0 4px 0;
+}
+
+.subtext {
+  font-family: var(--font-ui, 'General Sans', sans-serif);
+  font-size: 0.84rem;
+  color: var(--color-text-secondary, #4a4a45);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.telemetryRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.statusRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dateChip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 4px 10px;
+  background: #f7f6f1;
+  border: 1px solid #e8e6de;
+  border-radius: 2px;
+}
+
+.dateLabel {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--color-sage, #829386);
+}
+
+.dateValue {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-ink, #171916);
+  letter-spacing: 0.04em;
+}
+
+.statusChipNominal {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: #edf4f0;
+  border: 1px solid #cfded4;
+  border-radius: 2px;
+}
+
+.statusChipNominal .statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-tailor-green, #294238);
+}
+
+.statusChipNominal .statusText {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--color-tailor-green, #294238);
+}
+
+.statusChipAttention {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: #fbf4f0;
+  border: 1px solid #eadad2;
+  border-radius: 2px;
+}
+
+.statusChipAttention .statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-muted-clay, #b88970);
+  animation: pulseAttention 2s infinite ease-in-out;
+}
+
+@keyframes pulseAttention {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.statusChipAttention .statusText {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--color-muted-clay, #b88970);
+}
+
+.quickActionGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.primaryActionBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: var(--color-tailor-green, #294238);
+  color: #ffffff;
+  border: 1px solid var(--color-tailor-green, #294238);
+  border-radius: 2px;
+  font-family: var(--font-ui, 'General Sans', sans-serif);
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.primaryActionBtn:hover {
+  background: #1f332a;
+  border-color: #1f332a;
+}
+
+.secondaryActionBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  background: #ffffff;
+  color: var(--color-ink, #171916);
+  border: 1px solid var(--color-border, #e2e0d8);
+  border-radius: 2px;
+  font-family: var(--font-ui, 'General Sans', sans-serif);
+  font-size: 0.76rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.secondaryActionBtn:hover {
+  background: #f7f6f1;
+  border-color: #d1cec4;
+}
+
+@media (max-width: 768px) {
+  .headerMain {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .telemetryRight {
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .statusRow {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .quickActionGroup {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+}

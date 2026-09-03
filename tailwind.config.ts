@@ -9,11 +9,12 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        display: ["var(--font-display)", "Georgia", "serif"],
+        display: ["var(--font-ui)", "system-ui", "sans-serif"],
         ui: ["var(--font-ui)", "system-ui", "sans-serif"],
         mono: ["var(--font-mono)", "monospace"],
-        serif: ["var(--font-serif)", "Georgia", "serif"],
-        sans: ["var(--font-sans)", "system-ui", "sans-serif"],
+        serif: ["var(--font-ui)", "system-ui", "sans-serif"],
+        sans: ["var(--font-ui)", "system-ui", "sans-serif"],
+        editorial: ["var(--font-editorial)", "Georgia", "serif"],
       },
       colors: {
         background: "var(--background)",

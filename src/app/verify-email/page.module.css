@@ -25,8 +25,10 @@
 }
 
 .logo {
-  font-family: var(--font-serif, Georgia, serif);
-  font-size: 1.8rem;
+  font-family: var(--font-ui, sans-serif);
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
   color: var(--tth-black, #1a1a1a);
   text-decoration: none;
   margin-bottom: 12px;
@@ -35,7 +37,7 @@
 
 .logo span {
   color: var(--tth-olive, #435b43);
-  font-style: italic;
+  font-style: normal;
 }
 
 .content {
@@ -101,10 +103,11 @@
 }
 
 .title {
-  font-family: var(--font-serif, Georgia, serif);
-  font-size: 1.6rem;
+  font-family: var(--font-ui, sans-serif);
+  font-size: 1.5rem;
   color: var(--tth-black, #1a1a1a);
-  font-weight: 400;
+  font-weight: 700;
+  letter-spacing: -0.02em;
   margin: 0;
 }
 

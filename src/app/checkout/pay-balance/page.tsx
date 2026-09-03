@@ -157,7 +157,7 @@ function PayBalanceContent() {
     return (
       <div className={styles.pageWrapper} style={{ justifyContent: "center", alignItems: "center", padding: "20px" }}>
         <div style={{ maxWidth: "500px", textAlign: "center" }}>
-          <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "2rem", color: "#b91c1c", marginBottom: "16px" }}>Error Loading Payment</h2>
+          <h2 style={{ fontFamily: "var(--font-ui)", fontSize: "1.85rem", fontWeight: 700, color: "#b91c1c", marginBottom: "16px" }}>Error Loading Payment</h2>
           <p style={{ fontFamily: "var(--font-sans)", color: "var(--tth-text-muted)", marginBottom: "24px" }}>{error || "Order not found."}</p>
           <Link href="/dashboard/orders" className={styles.homeBtn} style={{ borderColor: "#b91c1c" }}>
             Back to Orders

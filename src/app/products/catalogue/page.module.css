@@ -54,12 +54,12 @@
 }
 
 .title {
-  font-family: var(--font-serif);
-  font-size: 4.5rem;
-  font-weight: 400;
+  font-family: var(--font-ui, sans-serif);
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-weight: 700;
   color: var(--tth-white, #fff);
   letter-spacing: -0.03em;
-  line-height: 1.05;
+  line-height: 1.08;
   margin-bottom: 20px;
 }
 
@@ -265,13 +265,13 @@
 }
 
 .catName {
-  font-family: var(--font-serif);
-  font-size: 1.45rem;
-  font-weight: 500;
+  font-family: var(--font-ui, sans-serif);
+  font-size: 1.35rem;
+  font-weight: 600;
   color: var(--tth-text, #1a1a18);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.015em;
   margin-bottom: 8px;
-  line-height: 1.2;
+  line-height: 1.25;
 }
 
 .pageInfo {

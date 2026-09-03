@@ -78,17 +78,17 @@
 }
 
 .headline {
-  font-family: var(--font-serif);
-  font-size: 3.25rem;
-  line-height: 1.1;
-  font-weight: 400;
+  font-family: var(--font-ui, sans-serif);
+  font-size: clamp(2rem, 3.8vw, 3rem);
+  line-height: 1.15;
+  font-weight: 700;
   color: #1a1a1a;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
 }
 
 .headline i {
-  font-style: italic;
-  font-weight: 400;
+  font-style: normal;
+  font-weight: 700;
   color: #333;
 }
 
@@ -126,8 +126,8 @@
 }
 
 .pillarText strong {
-  font-family: var(--font-serif);
-  font-size: 1.1rem;
+  font-family: var(--font-ui, sans-serif);
+  font-size: 1.05rem;
   font-weight: 600;
   color: #111;
 }

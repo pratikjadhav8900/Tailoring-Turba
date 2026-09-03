@@ -14,14 +14,16 @@
    Single source of truth. All components consume these.
    ──────────────────────────────────────────────────────────── */
 :root {
-  /* ── Typography ── */
-  --font-display: 'Boska', Georgia, serif;
-  --font-ui:      'General Sans', system-ui, -apple-system, sans-serif;
-  --font-mono:    'JetBrains Mono', monospace;
+  /* ── Typography System ── */
+  --font-ui:        'General Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono:      'JetBrains Mono', monospace;
+  --font-editorial: 'Boska', Georgia, serif;
 
-  /* Legacy aliases — existing components keep working */
-  --font-serif: var(--font-display);
-  --font-sans:  var(--font-ui);
+  /* Semantic defaults: General Sans is the primary typeface for display, UI, and default text */
+  --font-display:   var(--font-ui);
+  --font-primary:   var(--font-ui);
+  --font-sans:      var(--font-ui);
+  --font-serif:     var(--font-ui); /* default legacy serif alias safely maps to General Sans */
 
   /* ── Core Brand Palette ── */
   --color-warm-bone:      #F3F0E8;
@@ -162,84 +164,88 @@ html, body {
 
 /* ── TYPOGRAPHY HIERARCHY ─────────────────────────────────── */
 
-h1, h2, .type-hero, .font-display {
-  font-family: var(--font-display);
-  font-weight: 400;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
-  color: inherit;
-  margin: 0;
-}
-
-h3, h4, h5, h6 {
+h1, h2, h3, h4, h5, h6, .type-hero {
   font-family: var(--font-ui);
   font-weight: 600;
-  line-height: 1.25;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
   color: inherit;
   margin: 0;
 }
 
 /* Hero heading */
 .type-hero {
-  font-family: var(--font-display);
-  font-size: clamp(3rem, 6vw, 5.5rem);
-  font-weight: 400;
-  line-height: 1.0;
+  font-family: var(--font-ui);
+  font-size: clamp(2.5rem, 5.5vw, 4.25rem);
+  font-weight: 700;
+  line-height: 1.05;
   letter-spacing: -0.03em;
 }
 
 /* Page heading (h1) */
 h1 {
-  font-size: clamp(2.2rem, 4vw, 3.5rem);
+  font-size: clamp(2rem, 3.8vw, 3.25rem);
+  font-weight: 700;
   letter-spacing: -0.025em;
+  line-height: 1.15;
 }
 
 /* Section heading (h2) */
 h2 {
-  font-size: clamp(1.8rem, 3vw, 2.75rem);
+  font-size: clamp(1.5rem, 2.6vw, 2.35rem);
+  font-weight: 600;
   letter-spacing: -0.02em;
+  line-height: 1.25;
 }
 
 /* Sub-heading (h3) */
 h3 {
   font-size: 1.35rem;
+  font-weight: 600;
   letter-spacing: -0.01em;
-  line-height: 1.3;
+  line-height: 1.35;
 }
 
 /* Card / product names (h4) */
 h4 {
   font-size: 1.1rem;
+  font-weight: 600;
   letter-spacing: -0.01em;
-  line-height: 1.35;
+  line-height: 1.4;
 }
 
 h5 {
   font-size: 1rem;
+  font-weight: 600;
   letter-spacing: 0;
   line-height: 1.4;
 }
 
 h6 {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-family: var(--font-ui);
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  font-weight: 600;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   line-height: 1.4;
 }
 
-/* Technical metadata (SKU, GSM, MOQ, specs) */
+/* Technical metadata (SKU, GSM, MOQ, specs, prices, numeric indicators) */
 .type-technical, .font-mono {
   font-family: var(--font-mono);
-  letter-spacing: 0.03em;
+  letter-spacing: 0.01em;
+}
+
+/* Intentional editorial accent (rare decorative quotes/taglines only) */
+.type-editorial, .font-editorial {
+  font-family: var(--font-editorial);
 }
 
 /* Body text */
 p {
   font-family: var(--font-ui);
   font-size: 1rem;
-  line-height: 1.75;
+  line-height: 1.65;
   color: inherit;
   margin: 0;
 }
@@ -264,7 +270,7 @@ small, .type-caption {
 
 /* Price */
 .type-price {
-  font-family: var(--font-ui);
+  font-family: var(--font-mono);
   font-size: 1.25rem;
   font-weight: 600;
   letter-spacing: -0.01em;

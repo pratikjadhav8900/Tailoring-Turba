@@ -60,7 +60,7 @@ export default function OrderSummary({
           <ShoppingCart size={16} />
           <span style={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', opacity: 0.8 }}>Order Summary</span>
         </div>
-        <div style={{ fontSize: '1.6rem', fontWeight: 800, fontFamily: 'var(--font-serif)' }}>
+        <div style={{ fontSize: '1.6rem', fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
           ₹{Math.round(total).toLocaleString('en-IN')}
         </div>
         <div style={{ fontSize: '0.75rem', opacity: 0.7, marginTop: '2px' }}>

@@ -1,4 +1,4 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
@@ -82,12 +82,12 @@ export default function PrivacyPolicyPage() {
           Legal
         </p>
         <h1 style={{
-          fontFamily: "var(--font-serif, 'Playfair Display', serif)",
-          fontSize: "clamp(2.2rem, 5vw, 3.5rem)",
-          fontWeight: 400,
+          fontFamily: "var(--font-ui, sans-serif)",
+          fontSize: "clamp(2.2rem, 5vw, 3.25rem)",
+          fontWeight: 700,
           margin: "0 0 20px",
-          lineHeight: 1.1,
-          letterSpacing: "-0.02em",
+          lineHeight: 1.15,
+          letterSpacing: "-0.025em",
         }}>
           Cookie &amp; Privacy Policy
         </h1>
@@ -145,7 +145,7 @@ export default function PrivacyPolicyPage() {
               background: "#fafaf8",
             }}>
               <p style={{
-                fontFamily: "var(--font-serif, 'Playfair Display', serif)",
+                fontFamily: "var(--font-ui, sans-serif)",
                 fontSize: "1rem",
                 fontWeight: 600,
                 color: "#111",
@@ -170,9 +170,9 @@ export default function PrivacyPolicyPage() {
             borderTop: i === 0 ? "none" : "1px solid #ebebeb",
           }}>
             <h2 style={{
-              fontFamily: "var(--font-serif, 'Playfair Display', serif)",
+              fontFamily: "var(--font-ui, sans-serif)",
               fontSize: "1.35rem",
-              fontWeight: 400,
+              fontWeight: 600,
               color: "#111",
               margin: "0 0 14px",
               letterSpacing: "-0.01em",
@@ -180,7 +180,7 @@ export default function PrivacyPolicyPage() {
               {s.title}
             </h2>
             <p style={{
-              fontFamily: "var(--font-sans, 'Outfit', sans-serif)",
+              fontFamily: "var(--font-ui, sans-serif)",
               fontSize: "0.88rem",
               lineHeight: 1.85,
               color: "#555",
@@ -201,17 +201,17 @@ export default function PrivacyPolicyPage() {
           padding: "28px 32px",
         }}>
           <p style={{
-            fontFamily: "var(--font-sans, 'Outfit', sans-serif)",
+            fontFamily: "var(--font-ui, sans-serif)",
             fontSize: "0.7rem",
             fontWeight: 700,
-            letterSpacing: "0.2em",
+            letterSpacing: "0.1em",
             textTransform: "uppercase",
             color: "var(--tth-olive-dark, #4a5e3a)",
             margin: "0 0 10px",
           }}>
             Contact Us
           </p>
-          <p style={{ fontFamily: "var(--font-serif, 'Playfair Display', serif)", fontSize: "1.15rem", fontWeight: 400, color: "#111", margin: "0 0 8px" }}>
+          <p style={{ fontFamily: "var(--font-ui, sans-serif)", fontSize: "1.15rem", fontWeight: 600, color: "#111", margin: "0 0 8px" }}>
             Questions about this policy?
           </p>
           <p style={{ fontSize: "0.85rem", color: "#666", margin: 0 }}>

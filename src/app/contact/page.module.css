@@ -71,11 +71,11 @@
 }
 
 .leftTitle {
-  font-family: var(--font-serif);
-  font-size: clamp(2.5rem, 3.8vw, 3.8rem);
-  font-weight: 400;
+  font-family: var(--font-ui, sans-serif);
+  font-size: clamp(2.2rem, 3.5vw, 3.25rem);
+  font-weight: 700;
   color: #ffffff;
-  line-height: 1.08;
+  line-height: 1.12;
   letter-spacing: -0.025em;
   margin-bottom: 20px;
 }
@@ -165,9 +165,9 @@
 }
 
 .formTitle {
-  font-family: var(--font-serif);
-  font-size: 2rem;
-  font-weight: 400;
+  font-family: var(--font-ui, sans-serif);
+  font-size: 1.85rem;
+  font-weight: 700;
   color: var(--tth-black, #0a0a0a);
   letter-spacing: -0.02em;
   margin-bottom: 10px;
@@ -279,9 +279,9 @@
 }
 
 .successTitle {
-  font-family: var(--font-serif);
-  font-size: 2.2rem;
-  font-weight: 400;
+  font-family: var(--font-ui, sans-serif);
+  font-size: 2rem;
+  font-weight: 700;
   color: var(--tth-black, #0a0a0a);
   letter-spacing: -0.02em;
   margin-bottom: 16px;

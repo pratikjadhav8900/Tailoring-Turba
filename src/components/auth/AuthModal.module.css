@@ -1,4 +1,4 @@
-﻿.modalOverlay {
+.modalOverlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -43,12 +43,12 @@
 }
 
 .modalTitle {
-  font-family: var(--font-serif);
-  font-size: 2.2rem;
-  font-weight: 400;
+  font-family: var(--font-ui, sans-serif);
+  font-size: 1.85rem;
+  font-weight: 700;
   color: var(--tth-black);
   margin: 0;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
 }
 
 .closeBtn {
@@ -165,8 +165,8 @@
   margin: 32px 0;
   color: var(--tth-tan);
   font-size: 0.75rem;
-  font-style: italic;
-  font-family: var(--font-serif);
+  font-style: normal;
+  font-family: var(--font-ui, sans-serif);
 }
 
 .divider::before,
@@ -255,11 +255,12 @@
 }
 
 .registerInfo h3 {
-  font-family: var(--font-serif);
+  font-family: var(--font-ui, sans-serif);
   color: var(--tth-black);
   margin: 0;
-  font-size: 1.8rem;
-  font-weight: 400;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .registerInfo p {

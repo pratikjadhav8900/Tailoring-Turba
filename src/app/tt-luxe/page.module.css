@@ -61,12 +61,12 @@
 }
 
 .pumaTitle {
-  font-family: var(--font-serif), serif;
+  font-family: var(--font-ui, sans-serif);
   font-size: clamp(2.2rem, 5vw, 3.6rem);
   font-weight: 800;
   color: #111827;
   line-height: 1.05;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
   margin-bottom: 12px;
   text-transform: uppercase;
 }
@@ -204,12 +204,12 @@
 }
 
 .interBannerTitle {
-  font-family: var(--font-serif), serif;
+  font-family: var(--font-ui, sans-serif);
   font-size: clamp(2rem, 4.5vw, 3.4rem);
   font-weight: 800;
   color: #FFFFFF;
   line-height: 1.05;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
   text-transform: uppercase;
   margin-bottom: 10px;
 }
@@ -477,9 +477,10 @@
 }
 
 .sectionHeadline {
-  font-family: var(--font-serif), serif;
+  font-family: var(--font-ui, sans-serif);
   font-size: clamp(1.8rem, 3.5vw, 2.5rem);
   font-weight: 700;
+  letter-spacing: -0.02em;
   color: #111827;
 }
 
@@ -539,9 +540,10 @@
 }
 
 .bannerTitle {
-  font-family: var(--font-serif), serif;
+  font-family: var(--font-ui, sans-serif);
   font-size: 1.8rem;
   font-weight: 700;
+  letter-spacing: -0.02em;
   margin-bottom: 6px;
 }
 
@@ -694,9 +696,10 @@
 }
 
 .ctaTitle {
-  font-family: var(--font-serif), serif;
+  font-family: var(--font-ui, sans-serif);
   font-size: clamp(1.8rem, 4vw, 2.6rem);
   font-weight: 700;
+  letter-spacing: -0.02em;
   margin-bottom: 16px;
 }
 

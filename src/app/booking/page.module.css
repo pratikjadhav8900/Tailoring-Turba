@@ -90,17 +90,17 @@
 }
 
 .heroTitle {
-  font-family: var(--font-serif);
-  font-size: clamp(2.8rem, 6vw, 5.5rem);
-  font-weight: 400;
-  line-height: 1.05;
+  font-family: var(--font-ui, sans-serif);
+  font-size: clamp(2.5rem, 5.5vw, 4.5rem);
+  font-weight: 700;
+  line-height: 1.08;
   color: var(--color-neutral-800, #1F2937);
-  letter-spacing: -0.01em;
+  letter-spacing: -0.025em;
 }
 
 .heroTitle span {
-  font-style: italic;
-  font-family: var(--font-serif);
+  font-style: normal;
+  font-family: var(--font-ui, sans-serif);
   color: var(--tth-olive, #6b7d60);
 }
 
@@ -209,11 +209,12 @@
 }
 
 .sectionTitle {
-  font-family: var(--font-serif);
-  font-size: clamp(2.2rem, 4vw, 3.5rem);
-  font-weight: 400;
+  font-family: var(--font-ui, sans-serif);
+  font-size: clamp(2rem, 3.5vw, 3rem);
+  font-weight: 700;
   color: var(--color-neutral-800, #1F2937);
   line-height: 1.15;
+  letter-spacing: -0.025em;
 }
 
 .sectionSub {
@@ -276,8 +277,9 @@
 }
 
 .galleryTitle {
-  font-family: var(--font-serif);
-  font-size: 1.25rem;
+  font-family: var(--font-ui, sans-serif);
+  font-size: 1.2rem;
+  font-weight: 600;
   color: #ffffff;
 }
 
@@ -371,10 +373,11 @@
 }
 
 .formLabel {
-  font-family: var(--font-serif);
-  font-size: 1.8rem;
+  font-family: var(--font-ui, sans-serif);
+  font-size: 1.6rem;
   color: var(--color-neutral-800, #1F2937);
-  font-weight: 400;
+  font-weight: 700;
+  letter-spacing: -0.02em;
   margin-bottom: 32px;
   text-align: center;
 }
@@ -649,10 +652,11 @@
 }
 
 .successTitle {
-  font-family: var(--font-serif);
-  font-size: 2.5rem;
+  font-family: var(--font-ui, sans-serif);
+  font-size: 2.2rem;
   color: var(--color-neutral-800, #1F2937);
-  font-weight: 400;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .successDesc {

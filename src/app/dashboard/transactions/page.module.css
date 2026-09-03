@@ -49,12 +49,12 @@
 }
 
 .title {
-  font-family: var(--font-serif);
-  font-size: 3.5rem;
-  font-weight: 500;
+  font-family: var(--font-ui, sans-serif);
+  font-size: clamp(2.4rem, 4.5vw, 3.5rem);
+  font-weight: 700;
   color: white;
   margin-bottom: 12px;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
 }
 
 .sub {
@@ -237,9 +237,9 @@
 }
 
 .amount {
-  font-family: var(--font-serif);
+  font-family: var(--font-mono, monospace);
   font-size: 1.25rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--color-neutral-900);
 }
 

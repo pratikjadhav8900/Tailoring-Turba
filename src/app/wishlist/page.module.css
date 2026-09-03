@@ -30,12 +30,12 @@
 }
 
 .title {
-  font-family: var(--font-serif);
-  font-size: 3.5rem;
-  font-weight: 500;
+  font-family: var(--font-ui, sans-serif);
+  font-size: clamp(2.2rem, 4vw, 3rem);
+  font-weight: 700;
   color: #1a1a1a;
   margin-bottom: 16px;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
 }
 
 .subtitle {
@@ -148,11 +148,11 @@
 }
 
 .cardTitle {
-  font-size: 1.4rem;
+  font-size: 1.25rem;
   font-weight: 600;
   color: #1a1a1a;
   margin-bottom: 24px;
-  font-family: var(--font-serif);
+  font-family: var(--font-ui, sans-serif);
 }
 
 .cardActions {

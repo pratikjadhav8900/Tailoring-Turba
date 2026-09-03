@@ -1,4 +1,4 @@
-﻿.authWrapper {
+.authWrapper {
   min-height: 100vh;
   display: flex;
   justify-content: center;
@@ -44,9 +44,9 @@
   padding: 24px 0;
   background: none;
   border: none;
-  font-family: var(--font-serif);
-  font-size: 1.1rem;
-  font-weight: 500;
+  font-family: var(--font-ui, sans-serif);
+  font-size: 0.95rem;
+  font-weight: 600;
   color: var(--tth-text-muted);
   cursor: pointer;
   transition: all 0.3s ease;
@@ -79,8 +79,10 @@
 }
 
 .logo {
-  font-family: var(--font-serif);
-  font-size: 1.8rem;
+  font-family: var(--font-ui, sans-serif);
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
   color: var(--tth-black);
   text-decoration: none;
   margin-bottom: 12px;
@@ -89,15 +91,16 @@
 
 .logo span {
   color: var(--tth-olive);
-  font-style: italic;
+  font-style: normal;
 }
 
 .title {
-  font-family: var(--font-serif);
-  font-size: 2rem;
+  font-family: var(--font-ui, sans-serif);
+  font-size: 1.85rem;
   color: var(--tth-black);
   margin-bottom: 8px;
-  font-weight: 400;
+  font-weight: 700;
+  letter-spacing: -0.025em;
 }
 
 .sub {

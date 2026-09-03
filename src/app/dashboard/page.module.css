@@ -22,12 +22,12 @@
 }
 
 .welcomeTitle {
-  font-family: var(--font-serif);
-  font-size: 2.2rem;
+  font-family: var(--font-ui, sans-serif);
+  font-size: 2rem;
   font-weight: 700;
   color: var(--color-neutral-900);
   margin: 0 0 6px;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
 }
 
 .welcomeSub {
@@ -121,12 +121,12 @@
 }
 
 .sectionTitle {
-  font-family: var(--font-serif);
-  font-size: 1.4rem;
+  font-family: var(--font-ui, sans-serif);
+  font-size: 1.35rem;
   font-weight: 700;
   color: var(--color-neutral-900);
   margin: 0;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
 }
 
 .sectionLink {
@@ -553,8 +553,8 @@
 }
 
 .supportCard h3 {
-  font-family: var(--font-serif);
-  font-size: 1.25rem;
+  font-family: var(--font-ui, sans-serif);
+  font-size: 1.2rem;
   font-weight: 700;
   color: var(--color-neutral-900);
   margin: 0 0 16px;

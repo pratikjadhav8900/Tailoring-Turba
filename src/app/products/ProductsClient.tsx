@@ -665,14 +665,14 @@ export default function ProductsClient({ products }: { products: any[] }) {
                   boxShadow: "0 10px 30px rgba(0, 0, 0, 0.3)"
                 }}
               >
-                <div style={{ position: "absolute", top: "-10px", right: "-10px", opacity: 0.05, fontSize: "8rem", fontWeight: 900, color: "#fff", pointerEvents: "none", fontFamily: "var(--font-serif)" }}>
+                <div style={{ position: "absolute", top: "-10px", right: "-10px", opacity: 0.05, fontSize: "8rem", fontWeight: 900, color: "#fff", pointerEvents: "none", fontFamily: "var(--font-ui)" }}>
                   LUXE
                 </div>
                 <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#D4AF37", letterSpacing: "0.15em", textTransform: "uppercase", display: "inline-flex", alignItems: "center", gap: "6px", marginBottom: "12px" }}>
                   <Star size={12} fill="#D4AF37" color="#D4AF37" />
                   TT LUXE COLLECTION
                 </span>
-                <h1 style={{ fontSize: "2rem", fontWeight: 800, color: "#ffffff", marginBottom: "8px", fontFamily: "var(--font-serif)" }}>
+                <h1 style={{ fontSize: "2rem", fontWeight: 800, color: "#ffffff", marginBottom: "8px", letterSpacing: "-0.025em", fontFamily: "var(--font-ui)" }}>
                   {BRAND_BANNERS[activeBrand.toLowerCase()].title}
                 </h1>
                 <p style={{ color: "#cbd5e1", fontSize: "0.95rem", maxWidth: "700px", lineHeight: 1.5 }}>

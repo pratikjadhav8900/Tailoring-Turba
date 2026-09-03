@@ -17,7 +17,7 @@ export default async function OrdersPage() {
   if (!userId) {
     return (
       <div className={styles.page} style={{ padding: "40px", textAlign: "center" }}>
-        <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "2rem" }}>Unauthorized</h2>
+        <h2 style={{ fontFamily: "var(--font-ui)", fontSize: "1.85rem", fontWeight: 700 }}>Unauthorized</h2>
         <p style={{ fontFamily: "var(--font-sans)", color: "var(--tth-text-muted)" }}>Please log in to view your orders.</p>
       </div>
     );

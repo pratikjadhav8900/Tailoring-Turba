@@ -50,28 +50,28 @@
 
 .logo {
   display: block;
-  font-family: var(--font-serif);
-  font-size: 1.8rem;
-  font-weight: 400;
+  font-family: var(--font-ui, sans-serif);
+  font-size: 1.6rem;
+  font-weight: 700;
   color: var(--tth-black);
   text-decoration: none;
   margin-bottom: 60px;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.025em;
 }
 
 .logo span {
   color: var(--tth-olive-dark);
-  font-style: italic;
+  font-style: normal;
 }
 
 .title {
-  font-family: var(--font-serif);
-  font-size: 2.8rem;
-  font-weight: 400;
+  font-family: var(--font-ui, sans-serif);
+  font-size: clamp(2rem, 3.8vw, 2.75rem);
+  font-weight: 700;
   color: var(--tth-black);
   margin-bottom: 12px;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
 }
 
 .sub {

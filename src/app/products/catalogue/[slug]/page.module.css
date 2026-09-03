@@ -122,12 +122,12 @@
 }
 
 .title {
-  font-family: var(--font-serif);
-  font-size: 4rem;
-  font-weight: 400;
+  font-family: var(--font-ui, sans-serif);
+  font-size: clamp(2.4rem, 4.5vw, 3.8rem);
+  font-weight: 700;
   color: white;
   letter-spacing: -0.03em;
-  line-height: 1.05;
+  line-height: 1.08;
   margin-bottom: 16px;
 }
 
@@ -244,13 +244,13 @@
 }
 
 .cardName {
-  font-family: var(--font-serif);
-  font-size: 1.35rem;
-  font-weight: 500;
+  font-family: var(--font-ui, sans-serif);
+  font-size: 1.25rem;
+  font-weight: 600;
   color: var(--tth-text, #1a1a18);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.015em;
   margin-bottom: 8px;
-  line-height: 1.2;
+  line-height: 1.25;
 }
 
 .cardSpec {
@@ -279,9 +279,9 @@
 }
 
 .priceValue {
-  font-family: var(--font-serif);
-  font-size: 1.8rem;
-  font-weight: 500;
+  font-family: var(--font-mono, monospace);
+  font-size: 1.6rem;
+  font-weight: 600;
   color: var(--tth-text, #1a1a18);
   letter-spacing: -0.02em;
   line-height: 1;
@@ -292,6 +292,48 @@
   font-family: var(--font-sans);
   font-size: 0.75rem;
   color: var(--tth-text-muted, #6b6b65);
+}
+
+.cardBtn {
+  display: block;
+  text-align: center;
+  padding: 11px 20px;
+  background: var(--tth-olive, #6b7d60);
+  color: white;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-decoration: none;
+  border-radius: 2px;
+  transition: background 0.2s ease;
+}
+
+.cardBtn:hover {
+  background: var(--tth-olive-dark, #4a5c3f);
+}
+
+/* ===========================
+   PAGES PREVIEW SECTION
+   =========================== */
+.pagesSection {
+  margin-top: 60px;
+  border-top: 1px solid var(--tth-beige-light, #e8e0d4);
+  padding-top: 60px;
+}
+
+.pagesSectionHeader {
+  margin-bottom: 32px;
+}
+
+.pagesSectionTitle {
+  font-family: var(--font-ui, sans-serif);
+  font-size: 1.85rem;
+  font-weight: 700;
+  color: var(--tth-text, #1a1a18);
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
 }
 
 /* ===========================
@@ -381,9 +423,9 @@
 }
 
 .pagesSectionTitle {
-  font-family: var(--font-serif);
-  font-size: 2rem;
-  font-weight: 400;
+  font-family: var(--font-ui, sans-serif);
+  font-size: 1.85rem;
+  font-weight: 700;
   color: var(--tth-text, #1a1a18);
   letter-spacing: -0.02em;
   margin-bottom: 6px;

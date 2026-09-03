@@ -15,65 +15,132 @@ import {
   LogOut,
   ArrowLeft,
   Mail,
-  Home,
   Briefcase,
-  ClipboardList
+  ClipboardList,
+  Activity,
+  Shield
 } from "lucide-react";
 
-const navItems = [
-  { icon: Home, label: "Home", href: "/" },
-  { icon: LayoutDashboard, label: "Dashboard", href: "/admin" },
-  { icon: Package, label: "Orders", href: "/admin/orders" },
-  { icon: ClipboardList, label: "Leads", href: "/admin/leads" },
-  { icon: Users, label: "Users", href: "/admin/users" },
-  { icon: Shirt, label: "Products", href: "/admin/products" },
-  { icon: Layers, label: "Categories", href: "/admin/categories" },
-  { icon: Calendar, label: "Bookings", href: "/admin/bookings" },
-  { icon: Mail, label: "Inquiries", href: "/admin/inquiries" },
-  { icon: Briefcase, label: "Jobs", href: "/admin/jobs" },
-  { icon: CreditCard, label: "Transactions", href: "/admin/transactions" },
+interface NavGroup {
+  groupLabel: string;
+  items: {
+    icon: typeof LayoutDashboard;
+    label: string;
+    href: string;
+    badge?: string;
+  }[];
+}
+
+const navGroups: NavGroup[] = [
+  {
+    groupLabel: "OVERVIEW",
+    items: [
+      { icon: LayoutDashboard, label: "Dashboard", href: "/admin" },
+    ],
+  },
+  {
+    groupLabel: "COMMERCE",
+    items: [
+      { icon: Package, label: "Orders", href: "/admin/orders" },
+      { icon: Shirt, label: "Products", href: "/admin/products" },
+      { icon: Layers, label: "Categories", href: "/admin/categories" },
+    ],
+  },
+  {
+    groupLabel: "CUSTOMERS",
+    items: [
+      { icon: Users, label: "Users", href: "/admin/users" },
+      { icon: ClipboardList, label: "Leads", href: "/admin/leads" },
+      { icon: Mail, label: "Inquiries", href: "/admin/inquiries" },
+    ],
+  },
+  {
+    groupLabel: "OPERATIONS",
+    items: [
+      { icon: Calendar, label: "Bookings", href: "/admin/bookings" },
+      { icon: Briefcase, label: "Jobs", href: "/admin/jobs" },
+      { icon: CreditCard, label: "Transactions", href: "/admin/transactions" },
+    ],
+  },
 ];
 
 export default function AdminSidebar({ role }: { role: string }) {
   const pathname = usePathname();
-  
+
   return (
     <aside className={styles.sidebar}>
+      {/* Brand Header */}
       <div className={styles.header}>
-        <Link href="/" className={styles.logo}>
-          Tailoring <span>Turba</span>
-        </Link>
-        <div className={styles.roleChip}>
-          {role === "SUPER_ADMIN" ? "Super Admin" : "Platform Admin"}
+        <div className={styles.brandRow}>
+          <Link href="/admin" className={styles.logo}>
+            TAILORING <span>TURBA</span>
+          </Link>
+          <div className={styles.envTag}>OPS</div>
+        </div>
+        <div className={styles.systemSub}>
+          <span className={styles.statusDot} />
+          <span className={styles.statusText}>CONTROL CENTER</span>
         </div>
       </div>
 
+      {/* Navigation Groups */}
       <nav className={styles.nav}>
-        {navItems.map(Item => {
-          const isActive = Item.href === "/" 
-            ? pathname === "/" 
-            : Item.href === "/admin" 
-              ? pathname === "/admin" 
-              : pathname.startsWith(Item.href);
-          return (
-            <Link key={Item.href} href={Item.href} className={`${styles.item} ${isActive ? styles.active : ""}`}>
-              <div className={styles.iconWrapper}>
-                <Item.icon size={20} strokeWidth={isActive ? 2.5 : 2} />
-              </div>
-              <span>{Item.label}</span>
-              {isActive && <div className={styles.indicator} />}
-            </Link>
-          );
-        })}
+        {navGroups.map((group) => (
+          <div key={group.groupLabel} className={styles.navGroup}>
+            <div className={styles.groupLabel}>{group.groupLabel}</div>
+            <div className={styles.groupItems}>
+              {group.items.map((item) => {
+                const isActive = item.href === "/admin" 
+                  ? pathname === "/admin" 
+                  : pathname.startsWith(item.href);
+
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`${styles.item} ${isActive ? styles.active : ""}`}
+                  >
+                    <div className={styles.iconWrapper}>
+                      <item.icon size={17} strokeWidth={isActive ? 2.2 : 1.7} />
+                    </div>
+                    <span className={styles.itemLabel}>{item.label}</span>
+                    {isActive && <div className={styles.activeBar} />}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
 
+      {/* Footer / Admin Identity & Actions */}
       <div className={styles.footer}>
-        <Link href="/" className={styles.backBtn}>
-          <ArrowLeft size={16} /> Back to Site
-        </Link>
-        <button className={styles.logout} onClick={() => signOut({ callbackUrl: "/" })}>
-          <LogOut size={16} /> Sign Out
-        </button>
+        <div className={styles.adminBadge}>
+          <div className={styles.adminIconWrap}>
+            <Shield size={14} />
+          </div>
+          <div className={styles.adminInfo}>
+            <div className={styles.adminRole}>
+              {role === "SUPER_ADMIN" ? "SUPER ADMIN" : "PLATFORM ADMIN"}
+            </div>
+            <div className={styles.adminStatus}>AUTHENTICATED</div>
+          </div>
+        </div>
+
+        <div className={styles.footerLinks}>
+          <Link href="/" className={styles.backBtn} title="View Storefront">
+            <ArrowLeft size={14} />
+            <span>Storefront</span>
+          </Link>
+          <button 
+            className={styles.logout} 
+            onClick={() => signOut({ callbackUrl: "/" })}
+            title="End Session"
+          >
+            <LogOut size={14} />
+            <span>Sign Out</span>
+          </button>
+        </div>
       </div>
     </aside>
   );
