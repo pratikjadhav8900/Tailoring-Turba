@@ -1,21 +1,20 @@
 "use client";
 
-import { useState } from "react";
 import styles from "./RecentOperationsFeed.module.css";
 import Link from "next/link";
-import { ChevronRight, ArrowUpRight, Filter, ShoppingBag } from "lucide-react";
+import { ArrowRight, Activity } from "lucide-react";
 
-interface OrderItem {
+export interface ActivityOrderItem {
   id: string;
-  orderNumber?: number;
+  orderNumber?: number | null;
   totalAmount: number;
   status: string;
   createdAt: Date | string;
-  user: {
-    name: string | null;
-    email: string | null;
+  user?: {
+    name?: string | null;
+    email?: string | null;
     companyName?: string | null;
-  };
+  } | null;
   items: {
     id: string;
     quantity: number;
@@ -27,127 +26,109 @@ interface OrderItem {
 }
 
 interface RecentOperationsFeedProps {
-  orders: OrderItem[];
+  orders: ActivityOrderItem[];
+  newInquiries?: {
+    id: string;
+    name: string;
+    quantity: number;
+    companyName?: string | null;
+    createdAt: Date | string;
+  }[];
 }
 
-export default function RecentOperationsFeed({ orders }: { orders: OrderItem[] }) {
-  const [filterStatus, setFilterStatus] = useState<string>("ALL");
-
-  const filteredOrders = filterStatus === "ALL" 
-    ? orders 
-    : orders.filter((o) => o.status.toUpperCase() === filterStatus);
-
-  const getStatusBadgeClass = (status: string) => {
-    switch (status.toUpperCase()) {
-      case "PENDING":
-        return styles.statusPending;
-      case "PROCESSING":
-        return styles.statusProcessing;
-      case "SHIPPED":
-        return styles.statusShipped;
-      case "DELIVERED":
-        return styles.statusDelivered;
-      case "CANCELLED":
-        return styles.statusCancelled;
-      default:
-        return styles.statusDefault;
-    }
-  };
+export default function RecentOperationsFeed({
+  orders,
+  newInquiries = [],
+}: RecentOperationsFeedProps) {
+  // Merge orders and inquiries into a unified chronological activity stream
+  const events = [
+    ...orders.map((o) => ({
+      id: `order-${o.id}`,
+      type: "ORDER" as const,
+      refId: o.orderNumber ? `#TT-${String(o.orderNumber).padStart(4, "0")}` : `#${o.id.slice(-6).toUpperCase()}`,
+      title: o.user?.companyName || o.user?.name || "Client Order",
+      meta: `${o.items.reduce((sum, i) => sum + (i.quantity || 1), 0)} pcs • ₹${o.totalAmount.toLocaleString("en-IN")}`,
+      timestamp: new Date(o.createdAt),
+      status: o.status,
+      url: `/admin/orders/${o.id}`,
+    })),
+    ...newInquiries.map((inq) => ({
+      id: `inq-${inq.id}`,
+      type: "INQUIRY" as const,
+      refId: `#INQ-${inq.id.slice(-4).toUpperCase()}`,
+      title: inq.companyName ? `${inq.name} (${inq.companyName})` : inq.name,
+      meta: `${inq.quantity} units requested`,
+      timestamp: new Date(inq.createdAt),
+      status: "NEW",
+      url: `/admin/inquiries`,
+    })),
+  ].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
 
   return (
-    <section className={styles.ledgerConsole} aria-label="Operations Feed & Ledger">
-      {/* Ledger Header */}
-      <div className={styles.ledgerHeader}>
+    <div className={styles.activityConsole} role="region" aria-label="Recent Operational Activity">
+      {/* Activity Header */}
+      <div className={styles.consoleHeader}>
         <div className={styles.headerLeft}>
-          <div className={styles.tagMono}>LOGS // CHRONOLOGICAL ACTIVITY</div>
-          <h3 className={styles.ledgerTitle}>Recent Operations Feed</h3>
+          <div className={styles.tagMono}>LOG // EVENT TELEMETRY</div>
+          <h3 className={styles.consoleTitle}>Recent Activity</h3>
         </div>
 
-        <div className={styles.headerRight}>
-          <div className={styles.filterPills}>
-            {["ALL", "PENDING", "PROCESSING", "DELIVERED"].map((st) => (
-              <button
-                key={st}
-                type="button"
-                onClick={() => setFilterStatus(st)}
-                className={`${styles.filterBtn} ${filterStatus === st ? styles.filterActive : ""}`}
-              >
-                {st}
-              </button>
-            ))}
-          </div>
-
-          <Link href="/admin/orders" className={styles.fullLedgerLink}>
-            <span>Full Order Ledger</span>
-            <ChevronRight size={13} />
-          </Link>
-        </div>
+        <Link href="/admin/orders" className={styles.headerLink}>
+          <span>Order Ledger</span>
+          <ArrowRight size={11} className={styles.btnArrow} />
+        </Link>
       </div>
 
-      {/* Chronological Feed Table */}
+      {/* Activity Log Feed */}
       <div className={styles.feedWrapper}>
-        {filteredOrders.length === 0 ? (
-          <div className={styles.emptyFeed}>
-            <ShoppingBag size={22} className={styles.emptyIcon} />
-            <span className={styles.emptyText}>No operations recorded for the selected filter.</span>
+        {events.length === 0 ? (
+          <div className={styles.emptyLog}>
+            <Activity size={20} className={styles.emptyIcon} />
+            <p>No recent operational events recorded in this cycle.</p>
           </div>
         ) : (
-          <div className={styles.feedList}>
-            {filteredOrders.map((o) => {
-              const orderDate = new Date(o.createdAt);
-              const timeStr = orderDate.toLocaleTimeString("en-IN", { 
-                hour: "2-digit", 
+          <div className={styles.logList}>
+            {events.slice(0, 6).map((item) => {
+              const timeFormatted = item.timestamp.toLocaleTimeString("en-IN", {
+                hour: "2-digit",
                 minute: "2-digit",
-                hour12: false
+                hour12: false,
               });
-              const dateStr = orderDate.toLocaleDateString("en-IN", { 
-                day: "2-digit", 
-                month: "short" 
+              const dateFormatted = item.timestamp.toLocaleDateString("en-IN", {
+                day: "2-digit",
+                month: "short",
               });
-              const orderRef = o.orderNumber ? `#TT-${o.orderNumber}` : `#${o.id.slice(-6).toUpperCase()}`;
-              const totalUnits = o.items.reduce((sum, item) => sum + (item.quantity || 1), 0);
-              const clientName = o.user.companyName || o.user.name || o.user.email || "B2B Client";
+
+              const isOrder = item.type === "ORDER";
 
               return (
-                <div key={o.id} className={styles.feedRow}>
-                  {/* Timestamp & Code */}
+                <div key={item.id} className={styles.logRow}>
+                  {/* Timestamp */}
                   <div className={styles.timeCell}>
-                    <span className={styles.timeMono}>{timeStr}</span>
-                    <span className={styles.dateMono}>{dateStr}</span>
+                    <span className={styles.timeMono}>{timeFormatted}</span>
+                    <span className={styles.dateMono}>{dateFormatted}</span>
                   </div>
 
-                  {/* Ref & Type */}
-                  <div className={styles.refCell}>
-                    <span className={styles.typeBadge}>ORDER</span>
-                    <span className={styles.refCode}>{orderRef}</span>
-                  </div>
-
-                  {/* Client & Description */}
-                  <div className={styles.descCell}>
-                    <div className={styles.clientTitle}>{clientName}</div>
-                    <div className={styles.clientMeta}>
-                      {totalUnits} units • {o.items.length} style{o.items.length === 1 ? "" : "s"}
-                      {o.items[0]?.product?.name ? ` (${o.items[0].product.name})` : ""}
-                    </div>
-                  </div>
-
-                  {/* Amount Value */}
-                  <div className={styles.amountCell}>
-                    <span className={styles.amountMono}>₹{o.totalAmount.toLocaleString("en-IN")}</span>
-                  </div>
-
-                  {/* Status */}
-                  <div className={styles.statusCell}>
-                    <span className={`${styles.statusBadge} ${getStatusBadgeClass(o.status)}`}>
-                      {o.status}
+                  {/* Type Badge */}
+                  <div className={styles.typeCell}>
+                    <span 
+                      className={`${styles.typeTag} ${isOrder ? styles.tagOrder : styles.tagInq}`}
+                    >
+                      {item.type}
                     </span>
+                    <span className={styles.refCode}>{item.refId}</span>
+                  </div>
+
+                  {/* Description */}
+                  <div className={styles.descCell}>
+                    <div className={styles.itemTitle}>{item.title}</div>
+                    <div className={styles.itemMeta}>{item.meta}</div>
                   </div>
 
                   {/* Action Link */}
                   <div className={styles.actionCell}>
-                    <Link href={`/admin/orders`} className={styles.actionBtn}>
-                      <span>Inspect</span>
-                      <ChevronRight size={12} />
+                    <Link href={item.url} className={styles.rowActionLink} aria-label={`View ${item.refId}`}>
+                      <ArrowRight size={12} className={styles.btnArrow} />
                     </Link>
                   </div>
                 </div>
@@ -156,6 +137,6 @@ export default function RecentOperationsFeed({ orders }: { orders: OrderItem[] }
           </div>
         )}
       </div>
-    </section>
+    </div>
   );
 }

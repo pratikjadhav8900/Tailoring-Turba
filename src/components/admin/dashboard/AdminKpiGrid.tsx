@@ -4,14 +4,11 @@ import styles from "./AdminKpiGrid.module.css";
 import Link from "next/link";
 import AnimatedNumber from "./AnimatedNumber";
 import { 
-  Users, 
-  ShoppingBag, 
   Clock, 
   Calendar, 
   Shirt, 
   Scissors,
-  ArrowUpRight,
-  ChevronRight
+  ArrowRight
 } from "lucide-react";
 
 interface KpiProps {
@@ -34,27 +31,16 @@ export default function AdminKpiGrid({
   productCount,
 }: KpiProps) {
   return (
-    <section className={styles.metricsConsole} aria-label="Business Metrics Console">
-      {/* Console Header Bar */}
-      <div className={styles.consoleHeader}>
-        <div className={styles.consoleTag}>
-          <span className={styles.tagDot} />
-          <span>METRICS // REAL-TIME ENTERPRISE LEDGER</span>
-        </div>
-        <div className={styles.consoleContext}>
-          <span>ALL FIGURES GROUNDED IN LIVE POSTGRESQL STATE</span>
-        </div>
-      </div>
-
+    <section className={styles.metricsSection} aria-label="Enterprise Performance Metrics">
       {/* Primary Dominant Metrics Tier */}
       <div className={styles.primaryGrid}>
         {/* Primary 1: Gross Revenue */}
         <div className={styles.primaryBlock}>
-          <div className={styles.blockTop}>
+          <div className={styles.blockMeta}>
             <span className={styles.metricCode}>REV-01</span>
             <span className={styles.categoryTag}>COMMERCE</span>
           </div>
-          <div className={styles.metricTitle}>GROSS REVENUE</div>
+          <div className={styles.metricLabel}>Gross Revenue</div>
           <div className={styles.primaryValueRow}>
             <span className={styles.currencyPrefix}>₹</span>
             <AnimatedNumber
@@ -64,17 +50,17 @@ export default function AdminKpiGrid({
             />
           </div>
           <div className={styles.metricFootnote}>
-            <span>Cumulative realized revenue from {orderCount} confirmed order{orderCount === 1 ? "" : "s"}</span>
+            Cumulative realized revenue from {orderCount} confirmed order{orderCount === 1 ? "" : "s"}
           </div>
         </div>
 
         {/* Primary 2: Registered Clients */}
         <div className={styles.primaryBlock}>
-          <div className={styles.blockTop}>
+          <div className={styles.blockMeta}>
             <span className={styles.metricCode}>ACC-02</span>
             <span className={styles.categoryTag}>CLIENTELE</span>
           </div>
-          <div className={styles.metricTitle}>REGISTERED CLIENTS</div>
+          <div className={styles.metricLabel}>Registered Clients</div>
           <div className={styles.primaryValueRow}>
             <AnimatedNumber
               value={userCount}
@@ -84,18 +70,19 @@ export default function AdminKpiGrid({
           </div>
           <div className={styles.metricFootnote}>
             <Link href="/admin/users" className={styles.footLink}>
-              View Client Directory <ChevronRight size={12} />
+              <span>Client Directory</span>
+              <ArrowRight size={12} className={styles.linkArrow} />
             </Link>
           </div>
         </div>
 
         {/* Primary 3: Production Orders */}
         <div className={styles.primaryBlock}>
-          <div className={styles.blockTop}>
+          <div className={styles.blockMeta}>
             <span className={styles.metricCode}>VOL-03</span>
             <span className={styles.categoryTag}>FULFILLMENT</span>
           </div>
-          <div className={styles.metricTitle}>PRODUCTION ORDERS</div>
+          <div className={styles.metricLabel}>Production Orders</div>
           <div className={styles.primaryValueRow}>
             <AnimatedNumber
               value={orderCount}
@@ -105,7 +92,8 @@ export default function AdminKpiGrid({
           </div>
           <div className={styles.metricFootnote}>
             <Link href="/admin/orders" className={styles.footLink}>
-              Manage Order Ledger <ChevronRight size={12} />
+              <span>Order Ledger</span>
+              <ArrowRight size={12} className={styles.linkArrow} />
             </Link>
           </div>
         </div>
@@ -119,12 +107,12 @@ export default function AdminKpiGrid({
           className={`${styles.secondaryCell} ${pendingOrders > 0 ? styles.cellAttention : ""}`}
         >
           <div className={styles.secondaryHeader}>
-            <span className={styles.secondaryLabel}>PENDING APPROVAL</span>
+            <span className={styles.secondaryLabel}>PENDING INTAKE</span>
             <Clock size={13} className={pendingOrders > 0 ? styles.iconClay : styles.iconSage} />
           </div>
           <div className={styles.secondaryValueRow}>
             <AnimatedNumber value={pendingOrders} className={styles.secondaryNumber} />
-            <span className={styles.secondarySub}>Awaiting intake</span>
+            <span className={styles.secondarySub}>Awaiting verification</span>
           </div>
         </Link>
 
@@ -136,7 +124,7 @@ export default function AdminKpiGrid({
           </div>
           <div className={styles.secondaryValueRow}>
             <AnimatedNumber value={processingOrders} className={styles.secondaryNumber} />
-            <span className={styles.secondarySub}>Cutting / Stitching</span>
+            <span className={styles.secondarySub}>Cutting &amp; stitching</span>
           </div>
         </Link>
 
@@ -160,7 +148,7 @@ export default function AdminKpiGrid({
           </div>
           <div className={styles.secondaryValueRow}>
             <AnimatedNumber value={productCount} className={styles.secondaryNumber} />
-            <span className={styles.secondarySub}>Manufacturing styles</span>
+            <span className={styles.secondarySub}>Catalogue styles</span>
           </div>
         </Link>
       </div>

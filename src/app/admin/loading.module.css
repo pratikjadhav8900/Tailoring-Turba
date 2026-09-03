@@ -1,0 +1,178 @@
+/* ============================================================
+   TAILORING TURBA — ADMIN LOADING SKELETON
+   Visual System: Low-Contrast Geometric Shimmer, Static on Reduced Motion
+   ============================================================ */
+
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skelLine,
+.skeletonFocus,
+.skelMetricBlock,
+.skelCell,
+.skelRailHead,
+.skelNode,
+.skelOrdersHeader,
+.skelFilterTabs,
+.skelTableHeader,
+.skelTableRow {
+  background: linear-gradient(90deg, #F5F4EF 25%, #EAE8E1 50%, #F5F4EF 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite ease-in-out;
+  border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skelLine,
+  .skeletonFocus,
+  .skelMetricBlock,
+  .skelCell,
+  .skelRailHead,
+  .skelNode,
+  .skelOrdersHeader,
+  .skelFilterTabs,
+  .skelTableHeader,
+  .skelTableRow {
+    animation: none;
+    background: #F3F1EA;
+  }
+}
+
+/* Header Skeleton (Flush Layout) */
+.skeletonHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--color-border, #E2E0D8);
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.skelCol {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skelShort { width: 140px; height: 10px; }
+.skelTitle { width: 260px; height: 26px; }
+.skelSub { width: 320px; height: 12px; }
+
+.skelRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.skelChip { width: 110px; height: 28px; }
+.skelBtn { width: 85px; height: 32px; }
+
+/* Focus Bar */
+.skeletonFocus {
+  height: 48px;
+  border-radius: 2px;
+  border: 1px solid var(--color-border, #E2E0D8);
+}
+
+/* Metrics Grid Skeleton */
+.skeletonMetrics {
+  background: #ffffff;
+  border: 1px solid var(--color-border, #E2E0D8);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.skelMetricsTop {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--color-border, #E2E0D8);
+}
+
+.skelMetricBlock {
+  height: 120px;
+  background: #ffffff;
+}
+
+.skelMetricsBottom {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--color-border, #E2E0D8);
+  border-top: 1px solid var(--color-border, #E2E0D8);
+}
+
+.skelCell {
+  height: 56px;
+  background: #ffffff;
+}
+
+/* Production Rail Skeleton */
+.skeletonRail {
+  background: #ffffff;
+  border: 1px solid var(--color-border, #E2E0D8);
+  border-radius: 2px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.skelRailHead {
+  height: 60px;
+  border-bottom: 1px solid var(--color-border, #E2E0D8);
+}
+
+.skelRailNodes {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+  padding: 16px 20px;
+}
+
+.skelNode {
+  height: 120px;
+}
+
+/* Orders Workspace Skeleton */
+.skeletonTable {
+  background: #ffffff;
+  border: 1px solid var(--color-border, #E2E0D8);
+  border-radius: 2px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.skelOrdersHeader {
+  height: 60px;
+  border-bottom: 1px solid var(--color-border, #E2E0D8);
+}
+
+.skelFilterTabs {
+  height: 38px;
+  border-bottom: 1px solid var(--color-border, #E2E0D8);
+}
+
+.skelTableHeader {
+  height: 36px;
+  border-bottom: 1px solid var(--color-border, #E2E0D8);
+}
+
+.skelTableRow {
+  height: 50px;
+  border-bottom: 1px solid #F1EEE6;
+}
+
+.skelTableRow:last-child {
+  border-bottom: none;
+}

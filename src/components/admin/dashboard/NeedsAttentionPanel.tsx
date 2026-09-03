@@ -4,12 +4,8 @@ import styles from "./NeedsAttentionPanel.module.css";
 import Link from "next/link";
 import { 
   CheckCircle2, 
-  ArrowRight, 
-  Clock, 
-  Mail, 
-  Calendar,
   AlertTriangle,
-  ChevronRight
+  ArrowRight
 } from "lucide-react";
 
 interface AttentionItem {
@@ -24,10 +20,44 @@ interface AttentionItem {
   actionLabel: string;
 }
 
+interface NeedsAttentionPendingOrder {
+  id: string;
+  orderNumber?: number;
+  totalAmount?: number;
+  createdAt: Date | string;
+  user?: {
+    name?: string | null;
+    email?: string | null;
+    companyName?: string | null;
+  } | null;
+  items?: unknown[];
+}
+
+interface NeedsAttentionInquiry {
+  id: string;
+  name: string;
+  quantity: number;
+  companyName?: string | null;
+  requirements?: string | null;
+  createdAt: Date | string;
+}
+
+interface NeedsAttentionBooking {
+  id: string;
+  guestName?: string | null;
+  date: Date | string;
+  timeSlot?: string | null;
+  createdAt: Date | string;
+  user?: {
+    name?: string | null;
+    email?: string | null;
+  } | null;
+}
+
 interface NeedsAttentionPanelProps {
-  pendingOrders: any[];
-  newInquiries: any[];
-  requestedBookings: any[];
+  pendingOrders: NeedsAttentionPendingOrder[];
+  newInquiries: NeedsAttentionInquiry[];
+  requestedBookings: NeedsAttentionBooking[];
 }
 
 export default function NeedsAttentionPanel({
@@ -39,8 +69,8 @@ export default function NeedsAttentionPanel({
 
   // Map real pending orders
   pendingOrders.forEach((o) => {
-    const orderRef = o.orderNumber ? `#TT-${o.orderNumber}` : `#${o.id.slice(-6).toUpperCase()}`;
-    const clientName = o.user?.name || o.user?.email || "Customer";
+    const orderRef = o.orderNumber ? `#TT-${String(o.orderNumber).padStart(4, "0")}` : `#${o.id.slice(-6).toUpperCase()}`;
+    const clientName = o.user?.companyName || o.user?.name || o.user?.email || "Customer";
     const amountStr = o.totalAmount ? `₹${o.totalAmount.toLocaleString("en-IN")}` : "Custom Quote";
     const itemCount = o.items?.length || 0;
 
@@ -49,7 +79,7 @@ export default function NeedsAttentionPanel({
       type: "ORDER",
       statusCode: "PENDING",
       title: `Order ${orderRef} — ${clientName}`,
-      subtitle: `${amountStr} • ${itemCount} line item${itemCount === 1 ? "" : "s"} awaiting confirmation`,
+      subtitle: `${amountStr} • ${itemCount} line item${itemCount === 1 ? "" : "s"} awaiting verification`,
       timeStr: new Date(o.createdAt).toLocaleDateString("en-IN", { 
         month: "short", 
         day: "numeric",
@@ -57,7 +87,7 @@ export default function NeedsAttentionPanel({
         minute: "2-digit"
       }),
       refId: orderRef,
-      actionUrl: `/admin/orders`,
+      actionUrl: `/admin/orders/${o.id}`,
       actionLabel: "Review",
     });
   });
@@ -71,7 +101,7 @@ export default function NeedsAttentionPanel({
       id: `inq-${inq.id}`,
       type: "INQUIRY",
       statusCode: "NEW LEAD",
-      title: `B2B Request: ${inq.name}${companyInfo}`,
+      title: `B2B Spec: ${inq.name}${companyInfo}`,
       subtitle: `Target: ${inq.quantity} units • ${inq.requirements ? inq.requirements.slice(0, 48) + "..." : "Custom specifications submitted"}`,
       timeStr: new Date(inq.createdAt).toLocaleDateString("en-IN", { 
         month: "short", 
@@ -114,7 +144,7 @@ export default function NeedsAttentionPanel({
   const totalCount = items.length;
 
   return (
-    <div className={styles.attentionConsole}>
+    <div className={styles.attentionConsole} role="region" aria-label="Operational Needs Attention">
       {/* Header */}
       <div className={styles.consoleHeader}>
         <div className={styles.headerLeft}>
@@ -122,12 +152,12 @@ export default function NeedsAttentionPanel({
             <span className={styles.tagMono}>ACTION QUEUE // TRIAGE</span>
             {totalCount > 0 ? (
               <span className={styles.badgeAttention}>
-                <AlertTriangle size={11} />
+                <AlertTriangle size={10} />
                 <span>{totalCount} REQUIRING ATTENTION</span>
               </span>
             ) : (
               <span className={styles.badgeClear}>
-                <CheckCircle2 size={11} />
+                <CheckCircle2 size={10} />
                 <span>ALL CLEAR</span>
               </span>
             )}
@@ -137,7 +167,7 @@ export default function NeedsAttentionPanel({
 
         <div className={styles.headerRight}>
           <span className={styles.contextMeta}>
-            Real-time critical items from active pipelines
+            Live alerts from active pipelines
           </span>
         </div>
       </div>
@@ -147,11 +177,11 @@ export default function NeedsAttentionPanel({
         {totalCount === 0 ? (
           <div className={styles.allClearState}>
             <div className={styles.clearIconWrap}>
-              <CheckCircle2 size={28} className={styles.clearIcon} />
+              <CheckCircle2 size={24} className={styles.clearIcon} />
             </div>
             <div className={styles.clearTitle}>ALL CLEAR</div>
             <p className={styles.clearSub}>
-              No pending orders, unquoted leads, or unhandled bookings in the queue.
+              No operational issues require attention. Order queues and client intake are up to date.
             </p>
           </div>
         ) : (
@@ -168,12 +198,12 @@ export default function NeedsAttentionPanel({
                 <div key={item.id} className={styles.itemRow}>
                   <div className={styles.colStatus}>
                     <span 
-                      className={`${styles.statusPill} ${
+                      className={`${styles.statusTag} ${
                         item.type === "ORDER" 
-                          ? styles.pillOrder 
+                          ? styles.tagOrder 
                           : item.type === "INQUIRY" 
-                            ? styles.pillInquiry 
-                            : styles.pillBooking
+                            ? styles.tagInquiry 
+                            : styles.tagBooking
                       }`}
                     >
                       {item.statusCode}
@@ -186,14 +216,14 @@ export default function NeedsAttentionPanel({
                   </div>
 
                   <div className={styles.colTime}>
-                    <div className={styles.refCode}>{item.refId}</div>
-                    <div className={styles.timeValue}>{item.timeStr}</div>
+                    <span className={styles.refCode}>{item.refId}</span>
+                    <span className={styles.timeValue}>{item.timeStr}</span>
                   </div>
 
                   <div className={styles.colAction}>
                     <Link href={item.actionUrl} className={styles.actionBtn}>
                       <span>{item.actionLabel}</span>
-                      <ChevronRight size={13} />
+                      <ArrowRight size={11} className={styles.btnArrow} />
                     </Link>
                   </div>
                 </div>

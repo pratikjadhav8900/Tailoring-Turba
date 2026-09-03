@@ -1,14 +1,18 @@
+/* ============================================================
+   TAILORING TURBA — ADMIN HEADER (SEAMLESS WORKSPACE BAR)
+   Visual System: Clean Layout, Zero Card Soup, Calibrated Rhythm
+   ============================================================ */
+
 .workspaceHeader {
-  background: #ffffff;
-  border: 1px solid var(--color-border, #e2e0d8);
-  border-radius: 3px;
-  padding: 20px 24px;
+  width: 100%;
+  padding-bottom: 24px;
   margin-bottom: 24px;
+  border-bottom: 1px solid var(--color-border, #E2E0D8);
 }
 
 .headerMain {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
   gap: 24px;
   flex-wrap: wrap;
@@ -19,11 +23,11 @@
   min-width: 280px;
 }
 
-.salutation {
+.monoLabel {
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   font-weight: 700;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--color-sage, #829386);
   margin-bottom: 4px;
@@ -31,18 +35,18 @@
 
 .headline {
   font-family: var(--font-ui, 'General Sans', sans-serif);
-  font-size: 1.5rem;
+  font-size: 1.75rem;
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
   color: var(--color-ink, #171916);
   line-height: 1.15;
-  margin: 0 0 4px 0;
+  margin: 0 0 6px 0;
 }
 
 .subtext {
   font-family: var(--font-ui, 'General Sans', sans-serif);
   font-size: 0.84rem;
-  color: var(--color-text-secondary, #4a4a45);
+  color: var(--color-text-secondary, #4A4A45);
   margin: 0;
   line-height: 1.4;
 }
@@ -57,7 +61,7 @@
 .statusRow {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
 .dateChip {
@@ -65,22 +69,22 @@
   align-items: baseline;
   gap: 6px;
   padding: 4px 10px;
-  background: #f7f6f1;
-  border: 1px solid #e8e6de;
+  background: var(--color-warm-bone, #F3F0E8);
+  border: 1px solid var(--color-border, #E2E0D8);
   border-radius: 2px;
 }
 
 .dateLabel {
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 0.58rem;
-  font-weight: 600;
+  font-size: 0.55rem;
+  font-weight: 700;
   letter-spacing: 0.12em;
   color: var(--color-sage, #829386);
 }
 
 .dateValue {
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 700;
   color: var(--color-ink, #171916);
   letter-spacing: 0.04em;
@@ -91,21 +95,21 @@
   align-items: center;
   gap: 6px;
   padding: 4px 10px;
-  background: #edf4f0;
-  border: 1px solid #cfded4;
+  background: #EDF5F0;
+  border: 1px solid #D0E0D5;
   border-radius: 2px;
 }
 
 .statusChipNominal .statusDot {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   background: var(--color-tailor-green, #294238);
 }
 
 .statusChipNominal .statusText {
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   color: var(--color-tailor-green, #294238);
@@ -116,32 +120,39 @@
   align-items: center;
   gap: 6px;
   padding: 4px 10px;
-  background: #fbf4f0;
-  border: 1px solid #eadad2;
+  background: #FDF3ED;
+  border: 1px solid #EBDCD3;
   border-radius: 2px;
 }
 
 .statusChipAttention .statusDot {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
-  background: var(--color-muted-clay, #b88970);
+  background: var(--color-muted-clay, #B88970);
   animation: pulseAttention 2s infinite ease-in-out;
 }
 
 @keyframes pulseAttention {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+  50% { opacity: 0.35; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .statusChipAttention .statusDot {
+    animation: none;
+  }
 }
 
 .statusChipAttention .statusText {
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   font-weight: 700;
   letter-spacing: 0.08em;
-  color: var(--color-muted-clay, #b88970);
+  color: var(--color-muted-clay, #B88970);
 }
 
+/* ─── STANDARDIZED ACTION BUTTONS ─── */
 .quickActionGroup {
   display: flex;
   align-items: center;
@@ -152,7 +163,8 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 14px;
+  height: 32px;
+  padding: 0 14px;
   background: var(--color-tailor-green, #294238);
   color: #ffffff;
   border: 1px solid var(--color-tailor-green, #294238);
@@ -162,39 +174,58 @@
   font-weight: 600;
   letter-spacing: 0.02em;
   text-decoration: none;
-  transition: all 0.15s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+  box-sizing: border-box;
+}
+
+.primaryActionBtn:focus-visible {
+  outline: 2px solid var(--color-tailor-green, #294238);
+  outline-offset: 2px;
 }
 
 .primaryActionBtn:hover {
-  background: #1f332a;
-  border-color: #1f332a;
+  background: #1F332A;
+  border-color: #1F332A;
 }
 
 .secondaryActionBtn {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 6px 12px;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
   background: #ffffff;
   color: var(--color-ink, #171916);
-  border: 1px solid var(--color-border, #e2e0d8);
+  border: 1px solid var(--color-border, #E2E0D8);
   border-radius: 2px;
   font-family: var(--font-ui, 'General Sans', sans-serif);
   font-size: 0.76rem;
   font-weight: 600;
   text-decoration: none;
-  transition: all 0.15s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+  box-sizing: border-box;
+}
+
+.secondaryActionBtn:focus-visible {
+  outline: 2px solid var(--color-tailor-green, #294238);
+  outline-offset: 2px;
 }
 
 .secondaryActionBtn:hover {
-  background: #f7f6f1;
-  border-color: #d1cec4;
+  background: var(--color-warm-bone, #F3F0E8);
+  border-color: #D1CEC4;
 }
 
+/* ─── RESPONSIVE ─── */
 @media (max-width: 768px) {
   .headerMain {
     flex-direction: column;
     align-items: flex-start;
+    gap: 16px;
+  }
+
+  .headline {
+    font-size: 1.45rem;
   }
 
   .telemetryRight {

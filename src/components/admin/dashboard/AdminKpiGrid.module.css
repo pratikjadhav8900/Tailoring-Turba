@@ -1,59 +1,31 @@
-.metricsConsole {
+/* ============================================================
+   TAILORING TURBA — ADMIN KPI GRID (ENTERPRISE PERFORMANCE)
+   Visual System: Disciplined Matrix, Mathematically Aligned Numbers
+   ============================================================ */
+
+.metricsSection {
   background: #ffffff;
-  border: 1px solid var(--color-border, #e2e0d8);
-  border-radius: 3px;
-  overflow: hidden;
+  border: 1px solid var(--color-border, #E2E0D8);
+  border-radius: 2px;
   margin-bottom: 24px;
-}
-
-.consoleHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 20px;
-  background: #f7f6f1;
-  border-bottom: 1px solid var(--color-border, #e2e0d8);
-}
-
-.consoleTag {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  color: var(--color-sage, #829386);
-}
-
-.tagDot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--color-tailor-green, #294238);
-}
-
-.consoleContext {
-  font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 0.58rem;
-  letter-spacing: 0.1em;
-  color: var(--color-sage, #829386);
 }
 
 /* ─── PRIMARY DOMINANT METRICS TIER ─── */
 .primaryGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  divide-x: 1px solid var(--color-border, #e2e0d8);
-  border-bottom: 1px solid var(--color-border, #e2e0d8);
+  border-bottom: 1px solid var(--color-border, #E2E0D8);
 }
 
 .primaryBlock {
-  padding: 24px 28px;
+  padding: 24px;
   background: #ffffff;
   position: relative;
-  transition: background 0.15s ease;
-  border-right: 1px solid var(--color-border, #e2e0d8);
+  transition: background-color 0.15s ease;
+  border-right: 1px solid var(--color-border, #E2E0D8);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .primaryBlock:last-child {
@@ -61,10 +33,10 @@
 }
 
 .primaryBlock:hover {
-  background: #fcfbfa;
+  background: var(--color-soft-white, #FAF9F5);
 }
 
-.blockTop {
+.blockMeta {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -73,7 +45,7 @@
 
 .metricCode {
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   color: var(--color-sage, #829386);
@@ -81,35 +53,37 @@
 
 .categoryTag {
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 0.58rem;
+  font-size: 0.55rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   color: var(--color-tailor-green, #294238);
-  background: #edf4f0;
-  padding: 2px 6px;
+  background: #EDF5F0;
+  padding: 1px 6px;
   border-radius: 2px;
+  border: 1px solid #D0E0D5;
 }
 
-.metricTitle {
+.metricLabel {
   font-family: var(--font-ui, 'General Sans', sans-serif);
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--color-text-secondary, #4a4a45);
-  margin-bottom: 12px;
+  color: var(--color-text-secondary, #4A4A45);
+  margin-bottom: 8px;
 }
 
 .primaryValueRow {
   display: flex;
   align-items: baseline;
   gap: 4px;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
+  font-variant-numeric: tabular-nums;
 }
 
 .currencyPrefix {
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 1.6rem;
+  font-size: 1.5rem;
   font-weight: 600;
   color: var(--color-tailor-green, #294238);
   line-height: 1;
@@ -122,20 +96,21 @@
   letter-spacing: -0.025em;
   color: var(--color-ink, #171916);
   line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
 
 .unitSuffix {
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 0.68rem;
+  font-size: 0.64rem;
   font-weight: 600;
   letter-spacing: 0.12em;
   color: var(--color-sage, #829386);
-  margin-left: 8px;
+  margin-left: 6px;
 }
 
 .metricFootnote {
   font-family: var(--font-ui, 'General Sans', sans-serif);
-  font-size: 0.76rem;
+  font-size: 0.74rem;
   color: var(--color-sage, #829386);
   line-height: 1.35;
 }
@@ -145,32 +120,56 @@
   align-items: center;
   gap: 4px;
   color: var(--color-tailor-green, #294238);
+  font-family: var(--font-ui, 'General Sans', sans-serif);
+  font-size: 0.74rem;
   font-weight: 600;
   text-decoration: none;
   transition: gap 0.15s ease;
 }
 
-.footLink:hover {
-  gap: 7px;
-  text-decoration: underline;
+.footLink:focus-visible {
+  outline: 2px solid var(--color-tailor-green, #294238);
+  outline-offset: 2px;
 }
 
-/* ─── SECONDARY COMPACT ROW ─── */
+.footLink:hover {
+  gap: 7px;
+}
+
+.linkArrow {
+  transition: transform 0.15s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .linkArrow {
+    transition: none;
+  }
+  .footLink:hover .linkArrow {
+    transform: none;
+  }
+}
+
+/* ─── SECONDARY COMPACT OPERATIONAL TIER ─── */
 .secondaryGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  background: #fbfbfa;
+  background: #ffffff;
 }
 
 .secondaryCell {
-  padding: 14px 20px;
+  padding: 12px 20px;
   background: #ffffff;
-  border-right: 1px solid var(--color-border, #e2e0d8);
+  border-right: 1px solid var(--color-border, #E2E0D8);
   text-decoration: none;
-  transition: all 0.15s ease;
+  transition: background-color 0.15s ease;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+}
+
+.secondaryCell:focus-visible {
+  outline: 2px solid var(--color-tailor-green, #294238);
+  outline-offset: -2px;
 }
 
 .secondaryCell:last-child {
@@ -178,15 +177,15 @@
 }
 
 .secondaryCell:hover {
-  background: #f5f4ee;
+  background: var(--color-soft-white, #FAF9F5);
 }
 
 .cellAttention {
-  background: #fffbf9;
+  background: #FCF9F7;
 }
 
 .cellAttention:hover {
-  background: #fdf5f0;
+  background: #F9F2EE;
 }
 
 .secondaryHeader {
@@ -198,11 +197,11 @@
 
 .secondaryLabel {
   font-family: var(--font-ui, 'General Sans', sans-serif);
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--color-text-secondary, #4a4a45);
+  color: var(--color-text-secondary, #4A4A45);
 }
 
 .secondaryValueRow {
@@ -210,24 +209,26 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 8px;
+  font-variant-numeric: tabular-nums;
 }
 
 .secondaryNumber {
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 1.45rem;
+  font-size: 1.4rem;
   font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--color-ink, #171916);
   line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
 
 .cellAttention .secondaryNumber {
-  color: var(--color-muted-clay, #b88970);
+  color: var(--color-muted-clay, #B88970);
 }
 
 .secondarySub {
   font-family: var(--font-ui, 'General Sans', sans-serif);
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   color: var(--color-sage, #829386);
 }
 
@@ -236,14 +237,14 @@
 }
 
 .iconClay {
-  color: var(--color-muted-clay, #b88970);
+  color: var(--color-muted-clay, #B88970);
 }
 
 .iconGreen {
   color: var(--color-tailor-green, #294238);
 }
 
-/* ─── RESPONSIVE ─── */
+/* ─── RESPONSIVE BREAKPOINTS ─── */
 @media (max-width: 1024px) {
   .primaryGrid {
     grid-template-columns: 1fr;
@@ -251,7 +252,7 @@
 
   .primaryBlock {
     border-right: none;
-    border-bottom: 1px solid var(--color-border, #e2e0d8);
+    border-bottom: 1px solid var(--color-border, #E2E0D8);
   }
 
   .secondaryGrid {
@@ -264,7 +265,7 @@
 
   .secondaryCell:nth-child(1),
   .secondaryCell:nth-child(2) {
-    border-bottom: 1px solid var(--color-border, #e2e0d8);
+    border-bottom: 1px solid var(--color-border, #E2E0D8);
   }
 }
 
@@ -275,7 +276,7 @@
 
   .secondaryCell {
     border-right: none;
-    border-bottom: 1px solid var(--color-border, #e2e0d8);
+    border-bottom: 1px solid var(--color-border, #E2E0D8);
   }
 
   .secondaryCell:last-child {

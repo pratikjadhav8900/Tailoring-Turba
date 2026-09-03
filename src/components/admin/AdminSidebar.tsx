@@ -17,7 +17,6 @@ import {
   Mail,
   Briefcase,
   ClipboardList,
-  Activity,
   Shield
 } from "lucide-react";
 

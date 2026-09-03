@@ -10,7 +10,6 @@ import {
   Scissors, 
   Truck, 
   CheckCircle2,
-  ChevronRight,
   ArrowRight
 } from "lucide-react";
 
@@ -46,7 +45,7 @@ export default function ProductionPipeline({ counts }: { counts: PipelineCounts 
     {
       code: "03",
       name: "ORDER QUEUE",
-      subtext: "Pending Approval",
+      subtext: "Pending Intake",
       count: counts.pendingOrders,
       href: "/admin/orders",
       status: counts.pendingOrders > 0 ? "attention" : "idle",
@@ -55,7 +54,7 @@ export default function ProductionPipeline({ counts }: { counts: PipelineCounts 
     {
       code: "04",
       name: "MANUFACTURING",
-      subtext: "Cut & Stitching",
+      subtext: "Cutting & Stitching",
       count: counts.processingOrders,
       href: "/admin/orders",
       status: counts.processingOrders > 0 ? "active" : "idle",
@@ -63,7 +62,7 @@ export default function ProductionPipeline({ counts }: { counts: PipelineCounts 
     },
     {
       code: "05",
-      name: "DISPATCH & COURIER",
+      name: "DISPATCH & TRANSIT",
       subtext: "In Transit",
       count: counts.shippedOrders,
       href: "/admin/orders",
@@ -91,36 +90,36 @@ export default function ProductionPipeline({ counts }: { counts: PipelineCounts 
   const totalAllUnits = totalActiveUnits + counts.deliveredOrders;
 
   return (
-    <section className={styles.railWorkspace} aria-label="Manufacturing Production Control Rail">
-      {/* Workspace Header */}
+    <section className={styles.railSection} aria-label="Manufacturing Production Flow">
+      {/* Section Header */}
       <div className={styles.railHeader}>
         <div className={styles.headerLeft}>
-          <div className={styles.controlTag}>
-            <span className={styles.controlDot} />
-            <span>PRODUCTION CONTROL RAIL // LINE 01</span>
+          <div className={styles.sectionTag}>
+            <span className={styles.tagDot} />
+            <span>OPERATIONS PIPELINE // REAL-TIME DISPATCH</span>
           </div>
           <h2 className={styles.railTitle}>Production &amp; Fulfillment Flow</h2>
           <p className={styles.railDesc}>
-            Real-time pipeline monitoring from incoming client specs to garment cutting, assembly and courier dispatch.
+            Continuous garment pipeline from incoming specifications to cutting, assembly and dispatch.
           </p>
         </div>
 
         <div className={styles.headerRight}>
-          <div className={styles.throughputChip}>
+          <div className={styles.throughputBadge}>
             <span className={styles.throughputLabel}>ACTIVE FLOW</span>
-            <span className={styles.throughputNumber}>
+            <span className={styles.throughputValue}>
               <AnimatedNumber value={totalActiveUnits} />
               <span className={styles.unitText}>UNITS</span>
             </span>
           </div>
-          <Link href="/admin/orders" className={styles.consoleLink}>
+          <Link href="/admin/orders" className={styles.ledgerActionBtn}>
             <span>Order Ledger</span>
-            <ChevronRight size={13} />
+            <ArrowRight size={12} className={styles.btnArrow} />
           </Link>
         </div>
       </div>
 
-      {/* Horizontal Manufacturing Control Rail */}
+      {/* Signature Manufacturing Rail Track */}
       <div className={styles.railTrackWrap}>
         <div className={styles.railTrack}>
           {stages.map((stage, idx) => {
@@ -130,30 +129,30 @@ export default function ProductionPipeline({ counts }: { counts: PipelineCounts 
             const isCompleted = stage.status === "completed";
 
             return (
-              <div key={stage.code} className={styles.stageCellWrap}>
+              <div key={stage.code} className={styles.stageNodeWrap}>
                 <Link 
                   href={stage.href} 
-                  className={`${styles.stageCell} ${
+                  className={`${styles.stageNode} ${
                     isAttention 
-                      ? styles.stageAttention 
+                      ? styles.nodeAttention 
                       : isActive 
-                        ? styles.stageActive 
+                        ? styles.nodeActive 
                         : isCompleted
-                          ? styles.stageCompleted
-                          : styles.stageIdle
+                          ? styles.nodeCompleted
+                          : styles.nodeIdle
                   }`}
                 >
                   {/* Step Code & Status Dot */}
-                  <div className={styles.cellHeader}>
+                  <div className={styles.nodeHeader}>
                     <span className={styles.stageCode}>{stage.code}</span>
                     <div className={styles.indicatorWrap}>
                       <span className={styles.stateDot} />
-                      <Icon size={13} className={styles.stateIcon} />
+                      <Icon size={12} className={styles.stateIcon} />
                     </div>
                   </div>
 
-                  {/* Stage Details */}
-                  <div className={styles.cellBody}>
+                  {/* Stage Body */}
+                  <div className={styles.nodeBody}>
                     <div className={styles.stageName}>{stage.name}</div>
                     <div className={styles.stageCountRow}>
                       <AnimatedNumber 
@@ -165,19 +164,27 @@ export default function ProductionPipeline({ counts }: { counts: PipelineCounts 
                     <div className={styles.stageSubtext}>{stage.subtext}</div>
                   </div>
 
-                  {/* Stage Status Foot */}
-                  <div className={styles.cellFoot}>
-                    <span className={styles.statusPill}>
-                      {isAttention ? "REQUIRES ACTION" : isActive ? "IN PROGRESS" : isCompleted ? "FULFILLED" : "STANDBY"}
+                  {/* Stage Foot */}
+                  <div className={styles.nodeFoot}>
+                    <span className={styles.statusLabel}>
+                      {isAttention ? "REQUIRES ACTION" : isActive ? "IN PRODUCTION" : isCompleted ? "FULFILLED" : "STANDBY"}
                     </span>
                   </div>
                 </Link>
 
-                {/* Connecting Rail Joint (except last item) */}
+                {/* Trail Connector Line with Manufacturing Thread Motif */}
                 {idx < stages.length - 1 && (
-                  <div className={styles.railJoint} aria-hidden="true">
-                    <div className={styles.jointLine} />
-                    <ArrowRight size={12} className={styles.jointArrow} />
+                  <div className={styles.trailConnector} aria-hidden="true">
+                    <div 
+                      className={`${styles.trailLine} ${
+                        (isActive || isAttention) ? styles.trailActive : ""
+                      }`}
+                    >
+                      {(isActive || isAttention) && (
+                        <div className={styles.threadPulse} />
+                      )}
+                    </div>
+                    <ArrowRight size={11} className={styles.trailArrow} />
                   </div>
                 )}
               </div>
@@ -186,12 +193,12 @@ export default function ProductionPipeline({ counts }: { counts: PipelineCounts 
         </div>
       </div>
 
-      {/* Real Allocation Bar */}
+      {/* Production Allocation Bar */}
       <div className={styles.allocationRow}>
         <div className={styles.allocationLabel}>
-          <span>PIPELINE ALLOCATION</span>
+          <span className={styles.allocationTitle}>FLOW ALLOCATION</span>
           <span className={styles.allocationMeta}>
-            {totalAllUnits > 0 ? `${totalAllUnits} total lifetime items recorded` : "Awaiting initial intake"}
+            {totalAllUnits > 0 ? `${totalAllUnits} lifetime units recorded` : "Awaiting initial intake"}
           </span>
         </div>
         <div className={styles.allocationTrack}>
@@ -209,7 +216,7 @@ export default function ProductionPipeline({ counts }: { counts: PipelineCounts 
                         ? styles.segActive 
                         : styles.segNeutral
                   }`}
-                  style={{ width: `${Math.max(pct, 4)}%` }}
+                  style={{ width: `${Math.max(pct, 3)}%` }}
                   title={`${st.name}: ${st.count} units (${Math.round(pct)}%)`}
                 />
               );

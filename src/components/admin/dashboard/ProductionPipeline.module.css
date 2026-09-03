@@ -1,18 +1,23 @@
-.railWorkspace {
+/* ============================================================
+   TAILORING TURBA — PRODUCTION PIPELINE FLOW (MANUFACTURING RAIL)
+   Visual System: Deliberate Operational Rail, Subtle Thread Signature
+   ============================================================ */
+
+.railSection {
   background: #ffffff;
-  border: 1px solid var(--color-border, #e2e0d8);
-  border-radius: 3px;
-  overflow: hidden;
+  border: 1px solid var(--color-border, #E2E0D8);
+  border-radius: 2px;
   margin-bottom: 24px;
 }
 
+/* ─── HEADER BAR ─── */
 .railHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18px 24px;
-  border-bottom: 1px solid var(--color-border, #e2e0d8);
-  background: #fdfcfa;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--color-border, #E2E0D8);
+  background: var(--color-soft-white, #FAF9F5);
   flex-wrap: wrap;
   gap: 16px;
 }
@@ -21,19 +26,19 @@
   max-width: 600px;
 }
 
-.controlTag {
+.sectionTag {
   display: flex;
   align-items: center;
   gap: 6px;
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 0.62rem;
+  font-size: 0.58rem;
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
   color: var(--color-sage, #829386);
-  margin-bottom: 4px;
+  margin-bottom: 3px;
 }
 
-.controlDot {
+.tagDot {
   width: 5px;
   height: 5px;
   border-radius: 50%;
@@ -42,17 +47,17 @@
 
 .railTitle {
   font-family: var(--font-ui, 'General Sans', sans-serif);
-  font-size: 1.25rem;
+  font-size: 1.2rem;
   font-weight: 700;
   letter-spacing: -0.015em;
   color: var(--color-ink, #171916);
-  margin: 0 0 4px 0;
+  margin: 0 0 3px 0;
 }
 
 .railDesc {
   font-family: var(--font-ui, 'General Sans', sans-serif);
-  font-size: 0.78rem;
-  color: var(--color-text-secondary, #4a4a45);
+  font-size: 0.76rem;
+  color: var(--color-text-secondary, #4A4A45);
   margin: 0;
   line-height: 1.35;
 }
@@ -60,199 +65,238 @@
 .headerRight {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
 }
 
-.throughputChip {
+.throughputBadge {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  padding: 4px 12px;
-  background: #f3f1ea;
-  border: 1px solid #e2ded4;
+  padding: 4px 10px;
+  background: var(--color-warm-bone, #F3F0E8);
+  border: 1px solid var(--color-border, #E2E0D8);
   border-radius: 2px;
 }
 
 .throughputLabel {
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 0.55rem;
+  font-size: 0.54rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   color: var(--color-sage, #829386);
 }
 
-.throughputNumber {
+.throughputValue {
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: var(--color-tailor-green, #294238);
   display: inline-flex;
   align-items: baseline;
   gap: 4px;
+  font-variant-numeric: tabular-nums;
 }
 
 .unitText {
-  font-size: 0.6rem;
+  font-size: 0.56rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   color: var(--color-sage, #829386);
 }
 
-.consoleLink {
+.ledgerActionBtn {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
+  height: 32px;
   font-family: var(--font-ui, 'General Sans', sans-serif);
-  font-size: 0.76rem;
+  font-size: 0.74rem;
   font-weight: 600;
   color: var(--color-tailor-green, #294238);
   text-decoration: none;
-  padding: 6px 12px;
-  border: 1px solid var(--color-border, #e2e0d8);
+  padding: 0 12px;
+  border: 1px solid var(--color-border, #E2E0D8);
   background: #ffffff;
   border-radius: 2px;
-  transition: all 0.15s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+  box-sizing: border-box;
 }
 
-.consoleLink:hover {
-  background: #f7f6f1;
-  border-color: #d1cec4;
+.ledgerActionBtn:focus-visible {
+  outline: 2px solid var(--color-tailor-green, #294238);
+  outline-offset: 2px;
 }
 
-/* ─── HORIZONTAL RAIL TRACK ─── */
+.ledgerActionBtn:hover {
+  background: var(--color-warm-bone, #F3F0E8);
+  border-color: #D1CEC4;
+}
+
+.ledgerActionBtn:hover .btnArrow {
+  transform: translateX(3px);
+}
+
+.btnArrow {
+  transition: transform 0.15s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btnArrow {
+    transition: none;
+  }
+  .ledgerActionBtn:hover .btnArrow {
+    transform: none;
+  }
+}
+
+/* ─── TIMELINE RAIL TRACK ─── */
 .railTrackWrap {
   overflow-x: auto;
-  padding: 20px 24px;
+  padding: 16px 20px;
   background: #ffffff;
   scrollbar-width: thin;
-  scrollbar-color: #e2e0d8 transparent;
+  scrollbar-color: var(--color-border, #E2E0D8) transparent;
 }
 
 .railTrack {
   display: flex;
   align-items: stretch;
   gap: 0;
-  min-width: 860px;
+  min-width: 840px;
 }
 
-.stageCellWrap {
+.stageNodeWrap {
   display: flex;
   align-items: center;
   flex: 1;
 }
 
-.stageCell {
+.stageNode {
   flex: 1;
   background: #ffffff;
-  border: 1px solid var(--color-border, #e2e0d8);
-  border-radius: 3px;
-  padding: 16px;
+  border: 1px solid var(--color-border, #E2E0D8);
+  border-radius: 2px;
+  padding: 12px 14px;
   text-decoration: none;
-  transition: all 0.15s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-height: 140px;
+  min-height: 126px;
 }
 
-.stageCell:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(23, 25, 22, 0.04);
+.stageNode:focus-visible {
+  outline: 2px solid var(--color-tailor-green, #294238);
+  outline-offset: -2px;
 }
 
-/* State Variants */
-.stageIdle {
-  background: #fafaf8;
-  opacity: 0.85;
+.stageNode:hover {
+  background: var(--color-soft-white, #FAF9F5);
 }
 
-.stageIdle:hover {
+/* Node Variants */
+.nodeIdle {
+  background: #FAFAF8;
+  opacity: 0.9;
+}
+
+.nodeIdle:hover {
   opacity: 1;
   background: #ffffff;
 }
 
-.stageActive {
-  border-color: #294238;
-  background: #f7faf8;
+.nodeActive {
+  border-color: var(--color-tailor-green, #294238);
+  background: #F6FAF7;
 }
 
-.stageActive .stateDot {
+.nodeActive .stateDot {
   background: var(--color-tailor-green, #294238);
-  box-shadow: 0 0 0 2px rgba(41, 66, 56, 0.2);
 }
 
-.stageAttention {
-  border-color: #b88970;
-  background: #fffcf9;
+.nodeAttention {
+  border-color: var(--color-muted-clay, #B88970);
+  background: #FDF6F2;
 }
 
-.stageAttention .stateDot {
-  background: var(--color-muted-clay, #b88970);
-  animation: pulseAttention 2s infinite ease-in-out;
+.nodeAttention .stateDot {
+  background: var(--color-muted-clay, #B88970);
+  animation: pulseDot 2s infinite ease-in-out;
 }
 
-.stageCompleted {
-  border-color: #cfded4;
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nodeAttention .stateDot {
+    animation: none;
+  }
+}
+
+.nodeCompleted {
+  border-color: #D4E2D9;
   background: #ffffff;
 }
 
-.stageCompleted .stateDot {
-  background: #829386;
+.nodeCompleted .stateDot {
+  background: var(--color-sage, #829386);
 }
 
-/* Cell Contents */
-.cellHeader {
+/* Node Internal Details */
+.nodeHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .stageCode {
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   color: var(--color-sage, #829386);
 }
 
 .indicatorWrap {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
 }
 
 .stateDot {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
-  background: #d1cec4;
+  background: #D1CEC4;
 }
 
 .stateIcon {
   color: var(--color-sage, #829386);
 }
 
-.stageActive .stateIcon {
+.nodeActive .stateIcon {
   color: var(--color-tailor-green, #294238);
 }
 
-.stageAttention .stateIcon {
-  color: var(--color-muted-clay, #b88970);
+.nodeAttention .stateIcon {
+  color: var(--color-muted-clay, #B88970);
 }
 
-.cellBody {
-  margin-bottom: 12px;
+.nodeBody {
+  margin-bottom: 8px;
 }
 
 .stageName {
   font-family: var(--font-ui, 'General Sans', sans-serif);
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--color-ink, #171916);
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   line-height: 1.25;
 }
 
@@ -260,77 +304,109 @@
   display: flex;
   align-items: baseline;
   gap: 4px;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
+  font-variant-numeric: tabular-nums;
 }
 
 .stageCountNumber {
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 1.4rem;
+  font-size: 1.3rem;
   font-weight: 700;
   color: var(--color-ink, #171916);
   line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
 
-.stageActive .stageCountNumber {
+.nodeActive .stageCountNumber {
   color: var(--color-tailor-green, #294238);
 }
 
-.stageAttention .stageCountNumber {
-  color: var(--color-muted-clay, #b88970);
+.nodeAttention .stageCountNumber {
+  color: var(--color-muted-clay, #B88970);
 }
 
 .stageCountUnit {
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 0.62rem;
+  font-size: 0.58rem;
   color: var(--color-sage, #829386);
 }
 
 .stageSubtext {
   font-family: var(--font-ui, 'General Sans', sans-serif);
-  font-size: 0.68rem;
+  font-size: 0.66rem;
   color: var(--color-sage, #829386);
 }
 
-.cellFoot {
-  padding-top: 8px;
-  border-top: 1px solid #f1eee6;
+.nodeFoot {
+  padding-top: 5px;
+  border-top: 1px solid #F1EEE6;
 }
 
-.statusPill {
+.statusLabel {
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 0.55rem;
+  font-size: 0.52rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   color: var(--color-sage, #829386);
 }
 
-.stageActive .statusPill {
+.nodeActive .statusLabel {
   color: var(--color-tailor-green, #294238);
 }
 
-.stageAttention .statusPill {
-  color: var(--color-muted-clay, #b88970);
+.nodeAttention .statusLabel {
+  color: var(--color-muted-clay, #B88970);
 }
 
-/* Rail Joint Connection */
-.railJoint {
+/* ─── TRAIL CONNECTOR LINE WITH NATURAL THREAD MOTIF ─── */
+.trailConnector {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
+  width: 20px;
   position: relative;
   flex-shrink: 0;
 }
 
-.jointLine {
+.trailLine {
   width: 100%;
-  height: 1px;
-  background: var(--color-border, #e2e0d8);
+  height: 1.5px;
+  background: var(--color-border, #E2E0D8);
   position: absolute;
+  overflow: hidden;
 }
 
-.jointArrow {
-  color: #b0aba1;
+.trailActive {
+  background: var(--color-tailor-green, #294238);
+}
+
+/* Signature Manufacturing Thread Pulse */
+.threadPulse {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 40%;
+  height: 100%;
+  background: var(--color-natural-thread, #D5C49A);
+  animation: threadTravel 2.4s infinite ease-in-out;
+}
+
+@keyframes threadTravel {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(250%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .threadPulse {
+    animation: none;
+    transform: none;
+    width: 100%;
+    opacity: 0.5;
+  }
+}
+
+.trailArrow {
+  color: #B5B1A8;
   position: relative;
   z-index: 1;
   background: #ffffff;
@@ -338,9 +414,9 @@
 
 /* ─── REAL ALLOCATION ROW ─── */
 .allocationRow {
-  padding: 12px 24px;
-  background: #f9f8f4;
-  border-top: 1px solid var(--color-border, #e2e0d8);
+  padding: 10px 20px;
+  background: var(--color-soft-white, #FAF9F5);
+  border-top: 1px solid var(--color-border, #E2E0D8);
   display: flex;
   align-items: center;
   gap: 20px;
@@ -350,24 +426,26 @@
   display: flex;
   flex-direction: column;
   min-width: 140px;
+}
+
+.allocationTitle {
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 0.6rem;
+  font-size: 0.58rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   color: var(--color-ink, #171916);
 }
 
 .allocationMeta {
-  font-size: 0.55rem;
-  font-weight: 500;
-  letter-spacing: 0.04em;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 0.54rem;
   color: var(--color-sage, #829386);
 }
 
 .allocationTrack {
   flex: 1;
-  height: 6px;
-  background: #e8e5dc;
+  height: 5px;
+  background: #E8E5DC;
   border-radius: 2px;
   display: flex;
   overflow: hidden;
@@ -380,7 +458,7 @@
 }
 
 .segAttention {
-  background: var(--color-muted-clay, #b88970);
+  background: var(--color-muted-clay, #B88970);
 }
 
 .segActive {
@@ -394,14 +472,10 @@
 .allocationEmpty {
   width: 100%;
   height: 100%;
-  background: #e0dcd2;
+  background: #E0DCD2;
 }
 
-@keyframes pulseAttention {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
-}
-
+/* ─── RESPONSIVE ─── */
 @media (max-width: 768px) {
   .railHeader {
     flex-direction: column;

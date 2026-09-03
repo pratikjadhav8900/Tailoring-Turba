@@ -3,31 +3,16 @@
 import { useEffect, useState } from "react";
 import styles from "./AdminHeader.module.css";
 import Link from "next/link";
-import { 
-  Plus, 
-  ShoppingBag, 
-  Clock, 
-  Calendar, 
-  ArrowUpRight,
-  ShieldCheck,
-  AlertCircle
-} from "lucide-react";
+import { Plus, ShoppingBag, Clock } from "lucide-react";
 
 interface AdminHeaderProps {
-  orderCount: number;
   pendingCount: number;
 }
 
-export default function AdminHeader({ orderCount, pendingCount }: AdminHeaderProps) {
-  const [salutation, setSalutation] = useState("GOOD MORNING");
+export default function AdminHeader({ pendingCount }: AdminHeaderProps) {
   const [currentDate, setCurrentDate] = useState("");
 
   useEffect(() => {
-    const hour = new Date().getHours();
-    if (hour < 12) setSalutation("GOOD MORNING");
-    else if (hour < 17) setSalutation("GOOD AFTERNOON");
-    else setSalutation("GOOD EVENING");
-
     const now = new Date();
     const formatted = now.toLocaleDateString("en-IN", {
       weekday: "short",
@@ -41,14 +26,14 @@ export default function AdminHeader({ orderCount, pendingCount }: AdminHeaderPro
   const hasPendingItems = pendingCount > 0;
 
   return (
-    <header className={styles.workspaceHeader}>
+    <header className={styles.workspaceHeader} role="banner">
       <div className={styles.headerMain}>
-        {/* Left: Operational Context */}
+        {/* Left: Operational Context & Editorial Hierarchy */}
         <div className={styles.contextLeft}>
-          <div className={styles.salutation}>{salutation}</div>
-          <h1 className={styles.headline}>MANUFACTURING OPERATIONS</h1>
+          <div className={styles.monoLabel}>OPERATIONS CONTROL // DISPATCH</div>
+          <h1 className={styles.headline}>Operations Overview</h1>
           <p className={styles.subtext}>
-            Production, orders and customer activity at a glance.
+            Real-time manufacturing pipeline, order intake and enterprise ledger.
           </p>
         </div>
 
@@ -56,19 +41,19 @@ export default function AdminHeader({ orderCount, pendingCount }: AdminHeaderPro
         <div className={styles.telemetryRight}>
           <div className={styles.statusRow}>
             <div className={styles.dateChip}>
-              <span className={styles.dateLabel}>CURRENT DATE</span>
+              <span className={styles.dateLabel}>DATE</span>
               <span className={styles.dateValue}>{currentDate || "LIVE"}</span>
             </div>
 
             <div className={hasPendingItems ? styles.statusChipAttention : styles.statusChipNominal}>
               <span className={styles.statusDot} />
               <span className={styles.statusText}>
-                {hasPendingItems ? `TRIAGE: ${pendingCount} PENDING ACTION` : "OPERATIONS STEADY"}
+                {hasPendingItems ? `TRIAGE: ${pendingCount} PENDING` : "OPERATIONS NOMINAL"}
               </span>
             </div>
           </div>
 
-          {/* Compact Quick Actions */}
+          {/* Standardized Quick Action Controls */}
           <div className={styles.quickActionGroup}>
             <Link href="/admin/products" className={styles.primaryActionBtn}>
               <Plus size={13} strokeWidth={2.5} />

@@ -3,7 +3,7 @@
 import styles from "./InventorySnapshot.module.css";
 import Link from "next/link";
 import AnimatedNumber from "./AnimatedNumber";
-import { ArrowRight, ChevronRight, Layers, Tag, Box, Shirt } from "lucide-react";
+import { ArrowRight, Box } from "lucide-react";
 
 interface CategorySummary {
   id: string;
@@ -39,12 +39,12 @@ export default function InventorySnapshot({
   categories = [],
 }: InventorySnapshotProps) {
   return (
-    <div className={styles.inventoryConsole}>
+    <div className={styles.inventoryConsole} role="region" aria-label="Catalogue and Fabric Inventory">
       {/* Console Header */}
       <div className={styles.consoleHeader}>
         <div className={styles.headerLeft}>
           <div className={styles.tagRow}>
-            <span className={styles.tagMono}>CATALOGUE & FABRIC // TELEMETRY</span>
+            <span className={styles.tagMono}>CATALOGUE &amp; FABRIC // TELEMETRY</span>
             <span className={styles.activeTag}>
               <AnimatedNumber value={totalCount} /> ACTIVE STYLES
             </span>
@@ -54,7 +54,7 @@ export default function InventorySnapshot({
 
         <Link href="/admin/products" className={styles.headerLink}>
           <span>Product Catalogue</span>
-          <ChevronRight size={13} />
+          <ArrowRight size={11} className={styles.btnArrow} />
         </Link>
       </div>
 
@@ -65,7 +65,8 @@ export default function InventorySnapshot({
             <div className={styles.categoryBlockHeader}>
               <span className={styles.subBlockTitle}>LINE ALLOCATION BY CATEGORY</span>
               <Link href="/admin/categories" className={styles.categoryManageLink}>
-                Manage Categories →
+                <span>Manage Categories</span>
+                <ArrowRight size={10} className={styles.btnArrow} />
               </Link>
             </div>
 
@@ -83,7 +84,7 @@ export default function InventorySnapshot({
                     <div className={styles.catTrack}>
                       <div 
                         className={styles.catFill} 
-                        style={{ width: `${Math.max(pct, 8)}%` }} 
+                        style={{ width: `${Math.max(pct, 6)}%` }} 
                       />
                     </div>
                   </div>
@@ -103,7 +104,7 @@ export default function InventorySnapshot({
           {products.length === 0 ? (
             <div className={styles.emptyState}>
               <Box size={20} className={styles.emptyIcon} />
-              <p>No products found in catalogue.</p>
+              <p>No active product styles found in catalogue ledger.</p>
             </div>
           ) : (
             <div className={styles.productList}>

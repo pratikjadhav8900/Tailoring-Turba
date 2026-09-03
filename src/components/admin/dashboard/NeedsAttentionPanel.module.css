@@ -1,7 +1,12 @@
+/* ============================================================
+   TAILORING TURBA — NEEDS ATTENTION PANEL (OPERATIONAL TRIAGE)
+   Visual System: High Legibility, Calm Triage Alert Language
+   ============================================================ */
+
 .attentionConsole {
   background: #ffffff;
-  border: 1px solid var(--color-border, #e2e0d8);
-  border-radius: 3px;
+  border: 1px solid var(--color-border, #E2E0D8);
+  border-radius: 2px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -11,9 +16,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 22px;
-  background: #fdfcfa;
-  border-bottom: 1px solid var(--color-border, #e2e0d8);
+  padding: 14px 18px;
+  background: var(--color-soft-white, #FAF9F5);
+  border-bottom: 1px solid var(--color-border, #E2E0D8);
   flex-wrap: wrap;
   gap: 12px;
 }
@@ -21,13 +26,13 @@
 .tagRow {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 4px;
+  gap: 8px;
+  margin-bottom: 3px;
 }
 
 .tagMono {
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 0.62rem;
+  font-size: 0.58rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   color: var(--color-sage, #829386);
@@ -37,27 +42,27 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 2px 7px;
-  background: #fdf4ee;
-  border: 1px solid #ead3c6;
+  padding: 1px 6px;
+  background: #FDF3ED;
+  border: 1px solid #EBDCD3;
   border-radius: 2px;
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 0.58rem;
+  font-size: 0.54rem;
   font-weight: 700;
   letter-spacing: 0.08em;
-  color: var(--color-muted-clay, #b88970);
+  color: var(--color-muted-clay, #B88970);
 }
 
 .badgeClear {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 2px 7px;
-  background: #edf5f0;
-  border: 1px solid #d0e0d5;
+  padding: 1px 6px;
+  background: #EDF5F0;
+  border: 1px solid #D0E0D5;
   border-radius: 2px;
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 0.58rem;
+  font-size: 0.54rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   color: var(--color-tailor-green, #294238);
@@ -65,7 +70,7 @@
 
 .panelTitle {
   font-family: var(--font-ui, 'General Sans', sans-serif);
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   font-weight: 700;
   letter-spacing: -0.015em;
   color: var(--color-ink, #171916);
@@ -74,37 +79,36 @@
 
 .contextMeta {
   font-family: var(--font-ui, 'General Sans', sans-serif);
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   color: var(--color-sage, #829386);
 }
 
 .consoleBody {
   flex: 1;
-  padding: 0;
   background: #ffffff;
 }
 
 /* ─── ALL CLEAR EMPTY STATE ─── */
 .allClearState {
-  padding: 48px 24px;
+  padding: 40px 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  background: #fdfcfb;
+  background: #ffffff;
 }
 
 .clearIconWrap {
-  width: 52px;
-  height: 52px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  background: #edf5f0;
-  border: 1px solid #d0e0d5;
+  background: #EDF5F0;
+  border: 1px solid #D0E0D5;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .clearIcon {
@@ -113,23 +117,23 @@
 
 .clearTitle {
   font-family: var(--font-ui, 'General Sans', sans-serif);
-  font-size: 1.15rem;
+  font-size: 1.05rem;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
   color: var(--color-ink, #171916);
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .clearSub {
   font-family: var(--font-ui, 'General Sans', sans-serif);
-  font-size: 0.84rem;
-  color: var(--color-text-secondary, #4a4a45);
-  max-width: 360px;
-  line-height: 1.45;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary, #4A4A45);
+  max-width: 320px;
+  line-height: 1.4;
   margin: 0;
 }
 
-/* ─── TABLE-LIKE ATTENTION LIST ─── */
+/* ─── ATTENTION LIST ROWS ─── */
 .attentionTable {
   display: flex;
   flex-direction: column;
@@ -138,13 +142,13 @@
 
 .tableHead {
   display: grid;
-  grid-template-columns: 100px 1fr 120px 80px;
-  gap: 16px;
-  padding: 8px 20px;
-  background: #f7f6f1;
-  border-bottom: 1px solid var(--color-border, #e2e0d8);
+  grid-template-columns: 90px 1fr 110px 70px;
+  gap: 12px;
+  padding: 8px 18px;
+  background: var(--color-warm-bone, #F3F0E8);
+  border-bottom: 1px solid var(--color-border, #E2E0D8);
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 0.58rem;
+  font-size: 0.56rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   color: var(--color-sage, #829386);
@@ -152,12 +156,12 @@
 
 .itemRow {
   display: grid;
-  grid-template-columns: 100px 1fr 120px 80px;
-  gap: 16px;
+  grid-template-columns: 90px 1fr 110px 70px;
+  gap: 12px;
   align-items: center;
-  padding: 14px 20px;
-  border-bottom: 1px solid #edebe4;
-  transition: background 0.15s ease;
+  padding: 12px 18px;
+  border-bottom: 1px solid #ECEAE2;
+  transition: background-color 0.15s ease;
 }
 
 .itemRow:last-child {
@@ -165,7 +169,11 @@
 }
 
 .itemRow:hover {
-  background: #fcfbf8;
+  background: #FAF8F3;
+}
+
+.itemRow:hover .btnArrow {
+  transform: translateX(3px);
 }
 
 .colStatus {
@@ -173,32 +181,32 @@
   align-items: center;
 }
 
-.statusPill {
+.statusTag {
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 0.6rem;
+  font-size: 0.54rem;
   font-weight: 700;
   letter-spacing: 0.08em;
-  padding: 3px 8px;
+  padding: 2px 6px;
   border-radius: 2px;
   text-transform: uppercase;
 }
 
-.pillOrder {
-  background: #fdf3ed;
-  color: var(--color-muted-clay, #b88970);
-  border: 1px solid #eddcd1;
+.tagOrder {
+  background: #FDF3ED;
+  color: var(--color-muted-clay, #B88970);
+  border: 1px solid #EBDCD3;
 }
 
-.pillInquiry {
-  background: #f2f5f3;
+.tagInquiry {
+  background: #EDF5F0;
   color: var(--color-tailor-green, #294238);
-  border: 1px solid #d5e2d9;
+  border: 1px solid #D0E0D5;
 }
 
-.pillBooking {
-  background: #f6f5ef;
-  color: #635f52;
-  border: 1px solid #e2ded2;
+.tagBooking {
+  background: var(--color-warm-bone, #F3F0E8);
+  color: #635F52;
+  border: 1px solid var(--color-border, #E2E0D8);
 }
 
 .colDesc {
@@ -207,10 +215,10 @@
 
 .itemTitle {
   font-family: var(--font-ui, 'General Sans', sans-serif);
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: var(--color-ink, #171916);
-  margin-bottom: 3px;
+  margin-bottom: 2px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -218,8 +226,8 @@
 
 .itemSub {
   font-family: var(--font-ui, 'General Sans', sans-serif);
-  font-size: 0.74rem;
-  color: var(--color-text-secondary, #4a4a45);
+  font-size: 0.72rem;
+  color: var(--color-text-secondary, #4A4A45);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -228,19 +236,19 @@
 .colTime {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
 }
 
 .refCode {
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   font-weight: 700;
   color: var(--color-ink, #171916);
 }
 
 .timeValue {
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 0.62rem;
+  font-size: 0.58rem;
   color: var(--color-sage, #829386);
 }
 
@@ -253,22 +261,42 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 5px 10px;
-  background: #f7f6f1;
-  border: 1px solid var(--color-border, #e2e0d8);
+  height: 26px;
+  padding: 0 8px;
+  background: var(--color-warm-bone, #F3F0E8);
+  border: 1px solid var(--color-border, #E2E0D8);
   border-radius: 2px;
   font-family: var(--font-ui, 'General Sans', sans-serif);
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 600;
   color: var(--color-ink, #171916);
   text-decoration: none;
-  transition: all 0.15s ease;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  box-sizing: border-box;
+}
+
+.actionBtn:focus-visible {
+  outline: 2px solid var(--color-tailor-green, #294238);
+  outline-offset: 1px;
 }
 
 .actionBtn:hover {
   background: var(--color-tailor-green, #294238);
   color: #ffffff;
   border-color: var(--color-tailor-green, #294238);
+}
+
+.btnArrow {
+  transition: transform 0.15s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btnArrow {
+    transition: none;
+  }
+  .itemRow:hover .btnArrow {
+    transform: none;
+  }
 }
 
 @media (max-width: 768px) {
@@ -279,7 +307,7 @@
   .itemRow {
     grid-template-columns: 1fr;
     gap: 8px;
-    padding: 14px 16px;
+    padding: 12px 16px;
   }
 
   .colAction {

@@ -1,7 +1,12 @@
+/* ============================================================
+   TAILORING TURBA — INVENTORY SNAPSHOT (CATALOGUE TELEMETRY)
+   Visual System: Disciplined Category Progress, High Legibility Specs
+   ============================================================ */
+
 .inventoryConsole {
   background: #ffffff;
-  border: 1px solid var(--color-border, #e2e0d8);
-  border-radius: 3px;
+  border: 1px solid var(--color-border, #E2E0D8);
+  border-radius: 2px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -11,9 +16,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 22px;
-  background: #fdfcfa;
-  border-bottom: 1px solid var(--color-border, #e2e0d8);
+  padding: 14px 18px;
+  background: var(--color-soft-white, #FAF9F5);
+  border-bottom: 1px solid var(--color-border, #E2E0D8);
   flex-wrap: wrap;
   gap: 12px;
 }
@@ -26,13 +31,13 @@
 .tagRow {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 4px;
+  gap: 8px;
+  margin-bottom: 3px;
 }
 
 .tagMono {
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 0.62rem;
+  font-size: 0.58rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   color: var(--color-sage, #829386);
@@ -40,18 +45,19 @@
 
 .activeTag {
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 0.6rem;
+  font-size: 0.56rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   color: var(--color-tailor-green, #294238);
-  background: #edf4f0;
-  padding: 2px 7px;
+  background: #EDF5F0;
+  border: 1px solid #D0E0D5;
+  padding: 1px 6px;
   border-radius: 2px;
 }
 
 .panelTitle {
   font-family: var(--font-ui, 'General Sans', sans-serif);
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   font-weight: 700;
   letter-spacing: -0.015em;
   color: var(--color-ink, #171916);
@@ -61,18 +67,36 @@
 .headerLink {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   font-family: var(--font-ui, 'General Sans', sans-serif);
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   font-weight: 600;
   color: var(--color-tailor-green, #294238);
   text-decoration: none;
   transition: gap 0.15s ease;
 }
 
+.headerLink:focus-visible {
+  outline: 2px solid var(--color-tailor-green, #294238);
+  outline-offset: 2px;
+}
+
 .headerLink:hover {
-  gap: 7px;
-  text-decoration: underline;
+  gap: 8px;
+}
+
+.btnArrow {
+  transition: transform 0.15s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btnArrow {
+    transition: none;
+  }
+  .headerLink:hover .btnArrow,
+  .categoryManageLink:hover .btnArrow {
+    transform: none;
+  }
 }
 
 .consoleBody {
@@ -83,36 +107,46 @@
 
 /* ─── CATEGORY ALLOCATION BLOCK ─── */
 .categoryBlock {
-  padding: 16px 22px;
-  background: #fbfaf7;
-  border-bottom: 1px solid var(--color-border, #e2e0d8);
+  padding: 14px 18px;
+  background: var(--color-warm-bone, #F3F0E8);
+  border-bottom: 1px solid var(--color-border, #E2E0D8);
 }
 
 .categoryBlockHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .subBlockTitle {
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 0.62rem;
+  font-size: 0.58rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   color: var(--color-sage, #829386);
 }
 
 .categoryManageLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-family: var(--font-ui, 'General Sans', sans-serif);
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   color: var(--color-sage, #829386);
   text-decoration: none;
   font-weight: 600;
+  transition: color 0.15s ease, gap 0.15s ease;
+}
+
+.categoryManageLink:focus-visible {
+  outline: 2px solid var(--color-tailor-green, #294238);
+  outline-offset: 1px;
 }
 
 .categoryManageLink:hover {
   color: var(--color-tailor-green, #294238);
+  gap: 7px;
 }
 
 .categoryPillGrid {
@@ -124,7 +158,7 @@
 .categoryPill {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
 .catTop {
@@ -146,14 +180,15 @@
 
 .catCountMono {
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   font-weight: 700;
   color: var(--color-sage, #829386);
+  font-variant-numeric: tabular-nums;
 }
 
 .catTrack {
-  height: 4px;
-  background: #eae7df;
+  height: 3px;
+  background: #EAE7DF;
   border-radius: 2px;
   overflow: hidden;
 }
@@ -166,7 +201,7 @@
 
 /* ─── PRODUCTS BLOCK ─── */
 .productsBlock {
-  padding: 16px 22px 6px;
+  padding: 14px 18px 6px;
   flex: 1;
 }
 
@@ -174,12 +209,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .specMeta {
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 0.6rem;
+  font-size: 0.58rem;
   color: var(--color-sage, #829386);
 }
 
@@ -193,8 +228,9 @@
   align-items: center;
   justify-content: space-between;
   padding: 10px 0;
-  border-bottom: 1px solid #f1eee7;
+  border-bottom: 1px solid #ECEAE2;
   gap: 16px;
+  transition: background-color 0.15s ease;
 }
 
 .productRow:last-child {
@@ -210,40 +246,42 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-bottom: 3px;
+  margin-bottom: 2px;
   flex-wrap: wrap;
 }
 
 .skuMono {
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 0.62rem;
+  font-size: 0.6rem;
   font-weight: 700;
   color: var(--color-ink, #171916);
 }
 
 .categoryBadge {
   font-family: var(--font-ui, 'General Sans', sans-serif);
-  font-size: 0.6rem;
+  font-size: 0.58rem;
   font-weight: 600;
   color: var(--color-sage, #829386);
-  background: #f3f1eb;
+  background: var(--color-warm-bone, #F3F0E8);
+  border: 1px solid var(--color-border, #E2E0D8);
   padding: 1px 5px;
   border-radius: 2px;
 }
 
 .gsmBadge {
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 0.58rem;
+  font-size: 0.56rem;
   font-weight: 700;
   color: var(--color-tailor-green, #294238);
-  background: #edf4f0;
+  background: #EDF5F0;
+  border: 1px solid #D0E0D5;
   padding: 1px 5px;
   border-radius: 2px;
 }
 
 .productName {
   font-family: var(--font-ui, 'General Sans', sans-serif);
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: var(--color-ink, #171916);
   white-space: nowrap;
@@ -255,7 +293,7 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 2px;
+  gap: 1px;
   flex-shrink: 0;
 }
 
@@ -264,19 +302,26 @@
   font-size: 0.88rem;
   font-weight: 700;
   color: var(--color-ink, #171916);
+  font-variant-numeric: tabular-nums;
 }
 
 .moqText {
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 0.62rem;
+  font-size: 0.6rem;
   color: var(--color-sage, #829386);
+  font-variant-numeric: tabular-nums;
 }
 
 .emptyState {
   padding: 24px;
   text-align: center;
   color: var(--color-sage, #829386);
-  font-size: 0.85rem;
+  font-size: 0.8rem;
+}
+
+.emptyIcon {
+  opacity: 0.4;
+  margin-bottom: 6px;
 }
 
 @media (max-width: 640px) {

@@ -1,0 +1,251 @@
+/* ============================================================
+   TAILORING TURBA — CURRENT FOCUS BANNER (OPERATIONAL RIBBON)
+   Visual System: Calibrated Alert Ribbon, Zero Shadow, Precise Rhythm
+   ============================================================ */
+
+.focusBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-radius: 2px;
+  margin-bottom: 24px;
+  gap: 16px;
+  flex-wrap: wrap;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.focusAttention {
+  background: #FDF4ED;
+  border: 1px solid #EBDCD3;
+  border-left: 3px solid var(--color-muted-clay, #B88970);
+}
+
+.focusLead {
+  background: #EDF5F0;
+  border: 1px solid #D4E3D9;
+  border-left: 3px solid var(--color-tailor-green, #294238);
+}
+
+.focusClear {
+  background: #FAF9F5;
+  border: 1px solid var(--color-border, #E2E0D8);
+  border-left: 3px solid var(--color-sage, #829386);
+}
+
+.focusLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.focusBadgeAttention {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #F7E9DE;
+  border: 1px solid #E5CEBF;
+  padding: 3px 8px;
+  border-radius: 2px;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--color-muted-clay, #B88970);
+  white-space: nowrap;
+}
+
+.pulseIcon {
+  animation: pulseAttention 2s infinite ease-in-out;
+}
+
+@keyframes pulseAttention {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulseIcon {
+    animation: none;
+  }
+}
+
+.focusBadgeLead {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #E0EDE5;
+  border: 1px solid #C9DFD1;
+  padding: 3px 8px;
+  border-radius: 2px;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--color-tailor-green, #294238);
+  white-space: nowrap;
+}
+
+.focusBadgeClear {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--color-warm-bone, #F3F0E8);
+  border: 1px solid var(--color-border, #E2E0D8);
+  padding: 3px 8px;
+  border-radius: 2px;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #635F52;
+  white-space: nowrap;
+}
+
+.focusMessage {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.focusLead {
+  font-family: var(--font-ui, 'General Sans', sans-serif);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-ink, #171916);
+  letter-spacing: -0.01em;
+}
+
+.focusDetails {
+  font-family: var(--font-ui, 'General Sans', sans-serif);
+  font-size: 0.8rem;
+  color: var(--color-text-secondary, #4A4A45);
+}
+
+.focusActionAttention {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 14px;
+  background: var(--color-muted-clay, #B88970);
+  color: #ffffff;
+  border-radius: 2px;
+  font-family: var(--font-ui, 'General Sans', sans-serif);
+  font-size: 0.76rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.15s ease;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.focusActionAttention:focus-visible {
+  outline: 2px solid var(--color-muted-clay, #B88970);
+  outline-offset: 2px;
+}
+
+.focusActionAttention:hover {
+  background: #A3745C;
+}
+
+.focusActionAttention:hover .actionArrow {
+  transform: translateX(3px);
+}
+
+.focusActionLead {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 14px;
+  background: var(--color-tailor-green, #294238);
+  color: #ffffff;
+  border-radius: 2px;
+  font-family: var(--font-ui, 'General Sans', sans-serif);
+  font-size: 0.76rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.15s ease;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.focusActionLead:focus-visible {
+  outline: 2px solid var(--color-tailor-green, #294238);
+  outline-offset: 2px;
+}
+
+.focusActionLead:hover {
+  background: #1F332A;
+}
+
+.focusActionLead:hover .actionArrow {
+  transform: translateX(3px);
+}
+
+.focusActionClear {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 14px;
+  background: #ffffff;
+  color: var(--color-ink, #171916);
+  border: 1px solid var(--color-border, #E2E0D8);
+  border-radius: 2px;
+  font-family: var(--font-ui, 'General Sans', sans-serif);
+  font-size: 0.76rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.focusActionClear:focus-visible {
+  outline: 2px solid var(--color-tailor-green, #294238);
+  outline-offset: 2px;
+}
+
+.focusActionClear:hover {
+  background: var(--color-warm-bone, #F3F0E8);
+  border-color: #D1CEC4;
+}
+
+.focusActionClear:hover .actionArrow {
+  transform: translateX(3px);
+}
+
+.actionArrow {
+  transition: transform 0.15s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .actionArrow {
+    transition: none;
+  }
+  .focusActionAttention:hover .actionArrow,
+  .focusActionLead:hover .actionArrow,
+  .focusActionClear:hover .actionArrow {
+    transform: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .focusBar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .focusActionAttention,
+  .focusActionLead,
+  .focusActionClear {
+    width: 100%;
+    justify-content: center;
+  }
+}
