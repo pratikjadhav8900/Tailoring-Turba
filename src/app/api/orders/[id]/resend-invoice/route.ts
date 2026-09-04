@@ -59,8 +59,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   try {
     const pdfBuffer = await generateInvoicePdf(pdfOrder);
 
+    let mailResult;
     if (invoiceType === "tax") {
-      await sendTaxInvoiceEmail(
+      mailResult = await sendTaxInvoiceEmail(
         order.user.email,
         order.user.name || "Customer",
         order.id,
@@ -69,7 +70,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       );
     } else {
       const totalQty = order.items.reduce((sum, i) => sum + i.quantity, 0);
-      await sendOrderConfirmationEmail(
+      mailResult = await sendOrderConfirmationEmail(
         order.user.email,
         order.user.name || "Customer",
         order.id,
@@ -79,6 +80,11 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         order.orderNumber ?? undefined,
         getEstimatedDeliveryDateRange(order.createdAt, totalQty)
       );
+    }
+
+    if (mailResult && !mailResult.success) {
+      const errMsg = (mailResult.error as any)?.message || "Failed to deliver email through mail service.";
+      throw new Error(errMsg);
     }
 
     return NextResponse.json({

@@ -123,7 +123,7 @@ export function generateInvoicePdf(order: InvoiceOrder): Promise<Buffer> {
       drawRect(doc, margin, y, rightMargin - margin, customerBoxH, false, brandColor);
       
       // Vertical line splitting customer and invoice details
-      const midX = 250;
+      const midX = 270;
       drawLine(doc, midX, y, midX, y + customerBoxH, brandColor);
       
       // Customer Details Header
@@ -135,29 +135,33 @@ export function generateInvoicePdf(order: InvoiceOrder): Promise<Buffer> {
       
       // Right side Grid details
       doc.font('Helvetica').fontSize(8)
-         .text(docNoLabel,   midX + 5,   y + 3)
-         .text(displayOrderNo, midX + 70, y + 3)
-         .text(docDateLabel, midX + 160, y + 3)
-         .text(invoiceDate,  midX + 220, y + 3);
+         .text(docNoLabel,     midX + 5,   y + 3)
+         .text(displayOrderNo, midX + 65,  y + 3)
+         .text(docDateLabel,   midX + 145, y + 3)
+         .text(invoiceDate,    midX + 205, y + 3);
          
       drawLine(doc, midX, y + 15, rightMargin, y + 15, brandColor);
-      doc.text('Completion Date', midX + 5, y + 18).text(invoiceDate, midX + 70, y + 18); // Default to invoice date for now
+      doc.text('Completion Date', midX + 5, y + 18).text(invoiceDate, midX + 75, y + 18); // Default to invoice date for now
       
       // Customer Info mapping
+      const labelX = margin + 5;
+      const valueX = margin + 72;
+      const valueW = midX - valueX - 5;
+
       doc.font('Helvetica-Bold').fontSize(8)
-         .text('M/S', margin + 5, y + 18)
-         .text('Address', margin + 5, y + 28)
-         .text('Phone', margin + 5, y + 48)
-         .text('Place of Supply', margin + 5, y + 58);
+         .text('M/S', labelX, y + 18)
+         .text('Address', labelX, y + 28)
+         .text('Phone', labelX, y + 48)
+         .text('Place of Supply', labelX, y + 58);
          
       const customerName = order.user.name || 'Walk-in Customer';
       const addressString = order.shippingAddress ? `${order.shippingAddress.street}, ${order.shippingAddress.city}, ${order.shippingAddress.state} - ${order.shippingAddress.postalCode}` : 'N/A';
       
       doc.font('Helvetica').fontSize(8)
-         .text(customerName, margin + 60, y + 18)
-         .text(addressString, margin + 60, y + 28, { width: midX - margin - 65, height: 20 })
-         .text(order.user.phone || 'N/A', margin + 60, y + 48)
-         .text(order.shippingAddress?.state || 'Maharashtra (27)', margin + 60, y + 58);
+         .text(customerName, valueX, y + 18, { width: valueW, lineBreak: false })
+         .text(addressString, valueX, y + 28, { width: valueW, height: 19 })
+         .text(order.user.phone || 'N/A', valueX, y + 48, { width: valueW, lineBreak: false })
+         .text(order.shippingAddress?.state || 'Maharashtra (27)', valueX, y + 58, { width: valueW, lineBreak: false });
 
       y += customerBoxH + 5;
       
