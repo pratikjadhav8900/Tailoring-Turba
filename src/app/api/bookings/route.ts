@@ -4,8 +4,20 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { sanitize } from "@/lib/sanitize";
 import { sendOperationsBookingAlert, sendCustomerBookingConfirmation } from "@/lib/mail";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
+  const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "127.0.0.1";
+
+  // Rate limit public bookings: Max 5 bookings per 15 minutes per IP
+  const rateLimit = checkRateLimit(`booking_ip_${clientIp}`, 5, 15 * 60 * 1000);
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { error: "Too many booking attempts. Please wait a few minutes before submitting again." },
+      { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } }
+    );
+  }
+
   const session = await auth();
   
   const { date, timeSlot, notes, name, email, phone } = await req.json();

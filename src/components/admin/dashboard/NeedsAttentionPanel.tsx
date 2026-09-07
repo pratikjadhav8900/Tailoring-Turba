@@ -149,7 +149,7 @@ export default function NeedsAttentionPanel({
       <div className={styles.consoleHeader}>
         <div className={styles.headerLeft}>
           <div className={styles.tagRow}>
-            <span className={styles.tagMono}>ACTION QUEUE // TRIAGE</span>
+            <span className={styles.tagMono}>ACTION QUEUE</span>
             {totalCount > 0 ? (
               <span className={styles.badgeAttention}>
                 <AlertTriangle size={10} />

@@ -85,8 +85,8 @@ export default function ComparePage() {
                   <ComparisonRow label="Fabric Type" values={compareItems.map(item => item.type)} />
                   <ComparisonRow label="Color Options" values={compareItems.map(item => `${item.colors} Available`)} />
                   <ComparisonRow label="Description" values={compareItems.map(item => item.description || "N/A")} isSmall />
-                  <ComparisonRow label="Features" values={compareItems.map(item => (
-                    <ul style={{ padding: 0, margin: 0, listStyle: "none", textAlign: "left" }}>
+                  <ComparisonRow label="Features" values={compareItems.map((item, itemIdx) => (
+                    <ul key={item.id || itemIdx} style={{ padding: 0, margin: 0, listStyle: "none", textAlign: "left" }}>
                       {item.features?.slice(0, 3).map((f, fi) => (
                         <li key={fi} style={{ fontSize: "0.8rem", marginBottom: "4px", color: "#475569" }}>• {f}</li>
                       )) || "N/A"}

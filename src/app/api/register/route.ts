@@ -119,16 +119,15 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      const isOwnerAdmin = sEmail === "tailoringturba@gmail.com";
       const user = await prisma.user.create({
         data: {
           name: sName,
           email: sEmail,
           password: hashed,
-          role: isOwnerAdmin ? "SUPER_ADMIN" : "USER",
+          role: "USER",
           companyName: isB2B ? sCompanyName : null,
           gstNumber: isB2B ? sGstNumber : null,
-          isB2BApproved: isOwnerAdmin ? true : false,
+          isB2BApproved: false,
         },
       });
 
@@ -174,8 +173,13 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Phone number and OTP verification token are required." }, { status: 400 });
       }
 
-      // Verification token binding validation
-      const secret = process.env.NEXTAUTH_SECRET || "fallback-secret-for-jwt-signing";
+      // Verification token binding validation: fail closed, never use static fallback
+      const secret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
+      if (!secret) {
+        console.error("[AUTH] Server authentication secret is not configured.");
+        return NextResponse.json({ error: "Server authentication configuration error." }, { status: 500 });
+      }
+
       const payload = verifyToken(phoneVerificationToken, secret);
 
       if (!payload || payload.signupAttemptId !== signupAttemptId) {

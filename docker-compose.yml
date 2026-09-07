@@ -1,12 +1,13 @@
+# LOCAL DEVELOPMENT ONLY — NEVER USE IN PRODUCTION
 version: '3.8'
 services:
   db:
     image: postgres:15-alpine
     restart: always
     environment:
-      POSTGRES_USER: root
-      POSTGRES_PASSWORD: rootpassword
-      POSTGRES_DB: tailoring_turba_db
+      POSTGRES_USER: ${POSTGRES_DEV_USER:-dev_postgres_user}
+      POSTGRES_PASSWORD: ${POSTGRES_DEV_PASSWORD:-dev_insecure_local_password_only}
+      POSTGRES_DB: ${POSTGRES_DEV_DB:-tailoring_turba_local_dev}
     ports:
       - "5432:5432"
     volumes:

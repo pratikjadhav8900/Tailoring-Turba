@@ -7,15 +7,7 @@ try {
   console.log('📦 Generating Prisma Client...');
   execSync('npx prisma generate', { stdio: 'inherit' });
 
-  // 2. Conditionally run database schema sync
-  if (process.env.DATABASE_URL) {
-    console.log('🔗 DATABASE_URL detected. Syncing database schema (db push)...');
-    execSync('npx prisma db push --accept-data-loss', { stdio: 'inherit' });
-  } else {
-    console.log('⚠️ DATABASE_URL not detected. Building with static client.');
-  }
-
-  // 3. Build Next.js
+  // 2. Build Next.js (Database schema migrations must be run independently via 'prisma migrate deploy')
   console.log('🚀 Compiling Next.js production build...');
   execSync('npx next build', { stdio: 'inherit' });
 

@@ -162,10 +162,10 @@ export default function CurrentOrdersWorkspace({
       <div className={styles.sectionHeader}>
         <div className={styles.headerLeft}>
           <div className={styles.titleRow}>
-            <span className={styles.sectionCode}>OPS-01 // REAL-TIME DISPATCH</span>
+            <span className={styles.sectionCode}>ORDER FULFILLMENT</span>
             <div className={styles.countBadge}>
               <span className={styles.countNumber}>{orders.length}</span>
-              <span className={styles.countLabel}>ACTIVE RECORDED</span>
+              <span className={styles.countLabel}>ACTIVE</span>
             </div>
           </div>
           <h2 className={styles.sectionTitle}>Current Orders</h2>

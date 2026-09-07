@@ -68,6 +68,36 @@ const STAGES = [
   },
 ];
 
+function StageEditorialCard({ stage, opacity }: { stage: (typeof STAGES)[0]; opacity: any }) {
+  const display = useTransform(opacity, (o: number) => (o > 0.05 ? "flex" : "none"));
+  return (
+    <motion.div
+      style={{
+        opacity,
+        display,
+      }}
+      className="flex-col gap-6"
+    >
+      <div className={styles.stageHeader}>
+        <span className={styles.stageNumber}>{stage.number}</span>
+        <span className={styles.stageCategory}>/ {stage.label}</span>
+      </div>
+
+      <h2 className={styles.stageTitle}>{stage.title}</h2>
+
+      <p className={styles.stageDescription}>{stage.description}</p>
+
+      <div className={styles.specChips}>
+        {stage.specs.map((spec, sIdx) => (
+          <span key={sIdx} className={styles.specChip}>
+            {spec}
+          </span>
+        ))}
+      </div>
+    </motion.div>
+  );
+}
+
 export default function GarmentJourney() {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -146,31 +176,7 @@ export default function GarmentJourney() {
           {/* RIGHT: EDITORIAL STAGE DESCRIPTION */}
           <div className={styles.contentColumn}>
             {STAGES.map((stage, idx) => (
-              <motion.div
-                key={stage.id}
-                style={{
-                  opacity: opacities[idx],
-                  display: useTransform(opacities[idx], (o) => (o > 0.05 ? "flex" : "none")),
-                }}
-                className="flex-col gap-6"
-              >
-                <div className={styles.stageHeader}>
-                  <span className={styles.stageNumber}>{stage.number}</span>
-                  <span className={styles.stageCategory}>/ {stage.label}</span>
-                </div>
-
-                <h2 className={styles.stageTitle}>{stage.title}</h2>
-
-                <p className={styles.stageDescription}>{stage.description}</p>
-
-                <div className={styles.specChips}>
-                  {stage.specs.map((spec, sIdx) => (
-                    <span key={sIdx} className={styles.specChip}>
-                      {spec}
-                    </span>
-                  ))}
-                </div>
-              </motion.div>
+              <StageEditorialCard key={stage.id} stage={stage} opacity={opacities[idx]} />
             ))}
 
             {/* STAGE PROGRESS TRACKER */}

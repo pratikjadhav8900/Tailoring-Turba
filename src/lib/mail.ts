@@ -414,8 +414,8 @@ export const sendOrderDeliveredEmail = async (
   return sendMail({ to: email, subject, html });
 };
 
-export const sendVerificationEmail = async (email: string, token: string, name: string) => {
-  const firstName = name.trim().split(" ")[0];
+export const sendVerificationEmail = async (email: string, token: string, name?: string | null) => {
+  const firstName = (name || "Customer").trim().split(" ")[0];
   const subject = "Verify your Tailoring Turba account";
   const verificationUrl = `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/verify-email?token=${token}`;
   const html = `
@@ -436,8 +436,74 @@ export const sendVerificationEmail = async (email: string, token: string, name: 
         <p>If you did not create this account, you can safely ignore this email.</p>
         <p>Best regards,<br/>The Tailoring Turba Team</p>
       </div>
+  `;
+
+  return sendMail({ to: email, subject, html });
+};
+
+export const sendOutForDeliveryEmail = async (
+  email: string,
+  name: string,
+  orderId: string,
+  orderNumber?: number,
+  awbNumber?: string,
+  courierName?: string,
+  balanceDuePaise: number = 0
+) => {
+  const displayNo = orderNumber ? String(orderNumber) : orderId.slice(-8).toUpperCase();
+  const subject = `Your Order is Out for Delivery! 🚚 — Tailoring Turba #${displayNo}`;
+  const isPaidInFull = balanceDuePaise === 0;
+  const payUrl = `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/checkout/pay-balance?orderId=${orderId}`;
+  const trackUrl = `${process.env.NEXTAUTH_URL || "http://localhost:3000"}/dashboard/orders`;
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+      <div style="background: #435b43; padding: 24px; border-radius: 6px 6px 0 0; text-align: center;">
+        <h1 style="color: white; margin: 0; font-size: 22px; letter-spacing: 1px;">TAILORING TURBA</h1>
+      </div>
+      <div style="padding: 28px 24px;">
+        <h2 style="color: #435b43; margin-top: 0;">Your Order is Out for Delivery Today! 🚚</h2>
+        <p>Dear <strong>${name}</strong>,</p>
+        <p>Great news! Your tailored apparel order <strong>#${displayNo}</strong> is on the delivery vehicle and heading your way today.</p>
+
+        <div style="background-color: #f0fdf4; padding: 20px; border-radius: 8px; margin: 24px 0; border-left: 4px solid #16a34a;">
+          <p style="margin: 0 0 8px 0; font-size: 13px; color: #166534; text-transform: uppercase; letter-spacing: 1px;">Delivery Details</p>
+          <p style="margin: 6px 0;">📦 <strong>Courier:</strong> ${courierName || "Carrier Partner"}</p>
+          ${awbNumber ? `<p style="margin: 6px 0;">🏷️ <strong>Tracking No (AWB):</strong> ${awbNumber}</p>` : ""}
+          <p style="margin: 6px 0;">💰 <strong>Payment Status:</strong> ${
+            isPaidInFull
+              ? '<span style="color: #16a34a; font-weight: bold;">Paid in Full ✓</span>'
+              : `<span style="color: #d97706; font-weight: bold;">Balance Due: ₹${(balanceDuePaise / 100).toFixed(2)}</span>`
+          }</p>
+        </div>
+
+        ${
+          !isPaidInFull
+            ? `
+          <div style="text-align: center; margin: 28px 0;">
+            <a href="${payUrl}" style="background-color: #d97706; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block; font-size: 15px;">
+              Pay Remaining Balance (₹${(balanceDuePaise / 100).toFixed(2)})
+            </a>
+          </div>
+        `
+            : `
+          <div style="text-align: center; margin: 28px 0;">
+            <a href="${trackUrl}" style="background-color: #435b43; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block; font-size: 15px;">
+              Track in Your Account
+            </a>
+          </div>
+        `
+        }
+
+        <p style="font-size: 13px; color: #6b7280; line-height: 1.5; margin-top: 24px;">
+          Please ensure someone is available at your shipping address to receive the package.
+        </p>
+
+        <p>Best regards,<br/>The Tailoring Turba Team</p>
+      </div>
     </div>
   `;
 
   return sendMail({ to: email, subject, html });
 };
+

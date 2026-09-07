@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Razorpay from 'razorpay';
 import { prisma } from '@/lib/prisma';
 import { auth } from '@/lib/auth';
+import { calculateAuthoritativePricing } from '@/lib/server-pricing';
 
 // Helper to get Razorpay instance
 function getRazorpay() {
@@ -22,21 +23,22 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { amount, currency = 'INR', items, shippingAddress, notes } = await request.json();
+    const { amount: clientReportedAmount, currency = 'INR', items, shippingAddress, notes } = await request.json();
 
-    // 1. Validate required fields
-    if (!amount || amount < 1) {
-      return NextResponse.json(
-        { error: 'Minimum amount of 1 INR (100 paise) is required' },
-        { status: 400 }
-      );
-    }
-
-    if (!items || !items.length) {
+    // 1. Validate cart presence
+    if (!items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ error: 'Cart items are required to initiate payment' }, { status: 400 });
     }
 
-    // 2. Handle Shipping Address
+    // 2. Compute Authoritative Server-Side Pricing (Server-Authoritative C-1)
+    let pricing;
+    try {
+      pricing = await calculateAuthoritativePricing(items, clientReportedAmount);
+    } catch (pricingErr: any) {
+      return NextResponse.json({ error: pricingErr.message || 'Invalid cart item configuration.' }, { status: 400 });
+    }
+
+    // 3. Handle Shipping Address
     let finalAddressId = null;
     if (shippingAddress) {
       try {
@@ -56,55 +58,28 @@ export async function POST(request: NextRequest) {
         finalAddressId = newAddress.id;
       } catch (addrErr) {
         console.error("[ADDRESS_CREATE_ERROR]", addrErr);
-        // We continue even if address fails, but ideally we should handle it
       }
     }
 
-    // Calculate total quantity of items to check for bulk (>= 10) split payment
-    const totalQuantity = items.reduce((sum: number, item: any) => sum + (item.quantity || 0), 0);
-    const isSplitPayment = totalQuantity >= 10;
-    const chargeAmount = isSplitPayment ? amount * 0.60 : amount;
-    const remainingAmount = isSplitPayment ? amount * 0.40 : 0;
-
-    // 3. Ensure all items have a valid productId to prevent DB foreign key errors
-    let defaultCustomProductId: string | null = null;
-    for (const item of items) {
-      if (!item.productId) {
-        if (!defaultCustomProductId) {
-          let customProduct = await prisma.product.findFirst({
-            where: { name: "Custom Design" }
-          });
-          if (!customProduct) {
-            const category = await prisma.category.findFirst();
-            if (!category) throw new Error("Cannot create fallback product: No categories exist.");
-            customProduct = await prisma.product.create({
-              data: {
-                name: "Custom Design",
-                description: "User submitted custom design",
-                basePrice: 0,
-                categoryId: category.id,
-              }
-            });
-          }
-          defaultCustomProductId = customProduct.id;
-        }
-        item.productId = defaultCustomProductId;
-      }
-    }
-
-    // 4. Create the Razorpay order first to get the ID
+    // 4. Create the Razorpay order with authoritative server charge amount
     const razorpay = getRazorpay();
-    console.log('[RAZORPAY] Initiating order creation for charge amount:', chargeAmount, 'Total amount:', amount);
+    console.log(
+      '[RAZORPAY] Initiating authoritative order:',
+      'Charge (paise):', pricing.chargeAmountPaise,
+      'Final Total (INR):', pricing.finalTotal,
+      'Client claimed:', clientReportedAmount
+    );
     
     let rzpOrder: any;
     try {
       rzpOrder = await razorpay.orders.create({
-        amount: Math.round(chargeAmount * 100), // Ensure it's an integer in paise
+        amount: pricing.chargeAmountPaise, // Authoritative integer in paise
         currency,
         receipt: `receipt_${Date.now()}`,
         notes: {
           ...notes,
           userId: session.user.id,
+          authoritativeTotal: String(pricing.finalTotal),
           timestamp: new Date().toISOString(),
         },
         payment_capture: true,
@@ -115,24 +90,24 @@ export async function POST(request: NextRequest) {
       throw new Error(`Razorpay Error: ${rzpErr.message || 'Failed to create order'}`);
     }
 
-    // 4. Create a "PENDING" order in our database for sales tracking
+    // 5. Create "PENDING" order in database storing authoritative server prices
     console.log('[DB] Creating pending order in database...');
     try {
       const order = await prisma.order.create({
         data: {
           userId: session.user.id,
-          totalAmount: amount,
-          status: "PENDING", // Initial status for tracking
+          totalAmount: pricing.finalTotal, // Authoritative total
+          status: "PENDING",
           razorpayOrderId: rzpOrder.id,
-          isSplitPayment,
+          isSplitPayment: pricing.isSplitPayment,
           amountPaid: 0,
-          remainingAmount,
+          remainingAmount: pricing.remainingAmount,
           ...(finalAddressId && { shippingAddressId: finalAddressId }),
           items: {
-            create: items.map((i: any) => ({
+            create: pricing.items.map((i) => ({
               productId: i.productId,
               quantity: i.quantity,
-              price: i.price,
+              price: i.effectiveUnitPrice, // Authoritative unit price
               ...(i.customStateJson && { customStateJson: i.customStateJson }),
               ...(i.printFiles && { printFiles: i.printFiles }),
               ...(i.mockupUrl && { mockupUrl: i.mockupUrl }),
@@ -149,7 +124,7 @@ export async function POST(request: NextRequest) {
       throw new Error(`Database Error: ${dbErr.message || 'Failed to save order'}`);
     }
 
-    // 5. Return order details to frontend
+    // 6. Return order details to frontend
     return NextResponse.json({
       success: true,
       order: {
@@ -173,4 +148,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

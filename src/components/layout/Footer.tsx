@@ -62,6 +62,7 @@ export default function Footer() {
               {[
                 { label: "Design Studio", href: "/customizer" },
                 { label: "Products", href: "/products" },
+                { label: "Track Your Order", href: "/track-order" },
                 { label: "Our Story", href: "/about" },
                 { label: "Full Catalogue", href: "/products/catalogue" },
                 { label: "Book Showroom", href: "/booking" },
@@ -115,7 +116,7 @@ export default function Footer() {
               </div>
               <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
                 <Lucide.MapPin size={15} style={{ flexShrink: 0, marginTop: "3px", opacity: 0.7 }} />
-                <span style={{ maxWidth: "240px" }}>321/1 Pandit Jawaharlal Nehru Marg, Sanjay Departments, Pune 411042, Maharashtra, IN</span>
+                <span style={{ maxWidth: "240px" }}>321/1, Jawaharlal Nehru Road, Mahatma Phule Peth, near HDFC Bank, Pune, Maharashtra 411042, India</span>
               </div>
             </div>
             <div style={{ marginTop: "20px" }}>

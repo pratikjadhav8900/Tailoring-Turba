@@ -51,28 +51,28 @@ export async function POST(request: Request) {
 
         // Strict Phone Number & Identity Check
         if (!verifiedPhone || verifiedPhone !== normalizedPhone) {
-          console.error(`[AUTH] Phone identity mismatch. Token phone: ${verifiedPhone}, Submitted phone: ${normalizedPhone}`);
+          console.error("[AUTH] Phone identity mismatch during token verification.");
           return NextResponse.json({ error: "Phone identity verification failed. Mismatched phone numbers." }, { status: 400 });
         }
 
         isApproved = true;
-        console.log(`[AUTH] Firebase token successfully verified for UID: ${firebaseUid}, Phone: ${verifiedPhone}`);
       } catch (err: any) {
-        console.error("[AUTH] Firebase token verification failed:", err.message);
+        console.error("[AUTH] Firebase token verification failed");
         return NextResponse.json({ error: "Invalid or expired Firebase ID token." }, { status: 400 });
       }
     } else {
-      // Fallback Mock Mode (strictly blocked in production)
-      if (isProduction || !enableMock) {
+      // Mock Mode is STRICTLY restricted to NODE_ENV === "test"
+      const isTestEnv = process.env.NODE_ENV === "test";
+      const isMockAllowed = isTestEnv && process.env.ENABLE_MOCK_AUTH === "true";
+
+      if (!isMockAllowed) {
         return NextResponse.json({ error: "Invalid verification request parameters." }, { status: 400 });
       }
 
       if (otp === "123456" || (otp && otp.length === 6 && /^\d+$/.test(otp))) {
         isApproved = true;
-        // Generate a mock Firebase UID matching the test number
         const hash = crypto.createHash("md5").update(normalizedPhone).digest("hex");
         firebaseUid = `mock-firebase-uid-${hash}`;
-        console.log(`[DEVELOPMENT MOCK VERIFICATION] Approved mock OTP for ${normalizedPhone}. Mock UID: ${firebaseUid}`);
       }
     }
 
@@ -81,7 +81,13 @@ export async function POST(request: Request) {
     }
 
     // 3. Issue short-lived phoneVerificationToken (5-minute expiration)
-    const secret = process.env.NEXTAUTH_SECRET || "fallback-secret-for-jwt-signing";
+    // Fail closed: Never use hardcoded fallback secrets
+    const secret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
+    if (!secret) {
+      console.error("[AUTH] Server authentication secret is not configured.");
+      return NextResponse.json({ error: "Server authentication configuration error." }, { status: 500 });
+    }
+
     const nowSec = Math.floor(Date.now() / 1000);
     const expirySec = nowSec + 300; // 5 minutes
 
@@ -98,7 +104,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ phoneVerificationToken });
   } catch (error: any) {
-    console.error("[AUTH] verify-otp error:", error);
+    console.error("[AUTH] verify-otp processing error");
     return NextResponse.json({ error: "Internal server error." }, { status: 500 });
   }
 }

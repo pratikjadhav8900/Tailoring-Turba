@@ -174,7 +174,7 @@ function ContactForm() {
             </div>
             <div className={styles.contactItem}>
               <MapPin size={14} strokeWidth={1.5} className={styles.contactIcon} />
-              <span className={styles.contactValue}>321/1 Pandit Jawaharlal Nehru Marg Pune 411042, Sanjay Departments, Pune, Maharashtra 411042, IN</span>
+              <span className={styles.contactValue}>321/1, Jawaharlal Nehru Road, Mahatma Phule Peth, near HDFC Bank, Pune, Maharashtra 411042, India</span>
             </div>
           </div>
         </div>

@@ -20,18 +20,25 @@
 }
 
 .banner {
-  background: var(--tth-olive);
-  color: white;
-  padding: 12px;
+  background: var(--tth-olive, #485c41);
+  color: #ffffff;
+  padding: 10px 16px;
   text-align: center;
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   font-weight: 600;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
+  line-height: 1.4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  flex-wrap: wrap;
 }
 
 .banner span {
-  color: rgba(138,106,26,0.25); /* Soft gold */
+  color: #fde047; /* Bright, clear, readable gold */
+  font-weight: 700;
 }
 
 .tabs {

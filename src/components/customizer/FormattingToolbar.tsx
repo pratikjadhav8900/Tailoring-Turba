@@ -70,29 +70,32 @@ export default function FormattingToolbar({
     return () => document.removeEventListener("mousedown", handler);
   }, [showColorPicker]);
 
+  const activeWidthStr = activeEl ? getElementDetails(activeEl, garmentType, activeSide).widthInches.toString() : "";
+  const activeHeightStr = activeEl ? getElementDetails(activeEl, garmentType, activeSide).heightInches.toString() : "";
+
+  // Local state for inputs to allow smooth editing of decimals and empty inputs
+  const [widthInput, setWidthInput] = useState(activeWidthStr);
+  const [heightInput, setHeightInput] = useState(activeHeightStr);
+  const [isFocusedW, setIsFocusedW] = useState(false);
+  const [isFocusedH, setIsFocusedH] = useState(false);
+
+  useEffect(() => {
+    if (!isFocusedW && activeWidthStr) {
+      setWidthInput(activeWidthStr);
+    }
+  }, [activeWidthStr, isFocusedW]);
+
+  useEffect(() => {
+    if (!isFocusedH && activeHeightStr) {
+      setHeightInput(activeHeightStr);
+    }
+  }, [activeHeightStr, isFocusedH]);
+
   if (!activeEl) return null;
 
   // Calculate size details in inches and image DPI
   const details = getElementDetails(activeEl, garmentType, activeSide);
   const { widthPx, heightPx } = getPrintableAreaDimensionsPx(garmentType, activeSide);
-
-  // Local state for inputs to allow smooth editing of decimals and empty inputs
-  const [widthInput, setWidthInput] = useState(details.widthInches.toString());
-  const [heightInput, setHeightInput] = useState(details.heightInches.toString());
-  const [isFocusedW, setIsFocusedW] = useState(false);
-  const [isFocusedH, setIsFocusedH] = useState(false);
-
-  useEffect(() => {
-    if (!isFocusedW) {
-      setWidthInput(details.widthInches.toString());
-    }
-  }, [details.widthInches, isFocusedW]);
-
-  useEffect(() => {
-    if (!isFocusedH) {
-      setHeightInput(details.heightInches.toString());
-    }
-  }, [details.heightInches, isFocusedH]);
 
   const handleWidthChange = (val: number) => {
     if (isNaN(val) || val <= 0) return;

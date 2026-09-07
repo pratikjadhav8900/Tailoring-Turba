@@ -69,7 +69,7 @@ export default function RecentOperationsFeed({
       {/* Activity Header */}
       <div className={styles.consoleHeader}>
         <div className={styles.headerLeft}>
-          <div className={styles.tagMono}>LOG // EVENT TELEMETRY</div>
+          <div className={styles.tagMono}>LIVE ACTIVITY LOG</div>
           <h3 className={styles.consoleTitle}>Recent Activity</h3>
         </div>
 

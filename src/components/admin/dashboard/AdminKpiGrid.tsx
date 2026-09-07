@@ -4,11 +4,15 @@ import styles from "./AdminKpiGrid.module.css";
 import Link from "next/link";
 import AnimatedNumber from "./AnimatedNumber";
 import { 
+  IndianRupee,
+  Users,
+  ShoppingBag,
   Clock, 
   Calendar, 
   Shirt, 
   Scissors,
-  ArrowRight
+  ArrowRight,
+  TrendingUp
 } from "lucide-react";
 
 interface KpiProps {
@@ -31,16 +35,18 @@ export default function AdminKpiGrid({
   productCount,
 }: KpiProps) {
   return (
-    <section className={styles.metricsSection} aria-label="Enterprise Performance Metrics">
+    <section className={styles.metricsSection} aria-label="Business Performance Metrics">
       {/* Primary Dominant Metrics Tier */}
       <div className={styles.primaryGrid}>
         {/* Primary 1: Gross Revenue */}
         <div className={styles.primaryBlock}>
           <div className={styles.blockMeta}>
-            <span className={styles.metricCode}>REV-01</span>
-            <span className={styles.categoryTag}>COMMERCE</span>
+            <div className={styles.iconBadgeGreen}>
+              <TrendingUp size={16} />
+            </div>
+            <span className={styles.categoryTag}>REVENUE</span>
           </div>
-          <div className={styles.metricLabel}>Gross Revenue</div>
+          <div className={styles.metricLabel}>Total Revenue</div>
           <div className={styles.primaryValueRow}>
             <span className={styles.currencyPrefix}>₹</span>
             <AnimatedNumber
@@ -50,15 +56,17 @@ export default function AdminKpiGrid({
             />
           </div>
           <div className={styles.metricFootnote}>
-            Cumulative realized revenue from {orderCount} confirmed order{orderCount === 1 ? "" : "s"}
+            From {orderCount} confirmed order{orderCount === 1 ? "" : "s"}
           </div>
         </div>
 
         {/* Primary 2: Registered Clients */}
         <div className={styles.primaryBlock}>
           <div className={styles.blockMeta}>
-            <span className={styles.metricCode}>ACC-02</span>
-            <span className={styles.categoryTag}>CLIENTELE</span>
+            <div className={styles.iconBadgeSage}>
+              <Users size={16} />
+            </div>
+            <span className={styles.categoryTag}>CUSTOMERS</span>
           </div>
           <div className={styles.metricLabel}>Registered Clients</div>
           <div className={styles.primaryValueRow}>
@@ -70,7 +78,7 @@ export default function AdminKpiGrid({
           </div>
           <div className={styles.metricFootnote}>
             <Link href="/admin/users" className={styles.footLink}>
-              <span>Client Directory</span>
+              <span>View Clients</span>
               <ArrowRight size={12} className={styles.linkArrow} />
             </Link>
           </div>
@@ -79,10 +87,12 @@ export default function AdminKpiGrid({
         {/* Primary 3: Production Orders */}
         <div className={styles.primaryBlock}>
           <div className={styles.blockMeta}>
-            <span className={styles.metricCode}>VOL-03</span>
-            <span className={styles.categoryTag}>FULFILLMENT</span>
+            <div className={styles.iconBadgeClay}>
+              <ShoppingBag size={16} />
+            </div>
+            <span className={styles.categoryTag}>ORDERS</span>
           </div>
-          <div className={styles.metricLabel}>Production Orders</div>
+          <div className={styles.metricLabel}>Total Orders</div>
           <div className={styles.primaryValueRow}>
             <AnimatedNumber
               value={orderCount}
@@ -92,7 +102,7 @@ export default function AdminKpiGrid({
           </div>
           <div className={styles.metricFootnote}>
             <Link href="/admin/orders" className={styles.footLink}>
-              <span>Order Ledger</span>
+              <span>View Orders</span>
               <ArrowRight size={12} className={styles.linkArrow} />
             </Link>
           </div>
@@ -107,12 +117,12 @@ export default function AdminKpiGrid({
           className={`${styles.secondaryCell} ${pendingOrders > 0 ? styles.cellAttention : ""}`}
         >
           <div className={styles.secondaryHeader}>
-            <span className={styles.secondaryLabel}>PENDING INTAKE</span>
-            <Clock size={13} className={pendingOrders > 0 ? styles.iconClay : styles.iconSage} />
+            <span className={styles.secondaryLabel}>PENDING ORDERS</span>
+            <Clock size={14} className={pendingOrders > 0 ? styles.iconClay : styles.iconSage} />
           </div>
           <div className={styles.secondaryValueRow}>
             <AnimatedNumber value={pendingOrders} className={styles.secondaryNumber} />
-            <span className={styles.secondarySub}>Awaiting verification</span>
+            <span className={styles.secondarySub}>Awaiting confirmation</span>
           </div>
         </Link>
 
@@ -120,7 +130,7 @@ export default function AdminKpiGrid({
         <Link href="/admin/orders" className={styles.secondaryCell}>
           <div className={styles.secondaryHeader}>
             <span className={styles.secondaryLabel}>IN PRODUCTION</span>
-            <Scissors size={13} className={styles.iconGreen} />
+            <Scissors size={14} className={styles.iconGreen} />
           </div>
           <div className={styles.secondaryValueRow}>
             <AnimatedNumber value={processingOrders} className={styles.secondaryNumber} />
@@ -131,24 +141,24 @@ export default function AdminKpiGrid({
         {/* Secondary 3: Client Bookings */}
         <Link href="/admin/bookings" className={styles.secondaryCell}>
           <div className={styles.secondaryHeader}>
-            <span className={styles.secondaryLabel}>CLIENT BOOKINGS</span>
-            <Calendar size={13} className={styles.iconSage} />
+            <span className={styles.secondaryLabel}>STUDIO BOOKINGS</span>
+            <Calendar size={14} className={styles.iconSage} />
           </div>
           <div className={styles.secondaryValueRow}>
             <AnimatedNumber value={bookingCount} className={styles.secondaryNumber} />
-            <span className={styles.secondarySub}>Consultations</span>
+            <span className={styles.secondarySub}>Showroom visits</span>
           </div>
         </Link>
 
-        {/* Secondary 4: Active SKUs */}
+        {/* Secondary 4: Active Products */}
         <Link href="/admin/products" className={styles.secondaryCell}>
           <div className={styles.secondaryHeader}>
-            <span className={styles.secondaryLabel}>ACTIVE SKUS</span>
-            <Shirt size={13} className={styles.iconSage} />
+            <span className={styles.secondaryLabel}>ACTIVE PRODUCTS</span>
+            <Shirt size={14} className={styles.iconSage} />
           </div>
           <div className={styles.secondaryValueRow}>
             <AnimatedNumber value={productCount} className={styles.secondaryNumber} />
-            <span className={styles.secondarySub}>Catalogue styles</span>
+            <span className={styles.secondarySub}>In catalog</span>
           </div>
         </Link>
       </div>

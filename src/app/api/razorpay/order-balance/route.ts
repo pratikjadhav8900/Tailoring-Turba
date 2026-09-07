@@ -40,23 +40,41 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized to access this order' }, { status: 403 });
     }
 
-    // 3. Validate order split status
-    if (!order.isSplitPayment) {
-      return NextResponse.json({ error: 'This order is not configured for split payments' }, { status: 400 });
+    // 3. Compute balance due from authoritative ledger
+    const allTx = await prisma.paymentTransaction.findMany({
+      where: { orderId: order.id },
+    });
+
+    let grossPaidPaise = 0;
+    let totalRefundedPaise = 0;
+    for (const t of allTx) {
+      if (t.status === 'CAPTURED') {
+        if (t.type === 'PAYMENT' || t.type === 'ADJUSTMENT') grossPaidPaise += t.amountPaise;
+        if (t.type === 'REFUND') totalRefundedPaise += t.amountPaise;
+      }
     }
 
-    if (order.remainingAmount <= 0 || order.secondPaymentStatus === 'PAID') {
+    // Fallback to order.amountPaid if no ledger transactions exist yet (legacy compatibility)
+    if (allTx.length === 0 && order.amountPaid > 0) {
+      grossPaidPaise = Math.round(order.amountPaid * 100);
+    }
+
+    const netPaidPaise = Math.max(0, grossPaidPaise - totalRefundedPaise);
+    const orderTotalPaise = Math.round(order.totalAmount * 100);
+    const balanceDuePaise = Math.max(0, orderTotalPaise - netPaidPaise);
+
+    if (balanceDuePaise <= 0) {
       return NextResponse.json({ error: 'Balance is already fully paid' }, { status: 400 });
     }
 
-    // 4. Create the Razorpay order for the remaining amount
+    // 4. Create the Razorpay order for the exact remaining balance
     const razorpay = getRazorpay();
-    console.log(`[RAZORPAY] Creating balance order for order ID ${order.id}, remaining amount: ${order.remainingAmount}`);
+    console.log(`[RAZORPAY] Creating balance order for order ID ${order.id}, balance due paise: ${balanceDuePaise}`);
 
     let rzpOrder: any;
     try {
       rzpOrder = await razorpay.orders.create({
-        amount: Math.round(order.remainingAmount * 100), // in paise
+        amount: balanceDuePaise, // in paise
         currency: "INR",
         receipt: `receipt_bal_${order.id.slice(-6)}_${Date.now()}`,
         notes: {

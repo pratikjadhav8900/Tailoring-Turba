@@ -4,9 +4,21 @@ import { sendMail } from "@/lib/mail";
 import { prisma } from "@/lib/prisma";
 import { sanitize } from "@/lib/sanitize";
 import { generateInvoicePdf, InvoiceOrder } from "@/lib/pdf";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
   try {
+    const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "127.0.0.1";
+    
+    // Rate limit public inquiries: Max 5 submissions per 10 minutes per IP
+    const rateLimit = checkRateLimit(`contact_ip_${clientIp}`, 5, 10 * 60 * 1000);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: "Too many contact requests. Please wait a few minutes before submitting again." },
+        { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } }
+      );
+    }
+
     let { name, email, phone, company, quantity, message, cartItems, totalAmount, customCharge } = await req.json();
 
     if (!name || !email || !phone || !message) {

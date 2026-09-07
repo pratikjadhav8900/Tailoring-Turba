@@ -96,7 +96,7 @@ export default function ProductionPipeline({ counts }: { counts: PipelineCounts 
         <div className={styles.headerLeft}>
           <div className={styles.sectionTag}>
             <span className={styles.tagDot} />
-            <span>OPERATIONS PIPELINE // REAL-TIME DISPATCH</span>
+            <span>OPERATIONS PIPELINE</span>
           </div>
           <h2 className={styles.railTitle}>Production &amp; Fulfillment Flow</h2>
           <p className={styles.railDesc}>

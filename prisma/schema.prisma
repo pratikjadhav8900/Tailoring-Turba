@@ -157,6 +157,15 @@ model Order {
   items                 OrderItem[]
   orderSheet            OrderSheet?
   feedback              OrderFeedback?
+  paymentTransactions   PaymentTransaction[]
+  shipments             Shipment[]
+  timelineEvents        OrderTimelineEvent[]
+  outboxNotifications   OutboxNotification[]
+  productionStage       ProductionStage? @default(QUEUED)
+  qcPassedAt            DateTime?
+  qcNotes               String?
+  dispatchOverrideReason String?
+  dispatchOverriddenBy  String?
 }
 
 model OrderItem {
@@ -303,7 +312,12 @@ enum Role {
 
 enum OrderStatus {
   PENDING
+  CONFIRMED
   PROCESSING
+  IN_PRODUCTION
+  QUALITY_CHECK
+  READY_TO_SHIP
+  DISPATCHED
   SHIPPED
   DELIVERED
   CANCELLED
@@ -360,3 +374,168 @@ model OtpRequestLog {
   ip        String
   createdAt DateTime @default(now())
 }
+
+enum ProductionStage {
+  QUEUED
+  FABRIC_ALLOCATION
+  PRINTING_EMBROIDERY
+  STITCHING
+  QC_INSPECTION
+  PACKED
+}
+
+enum TransactionType {
+  PAYMENT
+  REFUND
+  ADJUSTMENT
+}
+
+enum TransactionStatus {
+  PENDING
+  CAPTURED
+  FAILED
+  REFUNDED
+}
+
+enum PaymentProvider {
+  RAZORPAY
+  MANUAL_BANK_TRANSFER
+  UPI_MANUAL
+  CASH
+  SYSTEM_ADJUSTMENT
+}
+
+model PaymentTransaction {
+  id                String            @id @default(cuid())
+  orderId           String
+  order             Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  amountPaise       Int
+  currency          String            @default("INR")
+  type              TransactionType   @default(PAYMENT)
+  status            TransactionStatus @default(PENDING)
+  provider          PaymentProvider   @default(RAZORPAY)
+  providerOrderId   String?
+  providerPaymentId String?           @unique
+  providerSignature String?
+  failureReason     String?
+  referenceNote     String?
+  metadata          Json?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@index([orderId])
+  @@index([providerPaymentId])
+  @@index([status])
+}
+
+enum ShipmentStatus {
+  NOT_CREATED
+  BOOKED
+  PICKED_UP
+  IN_TRANSIT
+  OUT_FOR_DELIVERY
+  DELIVERED
+  FAILED_ATTEMPT
+  RETURNED_TO_ORIGIN
+  CANCELLED
+}
+
+enum CourierProvider {
+  BIGSHIP
+  LOCAL_COURIER
+  DIRECT_PICKUP
+  OTHER
+}
+
+model Shipment {
+  id                  String          @id @default(cuid())
+  orderId             String
+  order               Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  shipmentNumber      Int             @default(1)
+  status              ShipmentStatus  @default(NOT_CREATED)
+  provider            CourierProvider @default(BIGSHIP)
+  courierName         String?
+  awbNumber           String?
+  providerOrderId     String?
+  labelUrl            String?
+  manifestUrl         String?
+  shippingChargePaise Int?
+  weightKg            Float?
+  dimensionsCm        Json?
+  pickupWarehouseId   String?
+  checkpoints         Json?
+  dispatchedAt        DateTime?
+  deliveredAt         DateTime?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  @@index([orderId])
+  @@index([awbNumber])
+  @@index([status])
+}
+
+model ProcessedWebhookEvent {
+  id          String   @id @default(cuid())
+  provider    String
+  eventId     String
+  eventType   String
+  orderId     String?
+  processedAt DateTime @default(now())
+
+  @@unique([provider, eventId])
+  @@index([provider, eventId])
+}
+
+enum EventActorRole {
+  CUSTOMER
+  ADMIN
+  SUPER_ADMIN
+  SYSTEM_WORKER
+  WEBHOOK
+}
+
+model OrderTimelineEvent {
+  id                String         @id @default(cuid())
+  orderId           String
+  order             Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  eventType         String
+  title             String
+  description       String?
+  actorId           String?
+  actorName         String
+  actorRole         EventActorRole @default(SYSTEM_WORKER)
+  isCustomerVisible Boolean        @default(true)
+  metadata          Json?
+  createdAt         DateTime       @default(now())
+
+  @@index([orderId])
+  @@index([createdAt])
+  @@index([isCustomerVisible])
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+model OutboxNotification {
+  id           String             @id @default(cuid())
+  orderId      String
+  order        Order              @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  channel      String             @default("EMAIL")
+  template     String
+  recipient    String
+  payload      Json
+  status       NotificationStatus @default(PENDING)
+  attemptCount Int                @default(0)
+  maxAttempts  Int                @default(5)
+  lastError    String?
+  processedAt  DateTime?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  @@index([status, attemptCount])
+  @@index([orderId])
+}
+

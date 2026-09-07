@@ -5,6 +5,8 @@ import { auth } from "@/lib/auth";
 import Razorpay from "razorpay";
 import { sendBalancePaymentRequestEmail, sendOrderCancellationEmail, sendTaxInvoiceEmail, sendOrderDeliveredEmail } from "@/lib/mail";
 import { generateInvoicePdf } from "@/lib/pdf";
+import { validateOrderTransition } from "@/lib/order-state";
+import { calculateLedgerFromTransactions } from "@/lib/currency";
 
 function getRazorpay() {
   const key_id = process.env.RAZORPAY_KEY_ID;
@@ -28,6 +30,18 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         include: {
           product: true
         }
+      },
+      paymentTransactions: true,
+      shipments: {
+        orderBy: { createdAt: "desc" },
+        take: 1
+      },
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        }
       }
     }
   });
@@ -49,16 +63,29 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
 
-  const { status, bigshipCourierName, bigshipTrackingId } = await req.json();
-  const validStatuses = ["PENDING", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED"];
+  const body = await req.json();
+  const { status, bigshipCourierName, bigshipTrackingId, overrideConfirmed, overrideReason } = body;
+  
+  const validStatuses = [
+    "PENDING",
+    "CONFIRMED",
+    "PROCESSING",
+    "IN_PRODUCTION",
+    "QUALITY_CHECK",
+    "READY_TO_SHIP",
+    "DISPATCHED",
+    "SHIPPED",
+    "DELIVERED",
+    "CANCELLED"
+  ];
   if (!validStatuses.includes(status)) {
-    return NextResponse.json({ error: "Invalid status." }, { status: 400 });
+    return NextResponse.json({ error: `Invalid status: ${status}` }, { status: 400 });
   }
 
-  // Fetch current order state
+  // Fetch current order state and ledger
   const order = await prisma.order.findUnique({
     where: { id: params.id },
-    include: { user: true }
+    include: { user: true, paymentTransactions: true }
   });
 
   if (!order) {
@@ -74,14 +101,65 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     return NextResponse.json({ error: "Forbidden." }, { status: 403 });
   }
 
-  // Customers can only cancel their own orders, and only if status is PENDING or PROCESSING
+  // Customers can only cancel their own orders, and only if status is PENDING, CONFIRMED, or PROCESSING
   if (!isAdmin) {
     if (status !== "CANCELLED") {
       return NextResponse.json({ error: "Forbidden status change." }, { status: 403 });
     }
-    if (order.status !== "PENDING" && order.status !== "PROCESSING") {
-      return NextResponse.json({ error: "Cannot cancel order that has already shipped or completed." }, { status: 400 });
+    if (order.status !== "PENDING" && order.status !== "CONFIRMED" && order.status !== "PROCESSING") {
+      return NextResponse.json({ error: "Cannot cancel order that has already entered production or shipped." }, { status: 400 });
     }
+  }
+
+  // Authoritative Ledger Calculation
+  const ledger = calculateLedgerFromTransactions(
+    Math.round(order.totalAmount * 100),
+    order.paymentTransactions || []
+  );
+  // Legacy fallback if no ledger entries exist
+  if (order.paymentTransactions.length === 0 && order.amountPaid > 0) {
+    const paidPaise = Math.round(order.amountPaid * 100);
+    ledger.grossPaidPaise = paidPaise;
+    ledger.netPaidPaise = paidPaise;
+    ledger.balanceDuePaise = Math.max(0, ledger.orderTotalPaise - paidPaise);
+    ledger.isPaidInFull = ledger.balanceDuePaise === 0;
+  }
+
+  // Enforce transition validation & dispatch gating
+  const validation = validateOrderTransition(order.status, status, ledger, {
+    userRole: role,
+    overrideConfirmed,
+    overrideReason,
+  });
+
+  if (!validation.allowed) {
+    return NextResponse.json({
+      error: validation.message,
+      code: validation.code,
+      balanceDuePaise: ledger.balanceDuePaise,
+    }, { status: validation.code === "UNAUTHORIZED_OVERRIDE" ? 403 : 422 });
+  }
+
+  // If dispatch override was executed, log dedicated audit event
+  if (validation.isOverride) {
+    await prisma.orderTimelineEvent.create({
+      data: {
+        orderId: order.id,
+        eventType: "DISPATCH_OVERRIDE_EXECUTED",
+        title: "Dispatch Override Authorized",
+        description: `Admin override executed by ${session.user.name || session.user.email}. Reason: "${overrideReason}". Outstanding balance: ₹${(ledger.balanceDuePaise / 100).toFixed(2)}.`,
+        actorId: session.user.id,
+        actorName: session.user.name || session.user.email || "Admin",
+        actorRole: role === "SUPER_ADMIN" ? "SUPER_ADMIN" : "ADMIN",
+        isCustomerVisible: false,
+        metadata: {
+          previousStatus: order.status,
+          targetStatus: status,
+          balanceDuePaise: ledger.balanceDuePaise,
+          reason: overrideReason,
+        },
+      },
+    });
   }
 
   // Handle Cancellation (Refund Calculation and API call)

@@ -18,6 +18,7 @@ export default function BigShipShipmentModal({ order, onClose, onSuccess }: Prop
   const [rates, setRates] = useState<any[]>([]);
   const [selectedCourier, setSelectedCourier] = useState<any>(null);
   const [masterOrderId, setMasterOrderId] = useState("");
+  const [overrideReason, setOverrideReason] = useState("");
   
   const [formData, setFormData] = useState({
     warehouseId: "",
@@ -68,6 +69,10 @@ export default function BigShipShipmentModal({ order, onClose, onSuccess }: Prop
 
   const handleBook = async () => {
     if (!selectedCourier) return;
+    if (order.remainingAmount > 0 && !overrideReason.trim()) {
+      toast.error("Override reason required for dispatching unpaid order");
+      return;
+    }
     setBooking(true);
     try {
       const res = await fetch("/api/shipping/book", {
@@ -79,6 +84,8 @@ export default function BigShipShipmentModal({ order, onClose, onSuccess }: Prop
           courierId: selectedCourier.courierId,
           courierName: selectedCourier.courierName,
           shippingCharge: selectedCourier.total_freight || selectedCourier.total,
+          overrideConfirmed: order.remainingAmount > 0 ? true : undefined,
+          overrideReason: order.remainingAmount > 0 ? overrideReason.trim() : undefined,
         }),
       });
       const data = await res.json();
@@ -213,11 +220,43 @@ export default function BigShipShipmentModal({ order, onClose, onSuccess }: Prop
                   ))}
                 </div>
 
+                {order.remainingAmount > 0 && (
+                  <div style={{
+                    marginTop: '20px',
+                    padding: '14px',
+                    background: '#fffbeb',
+                    border: '1px solid #fde68a',
+                    borderRadius: '8px'
+                  }}>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#b45309', marginBottom: '4px' }}>
+                      ⚠️ Dispatch Gating: Balance Due ₹{order.remainingAmount.toLocaleString('en-IN')}
+                    </div>
+                    <div style={{ fontSize: '0.78rem', color: '#92400e', marginBottom: '8px' }}>
+                      Booking a shipment for an order with an unpaid balance requires an audited manager override reason.
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Reason for dispatch override (required)"
+                      value={overrideReason}
+                      onChange={e => setOverrideReason(e.target.value)}
+                      required
+                      style={{
+                        width: '100%',
+                        padding: '10px',
+                        borderRadius: '6px',
+                        border: '1px solid #f59e0b',
+                        fontSize: '0.85rem',
+                        background: 'white'
+                      }}
+                    />
+                  </div>
+                )}
+
                 <button 
                   onClick={handleBook}
                   disabled={booking || !selectedCourier}
                   style={{
-                    marginTop: '24px',
+                    marginTop: '20px',
                     width: '100%',
                     background: selectedCourier ? '#435b43' : '#cbd5e1',
                     color: 'white',

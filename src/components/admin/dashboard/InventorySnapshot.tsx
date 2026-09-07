@@ -44,7 +44,7 @@ export default function InventorySnapshot({
       <div className={styles.consoleHeader}>
         <div className={styles.headerLeft}>
           <div className={styles.tagRow}>
-            <span className={styles.tagMono}>CATALOGUE &amp; FABRIC // TELEMETRY</span>
+            <span className={styles.tagMono}>CATALOGUE &amp; FABRICS</span>
             <span className={styles.activeTag}>
               <AnimatedNumber value={totalCount} /> ACTIVE STYLES
             </span>

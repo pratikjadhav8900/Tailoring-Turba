@@ -43,24 +43,52 @@
   margin-bottom: 8px;
 }
 
-.metricCode {
-  font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 0.6rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  color: var(--color-sage, #829386);
+.iconBadgeGreen {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: #EDF5F0;
+  color: var(--color-tailor-green, #294238);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #D0E0D5;
+}
+
+.iconBadgeSage {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: #F0F4F2;
+  color: var(--color-sage, #5b7362);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #D5DFD8;
+}
+
+.iconBadgeClay {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: #FBF4EE;
+  color: var(--color-muted-clay, #A86B4D);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #EEDCD0;
 }
 
 .categoryTag {
-  font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 0.55rem;
+  font-family: var(--font-ui, 'General Sans', sans-serif);
+  font-size: 0.65rem;
   font-weight: 700;
-  letter-spacing: 0.1em;
-  color: var(--color-tailor-green, #294238);
-  background: #EDF5F0;
-  padding: 1px 6px;
-  border-radius: 2px;
-  border: 1px solid #D0E0D5;
+  letter-spacing: 0.08em;
+  color: var(--color-text-secondary, #64748b);
+  background: #F8FAFC;
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid #E2E8F0;
 }
 
 .metricLabel {

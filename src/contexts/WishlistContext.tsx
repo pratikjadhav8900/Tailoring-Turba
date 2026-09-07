@@ -2,13 +2,20 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 
-type WishlistItem = {
+export type WishlistItem = {
   id: string;
   name: string;
   image: string;
   price: string;
   category: string;
   type: string;
+  description?: string;
+  minOrderQuantity?: number;
+  gallery?: string[];
+  badge?: string;
+  colors?: any;
+  features?: any;
+  brand?: string;
 };
 
 type WishlistContextType = {

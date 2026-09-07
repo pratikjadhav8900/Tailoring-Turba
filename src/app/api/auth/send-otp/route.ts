@@ -87,20 +87,17 @@ export async function POST(request: Request) {
     );
 
     if (hasFirebase) {
-      // Semantic redesign: Firebase handles the actual OTP dispatch on the frontend.
+      // Firebase handles the actual OTP dispatch on the frontend.
       // The backend validates parameters, checks rate limits, and registers the signup attempt.
-      console.log(`[FIREBASE SIGNUP START] Attempt registered: ${signupAttemptId} for ${normalizedPhone}`);
+      console.log(`[FIREBASE SIGNUP START] Attempt registered: ${signupAttemptId}`);
     } else {
-      const isProduction = process.env.NODE_ENV === "production";
-      const enableMock = process.env.ENABLE_MOCK_AUTH === "true";
+      const isTestEnv = process.env.NODE_ENV === "test";
+      const isMockAllowed = isTestEnv && process.env.ENABLE_MOCK_AUTH === "true";
 
-      if (isProduction || !enableMock) {
-        console.error("[AUTH] Firebase configuration keys are missing.");
+      if (!isMockAllowed) {
+        console.error("[AUTH] SMS provider configuration keys are missing.");
         return NextResponse.json({ error: "SMS configuration is missing." }, { status: 500 });
       }
-
-      // Mock developer mode OTP logging (only for local unit/integration tests)
-      console.log(`[DEVELOPMENT MOCK OTP] signupAttemptId: ${signupAttemptId}, phone: ${normalizedPhone}, Mock OTP Sent.`);
     }
 
     return NextResponse.json({ signupAttemptId });

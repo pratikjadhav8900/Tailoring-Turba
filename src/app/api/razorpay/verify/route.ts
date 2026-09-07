@@ -89,57 +89,99 @@ export async function POST(request: NextRequest) {
     const isSecondPayment = existingOrder.secondRazorpayOrderId === razorpay_order_id;
     let order;
 
-    // 5. Update the order in our database
+    // 5. Update the ledger and order in database
     try {
-      if (!isSecondPayment) {
-        // Initial payment (100% or 60%)
-        const initialPaid = existingOrder.isSplitPayment ? existingOrder.totalAmount * 0.60 : existingOrder.totalAmount;
-        const initialRemaining = existingOrder.isSplitPayment ? existingOrder.totalAmount * 0.40 : 0;
+      const amountPaise = Math.round(Number(payment.amount));
 
-        order = await prisma.order.update({
-          where: { id: existingOrder.id },
+      // Record transaction if not already registered by webhook
+      const existingTx = await prisma.paymentTransaction.findUnique({
+        where: { providerPaymentId: razorpay_payment_id },
+      });
+
+      if (!existingTx) {
+        await prisma.paymentTransaction.create({
           data: {
-            status: "PROCESSING",
-            paymentId: razorpay_payment_id,
-            amountPaid: initialPaid,
-            remainingAmount: initialRemaining,
+            orderId: existingOrder.id,
+            amountPaise,
+            currency: payment.currency || 'INR',
+            type: 'PAYMENT',
+            status: 'CAPTURED',
+            provider: 'RAZORPAY',
+            providerOrderId: razorpay_order_id,
+            providerPaymentId: razorpay_payment_id,
+            providerSignature: razorpay_signature,
+            referenceNote: isSecondPayment ? 'Balance Payment' : (existingOrder.isSplitPayment ? 'Advance Payment' : 'Full Payment'),
+            metadata: payment as any,
           },
-          include: {
-            user: true,
-            shippingAddress: true,
-            items: {
-              include: {
-                product: true
-              }
-            }
-          }
         });
-        console.log('Initial order payment finalized successfully:', order.id);
-      } else {
-        // Balance payment (40%)
-        order = await prisma.order.update({
-          where: { id: existingOrder.id },
-          data: {
-            secondPaymentId: razorpay_payment_id,
-            secondPaymentStatus: "PAID",
-            amountPaid: existingOrder.totalAmount, // Mark as fully paid
-            remainingAmount: 0,
-          },
-          include: {
-            user: true,
-            shippingAddress: true,
-            items: {
-              include: {
-                product: true
-              }
-            }
-          }
-        });
-        console.log('Balance order payment finalized successfully:', order.id);
       }
+
+      // Compute authoritative ledger
+      const allTx = await prisma.paymentTransaction.findMany({
+        where: { orderId: existingOrder.id },
+      });
+      const orderTotalPaise = Math.round(existingOrder.totalAmount * 100);
+      let grossPaidPaise = 0;
+      let refundedPaise = 0;
+      for (const t of allTx) {
+        if (t.status === 'CAPTURED') {
+          if (t.type === 'PAYMENT' || t.type === 'ADJUSTMENT') grossPaidPaise += t.amountPaise;
+          if (t.type === 'REFUND') refundedPaise += t.amountPaise;
+        }
+      }
+      const netPaidPaise = Math.max(0, grossPaidPaise - refundedPaise);
+      const balanceDuePaise = Math.max(0, orderTotalPaise - netPaidPaise);
+
+      // Determine order status progression (PENDING -> CONFIRMED)
+      let targetStatus = existingOrder.status;
+      if (existingOrder.status === 'PENDING') {
+        targetStatus = 'CONFIRMED';
+      }
+
+      order = await prisma.order.update({
+        where: { id: existingOrder.id },
+        data: {
+          status: targetStatus,
+          amountPaid: netPaidPaise / 100,
+          remainingAmount: balanceDuePaise / 100,
+          ...(isSecondPayment
+            ? { secondPaymentId: razorpay_payment_id, secondPaymentStatus: 'PAID' }
+            : { paymentId: razorpay_payment_id }
+          ),
+        },
+        include: {
+          user: true,
+          shippingAddress: true,
+          items: {
+            include: {
+              product: true,
+            },
+          },
+        },
+      });
+
+      // Log timeline event
+      await prisma.orderTimelineEvent.create({
+        data: {
+          orderId: existingOrder.id,
+          eventType: isSecondPayment ? 'BALANCE_PAYMENT_CAPTURED' : 'PAYMENT_CAPTURED',
+          title: isSecondPayment ? 'Balance Payment Received' : 'Order Payment Confirmed',
+          description: `Received ₹${(amountPaise / 100).toFixed(2)} via Razorpay (${razorpay_payment_id}). ${balanceDuePaise === 0 ? 'Order is now Paid in Full.' : `Remaining Balance: ₹${(balanceDuePaise / 100).toFixed(2)}`}`,
+          actorName: 'Razorpay Checkout',
+          actorRole: 'CUSTOMER',
+          isCustomerVisible: true,
+          metadata: {
+            amountPaise,
+            balanceDuePaise,
+            providerPaymentId: razorpay_payment_id,
+            isSecondPayment,
+          },
+        },
+      });
+
+      console.log(`[PAYMENT_LEDGER] Payment ${razorpay_payment_id} recorded. Net Paid: ₹${netPaidPaise/100}, Balance: ₹${balanceDuePaise/100}`);
     } catch (dbErr) {
-      console.error("[DB_UPDATE_ERROR] Failed to update order status:", dbErr);
-      // Even if DB update fails, return 200 since Razorpay succeeded
+      console.error("[DB_UPDATE_ERROR] Failed to record payment in ledger:", dbErr);
     }
 
     // 6. Generate PDF invoice & Send email notification

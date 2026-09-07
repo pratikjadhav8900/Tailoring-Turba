@@ -6,19 +6,24 @@ import toast from "react-hot-toast";
 interface LocalShipmentModalProps {
   order: any;
   onClose: () => void;
-  onSubmit: (courierName: string, trackingId: string) => Promise<void>;
+  onSubmit: (courierName: string, trackingId: string, overrideReason?: string) => Promise<void>;
 }
 
 export default function LocalShipmentModal({ order, onClose, onSubmit }: LocalShipmentModalProps) {
   const [courierName, setCourierName] = useState("");
   const [trackingId, setTrackingId] = useState("");
+  const [overrideReason, setOverrideReason] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (order.remainingAmount > 0 && !overrideReason.trim()) {
+      toast.error("An override reason is required for unpaid orders");
+      return;
+    }
     setIsSubmitting(true);
     try {
-      await onSubmit(courierName, trackingId);
+      await onSubmit(courierName, trackingId, overrideReason.trim() || undefined);
     } catch (err) {
       console.error(err);
       toast.error("Failed to update tracking info");
@@ -107,6 +112,38 @@ export default function LocalShipmentModal({ order, onClose, onSubmit }: LocalSh
                 }}
               />
             </div>
+
+            {order.remainingAmount > 0 && (
+              <div style={{
+                marginBottom: "16px",
+                padding: "12px 14px",
+                background: "#fffbeb",
+                border: "1px solid #fde68a",
+                borderRadius: "6px"
+              }}>
+                <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "#b45309", marginBottom: "4px" }}>
+                  ⚠️ Dispatch Gating: Balance Due ₹{order.remainingAmount.toLocaleString('en-IN')}
+                </div>
+                <div style={{ fontSize: "0.75rem", color: "#92400e", marginBottom: "8px" }}>
+                  An audited manager override reason is required to dispatch an order before balance payment is settled.
+                </div>
+                <input
+                  type="text"
+                  placeholder="Reason for dispatch override (required)"
+                  value={overrideReason}
+                  onChange={e => setOverrideReason(e.target.value)}
+                  required
+                  style={{
+                    width: "100%",
+                    padding: "8px 10px",
+                    borderRadius: "4px",
+                    border: "1px solid #f59e0b",
+                    fontSize: "0.85rem",
+                    background: "white"
+                  }}
+                />
+              </div>
+            )}
           </div>
 
           {/* Footer */}

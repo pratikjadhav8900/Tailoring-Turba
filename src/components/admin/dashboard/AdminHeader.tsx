@@ -30,7 +30,7 @@ export default function AdminHeader({ pendingCount }: AdminHeaderProps) {
       <div className={styles.headerMain}>
         {/* Left: Operational Context & Editorial Hierarchy */}
         <div className={styles.contextLeft}>
-          <div className={styles.monoLabel}>OPERATIONS CONTROL // DISPATCH</div>
+          <div className={styles.monoLabel}>MANAGEMENT PORTAL</div>
           <h1 className={styles.headline}>Operations Overview</h1>
           <p className={styles.subtext}>
             Real-time manufacturing pipeline, order intake and enterprise ledger.

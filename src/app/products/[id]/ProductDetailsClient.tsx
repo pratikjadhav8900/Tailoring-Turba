@@ -517,7 +517,7 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
                 </button>
               </div>
               <div className={styles.sizeGrid}>
-                {availableSizes.map((size) => (
+                {availableSizes.map((size: string) => (
                   <button
                     key={size}
                     type="button"

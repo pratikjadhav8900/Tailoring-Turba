@@ -28,6 +28,7 @@ export async function GET(
 
     return NextResponse.json({ error: 'Pincode not found' }, { status: 404 });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("[PINCODE_LOOKUP_ERROR]", error);
+    return NextResponse.json({ error: "Failed to validate pincode." }, { status: 500 });
   }
 }

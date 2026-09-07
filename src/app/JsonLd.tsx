@@ -31,7 +31,7 @@ export default function JsonLd() {
     },
     "address": {
       "@type": "PostalAddress",
-      "streetAddress": "321/1 Pandit Jawaharlal Nehru Marg, Sanjay Departments",
+      "streetAddress": "321/1, Jawaharlal Nehru Road, Mahatma Phule Peth, near HDFC Bank",
       "addressLocality": "Pune",
       "addressRegion": "Maharashtra",
       "postalCode": "411042",

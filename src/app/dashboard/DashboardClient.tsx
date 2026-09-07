@@ -364,7 +364,7 @@ export default function DashboardClient({
                   id: item.id,
                   name: item.name,
                   description: item.description || "",
-                  basePrice: item.price,
+                  basePrice: Number(item.price) || 0,
                   minOrderQuantity: item.minOrderQuantity || 10,
                   images: item.gallery || [item.image],
                   badge: item.badge,
@@ -433,7 +433,7 @@ export default function DashboardClient({
           <h3>Pune Showroom</h3>
           <p className={styles.address}>
             <MapPin size={16} />
-            <span>Tailoring Turba Studio, Fergusson College Road, Pune, Maharashtra</span>
+            <span>321/1, Jawaharlal Nehru Road, Mahatma Phule Peth, near HDFC Bank, Pune, Maharashtra 411042, India</span>
           </p>
           <p className={styles.timings}>
             <Clock size={16} />

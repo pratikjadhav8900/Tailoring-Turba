@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { authConfig } from "@/lib/auth.config";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export class EmailNotVerifiedError extends CredentialsSignin {
   code = "email_not_verified"
@@ -20,33 +21,32 @@ export class InvalidCredentialsError extends CredentialsSignin {
   code = "invalid_credentials"
 }
 
+export class RateLimitExceededError extends CredentialsSignin {
+  code = "rate_limit_exceeded"
+}
+
 const prismaAdapter = PrismaAdapter(prisma);
 let lastSocialAccount: { provider: string; providerAccountId: string; time: number } | null = null;
 
 const customAdapter = {
   ...prismaAdapter,
   async getUserByAccount(providerAndId: { provider: string; providerAccountId: string }) {
-    console.log("[ADAPTER] getUserByAccount called with:", JSON.stringify(providerAndId));
     if (providerAndId.provider === "google" || providerAndId.provider === "apple") {
       lastSocialAccount = {
         provider: providerAndId.provider,
         providerAccountId: providerAndId.providerAccountId,
         time: Date.now(),
       };
-      console.log("[ADAPTER] Set lastSocialAccount:", JSON.stringify(lastSocialAccount));
     }
-    const res = await prismaAdapter.getUserByAccount(providerAndId);
-    console.log("[ADAPTER] getUserByAccount returned:", JSON.stringify(res));
+    const res = await (prismaAdapter as any).getUserByAccount(providerAndId);
     return res;
   },
   async getUserByEmail(email: string) {
-    console.log("[ADAPTER] getUserByEmail called with:", email);
-    const user = await prismaAdapter.getUserByEmail(email);
-    console.log("[ADAPTER] getUserByEmail found user:", JSON.stringify(user));
+    const user = await (prismaAdapter as any).getUserByEmail(email);
     
     if (user && lastSocialAccount && (Date.now() - lastSocialAccount.time < 5000)) {
       // SECURITY: If credentials account is NOT verified, reject linking
-      if (user.password && !user.emailVerified) {
+      if ((user as any).password && !(user as any).emailVerified) {
         lastSocialAccount = null;
         throw new Error("VerificationRequiredToLink");
       }
@@ -58,10 +58,9 @@ const customAdapter = {
             providerAccountId: lastSocialAccount.providerAccountId,
           },
         });
-        console.log("[ADAPTER] checked existing account:", JSON.stringify(existingAccount));
         
         if (!existingAccount) {
-          const newAccountLink = await prisma.account.create({
+          await prisma.account.create({
             data: {
               userId: user.id,
               type: "oidc",
@@ -69,7 +68,6 @@ const customAdapter = {
               providerAccountId: lastSocialAccount.providerAccountId,
             },
           });
-          console.log("[ADAPTER] successfully created account link in DB:", JSON.stringify(newAccountLink));
         }
       } catch (err: any) {
         console.error("[ADAPTER] failed to auto-link account in custom getUserByEmail:", err.message);
@@ -78,18 +76,14 @@ const customAdapter = {
       lastSocialAccount = null;
     }
     
-    const finalUser = await prismaAdapter.getUserByEmail(email);
-    console.log("[ADAPTER] getUserByEmail returning:", JSON.stringify(finalUser));
+    const finalUser = await (prismaAdapter as any).getUserByEmail(email);
     return finalUser;
   },
   async createUser(user: any) {
-    console.log("[ADAPTER] createUser called with:", JSON.stringify(user));
-    const res = await prismaAdapter.createUser(user);
-    console.log("[ADAPTER] createUser returned:", JSON.stringify(res));
+    const res = await (prismaAdapter as any).createUser(user);
     return res;
   },
   async linkAccount(account: any) {
-    console.log("[ADAPTER] linkAccount called with:", JSON.stringify(account));
     // SECURITY: Double guard, verify user email is verified before linking
     const user = await prisma.user.findUnique({
       where: { id: account.userId },
@@ -97,13 +91,12 @@ const customAdapter = {
     if (user && user.password && !user.emailVerified) {
       throw new Error("VerificationRequiredToLink");
     }
-    const res = await prismaAdapter.linkAccount(account);
-    console.log("[ADAPTER] linkAccount returned:", JSON.stringify(res));
+    const res = await (prismaAdapter as any).linkAccount(account);
     return res;
   }
 };
 
-const providersList = [
+const providersList: any[] = [
   GoogleProvider({
     clientId: process.env.GOOGLE_CLIENT_ID || "",
     clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
@@ -120,7 +113,15 @@ const providersList = [
         throw new InvalidCredentialsError();
       }
 
-      let searchIdentifier = (credentials.email as string).trim();
+      let searchIdentifier = (credentials.email as string).trim().toLowerCase();
+
+      // Rate limit credential attempts: Max 10 attempts per 15 minutes per identifier
+      const rateLimit = checkRateLimit(`login_attempt_${searchIdentifier}`, 10, 15 * 60 * 1000);
+      if (!rateLimit.allowed) {
+        console.warn(`[AUTH] Login rate limit exceeded for identifier`);
+        throw new RateLimitExceededError();
+      }
+
       const parsedPhone = parsePhoneNumberFromString(searchIdentifier, "IN");
       if (parsedPhone && parsedPhone.isValid()) {
         searchIdentifier = parsedPhone.number;
@@ -185,9 +186,9 @@ if (isAppleConfigured) {
         teamId: process.env.APPLE_TEAM_ID || "",
         keyId: process.env.APPLE_KEY_ID || "",
         privateKey: process.env.APPLE_PRIVATE_KEY?.replace(/\\n/g, "\n") || "",
-      },
+      } as any,
       allowDangerousEmailAccountLinking: true,
-    })
+    } as any)
   );
 } else {
   console.warn("[AUTH] Apple Sign In is not fully configured in environment variables. Skipping AppleProvider initialization.");
@@ -255,7 +256,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                   token_type: account.token_type,
                   scope: account.scope,
                   id_token: account.id_token,
-                  session_state: account.session_state,
+                  session_state: (account.session_state as string) ?? null,
                 },
               });
               console.log(`Manually linked ${account.provider} account for existing user: ${user.email}`);
@@ -269,7 +270,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
       }
 
-      if (user.email === "tailoringturba@gmail.com") {
+      const superAdminEmails = (process.env.SUPER_ADMIN_EMAILS || "")
+        .split(",")
+        .map((e) => e.trim().toLowerCase())
+        .filter(Boolean);
+
+      if (user.email && superAdminEmails.length > 0 && superAdminEmails.includes(user.email.toLowerCase())) {
         try {
           const dbUser = await prisma.user.findUnique({
             where: { email: user.email },
@@ -279,7 +285,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               where: { email: user.email },
               data: { role: "SUPER_ADMIN" },
             });
-            console.log("Database: Promoted tailoringturba@gmail.com to SUPER_ADMIN");
+            console.log(`Configured bootstrap: Promoted ${user.email} to SUPER_ADMIN`);
           }
         } catch (error) {
           console.error("Error promoting admin in database:", error);

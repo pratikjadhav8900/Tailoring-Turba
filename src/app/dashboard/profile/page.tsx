@@ -18,16 +18,36 @@ export default async function ProfilePage() {
 
   async function updateProfile(formData: FormData) {
     "use server";
-    if (!userId) return;
+    const actionSession = await auth();
+    if (!actionSession?.user?.id) {
+      throw new Error("Unauthorized: Active session required.");
+    }
+    const currentUserId = actionSession.user.id;
+
+    const currentUser = await prisma.user.findUnique({
+      where: { id: currentUserId },
+    });
+    if (!currentUser) return;
+
+    const rawEmail = (formData.get("email") as string)?.trim().toLowerCase();
+    const rawPhone = (formData.get("phone") as string)?.trim();
+    const rawName = (formData.get("name") as string)?.trim();
+    const rawCompanyName = (formData.get("companyName") as string)?.trim();
+    const rawGstNumber = (formData.get("gstNumber") as string)?.trim();
+
+    const isEmailChanged = Boolean(rawEmail && rawEmail !== currentUser.email?.toLowerCase());
+    const isPhoneChanged = Boolean(rawPhone && rawPhone !== currentUser.phone);
 
     await prisma.user.update({
-      where: { id: userId },
+      where: { id: currentUserId },
       data: {
-        name: formData.get("name") as string,
-        email: formData.get("email") as string,
-        phone: formData.get("phone") as string,
-        companyName: formData.get("companyName") as string,
-        gstNumber: formData.get("gstNumber") as string,
+        ...(rawName !== undefined ? { name: rawName } : {}),
+        ...(rawEmail ? { email: rawEmail } : {}),
+        ...(rawPhone !== undefined ? { phone: rawPhone } : {}),
+        companyName: rawCompanyName || null,
+        gstNumber: rawGstNumber || null,
+        ...(isEmailChanged ? { emailVerified: null } : {}),
+        ...(isPhoneChanged ? { phoneVerified: null } : {}),
       },
     });
 

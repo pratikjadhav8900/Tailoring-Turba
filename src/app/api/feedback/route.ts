@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from "next/server";
 import { prisma, withRetry } from "@/lib/prisma";
 import { sanitize } from "@/lib/sanitize";
+import { auth } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
   try {
@@ -77,7 +78,13 @@ export async function POST(req: NextRequest) {
       comment = null;
     }
 
-    // Fetch order to verify eligibility
+    // 1. Authenticate request using session
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+    }
+
+    // 2. Fetch order to verify eligibility and ownership
     const order = await prisma.order.findUnique({
       where: { id: orderId },
       include: { feedback: true }
@@ -85,6 +92,15 @@ export async function POST(req: NextRequest) {
 
     if (!order) {
       return NextResponse.json({ error: "Order not found." }, { status: 404 });
+    }
+
+    // 3. Strict Server-Side Ownership Check (Prevent IDOR)
+    const userRole = (session.user as { role?: string })?.role;
+    const isAdmin = userRole === "ADMIN" || userRole === "SUPER_ADMIN";
+    const isOwner = order.userId === session.user.id;
+
+    if (!isOwner && !isAdmin) {
+      return NextResponse.json({ error: "Forbidden." }, { status: 403 });
     }
 
     if (order.status !== "DELIVERED") {

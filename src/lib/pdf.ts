@@ -87,9 +87,9 @@ export function generateInvoicePdf(order: InvoiceOrder): Promise<Buffer> {
       }
       
       doc.font('Helvetica').fontSize(8)
-         .text('321/a1, Sanjay Departments, Jawaharlal Nehru Marg', margin + 160, y)
-         .text('New Timber Market', margin + 160, y + 10)
-         .text('Pune, Maharashtra - 411002', margin + 160, y + 20);
+         .text('321/1, Jawaharlal Nehru Road, Mahatma Phule Peth', margin + 160, y)
+         .text('Near HDFC Bank', margin + 160, y + 10)
+         .text('Pune, Maharashtra - 411042', margin + 160, y + 20);
 
       doc.font('Helvetica-Bold').fontSize(8)
          .text('Name : ', 400, y)

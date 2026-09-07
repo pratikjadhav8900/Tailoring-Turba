@@ -221,7 +221,12 @@
 }
 
 .badge-pending { background: var(--color-neutral-100); color: var(--color-neutral-600); }
+.badge-confirmed { background: #e0f2fe; color: #0369a1; }
 .badge-processing { background: var(--color-accent-50); color: var(--color-accent-700); }
+.badge-in_production { background: #fef3c7; color: #b45309; }
+.badge-quality_check { background: #f3e8ff; color: #7e22ce; }
+.badge-ready_to_ship { background: #ffedd5; color: #c2410c; }
+.badge-dispatched { background: #e0e7ff; color: #4338ca; }
 .badge-shipped { background: var(--color-neutral-800); color: white; }
 .badge-delivered { background: var(--tth-olive); color: white; }
 .badge-cancelled { background: var(--color-coral-50); color: var(--color-coral-700); }

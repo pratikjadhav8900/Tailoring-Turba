@@ -19,9 +19,6 @@ export const authConfig: NextAuthConfig = {
         token.email = user.email;
         token.role = (user as { role?: string }).role;
       }
-      if (token.email === "tailoringturba@gmail.com") {
-        token.role = "SUPER_ADMIN";
-      }
       return token;
     },
     async session({ session, token }) {
@@ -41,5 +38,5 @@ export const authConfig: NextAuthConfig = {
     signIn: "/login",
     error: "/login",
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
 };

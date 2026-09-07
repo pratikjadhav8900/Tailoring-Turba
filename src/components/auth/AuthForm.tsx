@@ -415,7 +415,7 @@ export default function AuthForm({ initialMode }: AuthFormProps) {
       <div className={styles.authWrapper}>
         <div className={styles.authCard}>
           <div className={styles.banner}>
-            Join the Club & Get <span>15% OFF</span> your first custom order
+            Join & Get <span>15% OFF</span> Your First Order
           </div>
           <div className={styles.content}>
             <div className={styles.header} style={{ marginBottom: '24px' }}>
@@ -471,7 +471,7 @@ export default function AuthForm({ initialMode }: AuthFormProps) {
       <div className={styles.authCard}>
         {/* Savana-inspired Banner */}
         <div className={styles.banner}>
-          Join the Club & Get <span>15% OFF</span> your first custom order
+          Join & Get <span>15% OFF</span> Your First Order
         </div>
 
         {/* Tabs */}
