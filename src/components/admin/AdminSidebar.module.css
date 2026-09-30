@@ -151,10 +151,25 @@
   font-weight: 600;
 }
 
+.iconContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobileActiveGlow {
+  display: none;
+}
+
 .iconWrapper {
   display: flex;
   align-items: center;
   justify-content: center;
+  color: inherit;
+}
+
+.navIcon {
   color: inherit;
 }
 
@@ -275,20 +290,20 @@
 @media (max-width: 1024px) {
   .sidebar {
     width: 100%;
-    height: 54px;
     position: fixed;
     bottom: 0;
     top: auto;
     left: 0;
     flex-direction: row;
-    padding: 0;
+    padding: 4px 6px calc(4px + env(safe-area-inset-bottom, 0px));
     border-right: none;
     border-top: 1px solid var(--color-border, #E2E0D8);
-    background: rgba(255, 255, 255, 0.96);
-    backdrop-filter: blur(12px);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 -2px 16px rgba(23, 25, 22, 0.05);
     z-index: 1000;
-    padding-bottom: env(safe-area-inset-bottom);
-    height: calc(54px + env(safe-area-inset-bottom));
+    height: auto;
   }
 
   .header, .footer {
@@ -299,8 +314,8 @@
     flex-direction: row;
     overflow-x: auto;
     overflow-y: hidden;
-    padding: 0 8px;
-    gap: 8px;
+    padding: 0 4px;
+    gap: 4px;
     width: 100%;
     scrollbar-width: none;
     -ms-overflow-style: none;
@@ -313,7 +328,7 @@
 
   .navGroup {
     flex-direction: row;
-    gap: 2px;
+    gap: 4px;
     align-items: center;
   }
 
@@ -323,7 +338,7 @@
 
   .groupItems {
     flex-direction: row;
-    gap: 2px;
+    gap: 4px;
   }
 
   .item {
@@ -332,29 +347,87 @@
     justify-content: center;
     align-items: center;
     gap: 2px;
-    padding: 4px 8px;
-    min-width: 52px;
-    font-size: 0.62rem;
-    border-radius: 2px;
+    padding: 3px 6px 2px;
+    min-width: 56px;
+    border-radius: 18px;
     background: transparent !important;
+    position: relative;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .iconContainer {
+    position: relative;
+    width: 48px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mobileActiveGlow {
+    display: block;
+    position: absolute;
+    inset: 0;
+    border-radius: 15px;
+    background: rgba(41, 66, 56, 0.08);
+    border: 1px solid rgba(41, 66, 56, 0.06);
+    box-shadow: 0 1px 4px rgba(41, 66, 56, 0.04);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .iconWrapper {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .item:active .iconWrapper {
+    transform: scale(0.92);
+  }
+
+  .navIcon {
+    transition: color 0.2s ease, opacity 0.2s ease, stroke-width 0.2s ease;
+  }
+
+  .item:not(.active) .navIcon {
+    opacity: 0.8;
+    color: #4a574d;
+  }
+
+  .item.active .navIcon {
+    opacity: 1;
+    color: var(--color-ink, #171916);
   }
 
   .itemLabel {
+    position: relative;
+    z-index: 2;
     font-size: 0.6rem;
-    font-weight: 500;
+    line-height: 1.1;
+    margin-top: 1px;
+    text-align: center;
+    letter-spacing: 0.01em;
+    transition: color 0.2s ease, opacity 0.2s ease, font-weight 0.2s ease;
   }
 
-  .active {
-    color: var(--color-tailor-green, #294238) !important;
+  .item:not(.active) .itemLabel {
+    color: #556458;
+    font-weight: 500;
+    opacity: 0.74;
+  }
+
+  .item.active .itemLabel {
+    color: var(--color-ink, #171916) !important;
+    font-weight: 700;
+    opacity: 1;
   }
 
   .activeBar {
-    top: auto;
-    bottom: 2px;
-    left: 20%;
-    right: 20%;
-    width: 60%;
-    height: 2px;
-    border-radius: 1px;
+    display: none !important;
   }
 }

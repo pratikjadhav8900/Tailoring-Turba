@@ -280,7 +280,7 @@ small, .type-caption {
 /* ── MOBILE PADDING ── */
 @media (max-width: 991px) {
   .has-mobile-nav {
-    padding-bottom: 80px;
+    padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
   }
 }
 
