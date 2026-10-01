@@ -1,23 +1,32 @@
 "use client";
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { signOut } from "next-auth/react";
 import { 
   Package, 
-  Paintbrush, 
+  Sparkles, 
   Heart, 
-  Calendar, 
-  User, 
-  ArrowRight, 
-  Trash2, 
+  CalendarCheck, 
   MapPin, 
+  User, 
+  Building2, 
+  FileText, 
+  ChevronRight, 
+  ArrowRight, 
+  Shirt, 
+  Clock, 
   Mail, 
-  Phone,
-  Clock,
-  Sparkles
+  Phone, 
+  MessageCircle, 
+  CheckCircle2, 
+  Trash2, 
+  LogOut,
+  SlidersHorizontal,
+  ExternalLink
 } from "lucide-react";
 import { useWishlist } from "@/contexts/WishlistContext";
-import ProductCard from "@/components/ui/ProductCard";
 import styles from "./page.module.css";
 
 interface OrderItem {
@@ -40,15 +49,22 @@ interface Order {
   id: string;
   totalAmount: number;
   status: string;
-  createdAt: Date;
+  createdAt: string | Date;
   orderNumber: number;
+  productionStage?: string | null;
   items: OrderItem[];
+  shippingAddress?: {
+    street?: string;
+    city?: string;
+    state?: string;
+    postalCode?: string;
+  } | null;
 }
 
 interface Design {
   id: string;
   name: string;
-  createdAt: Date;
+  createdAt: string | Date;
   imageUrl: string | null;
   product: {
     name: string;
@@ -59,7 +75,7 @@ interface Design {
 
 interface Booking {
   id: string;
-  date: Date;
+  date: string | Date;
   timeSlot: string;
   status: string;
 }
@@ -72,22 +88,33 @@ interface Product {
   minOrderQuantity: number;
   images: string[];
   badge: string | null;
-  colors: number | null;
-  features: string[];
   type: string | null;
-  brand: string | null;
 }
 
 interface DashboardClientProps {
   user: {
+    id?: string;
     name?: string | null;
     email?: string | null;
     phone?: string | null;
+    image?: string | null;
+    companyName?: string | null;
+    gstNumber?: string | null;
+    isB2BApproved?: boolean;
+    Address?: Array<{
+      id: string;
+      street: string;
+      city: string;
+      state: string;
+      postalCode: string;
+      isDefault: boolean;
+    }>;
   };
   orders: Order[];
   designs: Design[];
   bookings: Booking[];
   recommendedProducts: Product[];
+  totalOrdersCount?: number;
 }
 
 export default function DashboardClient({
@@ -95,21 +122,25 @@ export default function DashboardClient({
   orders,
   designs: initialDesigns,
   bookings,
-  recommendedProducts
+  recommendedProducts,
+  totalOrdersCount
 }: DashboardClientProps) {
   const { wishlistItems } = useWishlist();
   const [designs, setDesigns] = useState<Design[]>(initialDesigns);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [orderFilter, setOrderFilter] = useState<"all" | "active" | "delivered">("all");
 
-  const getGreeting = () => {
+  const [greeting, setGreeting] = useState("Welcome");
+
+  useEffect(() => {
     const h = new Date().getHours();
-    if (h < 12) return "Good morning";
-    if (h < 17) return "Good afternoon";
-    return "Good evening";
-  };
+    if (h < 12) setGreeting("Good morning");
+    else if (h < 17) setGreeting("Good afternoon");
+    else setGreeting("Good evening");
+  }, []);
 
   const handleDeleteDesign = async (designId: string) => {
-    if (!confirm("Are you sure you want to delete this design?")) return;
+    if (!confirm("Are you sure you want to delete this saved design?")) return;
     setDeletingId(designId);
     try {
       const res = await fetch(`/api/designs/${designId}`, {
@@ -128,205 +159,466 @@ export default function DashboardClient({
     }
   };
 
+  // Real order stats
+  const totalCount = totalOrdersCount !== undefined ? totalOrdersCount : orders.length;
+  const activeOrders = orders.filter(o => o.status !== "DELIVERED" && o.status !== "CANCELLED");
+  const deliveredOrders = orders.filter(o => o.status === "DELIVERED");
+  const activeCount = activeOrders.length;
+  const deliveredCount = deliveredOrders.length;
+
+  // Active / Spotlight Order
+  const spotlightOrder = activeOrders[0] || orders[0] || null;
+
+  // Order timeline calculations
+  const getOrderStageIndex = (status: string) => {
+    const s = status.toUpperCase();
+    if (s === "DELIVERED") return 3;
+    if (s === "DISPATCHED" || s === "SHIPPED") return 3;
+    if (s === "QUALITY_CHECK" || s === "READY_TO_SHIP") return 2;
+    if (s === "PROCESSING" || s === "IN_PRODUCTION") return 1;
+    return 0; // PENDING, CONFIRMED
+  };
+
+  // Filtered orders list
+  const filteredOrders = orderFilter === "all" 
+    ? orders 
+    : orderFilter === "active" 
+      ? activeOrders 
+      : deliveredOrders;
+
+  const userInitial = (user?.name?.[0] || user?.email?.[0] || "U").toUpperCase();
+  const [imgError, setImgError] = useState(false);
+
   return (
-    <div className={styles.container}>
+    <div className={styles.hubContainer}>
       
-      {/* 1. Header Section */}
-      <header className={styles.header}>
-        <div className={styles.headerWelcome}>
-          <h1 className={styles.welcomeTitle}>
-            {getGreeting()}, {user?.name?.split(" ")[0] || "Guest"}
-          </h1>
-          <p className={styles.welcomeSub}>
-            Manage your orders, custom designs, and showroom bookings in one space.
-          </p>
+      {/* ── SECTION 1: CUSTOMER HEADER ── */}
+      <header className={styles.customerHeader}>
+        <div className={styles.profileRow}>
+          <div className={styles.avatarWrapper} style={{ position: "relative" }}>
+            <div className={styles.avatarInitial}>{userInitial}</div>
+            {user?.image && !imgError && (
+              <img 
+                key={user.image}
+                src={user.image} 
+                alt={user.name || "Customer"} 
+                width={56} 
+                height={56} 
+                className={styles.avatarImg}
+                referrerPolicy="no-referrer"
+                onError={() => setImgError(true)}
+                style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+              />
+            )}
+          </div>
+          <div className={styles.profileDetails}>
+            <div className={styles.nameRow}>
+              <h1 className={styles.customerName}>
+                {greeting}, {user?.name?.split(" ")[0] || "Customer"}
+              </h1>
+              {user?.isB2BApproved && (
+                <span className={styles.verifiedBadge}>Verified B2B</span>
+              )}
+            </div>
+            <p className={styles.customerSubtitle}>Manage your orders, custom apparel & details</p>
+            <div className={styles.metaRow}>
+              {user?.email && <span className={styles.metaItem}>{user.email}</span>}
+              {user?.phone && (
+                <>
+                  <span className={styles.metaDot}>•</span>
+                  <span className={styles.metaItem}>{user.phone}</span>
+                </>
+              )}
+              {user?.companyName && (
+                <>
+                  <span className={styles.metaDot}>•</span>
+                  <span className={styles.companyBadge}>
+                    <Building2 size={12} /> {user.companyName}
+                  </span>
+                </>
+              )}
+            </div>
+          </div>
+          <Link href="/dashboard/profile" className={styles.editProfileBtn} aria-label="Edit Profile">
+            Edit
+          </Link>
         </div>
-        <Link href="/customizer" className={styles.startDesigningCta}>
-          <Sparkles size={16} />
-          <span>Start Designing</span>
-        </Link>
       </header>
 
-      {/* 2. Quick Actions */}
-      <section className={styles.quickActions}>
-        <Link href="#orders" className={styles.actionCard}>
-          <Package className={styles.actionIcon} size={22} strokeWidth={1.5} />
-          <div className={styles.actionInfo}>
-            <h4>My Orders</h4>
-            <p>Track delivery & history</p>
-          </div>
-        </Link>
-        <Link href="#designs" className={styles.actionCard}>
-          <Paintbrush className={styles.actionIcon} size={22} strokeWidth={1.5} />
-          <div className={styles.actionInfo}>
-            <h4>Saved Designs</h4>
-            <p>Continue customization</p>
-          </div>
-        </Link>
-        <Link href="#wishlist" className={styles.actionCard}>
-          <Heart className={styles.actionIcon} size={22} strokeWidth={1.5} />
-          <div className={styles.actionInfo}>
-            <h4>Wishlist</h4>
-            <p>View bookmarked styles</p>
-          </div>
-        </Link>
-        <Link href="/dashboard/profile" className={styles.actionCard}>
-          <User className={styles.actionIcon} size={22} strokeWidth={1.5} />
-          <div className={styles.actionInfo}>
-            <h4>Profile</h4>
-            <p>Manage account settings</p>
-          </div>
-        </Link>
-      </section>
-
-      {/* 3. Recent Orders */}
-      <section id="orders" className={styles.section}>
-        <div className={styles.sectionHeader}>
-          <h3 className={styles.sectionTitle}>Recent Orders</h3>
+      {/* ── SECTION 2: ORDER OVERVIEW ── */}
+      <section className={styles.orderOverviewSection}>
+        <div className={styles.overviewHeader}>
+          <h2 className={styles.sectionHeading}>Your Orders</h2>
           {orders.length > 0 && (
-            <Link href="/dashboard/orders" className={styles.sectionLink}>
-              View All Orders <ArrowRight size={14} />
+            <Link href="/dashboard/orders" className={styles.viewAllLink}>
+              View All ({totalCount}) <ChevronRight size={14} />
             </Link>
           )}
         </div>
 
-        {orders.length === 0 ? (
-          <div className={styles.emptyBox}>
-            <p className={styles.emptyText}>You haven't placed an order yet.</p>
-            <div className={styles.emptyCtas}>
-              <Link href="/customizer" className={styles.emptyBtnPrimary}>
-                Start Designing
-              </Link>
-              <Link href="/products" className={styles.emptyBtnSecondary}>
-                Explore Products
-              </Link>
-            </div>
-          </div>
-        ) : (
-          <div className={styles.ordersList}>
-            {orders.map((order) => (
-              <div key={order.id} className={styles.orderItem}>
-                <div className={styles.orderMetaRow}>
-                  <div>
-                    <span className={styles.orderNumber}>Order #TT{order.orderNumber}</span>
-                    <span className={styles.orderDate}>
-                      Placed on {new Date(order.createdAt).toLocaleDateString("en-IN", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric"
-                      })}
-                    </span>
-                  </div>
-                  <span className={`${styles.statusBadge} ${styles[order.status.toLowerCase()] || ""}`}>
-                    {order.status}
-                  </span>
-                </div>
+        {/* Real Summary Metrics */}
+        <div className={styles.orderStatsGrid}>
+          <button 
+            type="button"
+            onClick={() => setOrderFilter("all")}
+            className={`${styles.statPill} ${orderFilter === "all" ? styles.activeStatPill : ""}`}
+          >
+            <span className={styles.statCount}>{totalCount}</span>
+            <span className={styles.statLabel}>Total Orders</span>
+          </button>
+          <button 
+            type="button"
+            onClick={() => setOrderFilter("active")}
+            className={`${styles.statPill} ${orderFilter === "active" ? styles.activeStatPill : ""}`}
+          >
+            <span className={styles.statCount}>{activeCount}</span>
+            <span className={styles.statLabel}>In Progress</span>
+          </button>
+          <button 
+            type="button"
+            onClick={() => setOrderFilter("delivered")}
+            className={`${styles.statPill} ${orderFilter === "delivered" ? styles.activeStatPill : ""}`}
+          >
+            <span className={styles.statCount}>{deliveredCount}</span>
+            <span className={styles.statLabel}>Delivered</span>
+          </button>
+        </div>
+      </section>
 
-                <div className={styles.orderProducts}>
-                  {order.items.map((item) => {
-                    const fallbackImg = item.product.images?.[0] || "";
-                    const thumbnail = item.mockupUrl || fallbackImg;
+      {/* ── SECTION 3: ACTIVE / SPOTLIGHT ORDER ── */}
+      <section className={styles.spotlightSection}>
+        {spotlightOrder ? (
+          <div className={styles.spotlightCard}>
+            <div className={styles.spotlightCardHeader}>
+              <div className={styles.orderIdent}>
+                <span className={styles.orderNumberLabel}>Order #TT{spotlightOrder.orderNumber}</span>
+                <span className={styles.orderDateLabel}>
+                  Placed on {new Date(spotlightOrder.createdAt).toLocaleDateString("en-IN", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric"
+                  })}
+                </span>
+              </div>
+              <span className={`${styles.statusChip} ${styles[spotlightOrder.status.toLowerCase()] || styles.chipDefault}`}>
+                {spotlightOrder.status.replace(/_/g, " ")}
+              </span>
+            </div>
+
+            {/* Stepper Progress */}
+            {spotlightOrder.status !== "CANCELLED" && (
+              <div className={styles.stepperContainer}>
+                <div className={styles.stepperBar}>
+                  <div 
+                    className={styles.stepperProgressLine} 
+                    style={{ width: `${(getOrderStageIndex(spotlightOrder.status) / 3) * 100}%` }}
+                  />
+                </div>
+                <div className={styles.stepperSteps}>
+                  {[
+                    { label: "Placed", index: 0 },
+                    { label: "Production", index: 1 },
+                    { label: "QC Passed", index: 2 },
+                    { label: spotlightOrder.status === "DELIVERED" ? "Delivered" : "Dispatched", index: 3 }
+                  ].map((step) => {
+                    const currentIdx = getOrderStageIndex(spotlightOrder.status);
+                    const isDone = currentIdx >= step.index;
+                    const isCurrent = currentIdx === step.index;
                     return (
-                      <div key={item.id} className={styles.orderProductRow}>
-                        <div className={styles.orderProductThumb}>
-                          {thumbnail ? (
-                            <Image
-                              src={thumbnail}
-                              alt={item.product.name}
-                              fill
-                              style={{ objectFit: "contain" }}
-                            />
-                          ) : (
-                            <div className={styles.noThumb}>No Img</div>
-                          )}
+                      <div key={step.label} className={styles.stepNode}>
+                        <div className={`${styles.stepDot} ${isDone ? styles.stepDotDone : ""} ${isCurrent ? styles.stepDotCurrent : ""}`}>
+                          {isDone ? <CheckCircle2 size={12} /> : null}
                         </div>
-                        <div className={styles.orderProductInfo}>
-                          <h5>{item.product.name}</h5>
-                          <p className={styles.orderProductSpecs}>
-                            {item.quantity} pieces {item.design?.name ? `· Design: ${item.design.name}` : ""}
-                          </p>
-                        </div>
-                        <div className={styles.orderProductPrice}>
-                          ₹{item.price.toLocaleString("en-IN")}
-                        </div>
+                        <span className={`${styles.stepLabel} ${isDone ? styles.stepLabelDone : ""}`}>
+                          {step.label}
+                        </span>
                       </div>
                     );
                   })}
                 </div>
-
-                <div className={styles.orderFooter}>
-                  <div className={styles.orderTotal}>
-                    Total Amount: <span>₹{order.totalAmount.toLocaleString("en-IN")}</span>
-                  </div>
-                  <div className={styles.orderActions}>
-                    <Link href={`/dashboard/orders/${order.id}`} className={styles.viewOrderBtn}>
-                      View Order Details
-                    </Link>
-                  </div>
-                </div>
               </div>
-            ))}
+            )}
+
+            {/* Item preview */}
+            <div className={styles.spotlightItems}>
+              {spotlightOrder.items.slice(0, 2).map((item) => {
+                const img = item.mockupUrl || item.product.images?.[0] || "/placeholder_apparel.png";
+                return (
+                  <div key={item.id} className={styles.itemRow}>
+                    <div className={styles.itemThumb}>
+                      <Image 
+                        src={img} 
+                        alt={item.product.name} 
+                        width={48} 
+                        height={48} 
+                        style={{ objectFit: "contain" }}
+                        unoptimized
+                      />
+                    </div>
+                    <div className={styles.itemText}>
+                      <div className={styles.itemTitle}>{item.product.name}</div>
+                      <div className={styles.itemSpecs}>
+                        {item.quantity} pieces {item.design?.name ? `• ${item.design.name}` : ""}
+                      </div>
+                    </div>
+                    <div className={styles.itemPrice}>
+                      ₹{item.price.toLocaleString("en-IN")}
+                    </div>
+                  </div>
+                );
+              })}
+              {spotlightOrder.items.length > 2 && (
+                <div className={styles.moreItemsNote}>
+                  + {spotlightOrder.items.length - 2} more item(s) in this order
+                </div>
+              )}
+            </div>
+
+            {/* Spotlight Actions */}
+            <div className={styles.spotlightFooter}>
+              <div className={styles.spotlightTotal}>
+                Total: <span>₹{spotlightOrder.totalAmount.toLocaleString("en-IN")}</span>
+              </div>
+              <div className={styles.spotlightBtns}>
+                <Link 
+                  href={`/dashboard/orders/${spotlightOrder.id}`} 
+                  className={styles.trackOrderBtn}
+                >
+                  Track Order Details
+                </Link>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className={styles.emptyOrderCard}>
+            <div className={styles.emptyIconCircle}>
+              <Package size={24} />
+            </div>
+            <h3 className={styles.emptyTitle}>No orders yet</h3>
+            <p className={styles.emptyDesc}>Explore our wholesale catalogue and customize your team apparel.</p>
+            <Link href="/products" className={styles.primaryActionBtn}>
+              Explore Catalogue
+            </Link>
           </div>
         )}
       </section>
 
-      {/* 4. Continue Designing */}
-      <section id="designs" className={styles.section}>
-        <div className={styles.sectionHeader}>
-          <h3 className={styles.sectionTitle}>Continue Designing</h3>
+      {/* ── SECTION 4: QUICK ACCESS (2-COLUMN GRID) ── */}
+      <section className={styles.quickAccessSection}>
+        <h2 className={styles.sectionHeading}>Quick Access</h2>
+        <div className={styles.quickGrid}>
+          
+          <Link href="/dashboard/orders" className={styles.quickTile}>
+            <div className={styles.tileIconBox}>
+              <Package size={20} />
+            </div>
+            <div className={styles.tileContent}>
+              <div className={styles.tileTitleRow}>
+                <span className={styles.tileTitle}>My Orders</span>
+                {totalCount > 0 && <span className={styles.tileBadge}>{totalCount}</span>}
+              </div>
+              <p className={styles.tileDesc}>Track delivery & invoices</p>
+            </div>
+          </Link>
+
+          <Link href="/dashboard/designs" className={styles.quickTile}>
+            <div className={styles.tileIconBox}>
+              <Sparkles size={20} />
+            </div>
+            <div className={styles.tileContent}>
+              <div className={styles.tileTitleRow}>
+                <span className={styles.tileTitle}>Saved Designs</span>
+                {designs.length > 0 && <span className={styles.tileBadge}>{designs.length}</span>}
+              </div>
+              <p className={styles.tileDesc}>Continue 3D customizer</p>
+            </div>
+          </Link>
+
+          <Link href="/wishlist" className={styles.quickTile}>
+            <div className={styles.tileIconBox}>
+              <Heart size={20} />
+            </div>
+            <div className={styles.tileContent}>
+              <div className={styles.tileTitleRow}>
+                <span className={styles.tileTitle}>Wishlist</span>
+                {wishlistItems.length > 0 && <span className={styles.tileBadge}>{wishlistItems.length}</span>}
+              </div>
+              <p className={styles.tileDesc}>Bookmarked styles</p>
+            </div>
+          </Link>
+
+          <Link href="/customizer" className={styles.quickTile}>
+            <div className={styles.tileIconBox}>
+              <Shirt size={20} />
+            </div>
+            <div className={styles.tileContent}>
+              <div className={styles.tileTitleRow}>
+                <span className={styles.tileTitle}>Customizer</span>
+              </div>
+              <p className={styles.tileDesc}>Design new apparel</p>
+            </div>
+          </Link>
+
+          <Link href="/dashboard/bookings" className={styles.quickTile}>
+            <div className={styles.tileIconBox}>
+              <CalendarCheck size={20} />
+            </div>
+            <div className={styles.tileContent}>
+              <div className={styles.tileTitleRow}>
+                <span className={styles.tileTitle}>Showroom Visits</span>
+                {bookings.length > 0 && <span className={styles.tileBadge}>{bookings.length}</span>}
+              </div>
+              <p className={styles.tileDesc}>Pune studio appointments</p>
+            </div>
+          </Link>
+
+          <Link href="/dashboard/profile" className={styles.quickTile}>
+            <div className={styles.tileIconBox}>
+              <MapPin size={20} />
+            </div>
+            <div className={styles.tileContent}>
+              <div className={styles.tileTitleRow}>
+                <span className={styles.tileTitle}>Addresses</span>
+              </div>
+              <p className={styles.tileDesc}>Shipping destinations</p>
+            </div>
+          </Link>
+
+        </div>
+      </section>
+
+      {/* ── SECTION 5: BUSINESS & ACCOUNT ── */}
+      <section className={styles.businessSection}>
+        <h2 className={styles.sectionHeading}>Account & Business Settings</h2>
+        <div className={styles.menuGroupCard}>
+          
+          <Link href="/dashboard/profile" className={styles.menuRow}>
+            <div className={styles.menuLeft}>
+              <div className={styles.menuIcon}>
+                <User size={18} />
+              </div>
+              <div className={styles.menuText}>
+                <div className={styles.menuTitle}>Personal Information</div>
+                <div className={styles.menuSub}>{user.name || "Manage name, email & phone"}</div>
+              </div>
+            </div>
+            <ChevronRight size={18} className={styles.menuChevron} />
+          </Link>
+
+          <div className={styles.menuDivider} />
+
+          <Link href="/dashboard/profile" className={styles.menuRow}>
+            <div className={styles.menuLeft}>
+              <div className={styles.menuIcon}>
+                <Building2 size={18} />
+              </div>
+              <div className={styles.menuText}>
+                <div className={styles.menuTitle}>Business & GST Details</div>
+                <div className={styles.menuSub}>
+                  {user.companyName 
+                    ? `${user.companyName} • GST: ${user.gstNumber || "Not set"}`
+                    : "Add company name & GST for B2B tax invoices"}
+                </div>
+              </div>
+            </div>
+            <ChevronRight size={18} className={styles.menuChevron} />
+          </Link>
+
+          <div className={styles.menuDivider} />
+
+          <Link href="/dashboard/profile" className={styles.menuRow}>
+            <div className={styles.menuLeft}>
+              <div className={styles.menuIcon}>
+                <MapPin size={18} />
+              </div>
+              <div className={styles.menuText}>
+                <div className={styles.menuTitle}>Saved Addresses</div>
+                <div className={styles.menuSub}>
+                  {user.Address && user.Address.length > 0 
+                    ? `${user.Address.length} address(es) configured`
+                    : "Add shipping & billing destinations"}
+                </div>
+              </div>
+            </div>
+            <ChevronRight size={18} className={styles.menuChevron} />
+          </Link>
+
+          <div className={styles.menuDivider} />
+
+          <Link href="/dashboard/transactions" className={styles.menuRow}>
+            <div className={styles.menuLeft}>
+              <div className={styles.menuIcon}>
+                <FileText size={18} />
+              </div>
+              <div className={styles.menuText}>
+                <div className={styles.menuTitle}>Invoices & Payments</div>
+                <div className={styles.menuSub}>View past transaction receipts</div>
+              </div>
+            </div>
+            <ChevronRight size={18} className={styles.menuChevron} />
+          </Link>
+
+        </div>
+      </section>
+
+      {/* ── SECTION 6: SAVED CONTENT ── */}
+      <section className={styles.savedContentSection}>
+        <div className={styles.savedSectionHeader}>
+          <h2 className={styles.sectionHeading}>Saved Custom Designs</h2>
           {designs.length > 0 && (
-            <Link href="/dashboard/designs" className={styles.sectionLink}>
-              View All Designs <ArrowRight size={14} />
+            <Link href="/dashboard/designs" className={styles.viewAllLink}>
+              View All ({designs.length}) <ChevronRight size={14} />
             </Link>
           )}
         </div>
 
         {designs.length === 0 ? (
-          <div className={styles.emptyBox}>
-            <p className={styles.emptyText}>No saved custom designs found.</p>
-            <Link href="/customizer" className={styles.emptyBtnPrimary}>
-              + Start New Design
+          <div className={styles.emptySavedBox}>
+            <p className={styles.emptySavedText}>No saved custom designs yet.</p>
+            <Link href="/customizer" className={styles.emptyActionSmall}>
+              + Start 3D Design
             </Link>
           </div>
         ) : (
-          <div className={styles.designsGrid}>
-            {designs.map((design) => {
-              const fallbackImage = design.product?.images?.[0] || "/placeholder_apparel.png";
-              const imageUrl = design.imageUrl || fallbackImage;
-
+          <div className={styles.designsShelf}>
+            {designs.slice(0, 3).map((design) => {
+              const img = design.imageUrl || design.product?.images?.[0] || "/placeholder_apparel.png";
               return (
-                <div key={design.id} className={styles.designCard}>
-                  <div className={styles.designImageWrapper}>
-                    <Image
-                      src={imageUrl}
-                      alt={design.name}
-                      fill
+                <div key={design.id} className={styles.designMiniCard}>
+                  <div className={styles.designThumb}>
+                    <Image 
+                      src={img} 
+                      alt={design.name} 
+                      fill 
                       style={{ objectFit: "contain" }}
-                      sizes="(max-width: 768px) 50vw, 25vw"
+                      sizes="120px"
+                      unoptimized
                     />
                   </div>
-                  <div className={styles.designContent}>
-                    <h4 className={styles.designName}>{design.name}</h4>
-                    <p className={styles.designMeta}>
-                      {design.product?.name || "Custom Apparel"} · {new Date(design.createdAt).toLocaleDateString("en-IN", {
+                  <div className={styles.designInfo}>
+                    <div className={styles.designTitle}>{design.name}</div>
+                    <div className={styles.designDate}>
+                      {new Date(design.createdAt).toLocaleDateString("en-IN", {
                         day: "numeric",
                         month: "short"
                       })}
-                    </p>
-                    <div className={styles.designActions}>
+                    </div>
+                    <div className={styles.designActionsRow}>
                       <Link 
-                        href={`/customizer?designId=${design.id}`} 
-                        className={styles.designEditBtn}
+                        href={`/customizer?designId=${design.id}`}
+                        className={styles.designEditAction}
                       >
-                        Edit
+                        Edit in 3D
                       </Link>
                       <button
+                        type="button"
                         onClick={() => handleDeleteDesign(design.id)}
                         disabled={deletingId === design.id}
-                        className={styles.designDeleteBtn}
-                        title="Delete saved design"
+                        className={styles.designDeleteAction}
+                        title="Delete design"
+                        aria-label="Delete design"
                       >
-                        <Trash2 size={14} />
+                        <Trash2 size={13} />
                       </button>
                     </div>
                   </div>
@@ -337,132 +629,68 @@ export default function DashboardClient({
         )}
       </section>
 
-      {/* 5. Wishlist */}
-      <section id="wishlist" className={styles.section}>
-        <div className={styles.sectionHeader}>
-          <h3 className={styles.sectionTitle}>My Wishlist</h3>
-          {wishlistItems.length > 0 && (
-            <Link href="/wishlist" className={styles.sectionLink}>
-              Manage Wishlist <ArrowRight size={14} />
-            </Link>
-          )}
-        </div>
+      {/* ── SECTION 7: SUPPORT ── */}
+      <section className={styles.supportSection}>
+        <h2 className={styles.sectionHeading}>Customer Support & Showroom</h2>
+        <div className={styles.supportCardsGrid}>
+          
+          {/* WhatsApp Direct Chat */}
+          <a 
+            href="https://wa.me/919022553346?text=Hi%20Tailoring%20Turba%2C%20I%20have%20an%20enquiry%20regarding%20my%20orders%2Fbulk%20manufacturing" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className={styles.supportTileWhatsapp}
+          >
+            <div className={styles.supportIconWhatsapp}>
+              <MessageCircle size={22} />
+            </div>
+            <div className={styles.supportContent}>
+              <div className={styles.supportTitle}>Chat with us on WhatsApp</div>
+              <div className={styles.supportSub}>Quick assistance with sizing, pricing & bulk orders &rarr;</div>
+            </div>
+          </a>
 
-        {wishlistItems.length === 0 ? (
-          <div className={styles.emptyBox}>
-            <p className={styles.emptyText}>Your wishlist is empty.</p>
-            <Link href="/products" className={styles.emptyBtnSecondary}>
-              Explore Products
-            </Link>
-          </div>
-        ) : (
-          <div className={styles.productsGrid}>
-            {wishlistItems.slice(0, 4).map((item) => (
-              <ProductCard
-                key={item.id}
-                product={{
-                  id: item.id,
-                  name: item.name,
-                  description: item.description || "",
-                  basePrice: Number(item.price) || 0,
-                  minOrderQuantity: item.minOrderQuantity || 10,
-                  images: item.gallery || [item.image],
-                  badge: item.badge,
-                  colors: item.colors,
-                  features: item.features || [],
-                  type: item.type,
-                  brand: item.brand
-                }}
-              />
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* 6. Upcoming Appointments */}
-      {bookings.length > 0 && (
-        <section className={styles.section}>
-          <div className={styles.sectionHeader}>
-            <h3 className={styles.sectionTitle}>Pune Showroom Appointments</h3>
-            <Link href="/booking" className={styles.sectionLink}>
-              Book Another Visit <ArrowRight size={14} />
-            </Link>
-          </div>
-          <div className={styles.bookingsGrid}>
-            {bookings.map((booking) => (
-              <div key={booking.id} className={styles.bookingCard}>
-                <Calendar className={styles.bookingIcon} size={20} />
-                <div className={styles.bookingInfo}>
-                  <h5>
-                    {new Date(booking.date).toLocaleDateString("en-IN", {
-                      weekday: "long",
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric"
-                    })}
-                  </h5>
-                  <p>{booking.timeSlot}</p>
-                </div>
-                <span className={`${styles.bookingStatus} ${styles[booking.status.toLowerCase()] || ""}`}>
-                  {booking.status}
-                </span>
+          {/* Pune Showroom Card */}
+          <div className={styles.showroomTile}>
+            <div className={styles.showroomHeader}>
+              <div className={styles.showroomTitle}>
+                <MapPin size={16} /> Pune Showroom & Experience Centre
               </div>
-            ))}
+              <span className={styles.timingBadge}>
+                <Clock size={12} /> 11:00 AM – 8:00 PM
+              </span>
+            </div>
+            <p className={styles.showroomAddress}>
+              321/1, Jawaharlal Nehru Road, Mahatma Phule Peth, near HDFC Bank, Pune 411042
+            </p>
+            <div className={styles.showroomActions}>
+              <Link href="/booking" className={styles.showroomBtn}>
+                Book Consultation Visit
+              </Link>
+              <a 
+                href="tel:+919022553346" 
+                className={styles.callBtn}
+                aria-label="Call Tailoring Turba"
+              >
+                <Phone size={14} /> +91 90225 53346
+              </a>
+            </div>
           </div>
-        </section>
-      )}
 
-      {/* 7. Explore More Apparel (Recommendations) */}
-      <section className={styles.section}>
-        <div className={styles.sectionHeader}>
-          <h3 className={styles.sectionTitle}>Explore More Apparel</h3>
-          <Link href="/products" className={styles.sectionLink}>
-            Browse All <ArrowRight size={14} />
-          </Link>
-        </div>
-        <div className={styles.productsGrid}>
-          {recommendedProducts.map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
         </div>
       </section>
 
-      {/* 8. Account Summary & Support Info */}
-      <section className={styles.accountSupport}>
-        <div className={styles.supportCard}>
-          <h3>Pune Showroom</h3>
-          <p className={styles.address}>
-            <MapPin size={16} />
-            <span>321/1, Jawaharlal Nehru Road, Mahatma Phule Peth, near HDFC Bank, Pune, Maharashtra 411042, India</span>
-          </p>
-          <p className={styles.timings}>
-            <Clock size={16} />
-            <span>Open daily: 11:00 AM – 8:00 PM</span>
-          </p>
-          <div className={styles.supportLinks}>
-            <Link href="/booking" className={styles.supportCta}>
-              Book Showroom Consultation
-            </Link>
-          </div>
-        </div>
-
-        <div className={styles.supportCard}>
-          <h3>Contact Support</h3>
-          <p className={styles.supportDesc}>
-            Need assistance with bulk customization, sizing charts, or custom fabric sourcing?
-          </p>
-          <div className={styles.contactDetails}>
-            <a href="mailto:tailoringturba@gmail.com" className={styles.contactItem}>
-              <Mail size={16} />
-              <span>tailoringturba@gmail.com</span>
-            </a>
-            <a href="tel:+919022553346" className={styles.contactItem}>
-              <Phone size={16} />
-              <span>+91 90225 53346</span>
-            </a>
-          </div>
-        </div>
-      </section>
+      {/* ── SECTION 8: LOG OUT ── */}
+      <div className={styles.logoutWrapper}>
+        <button
+          type="button"
+          onClick={() => signOut({ callbackUrl: "/" })}
+          className={styles.logoutButton}
+        >
+          <LogOut size={16} />
+          <span>Sign Out</span>
+        </button>
+      </div>
 
     </div>
   );

@@ -1,47 +1,58 @@
 .mobileNav {
   position: fixed;
-  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
-  left: 16px;
-  right: 16px;
-  width: calc(100% - 32px);
-  max-width: 420px;
+  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  left: 14px;
+  right: 14px;
+  width: calc(100% - 28px);
+  max-width: 430px;
   margin: 0 auto;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(226, 224, 216, 0.9);
-  border-radius: 30px;
+  border: 1px solid rgba(226, 224, 216, 0.85);
+  border-radius: 28px;
   box-shadow: 0 4px 20px rgba(23, 25, 22, 0.07), 0 1px 3px rgba(23, 25, 22, 0.04);
   z-index: 99999;
-  padding: 6px 6px;
+  padding: 4px 5px;
   display: none;
   box-sizing: border-box;
 }
 
+@media (max-width: 991px) {
+  .mobileNav {
+    display: block;
+  }
+}
+
 .container {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   align-items: center;
   justify-items: center;
   width: 100%;
   margin: 0;
   padding: 0;
+  gap: 2px;
 }
 
 .navItem {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   text-decoration: none;
   width: 100%;
-  padding: 3px 0 2px;
+  min-height: 48px;
   border-radius: 20px;
   outline: none;
   position: relative;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
   cursor: pointer;
+  transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.navItem:active {
+  transform: scale(0.95);
 }
 
 .navItem:focus-visible {
@@ -49,22 +60,26 @@
   outline-offset: 2px;
 }
 
-.iconContainer {
+.pillContainer {
   position: relative;
-  width: 52px;
-  height: 32px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  width: 100%;
+  padding: 6px 2px 5px;
+  border-radius: 20px;
+  box-sizing: border-box;
 }
 
-.activeGlow {
+/* Active soft capsule enclosing BOTH the icon and label */
+.activePill {
   position: absolute;
   inset: 0;
-  border-radius: 16px;
-  background: rgba(41, 66, 56, 0.08);
-  border: 1px solid rgba(41, 66, 56, 0.06);
-  box-shadow: 0 1px 4px rgba(41, 66, 56, 0.04);
+  border-radius: 20px;
+  background: rgba(41, 66, 56, 0.08); /* Tailoring Turba subtle tailor-green tint */
+  border: 1px solid rgba(41, 66, 56, 0.08);
+  box-shadow: 0 1px 3px rgba(41, 66, 56, 0.03);
   pointer-events: none;
   z-index: 1;
 }
@@ -75,24 +90,20 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.navItem:active .iconWrapper {
-  transform: scale(0.92);
+  height: 22px;
 }
 
 .icon {
-  transition: color 0.2s ease, opacity 0.2s ease, stroke-width 0.2s ease, fill 0.2s ease;
+  transition: color 0.2s ease, opacity 0.2s ease, stroke-width 0.2s ease;
 }
 
-/* Inactive icon: clear contrast, non-faded, 78-80% visual presence */
+/* Inactive icon: clear contrast, non-faded, 82% visual presence */
 .navItem:not(.active) .icon {
-  opacity: 0.8;
-  color: #4a574d;
+  opacity: 0.82;
+  color: #556458;
 }
 
-/* Active icon: Tailoring Turba ink, primary focal point */
+/* Active icon: Tailoring Turba ink */
 .navItem.active .icon {
   opacity: 1;
   color: var(--color-ink, #171916);
@@ -101,53 +112,82 @@
 .label {
   position: relative;
   z-index: 2;
-  font-size: 0.625rem;
-  text-transform: uppercase;
-  letter-spacing: 0.035em;
-  line-height: 1.1;
-  margin-top: 2px;
+  font-family: var(--font-ui, system-ui, -apple-system, sans-serif);
+  font-size: 0.6875rem; /* 11px */
+  letter-spacing: 0.01em;
+  line-height: 1.15;
+  margin-top: 3px;
   text-align: center;
+  white-space: nowrap;
   transition: color 0.2s ease, opacity 0.2s ease, font-weight 0.2s ease;
 }
 
-/* Inactive label: immediately readable, 72-74% visual presence */
+/* Inactive label */
 .navItem:not(.active) .label {
   color: #556458;
   font-weight: 500;
-  opacity: 0.74;
+  opacity: 0.8;
 }
 
-/* Active label: slightly stronger, confident ink */
+/* Active label */
 .navItem.active .label {
   color: var(--color-ink, #171916);
-  font-weight: 700;
+  font-weight: 600;
   opacity: 1;
 }
 
+/* Badge on cart icon */
 .badge {
   position: absolute;
   top: -3px;
-  right: -8px;
+  right: -9px;
   z-index: 3;
   background: var(--color-error, #8b2020);
   color: #ffffff;
-  font-size: 0.6rem;
+  font-size: 0.58rem;
   font-weight: 700;
-  min-width: 16px;
-  height: 16px;
+  min-width: 15px;
+  height: 15px;
   border-radius: 999px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 4px;
+  padding: 0 3px;
   border: 1.5px solid #ffffff;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
   line-height: 1;
   pointer-events: none;
 }
 
-@media (max-width: 991px) {
+/* Extra small mobile adjustments (<= 360px) */
+@media (max-width: 360px) {
   .mobileNav {
-    display: block;
+    left: 8px;
+    right: 8px;
+    width: calc(100% - 16px);
+    padding: 3px 3px;
+    border-radius: 24px;
+  }
+
+  .pillContainer {
+    padding: 5px 1px 4px;
+    border-radius: 16px;
+  }
+
+  .activePill {
+    border-radius: 16px;
+  }
+
+  .label {
+    font-size: 0.6rem;
+    letter-spacing: 0;
+  }
+
+  .badge {
+    right: -7px;
+    top: -4px;
+    min-width: 14px;
+    height: 14px;
+    font-size: 0.54rem;
   }
 }

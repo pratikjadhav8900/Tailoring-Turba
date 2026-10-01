@@ -3,13 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect, useMemo } from "react";
-import { Home, LayoutGrid, User, ShoppingCart } from "lucide-react";
+import { Home, Shirt, ClipboardList, ShoppingCart, User } from "lucide-react";
 import { motion } from "framer-motion";
 import styles from "./MobileNav.module.css";
 import { useCart } from "@/contexts/CartContext";
 import { useSession } from "next-auth/react";
 
-type NavTabId = "home" | "categories" | "account" | "cart";
+type NavTabId = "home" | "products" | "orders" | "cart" | "account";
 
 function getActiveTab(pathname: string | null): NavTabId | null {
   if (!pathname) return "home";
@@ -19,7 +19,26 @@ function getActiveTab(pathname: string | null): NavTabId | null {
   }
 
   if (pathname === "/products" || pathname.startsWith("/products/")) {
-    return "categories";
+    return "products";
+  }
+
+  // Check orders before generic dashboard check so /dashboard/orders highlights Orders
+  if (
+    pathname === "/track-order" ||
+    pathname.startsWith("/track-order/") ||
+    pathname === "/dashboard/orders" ||
+    pathname.startsWith("/dashboard/orders/")
+  ) {
+    return "orders";
+  }
+
+  if (
+    pathname === "/cart" ||
+    pathname.startsWith("/cart/") ||
+    pathname === "/checkout" ||
+    pathname.startsWith("/checkout/")
+  ) {
+    return "cart";
   }
 
   if (
@@ -34,18 +53,11 @@ function getActiveTab(pathname: string | null): NavTabId | null {
     pathname === "/account" ||
     pathname.startsWith("/account/") ||
     pathname === "/profile" ||
-    pathname.startsWith("/profile/")
+    pathname.startsWith("/profile/") ||
+    pathname === "/wishlist" ||
+    pathname.startsWith("/wishlist/")
   ) {
     return "account";
-  }
-
-  if (
-    pathname === "/cart" ||
-    pathname.startsWith("/cart/") ||
-    pathname === "/checkout" ||
-    pathname.startsWith("/checkout/")
-  ) {
-    return "cart";
   }
 
   return null;
@@ -79,9 +91,10 @@ export default function MobileNav() {
     count?: number;
   }[] = [
     { id: "home", label: "Home", icon: Home, href: "/" },
-    { id: "categories", label: "Categories", icon: LayoutGrid, href: "/products" },
-    { id: "account", label: "Account", icon: User, href: session ? "/dashboard" : "/login" },
+    { id: "products", label: "Products", icon: Shirt, href: "/products" },
+    { id: "orders", label: "Orders", icon: ClipboardList, href: session ? "/dashboard/orders" : "/track-order" },
     { id: "cart", label: "Cart", icon: ShoppingCart, href: "/cart", count: cartCount },
+    { id: "account", label: "Account", icon: User, href: session ? "/dashboard" : "/login" },
   ];
 
   return (
@@ -100,30 +113,23 @@ export default function MobileNav() {
               aria-label={item.label}
               onClick={() => setActiveTab(item.id)}
             >
-              <div className={styles.iconContainer}>
+              <div className={styles.pillContainer}>
                 {isActive && (
                   <motion.div
-                    layoutId="mobileNavActiveGlow"
-                    className={styles.activeGlow}
+                    layoutId="mobileNavActivePill"
+                    className={styles.activePill}
                     transition={{
                       type: "spring",
-                      stiffness: 350,
-                      damping: 27,
-                      mass: 0.75,
+                      stiffness: 380,
+                      damping: 32,
+                      mass: 0.65,
                     }}
                   />
                 )}
                 <div className={styles.iconWrapper}>
                   <IconComponent
-                    size={22}
-                    strokeWidth={isActive ? 2.4 : 1.85}
-                    fill={
-                      isActive
-                        ? item.id === "home" || item.id === "categories"
-                          ? "currentColor"
-                          : "none"
-                        : "none"
-                    }
+                    size={20}
+                    strokeWidth={isActive ? 2.25 : 1.75}
                     className={styles.icon}
                     aria-hidden="true"
                   />
@@ -136,8 +142,8 @@ export default function MobileNav() {
                     </span>
                   )}
                 </div>
+                <span className={styles.label}>{item.label}</span>
               </div>
-              <span className={styles.label}>{item.label}</span>
             </Link>
           );
         })}

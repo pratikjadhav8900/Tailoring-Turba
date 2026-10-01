@@ -12,5 +12,5 @@
 
 @media (max-width: 1024px) {
   .shell { flex-direction: column; }
-  .main { padding-bottom: 90px; }
+  .main { padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px)); }
 }

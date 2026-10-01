@@ -22,9 +22,10 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
   const isCustomizer = pathname?.startsWith("/customizer");
 
   const hideNavigation = isAuthPage || isAdminPage || isDashboardPage || isCustomizer;
+  const hideMobileNav = isAuthPage || isAdminPage || isCustomizer;
 
   return (
-    <div className={mounted && !hideNavigation ? "has-mobile-nav" : ""}>
+    <div className={mounted && !hideMobileNav ? "has-mobile-nav" : ""}>
       {mounted && !hideNavigation && (
         <div key="nav-container" className="global-nav-container">
           <div style={{ position: "fixed", top: 0, left: 0, width: "100%", zIndex: 1001, height: "38px", overflow: "hidden" }}>
@@ -42,7 +43,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
       {mounted && !hideNavigation && <Footer />}
       {mounted && !hideNavigation && <WhatsAppButton />}
       {mounted && !hideNavigation && <CompareTray />}
-      {mounted && !hideNavigation && <MobileNav />}
+      {mounted && !hideMobileNav && <MobileNav />}
     </div>
   );
 }

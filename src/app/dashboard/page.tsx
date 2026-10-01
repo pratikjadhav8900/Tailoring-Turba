@@ -12,27 +12,46 @@ export default async function DashboardPage() {
 
   const userId = session.user.id;
 
-  const [orders, designs, bookings, recommendedProducts] = await withRetry(() =>
+  const [userRecord, orders, designs, bookings, recommendedProducts, totalOrdersCount] = await withRetry(() =>
     Promise.all([
-      // Fetch latest 5 orders with nested items, product models, and custom designs
+      // Fetch actual user profile, company info, and addresses
+      prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          companyName: true,
+          gstNumber: true,
+          isB2BApproved: true,
+          image: true,
+          Address: {
+            orderBy: { isDefault: "desc" },
+            take: 3,
+          }
+        }
+      }),
+      // Fetch recent orders with nested items, product models, and custom designs
       prisma.order.findMany({
         where: { userId },
         orderBy: { createdAt: "desc" },
-        take: 5,
+        take: 10,
         include: {
           items: {
             include: {
               product: true,
               design: true,
             }
-          }
+          },
+          shippingAddress: true,
         }
       }),
-      // Fetch latest 4 saved designs with their respective source product bases
+      // Fetch saved designs with source products
       prisma.design.findMany({
         where: { userId },
         orderBy: { createdAt: "desc" },
-        take: 4,
+        take: 6,
         include: {
           product: true
         }
@@ -45,7 +64,7 @@ export default async function DashboardPage() {
         },
         orderBy: { date: "asc" }
       }),
-      // Fetch recent 4 products as suggestions (excluding placeholder custom designs)
+      // Fetch recent products as recommendations
       prisma.product.findMany({
         where: {
           isActive: true,
@@ -53,17 +72,25 @@ export default async function DashboardPage() {
         },
         orderBy: { createdAt: "desc" },
         take: 4
+      }),
+      // Total count of customer orders
+      prisma.order.count({
+        where: { userId }
       })
     ])
   );
 
   return (
     <DashboardClient
-      user={session.user}
+      user={{
+        ...session.user,
+        ...(userRecord || {}),
+      }}
       orders={orders as any}
       designs={designs as any}
       bookings={bookings as any}
       recommendedProducts={recommendedProducts as any}
+      totalOrdersCount={totalOrdersCount}
     />
   );
 }
