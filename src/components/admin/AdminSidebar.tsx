@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { motion } from "framer-motion";
 import styles from "./AdminSidebar.module.css";
 import { 
   LayoutDashboard, 
@@ -102,18 +101,6 @@ export default function AdminSidebar({ role }: { role: string }) {
                     aria-current={isActive ? "page" : undefined}
                   >
                     <div className={styles.iconContainer}>
-                      {isActive && (
-                        <motion.div
-                          layoutId="adminMobileNavActiveGlow"
-                          className={styles.mobileActiveGlow}
-                          transition={{
-                            type: "spring",
-                            stiffness: 350,
-                            damping: 27,
-                            mass: 0.75,
-                          }}
-                        />
-                      )}
                       <div className={styles.iconWrapper}>
                         <item.icon size={18} strokeWidth={isActive ? 2.4 : 1.85} className={styles.navIcon} />
                       </div>

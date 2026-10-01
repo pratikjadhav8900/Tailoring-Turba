@@ -1,0 +1,391 @@
+/* ============================================================
+   TAILORING TURBA — SUPER ADMIN MOBILE NAVIGATION & MORE SHEET
+   Matches customer MobileNav 1-to-1 in visual design & tokens
+   ============================================================ */
+
+/* ─── FLOATING BAR CONTAINER ─── */
+.mobileNav {
+  position: fixed;
+  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  left: 14px;
+  right: 14px;
+  width: calc(100% - 28px);
+  max-width: 430px;
+  margin: 0 auto;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(226, 224, 216, 0.85);
+  border-radius: 28px;
+  box-shadow: 0 4px 20px rgba(23, 25, 22, 0.07), 0 1px 3px rgba(23, 25, 22, 0.04);
+  z-index: 99990;
+  padding: 4px 5px;
+  display: none;
+  box-sizing: border-box;
+}
+
+@media (max-width: 1024px) {
+  .mobileNav {
+    display: block;
+  }
+}
+
+.container {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  align-items: center;
+  justify-items: center;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  gap: 2px;
+}
+
+/* ─── NAV ITEM (BUTTON OR LINK) ─── */
+.navItem {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  width: 100%;
+  min-height: 48px;
+  border-radius: 20px;
+  outline: none;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.navItem:active {
+  transform: scale(0.95);
+}
+
+.navItem:focus-visible {
+  outline: 2px solid var(--color-ink, #171916);
+  outline-offset: 2px;
+}
+
+.pillContainer {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 6px 2px 5px;
+  border-radius: 20px;
+  box-sizing: border-box;
+}
+
+/* Active soft capsule enclosing BOTH the icon and label */
+.activePill {
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  background: rgba(41, 66, 56, 0.08); /* Tailoring Turba subtle tailor-green tint */
+  border: 1px solid rgba(41, 66, 56, 0.08);
+  box-shadow: 0 1px 3px rgba(41, 66, 56, 0.03);
+  pointer-events: none;
+  z-index: 1;
+  animation: navPillPop 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes navPillPop {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.iconWrapper {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 22px;
+}
+
+.icon {
+  transition: color 0.2s ease, opacity 0.2s ease, stroke-width 0.2s ease;
+}
+
+/* Inactive icon: muted sage/gray outline */
+.navItem:not(.active) .icon {
+  opacity: 0.82;
+  color: #556458;
+}
+
+/* Active icon: darker ink */
+.navItem.active .icon {
+  opacity: 1;
+  color: var(--color-ink, #171916);
+}
+
+.label {
+  position: relative;
+  z-index: 2;
+  font-family: var(--font-ui, 'General Sans', system-ui, -apple-system, sans-serif);
+  font-size: 0.6875rem; /* 11px */
+  letter-spacing: 0.01em;
+  line-height: 1.15;
+  margin-top: 3px;
+  text-align: center;
+  white-space: nowrap;
+  transition: color 0.2s ease, opacity 0.2s ease, font-weight 0.2s ease;
+}
+
+/* Inactive label */
+.navItem:not(.active) .label {
+  color: #556458;
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+/* Active label */
+.navItem.active .label {
+  color: var(--color-ink, #171916);
+  font-weight: 600;
+  opacity: 1;
+}
+
+/* ─── MORE BOTTOM SHEET OVERLAY ─── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(23, 25, 22, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 99995;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.25s;
+}
+
+.overlayOpen {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* ─── BOTTOM SHEET CONTAINER ─── */
+.sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  max-width: 540px;
+  margin: 0 auto;
+  background: #ffffff;
+  border-top-left-radius: 28px;
+  border-top-right-radius: 28px;
+  box-shadow: 0 -8px 30px rgba(23, 25, 22, 0.15);
+  z-index: 99998;
+  box-sizing: border-box;
+  transform: translateY(100%);
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 12px 18px calc(24px + env(safe-area-inset-bottom, 0px));
+  max-height: 85vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.sheetOpen {
+  transform: translateY(0);
+}
+
+/* Drag indicator handle */
+.dragHandle {
+  width: 38px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(23, 25, 22, 0.15);
+  margin: 0 auto 14px;
+}
+
+/* Sheet header */
+.sheetHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding: 0 4px;
+}
+
+.sheetBadge {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--color-tailor-green, #294238);
+  text-transform: uppercase;
+}
+
+.sheetTitle {
+  font-family: var(--font-ui, 'General Sans', sans-serif);
+  font-size: 1.12rem;
+  font-weight: 700;
+  color: var(--color-ink, #171916);
+  margin: 2px 0 0;
+  letter-spacing: -0.015em;
+}
+
+.closeBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--color-warm-bone, #f3f0e8);
+  border: 1px solid rgba(226, 224, 216, 0.85);
+  color: var(--color-ink, #171916);
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.closeBtn:active {
+  transform: scale(0.92);
+}
+
+/* ─── 2-COLUMN GRID FOR MORE OPERATIONS ─── */
+.moreGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.gridCard {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 14px;
+  background: #ffffff;
+  border: 1px solid rgba(226, 224, 216, 0.9);
+  border-radius: 16px;
+  text-decoration: none;
+  position: relative;
+  transition: all 0.18s ease;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 82px;
+  justify-content: space-between;
+  box-sizing: border-box;
+}
+
+.gridCard:hover {
+  background: var(--color-warm-bone, #f3f0e8);
+  border-color: rgba(41, 66, 56, 0.25);
+}
+
+.gridCard:active {
+  transform: scale(0.97);
+}
+
+/* Active card when on that route */
+.gridCardActive {
+  background: rgba(41, 66, 56, 0.06);
+  border-color: rgba(41, 66, 56, 0.35);
+  box-shadow: 0 2px 8px rgba(41, 66, 56, 0.06);
+}
+
+.cardIconRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.cardIconWrap {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: var(--color-warm-bone, #f3f0e8);
+  color: #556458;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.18s ease;
+}
+
+.gridCardActive .cardIconWrap {
+  background: var(--color-tailor-green, #294238);
+  color: #ffffff;
+}
+
+.activeDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-tailor-green, #294238);
+}
+
+.cardLabel {
+  font-family: var(--font-ui, 'General Sans', sans-serif);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-ink, #171916);
+  line-height: 1.2;
+}
+
+.gridCardActive .cardLabel {
+  color: var(--color-tailor-green, #294238);
+}
+
+.cardDesc {
+  font-size: 0.68rem;
+  color: var(--color-text-secondary, #606d64);
+  line-height: 1.25;
+  margin-top: 2px;
+}
+
+/* ─── QUICK UTILITIES FOOTER ─── */
+.sheetFooter {
+  padding-top: 14px;
+  border-top: 1px solid rgba(226, 224, 216, 0.85);
+  display: flex;
+  gap: 10px;
+}
+
+.footerBtn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--color-warm-bone, #f3f0e8);
+  border: 1px solid rgba(226, 224, 216, 0.85);
+  font-family: var(--font-ui, 'General Sans', sans-serif);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-ink, #171916);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-sizing: border-box;
+}
+
+.footerBtn:active {
+  transform: scale(0.97);
+}
+
+.footerBtnLogout {
+  color: #b91c1c;
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+.footerBtnLogout:hover {
+  background: #fee2e2;
+}
