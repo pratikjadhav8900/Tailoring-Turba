@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect, useMemo } from "react";
 import { Home, Shirt, ClipboardList, ShoppingCart, User } from "lucide-react";
-import { motion } from "framer-motion";
 import styles from "./MobileNav.module.css";
 import { useCart } from "@/contexts/CartContext";
 import { useSession } from "next-auth/react";
@@ -69,17 +68,12 @@ export default function MobileNav() {
   const { data: session } = useSession();
   const [mounted, setMounted] = useState(false);
 
-  // Synchronize active tab from the current pathname
-  const routeTab = useMemo(() => getActiveTab(pathname), [pathname]);
-  const [activeTab, setActiveTab] = useState<NavTabId | null>(routeTab);
-
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  useEffect(() => {
-    setActiveTab(routeTab);
-  }, [routeTab]);
+  // Synchronize active tab directly from pathname
+  const activeTab = useMemo(() => getActiveTab(pathname), [pathname]);
 
   if (!mounted) return null;
 
@@ -111,20 +105,10 @@ export default function MobileNav() {
               className={`${styles.navItem} ${isActive ? styles.active : ""}`}
               aria-current={isActive ? "page" : undefined}
               aria-label={item.label}
-              onClick={() => setActiveTab(item.id)}
             >
               <div className={styles.pillContainer}>
                 {isActive && (
-                  <motion.div
-                    layoutId="mobileNavActivePill"
-                    className={styles.activePill}
-                    transition={{
-                      type: "spring",
-                      stiffness: 380,
-                      damping: 32,
-                      mass: 0.65,
-                    }}
-                  />
+                  <div className={styles.activePill} aria-hidden="true" />
                 )}
                 <div className={styles.iconWrapper}>
                   <IconComponent

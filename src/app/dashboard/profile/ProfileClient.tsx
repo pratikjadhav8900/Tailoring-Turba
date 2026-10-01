@@ -98,7 +98,6 @@ export default function ProfileClient({ initialUser }: { initialUser: UserProfil
       setAvatarUrl(newImageUrl);
       setAvatarError(false);
       setFeedback({ type: "success", message: "Profile photo updated successfully!" });
-      router.refresh();
     } catch (err: any) {
       console.error("Avatar upload failed:", err);
       setFeedback({ type: "error", message: err.message || "Failed to upload photo. Please try again." });
@@ -126,7 +125,6 @@ export default function ProfileClient({ initialUser }: { initialUser: UserProfil
       setAvatarUrl(null);
       setAvatarError(false);
       setFeedback({ type: "success", message: "Profile photo removed." });
-      router.refresh();
     } catch (err: any) {
       setFeedback({ type: "error", message: err.message || "Failed to remove photo" });
     } finally {
@@ -156,7 +154,6 @@ export default function ProfileClient({ initialUser }: { initialUser: UserProfil
       if (!res.ok) throw new Error(data.error || "Failed to update profile");
 
       setFeedback({ type: "success", message: "Profile changes saved successfully!" });
-      router.refresh();
     } catch (err: any) {
       setFeedback({ type: "error", message: err.message || "An error occurred while saving." });
     } finally {
