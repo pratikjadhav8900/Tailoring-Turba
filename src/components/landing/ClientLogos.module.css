@@ -1,258 +1,330 @@
-/* ─── Section ─── */
+/* ─── TAILORING TURBA: EDITORIAL CLIENT TRUST SECTION (COMPACT & UNIFIED) ─── */
 .section {
-  background: #f9f7f4;
-  padding: 100px 0 88px;
-  overflow: hidden;
+  background: var(--color-background, #FAF9F5);
+  padding: 56px 0 50px;
   position: relative;
+  overflow: hidden;
+  border-top: 1px solid var(--color-border, #e2e0d8);
+  border-bottom: 1px solid var(--color-border, #e2e0d8);
 }
 
-.section::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(to right, transparent, rgba(196,157,50,0.25) 30%, rgba(196,157,50,0.25) 70%, transparent);
+.container {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 0 24px;
+  box-sizing: border-box;
 }
 
-/* ─── Header ─── */
+/* ─── 1. SECTION INTRO ─── */
 .header {
   text-align: center;
-  padding: 0 5%;
-  margin-bottom: 52px;
-  opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.7s ease, transform 0.7s ease;
-}
-.headerVisible {
-  opacity: 1;
-  transform: translateY(0);
+  max-width: 720px;
+  margin: 0 auto 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .eyebrow {
-  font-family: var(--font-sans);
-  font-size: 0.78rem;
-  font-weight: 700;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.74rem;
+  font-weight: 600;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--tth-gold, #c49d32);
-  margin-bottom: 16px;
+  color: var(--tth-olive-dark, #2d4530);
+  margin-bottom: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.eyebrowDot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--tth-olive-dark, #2d4530);
 }
 
 .heading {
   font-family: var(--font-ui, sans-serif);
-  font-size: clamp(2rem, 3.8vw, 3rem);
-  font-weight: 700;
-  color: var(--tth-text, #1a1a18);
-  line-height: 1.15;
+  font-size: clamp(1.85rem, 3.2vw, 2.5rem);
+  font-weight: 600;
+  color: var(--color-ink, #171916);
+  line-height: 1.18;
   letter-spacing: -0.025em;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 
 .subheading {
-  font-family: var(--font-sans);
-  font-size: 1.05rem;
-  color: var(--tth-text-muted, #6b6b65);
-  max-width: 620px;
+  font-family: var(--font-sans, sans-serif);
+  font-size: 0.96rem;
+  color: var(--color-text-secondary, #4a4a45);
+  max-width: 600px;
+  line-height: 1.6;
   margin: 0 auto;
-  line-height: 1.7;
 }
 
-/* ─── Marquee Container ─── */
-.marqueeContainer {
+/* ─── 2. UNIFIED LOGO WALL CANVAS ─── */
+.canvasContainer {
+  position: relative;
+  background: #ffffff;
+  border: 1px solid rgba(45, 69, 48, 0.12);
+  border-radius: 16px;
+  padding: 34px 0;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 7%,
+    black 93%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 7%,
+    black 93%,
+    transparent 100%
+  );
+  min-height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.canvasSpotlight {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    480px circle at var(--mouse-x, -1000px) var(--mouse-y, -1000px),
+    rgba(45, 69, 48, 0.06),
+    transparent 75%
+  );
+  z-index: 1;
+}
+
+.canvasCenterDivider {
+  position: absolute;
+  top: 50%;
+  left: 4%;
+  right: 4%;
+  height: 1px;
+  background: rgba(45, 69, 48, 0.07);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.marqueeStack {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-}
-
-/* ─── Row ─── */
-.rowWrapper {
+  gap: 24px;
   width: 100%;
-  overflow: hidden;
-  /* Edge fade */
-  mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
-  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+  z-index: 2;
+  position: relative;
 }
 
-.rowTrack {
+.trackRow {
   display: flex;
+  align-items: center;
+  gap: 52px;
   width: max-content;
-  gap: 12px;
-  animation: scrollLeft 40s linear infinite;
+  will-change: transform;
 }
 
-.rowReverse {
-  animation: scrollRight 32s linear infinite;
+.trackForward {
+  animation: marqueeLeft 58s linear infinite;
 }
 
-/* Pause on hover */
-.rowWrapper:hover .rowTrack {
+.trackReverse {
+  animation: marqueeRight 52s linear infinite;
+}
+
+.canvasContainer:hover .trackForward,
+.canvasContainer:hover .trackReverse {
   animation-play-state: paused;
 }
 
-@keyframes scrollLeft {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(-33.333%); }
+@keyframes marqueeLeft {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
 }
 
-@keyframes scrollRight {
-  0%   { transform: translateX(-33.333%); }
-  100% { transform: translateX(0); }
+@keyframes marqueeRight {
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(0);
+  }
 }
 
-/* ─── Brand Pill ─── */
-.brandPill {
+/* ─── 3. CLEAN LOGO ITEM ─── */
+.logoItem {
   display: inline-flex;
   align-items: center;
   gap: 12px;
-  padding: 16px 36px;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  border-radius: 100px;
-  white-space: nowrap;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.9);
-  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  padding: 8px 16px;
+  position: relative;
   cursor: default;
+  transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   user-select: none;
+  border-radius: 8px;
 }
 
-.brandPill:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 32px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.9);
-  border-color: rgba(196, 157, 50, 0.35);
+.logoItem:hover {
+  transform: translateY(-2px) scale(1.05);
 }
 
-/* Brand logo container and svg styling */
-.brandLogo {
-  width: 22px;
-  height: 22px;
-  display: inline-flex;
+.logoMark {
+  height: 26px;
+  display: flex;
   align-items: center;
   justify-content: center;
+  color: #5c5e58;
+  transition: color 0.25s ease, transform 0.25s ease;
   flex-shrink: 0;
-  transition: transform 0.25s ease, color 0.25s ease;
 }
 
-.brandLogo svg {
-  width: 100%;
+.logoMark svg {
   height: 100%;
+  width: auto;
+  max-width: 90px;
+  max-height: 26px;
   display: block;
 }
 
-.tier_enterprise .brandLogo {
-  color: var(--tth-gold, #c49d32);
-}
-
-.tier_premium .brandLogo {
-  color: var(--tth-olive, #6b7d60);
-}
-
-.tier_standard .brandLogo {
-  color: #94a3b8;
-}
-
-.brandPill:hover .brandLogo {
-  transform: scale(1.15);
-  color: #0d0d0b;
-}
-
-.brandName {
-  font-family: var(--font-sans);
-  font-size: 1rem;
+.brandNameText {
+  font-family: var(--font-sans, sans-serif);
+  font-size: 0.86rem;
   font-weight: 600;
-  letter-spacing: 0.04em;
-  color: #374151;
-  transition: color 0.25s ease;
+  color: #242521;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  line-height: 1;
 }
 
-.brandPill:hover .brandName {
-  color: #0d0d0b;
-}
-
-.tier_enterprise .brandName {
-  color: #1a1a18;
-  font-weight: 700;
-  font-size: 1.05rem;
-}
-
-/* ─── Footer caption ─── */
-.footer {
+/* ─── 4. UNDERSTATED PROOF FOOTER ─── */
+.bottomProof {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 16px;
-  margin-top: 52px;
-  opacity: 0;
-  transform: translateY(12px);
-  transition: opacity 0.6s ease 0.3s, transform 0.6s ease 0.3s;
-}
-.footerVisible {
-  opacity: 1;
-  transform: translateY(0);
+  margin-top: 28px;
+  text-align: center;
+  flex-wrap: wrap;
 }
 
-.footerStat {
+.bottomProofStat {
   font-family: var(--font-mono, monospace);
-  font-size: 1.15rem;
-  font-weight: 600;
-  color: var(--tth-text, #1a1a18);
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--tth-olive-dark, #2d4530);
+  text-transform: uppercase;
 }
 
-.footerDivider {
+.bottomProofDot {
   display: block;
-  width: 5px;
-  height: 5px;
+  width: 4px;
+  height: 4px;
   border-radius: 50%;
-  background: var(--tth-gold, #c49d32);
+  background: var(--tth-olive, #6b7d60);
   flex-shrink: 0;
 }
 
-.footerText {
-  font-family: var(--font-sans);
-  font-size: 0.95rem;
-  color: var(--tth-text-muted, #6b6b65);
-  letter-spacing: 0.03em;
+.bottomProofText {
+  font-family: var(--font-sans, sans-serif);
+  font-size: 0.88rem;
+  color: var(--color-text-secondary, #6b6b65);
+  font-weight: 400;
 }
 
 /* ─── RESPONSIVE ─── */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .section {
-    padding: 72px 0 56px;
+    padding: 50px 0 44px;
   }
-  .heading {
-    font-size: 2rem;
+  .trackRow {
+    gap: 40px;
   }
-  .subheading {
-    font-size: 0.92rem;
-  }
-  .footer {
-    flex-direction: column;
-    gap: 6px;
-    text-align: center;
-    padding: 0 16px;
-  }
-  .footerDivider {
-    display: none;
-  }
-  .brandPill {
-    padding: 12px 22px;
-  }
-  .brandName {
-    font-size: 0.88rem;
+  .canvasContainer {
+    padding: 26px 0;
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 768px) {
+  .section {
+    padding: 42px 0 36px;
+  }
+  .container {
+    padding: 0 16px;
+  }
+  .header {
+    margin-bottom: 20px;
+  }
   .heading {
-    font-size: 1.7rem;
+    font-size: 1.65rem;
   }
-  .rowTrack {
-    gap: 10px;
+  .subheading {
+    font-size: 0.88rem;
+    line-height: 1.5;
   }
-  .brandPill {
-    padding: 10px 18px;
+  .canvasContainer {
+    padding: 20px 0;
+    min-height: 160px;
+    border-radius: 12px;
+  }
+  .marqueeStack {
+    gap: 18px;
+  }
+  .trackRow {
+    gap: 32px;
+  }
+  .logoItem {
+    padding: 6px 10px;
+    gap: 9px;
+  }
+  .logoMark {
+    height: 22px;
+  }
+  .logoMark svg {
+    max-height: 22px;
+    max-width: 76px;
+  }
+  .brandNameText {
+    font-size: 0.8rem;
+  }
+  .bottomProof {
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 20px;
+  }
+  .bottomProofDot {
+    display: none;
+  }
+  .bottomProofStat {
+    font-size: 0.82rem;
+  }
+  .bottomProofText {
+    font-size: 0.8rem;
+  }
+}
+
+/* Accessibility: Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .trackForward,
+  .trackReverse {
+    animation: none !important;
+  }
+  .logoItem {
+    transition: none !important;
+    transform: none !important;
   }
 }
