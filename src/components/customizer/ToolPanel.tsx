@@ -2,7 +2,8 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
   Type, UploadCloud, Shirt, X, Plus, ArrowUpRight, Smartphone, Trash2, LogIn, HelpCircle,
-  Sliders, ArrowLeft, LayoutTemplate, Bold, Underline, AlignLeft, Copy, ChevronUp, ChevronDown, Link2
+  Sliders, ArrowLeft, LayoutTemplate, Bold, Underline, AlignLeft, Copy, ChevronUp, ChevronDown, Link2,
+  Minus, FlipHorizontal2, FlipVertical2, AlignCenterHorizontal
 } from "lucide-react";
 import { useSession, signIn } from "next-auth/react";
 import styles from "./PoloCustomizer.module.css";
@@ -643,9 +644,9 @@ export default function ToolPanel({
             </div>
           )}
 
-          {/* ── PROPERTIES (EDIT ELEMENT) ─────────────────────────── */}
+          {/* ── PROPERTIES (EDIT ELEMENT) — Canva-style ─────────── */}
           {activeTool === "Properties" && (
-            <div className={styles.contextBody} style={{ gap: '16px', display: 'flex', flexDirection: 'column' }}>
+            <div className={styles.contextBody} style={{ gap: '14px', display: 'flex', flexDirection: 'column' }}>
               {!activeElement || !details ? (
                 <div style={{ textAlign: 'center', padding: '40px 20px', color: '#94a3b8' }}>
                   <p style={{ fontSize: '0.9rem', marginBottom: '8px', fontWeight: 600 }}>No element selected</p>
@@ -653,709 +654,354 @@ export default function ToolPanel({
                 </div>
               ) : (
                 <>
-                  {/* Element Type Indicator */}
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #e2e8f0', paddingBottom: '12px' }}>
-                    <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#64748b', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-                      {activeElement.type === "text" ? "Text Layer" : activeElement.type === "preset" ? "Text Preset Layer" : "Logo Layer"}
+                  {/* Header + DPI Badge */}
+                  <div className={styles.editDrawerHeader}>
+                    <span className={styles.editDrawerTitle}>
+                      {activeElement.type === "text" ? "Edit Text" : activeElement.type === "preset" ? "Edit Preset" : "Edit Logo"}
                     </span>
-                    
-                    {/* DPI Badge (Logo Only) */}
                     {activeElement.type === "logo" && details.dpi && (
-                      <div
-                        className={`${styles.tfDpiBadge} ${
-                          details.dpiQuality === "Good"
-                            ? styles.tfDpiGood
-                            : details.dpiQuality === "Fair"
-                            ? styles.tfDpiFair
-                            : styles.tfDpiBad
+                      <span
+                        className={`${styles.dpiPill} ${
+                          details.dpi >= 300 ? styles.dpiPillGood : details.dpi >= 150 ? styles.dpiPillFair : styles.dpiPillBad
                         }`}
-                        style={{ margin: 0 }}
-                        title={`Image resolution at this scale. Recommended is 300 DPI. Original: ${activeElement.originalWidth}x${activeElement.originalHeight}px`}
+                        title={`Original: ${activeElement.originalWidth}x${activeElement.originalHeight}px`}
                       >
-                        DPI: {details.dpi}
-                      </div>
+                        {details.dpi >= 300 ? "300+ DPI · Crisp" : details.dpi >= 150 ? `${details.dpi} DPI · Good` : `${details.dpi} DPI · Low`}
+                      </span>
                     )}
                   </div>
 
-                  {/* Text Edit Area (Text Only or Preset) */}
+                  {/* ── TEXT CONTENT (text & preset) ─── */}
                   {(activeElement.type === "text" || activeElement.type === "preset") && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569' }}>Text Content</label>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       {activeElement.type === "preset" ? (() => {
                         const presetDef = TEXT_PRESETS.find(p => p.id === activeElement.presetId);
                         const isArray = Array.isArray(activeElement.presetText);
                         const lines = isArray ? (activeElement.presetText as string[]) : [(activeElement.presetText as string) || ""];
                         if (presetDef && presetDef.elements.length > 1) {
-                          return (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                              {presetDef.elements.map((el, i) => (
-                                <input
-                                  key={i}
-                                  type="text"
-                                  className={styles.textElementInput}
-                                  style={{ width: '100%', padding: '8px 12px', border: '2px solid #007aff', borderRadius: '8px', fontSize: '0.9rem', fontWeight: 600, background: '#f0f7ff', outline: 'none' }}
-                                  value={lines[i] !== undefined ? lines[i] : (el.value || "")}
-                                  onChange={(e) => {
-                                    const newLines = [...lines];
-                                    // Ensure array is populated
-                                    while (newLines.length < presetDef.elements.length) {
-                                      newLines.push(presetDef.elements[newLines.length].value || "");
-                                    }
-                                    newLines[i] = e.target.value;
-                                    onUpdateElement?.(activeElement.id, { presetText: newLines });
-                                  }}
-                                  placeholder={`Text ${i + 1}`}
-                                />
-                              ))}
-                            </div>
-                          );
+                          return presetDef.elements.map((el, i) => (
+                            <input
+                              key={i}
+                              type="text"
+                              className={styles.editTextInput}
+                              value={lines[i] !== undefined ? lines[i] : (el.value || "")}
+                              onChange={(e) => {
+                                const newLines = [...lines];
+                                while (newLines.length < presetDef.elements.length) {
+                                  newLines.push(presetDef.elements[newLines.length].value || "");
+                                }
+                                newLines[i] = e.target.value;
+                                onUpdateElement?.(activeElement.id, { presetText: newLines });
+                              }}
+                              placeholder={`Text ${i + 1}`}
+                            />
+                          ));
                         }
-                        
                         return (
-                          <textarea
-                            className={styles.textElementInput}
-                            style={{ 
-                              width: '100%', padding: '10px 12px', border: '2px solid #007aff', borderRadius: '8px',
-                              fontSize: '1rem', fontWeight: 600, background: '#f0f7ff', outline: 'none', resize: 'vertical', minHeight: '60px'
-                            }}
-                            value={isArray ? lines.join("\n") : (activeElement.presetText as string || "")}
+                          <input
+                            type="text"
+                            className={styles.editTextInput}
+                            value={isArray ? lines.join("") : (activeElement.presetText as string || "")}
                             onChange={(e) => onUpdateElement?.(activeElement.id, { presetText: e.target.value })}
-                            placeholder="Type your text here..."
+                            placeholder="Type your text..."
                           />
                         );
                       })() : (
                         <input
                           type="text"
-                          className={styles.textElementInput}
-                          style={{ 
-                            width: '100%', padding: '10px 12px', border: '2px solid #007aff', borderRadius: '8px',
-                            fontSize: '1rem', fontWeight: 600, background: '#f0f7ff', outline: 'none',
-                          }}
+                          className={styles.editTextInput}
                           value={activeElement.value}
                           onChange={(e) => onUpdateElement?.(activeElement.id, { value: e.target.value })}
-                          placeholder="Type your text here..."
-                          autoFocus
+                          placeholder="Type your text..."
                         />
                       )}
-                      <div style={{
-                        display: 'flex', alignItems: 'center', gap: '6px', background: '#FFF7ED', border: '1px solid #FED7AA',
-                        borderRadius: '6px', padding: '7px 10px', fontSize: '0.75rem', color: '#9A3412', fontWeight: 500,
-                      }}>
-                        <span style={{ fontSize: '0.9rem' }}>✏️</span>
-                        Tap the field above to change your text
+                    </div>
+                  )}
+
+                  {/* ── FONT FAMILY (text only) ─── */}
+                  {activeElement.type === "text" && (
+                    <select
+                      className={styles.editFontSelect}
+                      style={{ fontFamily: activeElement.fontFamily || "Inter" }}
+                      value={activeElement.fontFamily || "Inter"}
+                      onChange={(e) => onUpdateElement?.(activeElement.id, { fontFamily: e.target.value })}
+                    >
+                      {FONTS.map(f => (
+                        <option key={f} value={f} style={{ fontFamily: f }}>{f}</option>
+                      ))}
+                    </select>
+                  )}
+
+                  {/* ── FONT SIZE + COLOR ROW (text only) ─── */}
+                  {activeElement.type === "text" && (
+                    <div className={styles.editFontRow}>
+                      <div className={styles.editFontSizeGroup}>
+                        <button className={styles.editFontSizeBtn} onClick={() => bump(-1)}><Minus size={14} /></button>
+                        <span className={styles.editFontSizeValue}>{activeElement.fontSize || 24}</span>
+                        <button className={styles.editFontSizeBtn} onClick={() => bump(1)}><Plus size={14} /></button>
                       </div>
-                    </div>
-                  )}
-
-
-                  {/* Font Family (Text Only) */}
-                  {activeElement.type === "text" && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569' }}>Font Family</label>
-                      <select
-                        className={styles.tfFontSelect}
-                        style={{ width: '100%', fontFamily: activeElement.fontFamily || "Inter", padding: '8px 12px' }}
-                        value={activeElement.fontFamily || "Inter"}
-                        onChange={(e) => onUpdateElement?.(activeElement.id, { fontFamily: e.target.value })}
-                      >
-                        {FONTS.map(f => (
-                          <option key={f} value={f} style={{ fontFamily: f }}>{f}</option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-
-                  {/* Font Size & Color Row (Text Only) */}
-                  {activeElement.type === "text" && (
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                      {/* Font Size */}
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569' }}>Font Size</label>
-                        <div className={styles.tfSizeGroup} style={{ width: '100%' }}>
-                          <button className={styles.tfSizeBtn} onClick={() => bump(-1)}><ChevronDown size={12} /></button>
-                          <input
-                            type="number"
-                            className={styles.tfSizeInput}
-                            style={{ flex: 1, padding: 0 }}
-                            value={activeElement.fontSize || 24}
-                            min={8} max={200}
-                            onChange={(e) => onUpdateElement?.(activeElement.id, { fontSize: Math.max(8, Number(e.target.value)) })}
+                      <div ref={wrapRef} style={{ position: 'relative' }}>
+                        <button
+                          className={styles.editColorBtn}
+                          onClick={() => setShowColorPicker(v => !v)}
+                        >
+                          <span
+                            className={styles.editColorDot}
+                            style={{
+                              backgroundColor: currentColor,
+                              border: currentColor.toUpperCase() === "#FFFFFF" ? "1.5px solid #D1D5DB" : "none"
+                            }}
                           />
-                          <button className={styles.tfSizeBtn} onClick={() => bump(1)}><ChevronUp size={12} /></button>
-                        </div>
-                      </div>
-
-                      {/* Text Color dropdown */}
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569' }}>Text Color</label>
-                        <div ref={wrapRef} className={styles.tfColorDropdownWrap} style={{ width: '100%' }}>
-                          <button
-                            className={styles.tfColorDropdownBtn}
-                            style={{ width: '100%', padding: '7px 10px' }}
-                            onClick={() => setShowColorPicker(v => !v)}
-                            title="Text color"
-                          >
-                            <span
-                              className={styles.tfColorPreviewDot}
-                              style={{
-                                backgroundColor: currentColor,
-                                border: currentColor.toUpperCase() === "#FFFFFF" ? "1.5px solid #D1D5DB" : "none"
-                              }}
-                            />
-                            <span className={styles.tfColorBtnLabel} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{currentColorName}</span>
-                            <ChevronDown size={12} color="#6B7280" />
-                          </button>
-
-                          {showColorPicker && (
-                            <div className={styles.tfColorDropdown} style={{ left: 0, right: 'auto', width: '220px', zIndex: 100 }}>
-                              <div className={styles.tfColorDropdownGrid}>
-                                {TEXT_COLORS.map((c) => {
-                                  const isActive = currentColor.toLowerCase() === c.hex.toLowerCase();
-                                  return (
-                                    <button
-                                      key={c.hex}
-                                      className={`${styles.tfColorOption} ${isActive ? styles.tfColorOptionActive : ""}`}
-                                      onClick={() => { onUpdateElement?.(activeElement.id, { color: c.hex }); setShowColorPicker(false); }}
-                                      title={c.name}
-                                    >
-                                      <span
-                                        className={styles.tfColorOptionDot}
-                                        style={{
-                                          backgroundColor: c.hex,
-                                          border: c.hex.toUpperCase() === "#FFFFFF" ? "1.5px solid #D1D5DB" : "none"
-                                        }}
-                                      />
-                                      <span className={styles.tfColorOptionName}>{c.name}</span>
-                                    </button>
-                                  );
-                                })}
-                              </div>
+                          <span className={styles.editColorName}>{currentColorName}</span>
+                          <ChevronDown size={12} color="#94A3B8" />
+                        </button>
+                        {showColorPicker && (
+                          <div className={styles.tfColorDropdown} style={{ left: 0, right: 'auto', width: '220px', zIndex: 100 }}>
+                            <div className={styles.tfColorDropdownGrid}>
+                              {TEXT_COLORS.map((c) => {
+                                const isActive = currentColor.toLowerCase() === c.hex.toLowerCase();
+                                return (
+                                  <button
+                                    key={c.hex}
+                                    className={`${styles.tfColorOption} ${isActive ? styles.tfColorOptionActive : ""}`}
+                                    onClick={() => { onUpdateElement?.(activeElement.id, { color: c.hex }); setShowColorPicker(false); }}
+                                    title={c.name}
+                                  >
+                                    <span className={styles.tfColorOptionDot} style={{ backgroundColor: c.hex, border: c.hex.toUpperCase() === "#FFFFFF" ? "1.5px solid #D1D5DB" : "none" }} />
+                                    <span className={styles.tfColorOptionName}>{c.name}</span>
+                                  </button>
+                                );
+                              })}
                             </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Formatting Buttons: Bold, Underline, Alignment (Text Only) */}
-                  {activeElement.type === "text" && (
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569' }}>Styles</label>
-                        <div className={styles.tfBtnGroup} style={{ width: 'fit-content' }}>
-                          <button
-                            className={`${styles.tfBtn} ${activeElement.fontWeight === "bold" ? styles.tfBtnOn : ""}`}
-                            onClick={() => onUpdateElement?.(activeElement.id, { fontWeight: activeElement.fontWeight === "bold" ? "normal" : "bold" })}
-                            title="Bold"
-                          >
-                            <Bold size={16} strokeWidth={2.5} />
-                          </button>
-                          <button
-                            className={`${styles.tfBtn} ${activeElement.textDecoration === "underline" ? styles.tfBtnOn : ""}`}
-                            onClick={() => onUpdateElement?.(activeElement.id, { textDecoration: activeElement.textDecoration === "underline" ? "none" : "underline" })}
-                            title="Underline"
-                          >
-                            <Underline size={16} strokeWidth={2.5} />
-                          </button>
-                        </div>
-                      </div>
-
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569' }}>Alignment</label>
-                        <div className={styles.tfBtnGroup} style={{ width: 'fit-content' }}>
-                          <button
-                            className={`${styles.tfBtn} ${activeElement.textAlign === "left" ? styles.tfBtnOn : ""}`}
-                            onClick={() => onUpdateElement?.(activeElement.id, { textAlign: "left" })}
-                            title="Align Left"
-                          >
-                            <AlignLeft size={16} strokeWidth={2} />
-                          </button>
-                          <button
-                            className={`${styles.tfBtn} ${activeElement.textAlign === "center" ? styles.tfBtnOn : ""}`}
-                            onClick={() => onUpdateElement?.(activeElement.id, { textAlign: "center" })}
-                            title="Align Center"
-                          >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <line x1="18" y1="10" x2="6" y2="10" />
-                              <line x1="21" y1="6" x2="3" y2="6" />
-                              <line x1="21" y1="14" x2="3" y2="14" />
-                              <line x1="18" y1="18" x2="6" y2="18" />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Dimensions (Inches) */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569' }}>Dimensions (Inches)</label>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <div className={styles.tfInputWrapper} style={{ flex: 1 }} title="Width in Inches">
-                        <span className={styles.tfInputLabel}>W:</span>
-                        <input
-                          type="text"
-                          className={styles.tfDimensionInput}
-                          value={widthInput}
-                          onFocus={() => setIsFocusedW(true)}
-                          onBlur={() => setIsFocusedW(false)}
-                          onChange={(e) => {
-                            const valStr = e.target.value;
-                            setWidthInput(valStr);
-                            const valNum = parseFloat(valStr);
-                            if (!isNaN(valNum) && valNum > 0) {
-                              handleWidthChange(valNum);
-                            }
-                          }}
-                        />
-                        <span className={styles.tfInputUnit}>in</span>
-                      </div>
-
-                      <div className={styles.tfLinkIcon} title="Aspect Ratio Locked" style={{ margin: '0 4px' }}>
-                        <Link2 size={13} color="#9CA3AF" strokeWidth={2.5} />
-                      </div>
-
-                      <div className={styles.tfInputWrapper} style={{ flex: 1 }} title="Height in Inches">
-                        <span className={styles.tfInputLabel}>H:</span>
-                        <input
-                          type="text"
-                          className={styles.tfDimensionInput}
-                          value={heightInput}
-                          onFocus={() => setIsFocusedH(true)}
-                          onBlur={() => setIsFocusedH(false)}
-                          onChange={(e) => {
-                            const valStr = e.target.value;
-                            setHeightInput(valStr);
-                            const valNum = parseFloat(valStr);
-                            if (!isNaN(valNum) && valNum > 0) {
-                              handleHeightChange(valNum);
-                            }
-                          }}
-                        />
-                        <span className={styles.tfInputUnit}>in</span>
-                      </div>
-                    </div>
-
-                    {/* Quick Size Presets */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', marginTop: '4px' }}>
-                      <span style={{ fontSize: '0.72rem', fontWeight: 600, color: '#64748B' }}>Quick Size & Position Presets:</span>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
-                        {activeSide === "front" ? (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => applyPresetSizeAndPosition(2, "left-chest")}
-                              style={{
-                                padding: '4px 8px',
-                                fontSize: '0.7rem',
-                                fontWeight: 600,
-                                borderRadius: '4px',
-                                border: '1px solid #E2E8F0',
-                                background: '#F8FAFC',
-                                cursor: 'pointer',
-                                color: '#334155',
-                                transition: 'all 0.15s',
-                                textAlign: 'center'
-                              }}
-                              onMouseEnter={(e) => { e.currentTarget.style.background = '#EFF6FF'; e.currentTarget.style.borderColor = '#BFDBFE'; }}
-                              onMouseLeave={(e) => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.borderColor = '#E2E8F0'; }}
-                            >
-                              Small (2")
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => applyPresetSizeAndPosition(3.5, "left-chest")}
-                              style={{
-                                padding: '4px 8px',
-                                fontSize: '0.7rem',
-                                fontWeight: 600,
-                                borderRadius: '4px',
-                                border: '1px solid #E2E8F0',
-                                background: '#F8FAFC',
-                                cursor: 'pointer',
-                                color: '#334155',
-                                transition: 'all 0.15s',
-                                textAlign: 'center'
-                              }}
-                              onMouseEnter={(e) => { e.currentTarget.style.background = '#EFF6FF'; e.currentTarget.style.borderColor = '#BFDBFE'; }}
-                              onMouseLeave={(e) => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.borderColor = '#E2E8F0'; }}
-                            >
-                              Left Chest (3.5")
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => applyPresetSizeAndPosition(4, "left-chest")}
-                              style={{
-                                padding: '4px 8px',
-                                fontSize: '0.7rem',
-                                fontWeight: 600,
-                                borderRadius: '4px',
-                                border: '1px solid #E2E8F0',
-                                background: '#F8FAFC',
-                                cursor: 'pointer',
-                                color: '#334155',
-                                transition: 'all 0.15s',
-                                textAlign: 'center'
-                              }}
-                              onMouseEnter={(e) => { e.currentTarget.style.background = '#EFF6FF'; e.currentTarget.style.borderColor = '#BFDBFE'; }}
-                              onMouseLeave={(e) => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.borderColor = '#E2E8F0'; }}
-                            >
-                              Pocket/Patch (4")
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => applyPresetSizeAndPosition(8.5, "center")}
-                              style={{
-                                padding: '4px 8px',
-                                fontSize: '0.7rem',
-                                fontWeight: 600,
-                                borderRadius: '4px',
-                                border: '1px solid #E2E8F0',
-                                background: '#F8FAFC',
-                                cursor: 'pointer',
-                                color: '#334155',
-                                transition: 'all 0.15s',
-                                textAlign: 'center'
-                              }}
-                              onMouseEnter={(e) => { e.currentTarget.style.background = '#EFF6FF'; e.currentTarget.style.borderColor = '#BFDBFE'; }}
-                              onMouseLeave={(e) => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.borderColor = '#E2E8F0'; }}
-                            >
-                              Center Chest (8.5")
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => applyPresetSizeAndPosition(10, "center")}
-                              style={{
-                                padding: '4px 8px',
-                                fontSize: '0.7rem',
-                                fontWeight: 600,
-                                borderRadius: '4px',
-                                border: '1px solid #E2E8F0',
-                                background: '#F8FAFC',
-                                cursor: 'pointer',
-                                color: '#334155',
-                                transition: 'all 0.15s',
-                                textAlign: 'center'
-                              }}
-                              onMouseEnter={(e) => { e.currentTarget.style.background = '#EFF6FF'; e.currentTarget.style.borderColor = '#BFDBFE'; }}
-                              onMouseLeave={(e) => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.borderColor = '#E2E8F0'; }}
-                            >
-                              Large Print (10")
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => applyPresetSizeAndPosition(11.5, "oversized")}
-                              style={{
-                                padding: '4px 8px',
-                                fontSize: '0.7rem',
-                                fontWeight: 600,
-                                borderRadius: '4px',
-                                border: '1px solid #E2E8F0',
-                                background: '#F8FAFC',
-                                cursor: 'pointer',
-                                color: '#334155',
-                                transition: 'all 0.15s',
-                                textAlign: 'center'
-                              }}
-                              onMouseEnter={(e) => { e.currentTarget.style.background = '#EFF6FF'; e.currentTarget.style.borderColor = '#BFDBFE'; }}
-                              onMouseLeave={(e) => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.borderColor = '#E2E8F0'; }}
-                            >
-                              Oversized (11.5")
-                            </button>
-                          </>
-                         ) : (activeSide === "left" || activeSide === "right") ? (
-                           <>
-                             <button
-                               type="button"
-                               onClick={() => applyPresetSizeAndPosition(1.0, "sleeve-center")}
-                               style={{
-                                 padding: '4px 8px',
-                                 fontSize: '0.7rem',
-                                 fontWeight: 600,
-                                 borderRadius: '4px',
-                                 border: '1px solid #E2E8F0',
-                                 background: '#F8FAFC',
-                                 cursor: 'pointer',
-                                 color: '#334155',
-                                 transition: 'all 0.15s',
-                                 textAlign: 'center'
-                               }}
-                               onMouseEnter={(e) => { e.currentTarget.style.background = '#EFF6FF'; e.currentTarget.style.borderColor = '#BFDBFE'; }}
-                               onMouseLeave={(e) => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.borderColor = '#E2E8F0'; }}
-                             >
-                               Sleeve Mini (1.0")
-                             </button>
-                             <button
-                               type="button"
-                               onClick={() => applyPresetSizeAndPosition(1.5, "sleeve-center")}
-                               style={{
-                                 padding: '4px 8px',
-                                 fontSize: '0.7rem',
-                                 fontWeight: 600,
-                                 borderRadius: '4px',
-                                 border: '1px solid #E2E8F0',
-                                 background: '#F8FAFC',
-                                 cursor: 'pointer',
-                                 color: '#334155',
-                                 transition: 'all 0.15s',
-                                 textAlign: 'center'
-                               }}
-                               onMouseEnter={(e) => { e.currentTarget.style.background = '#EFF6FF'; e.currentTarget.style.borderColor = '#BFDBFE'; }}
-                               onMouseLeave={(e) => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.borderColor = '#E2E8F0'; }}
-                             >
-                               Sleeve Small (1.5")
-                             </button>
-                             <button
-                               type="button"
-                               onClick={() => applyPresetSizeAndPosition(2.0, "sleeve-center")}
-                               style={{
-                                 padding: '4px 8px',
-                                 fontSize: '0.7rem',
-                                 fontWeight: 600,
-                                 borderRadius: '4px',
-                                 border: '1px solid #E2E8F0',
-                                 background: '#F8FAFC',
-                                 cursor: 'pointer',
-                                 color: '#334155',
-                                 transition: 'all 0.15s',
-                                 textAlign: 'center'
-                               }}
-                               onMouseEnter={(e) => { e.currentTarget.style.background = '#EFF6FF'; e.currentTarget.style.borderColor = '#BFDBFE'; }}
-                               onMouseLeave={(e) => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.borderColor = '#E2E8F0'; }}
-                             >
-                               Sleeve Medium (2.0")
-                             </button>
-                             <button
-                               type="button"
-                               onClick={() => applyPresetSizeAndPosition(2.5, "sleeve-center")}
-                               style={{
-                                 padding: '4px 8px',
-                                 fontSize: '0.7rem',
-                                 fontWeight: 600,
-                                 borderRadius: '4px',
-                                 border: '1px solid #E2E8F0',
-                                 background: '#F8FAFC',
-                                 cursor: 'pointer',
-                                 color: '#334155',
-                                 transition: 'all 0.15s',
-                                 textAlign: 'center'
-                               }}
-                               onMouseEnter={(e) => { e.currentTarget.style.background = '#EFF6FF'; e.currentTarget.style.borderColor = '#BFDBFE'; }}
-                               onMouseLeave={(e) => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.borderColor = '#E2E8F0'; }}
-                             >
-                               Sleeve Large (2.5")
-                             </button>
-                           </>
-                         ) : (
-                           <>
-                            <button
-                              type="button"
-                              onClick={() => applyPresetSizeAndPosition(2, "locker-patch")}
-                              style={{
-                                padding: '4px 8px',
-                                fontSize: '0.7rem',
-                                fontWeight: 600,
-                                borderRadius: '4px',
-                                border: '1px solid #E2E8F0',
-                                background: '#F8FAFC',
-                                cursor: 'pointer',
-                                color: '#334155',
-                                transition: 'all 0.15s',
-                                textAlign: 'center'
-                              }}
-                              onMouseEnter={(e) => { e.currentTarget.style.background = '#EFF6FF'; e.currentTarget.style.borderColor = '#BFDBFE'; }}
-                              onMouseLeave={(e) => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.borderColor = '#E2E8F0'; }}
-                            >
-                              Small (2")
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => applyPresetSizeAndPosition(3.5, "locker-patch")}
-                              style={{
-                                padding: '4px 8px',
-                                fontSize: '0.7rem',
-                                fontWeight: 600,
-                                borderRadius: '4px',
-                                border: '1px solid #E2E8F0',
-                                background: '#F8FAFC',
-                                cursor: 'pointer',
-                                color: '#334155',
-                                transition: 'all 0.15s',
-                                textAlign: 'center'
-                              }}
-                              onMouseEnter={(e) => { e.currentTarget.style.background = '#EFF6FF'; e.currentTarget.style.borderColor = '#BFDBFE'; }}
-                              onMouseLeave={(e) => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.borderColor = '#E2E8F0'; }}
-                            >
-                              Locker Patch (3.5")
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => applyPresetSizeAndPosition(4, "locker-patch")}
-                              style={{
-                                padding: '4px 8px',
-                                fontSize: '0.7rem',
-                                fontWeight: 600,
-                                borderRadius: '4px',
-                                border: '1px solid #E2E8F0',
-                                background: '#F8FAFC',
-                                cursor: 'pointer',
-                                color: '#334155',
-                                transition: 'all 0.15s',
-                                textAlign: 'center'
-                              }}
-                              onMouseEnter={(e) => { e.currentTarget.style.background = '#EFF6FF'; e.currentTarget.style.borderColor = '#BFDBFE'; }}
-                              onMouseLeave={(e) => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.borderColor = '#E2E8F0'; }}
-                            >
-                              Pocket Patch (4")
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => applyPresetSizeAndPosition(8.5, "center")}
-                              style={{
-                                padding: '4px 8px',
-                                fontSize: '0.7rem',
-                                fontWeight: 600,
-                                borderRadius: '4px',
-                                border: '1px solid #E2E8F0',
-                                background: '#F8FAFC',
-                                cursor: 'pointer',
-                                color: '#334155',
-                                transition: 'all 0.15s',
-                                textAlign: 'center'
-                              }}
-                              onMouseEnter={(e) => { e.currentTarget.style.background = '#EFF6FF'; e.currentTarget.style.borderColor = '#BFDBFE'; }}
-                              onMouseLeave={(e) => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.borderColor = '#E2E8F0'; }}
-                            >
-                              Center Back (8.5")
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => applyPresetSizeAndPosition(10, "center")}
-                              style={{
-                                padding: '4px 8px',
-                                fontSize: '0.7rem',
-                                fontWeight: 600,
-                                borderRadius: '4px',
-                                border: '1px solid #E2E8F0',
-                                background: '#F8FAFC',
-                                cursor: 'pointer',
-                                color: '#334155',
-                                transition: 'all 0.15s',
-                                textAlign: 'center'
-                              }}
-                              onMouseEnter={(e) => { e.currentTarget.style.background = '#EFF6FF'; e.currentTarget.style.borderColor = '#BFDBFE'; }}
-                              onMouseLeave={(e) => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.borderColor = '#E2E8F0'; }}
-                            >
-                              Large Print (10")
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => applyPresetSizeAndPosition(11.5, "oversized")}
-                              style={{
-                                padding: '4px 8px',
-                                fontSize: '0.7rem',
-                                fontWeight: 600,
-                                borderRadius: '4px',
-                                border: '1px solid #E2E8F0',
-                                background: '#F8FAFC',
-                                cursor: 'pointer',
-                                color: '#334155',
-                                transition: 'all 0.15s',
-                                textAlign: 'center'
-                              }}
-                              onMouseEnter={(e) => { e.currentTarget.style.background = '#EFF6FF'; e.currentTarget.style.borderColor = '#BFDBFE'; }}
-                              onMouseLeave={(e) => { e.currentTarget.style.background = '#F8FAFC'; e.currentTarget.style.borderColor = '#E2E8F0'; }}
-                            >
-                              Full Back (11.5")
-                            </button>
-                          </>
+                          </div>
                         )}
                       </div>
-                      <span style={{ fontSize: '0.65rem', color: '#94A3B8', fontStyle: 'italic', lineHeight: '1.2' }}>
-                        💡 Industry standard left chest is 3"–4", center print is 8"–10", oversized print is 11"–12".
-                      </span>
+                    </div>
+                  )}
+
+                  {/* ── FORMAT BAR (text only) ─── */}
+                  {activeElement.type === "text" && (
+                    <div className={styles.formatBar}>
+                      <button
+                        className={`${styles.formatBtn} ${activeElement.fontWeight === "bold" ? styles.formatBtnActive : ""}`}
+                        onClick={() => onUpdateElement?.(activeElement.id, { fontWeight: activeElement.fontWeight === "bold" ? "normal" : "bold" })}
+                        title="Bold"
+                      ><Bold size={16} strokeWidth={2.5} /></button>
+                      <button
+                        className={`${styles.formatBtn} ${activeElement.textDecoration === "underline" ? styles.formatBtnActive : ""}`}
+                        onClick={() => onUpdateElement?.(activeElement.id, { textDecoration: activeElement.textDecoration === "underline" ? "none" : "underline" })}
+                        title="Underline"
+                      ><Underline size={16} strokeWidth={2.5} /></button>
+                      <button
+                        className={`${styles.formatBtn} ${activeElement.uppercase ? styles.formatBtnActive : ""}`}
+                        onClick={() => onUpdateElement?.(activeElement.id, { uppercase: !activeElement.uppercase })}
+                        title="Uppercase"
+                      ><span style={{ fontSize: '0.7rem', fontWeight: 800, lineHeight: 1 }}>aA</span></button>
+                      <div style={{ width: 1, height: 20, background: '#CBD5E1', margin: '0 2px' }} />
+                      <button
+                        className={`${styles.formatBtn} ${activeElement.textAlign === "left" ? styles.formatBtnActive : ""}`}
+                        onClick={() => onUpdateElement?.(activeElement.id, { textAlign: "left" })}
+                        title="Left"
+                      ><AlignLeft size={16} strokeWidth={2} /></button>
+                      <button
+                        className={`${styles.formatBtn} ${activeElement.textAlign === "center" || !activeElement.textAlign ? styles.formatBtnActive : ""}`}
+                        onClick={() => onUpdateElement?.(activeElement.id, { textAlign: "center" })}
+                        title="Center"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <line x1="18" y1="10" x2="6" y2="10" /><line x1="21" y1="6" x2="3" y2="6" /><line x1="21" y1="14" x2="3" y2="14" /><line x1="18" y1="18" x2="6" y2="18" />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
+
+                  {/* ── SIZE SLIDER ─── */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <span className={styles.editSectionLabel}>Size</span>
+                    <div className={styles.sizeSliderWrap}>
+                      <button
+                        className={styles.sizeSliderBtn}
+                        onClick={() => {
+                          const cur = parseFloat(details.widthInches.toString());
+                          if (cur > 0.5) handleWidthChange(Math.round((cur - 0.5) * 10) / 10);
+                        }}
+                      ><Minus size={14} /></button>
+                      <input
+                        type="range"
+                        className={styles.sizeSliderTrack}
+                        min={activeSide === "left" || activeSide === "right" ? 0.5 : 1}
+                        max={activeSide === "left" || activeSide === "right" ? 4 : 12}
+                        step={0.1}
+                        value={details.widthInches}
+                        onChange={(e) => handleWidthChange(parseFloat(e.target.value))}
+                      />
+                      <button
+                        className={styles.sizeSliderBtn}
+                        onClick={() => {
+                          const cur = parseFloat(details.widthInches.toString());
+                          const max = (activeSide === "left" || activeSide === "right") ? 4 : 12;
+                          if (cur < max) handleWidthChange(Math.round((cur + 0.5) * 10) / 10);
+                        }}
+                      ><Plus size={14} /></button>
+                      <span className={styles.sizeSliderReadout}>{details.widthInches} in</span>
                     </div>
                   </div>
 
-                  {/* Printing Method */}
+                  {/* ── PLACEMENT CARDS ─── */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <span className={styles.editSectionLabel}>Position</span>
+                    <div className={styles.placementRow}>
+                      {activeSide === "front" ? (
+                        <>
+                          <button className={styles.placementCard} onClick={() => applyPresetSizeAndPosition(3.5, "left-chest")}>
+                            <span>Left Chest</span><span className={styles.placementCardSize}>3.5"</span>
+                          </button>
+                          <button className={styles.placementCard} onClick={() => applyPresetSizeAndPosition(8.5, "center")}>
+                            <span>Center</span><span className={styles.placementCardSize}>8.5"</span>
+                          </button>
+                          <button className={styles.placementCard} onClick={() => applyPresetSizeAndPosition(11.5, "oversized")}>
+                            <span>Full Front</span><span className={styles.placementCardSize}>11.5"</span>
+                          </button>
+                          <button className={styles.placementCard} onClick={() => applyPresetSizeAndPosition(4, "left-chest")}>
+                            <span>Pocket</span><span className={styles.placementCardSize}>4"</span>
+                          </button>
+                        </>
+                      ) : (activeSide === "left" || activeSide === "right") ? (
+                        <>
+                          <button className={styles.placementCard} onClick={() => applyPresetSizeAndPosition(1.0, "sleeve-center")}>
+                            <span>Mini</span><span className={styles.placementCardSize}>1"</span>
+                          </button>
+                          <button className={styles.placementCard} onClick={() => applyPresetSizeAndPosition(1.5, "sleeve-center")}>
+                            <span>Small</span><span className={styles.placementCardSize}>1.5"</span>
+                          </button>
+                          <button className={styles.placementCard} onClick={() => applyPresetSizeAndPosition(2.0, "sleeve-center")}>
+                            <span>Medium</span><span className={styles.placementCardSize}>2"</span>
+                          </button>
+                          <button className={styles.placementCard} onClick={() => applyPresetSizeAndPosition(2.5, "sleeve-center")}>
+                            <span>Large</span><span className={styles.placementCardSize}>2.5"</span>
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button className={styles.placementCard} onClick={() => applyPresetSizeAndPosition(3.5, "locker-patch")}>
+                            <span>Top Patch</span><span className={styles.placementCardSize}>3.5"</span>
+                          </button>
+                          <button className={styles.placementCard} onClick={() => applyPresetSizeAndPosition(8.5, "center")}>
+                            <span>Center</span><span className={styles.placementCardSize}>8.5"</span>
+                          </button>
+                          <button className={styles.placementCard} onClick={() => applyPresetSizeAndPosition(11.5, "oversized")}>
+                            <span>Full Back</span><span className={styles.placementCardSize}>11.5"</span>
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* ── ACTION STRIP ─── */}
+                  <div className={styles.actionStrip}>
+                    <button
+                      className={styles.actionStripBtn}
+                      onClick={() => {
+                        if (!activeElement) return;
+                        const newX = Math.round(printableLeftPx + (printableWidthPx / 2) - (activeElement.width / 2));
+                        onUpdateElement?.(activeElement.id, { x: newX });
+                      }}
+                      title="Center horizontally"
+                    >
+                      <AlignCenterHorizontal size={16} />
+                      <span>Center</span>
+                    </button>
+                    <button
+                      className={`${styles.actionStripBtn} ${activeElement.flipX ? styles.actionStripBtnActive : ""}`}
+                      onClick={() => onUpdateElement?.(activeElement.id, { flipX: !activeElement.flipX })}
+                      title="Flip horizontal"
+                    >
+                      <FlipHorizontal2 size={16} />
+                      <span>Flip H</span>
+                    </button>
+                    <button
+                      className={`${styles.actionStripBtn} ${activeElement.flipY ? styles.actionStripBtnActive : ""}`}
+                      onClick={() => onUpdateElement?.(activeElement.id, { flipY: !activeElement.flipY })}
+                      title="Flip vertical"
+                    >
+                      <FlipVertical2 size={16} />
+                      <span>Flip V</span>
+                    </button>
+                    <button
+                      className={styles.actionStripBtn}
+                      onClick={(e) => onCopyElement?.(activeElement.id, e)}
+                      title="Duplicate"
+                    >
+                      <Copy size={16} />
+                      <span>Copy</span>
+                    </button>
+                    <button
+                      className={`${styles.actionStripBtn} ${styles.actionStripBtnDanger}`}
+                      onClick={() => onRemoveElement?.(activeElement.id)}
+                      title="Delete"
+                    >
+                      <Trash2 size={16} />
+                      <span>Delete</span>
+                    </button>
+                  </div>
+
+                  {/* ── PRINTING METHOD ─── */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569' }}>Printing Method</label>
+                      <span className={styles.editSectionLabel}>Print Method</span>
                       <button
                         className={styles.tfHelpBtn}
                         onClick={() => onToolSelect("Guide")}
                         title="View Printing Methods Guide"
                         style={{ padding: '2px', height: 'auto', background: 'none' }}
                       >
-                        <HelpCircle size={15} strokeWidth={2} />
+                        <HelpCircle size={14} strokeWidth={2} />
                       </button>
                     </div>
-                    
-                    {/* Print Type Pills Grid */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+                    <div className={styles.printMethodGrid}>
                       <button
-                        className={`${styles.tfPrintBtn} ${currentPrintType === "dtf" ? styles.tfPrintBtnActive : ""}`}
-                        style={{ width: '100%', display: 'flex', justifyContent: 'center' }}
+                        className={`${styles.printMethodCard} ${currentPrintType === "dtf" ? styles.printMethodCardActive : ""}`}
                         onClick={() => onUpdateElement?.(activeElement.id, { printType: "dtf" })}
                       >
-                        DTF
+                        <span className={styles.printMethodName}>DTF</span>
+                        <span className={styles.printMethodTag}>Vibrant · Full Color</span>
                       </button>
                       <button
-                        className={`${styles.tfPrintBtn} ${currentPrintType === "screen" ? styles.tfPrintBtnActive : ""}`}
-                        style={{ width: '100%', display: 'flex', justifyContent: 'center' }}
+                        className={`${styles.printMethodCard} ${currentPrintType === "screen" ? styles.printMethodCardActive : ""}`}
                         onClick={() => onUpdateElement?.(activeElement.id, { printType: "screen" })}
                       >
-                        Screen
+                        <span className={styles.printMethodName}>Screen</span>
+                        <span className={styles.printMethodTag}>Classic Matte</span>
                       </button>
                       <button
-                        className={`${styles.tfPrintBtn} ${currentPrintType === "embroidery" ? styles.tfPrintBtnActive : ""}`}
-                        style={{ width: '100%', display: 'flex', justifyContent: 'center' }}
+                        className={`${styles.printMethodCard} ${currentPrintType === "embroidery" ? styles.printMethodCardActive : ""}`}
                         onClick={() => onUpdateElement?.(activeElement.id, { printType: "embroidery" })}
                       >
-                        Embroidery
+                        <span className={styles.printMethodName}>Embroidery</span>
+                        <span className={styles.printMethodTag}>Textured Stitch</span>
                       </button>
                     </div>
                   </div>
 
-                  {/* Design/Embroidery Color Settings */}
+                  {/* ── COLOR TYPE ─── */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569' }}>
+                    <span className={styles.editSectionLabel}>
                       {currentPrintType === "embroidery" ? "Embroidery Colors" : "Design Colors"}
-                    </label>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                    </span>
+                    <div className={styles.colorTypePills}>
                       <button
-                        className={`${styles.tfPrintBtn} ${details.embroideryType === "mono" ? styles.tfPrintBtnActive : ""}`}
-                        style={{ width: '100%', display: 'flex', justifyContent: 'center' }}
+                        className={`${styles.colorTypePill} ${details.embroideryType === "mono" ? styles.colorTypePillActive : ""}`}
                         onClick={() => onUpdateElement?.(activeElement.id, { embroideryType: "mono" })}
                       >
                         Mono Color
                       </button>
                       <button
-                        className={`${styles.tfPrintBtn} ${details.embroideryType === "multi" ? styles.tfPrintBtnActive : ""}`}
-                        style={{ width: '100%', display: 'flex', justifyContent: 'center' }}
+                        className={`${styles.colorTypePill} ${details.embroideryType === "multi" ? styles.colorTypePillActive : ""}`}
                         onClick={() => onUpdateElement?.(activeElement.id, { embroideryType: "multi" })}
                       >
                         {currentPrintType === "embroidery" ? "Multi Color" : "Colorful"}
                       </button>
                     </div>
-                  </div>
-
-                  {/* Action Buttons: Copy, Delete */}
-                  <div style={{ display: 'flex', gap: '10px', marginTop: '16px', borderTop: '1px solid #e2e8f0', paddingTop: '16px' }}>
-                    <button
-                      className={styles.addAssetBtnOutline}
-                      style={{ flex: 1, margin: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px', fontSize: '0.8rem', height: '36px' }}
-                      onClick={(e) => onCopyElement?.(activeElement.id, e)}
-                    >
-                      <Copy size={13} /> Copy Layer
-                    </button>
-                    <button
-                      className={styles.addAssetBtnOutline}
-                      style={{ flex: 1, margin: 0, color: '#dc2626', borderColor: '#fee2e2', background: '#fef2f2', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px', fontSize: '0.8rem', height: '36px' }}
-                      onClick={() => onRemoveElement?.(activeElement.id)}
-                    >
-                      <Trash2 size={13} /> Delete
-                    </button>
                   </div>
                 </>
               )}

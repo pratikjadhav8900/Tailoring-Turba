@@ -10,6 +10,8 @@ export interface DesignElement {
   value: string;
   color: string;
   rotation?: number;
+  flipX?: boolean;
+  flipY?: boolean;
   // Text specific
   fontFamily?: string;
   fontWeight?: "normal" | "bold" | string;

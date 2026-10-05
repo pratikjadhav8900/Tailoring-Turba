@@ -415,7 +415,7 @@ export default function CanvasArea({
           }}
         >
           <div id={mockupId} className={styles.garmentContainer}>
-            <AnimatePresence>
+            <AnimatePresence mode="wait" initial={false}>
               <motion.div
                 key={`${garmentType}-${activeSide}`}
                 {...motionProps}
@@ -435,26 +435,31 @@ export default function CanvasArea({
               crossOrigin="anonymous"
             />
             
-            {/* Color Dye Tint overlays: Rendered with blend modes directly on top of the base image */}
+            {/* Color Dye Tint overlays: photometric composite for accurate garment coloring */}
             {(() => {
               const isTransparent = bodyColor === "transparent";
               const rawColor = isTransparent ? "#ffffff" : bodyColor;
               const effectiveColor = isValidHex(rawColor) ? normalizeHex(rawColor) : rawColor;
-              
-              // Calculate luminance to scale overlay values naturally
+
               const hex = effectiveColor.replace("#", "");
               const r = parseInt(hex.substring(0, 2), 16) || 0;
               const g = parseInt(hex.substring(2, 4), 16) || 0;
               const b = parseInt(hex.substring(4, 6), 16) || 0;
               const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-              
-              // Dynamic opacities to prevent flattening the fabric wrinkles and to keep dye subtle:
-              // - Multiply applies color and subtractive shade depth based on target darkness.
-              // - Color applies the hue/saturation tint without touching underlying luminance.
-              const multiplyOpacity = isTransparent ? 0 : Math.max(0, 0.75 * (1 - luminance));
-              const colorOpacity = isTransparent ? 0 : 0.70;
 
-              // Mask properties to align overlay perfectly over the shirt shape
+              const maxC = Math.max(r, g, b) / 255;
+              const minC = Math.min(r, g, b) / 255;
+              const chroma = maxC - minC;
+              const saturation = maxC === 0 ? 0 : chroma / maxC;
+
+              const darkFactor = 1 - luminance;
+              const multiplyOpacity = isTransparent ? 0 : Math.min(0.97, Math.pow(darkFactor, 0.45));
+              const colorOpacity = isTransparent ? 0 : Math.min(0.95,
+                saturation > 0.08 ? 0.35 + saturation * 0.6 : saturation * 2
+              );
+              const needsDarkBoost = !isTransparent && luminance < 0.15;
+              const darkBoostOpacity = needsDarkBoost ? Math.min(0.6, (0.15 - luminance) * 4) : 0;
+
               const maskStyle: React.CSSProperties = {
                 position: "absolute",
                 inset: 0,
@@ -473,11 +478,9 @@ export default function CanvasArea({
 
               return (
                 <>
-                  {/* Layer 1: Multiply blend mode to dye the fabric fibers, adjusting for target color darkness */}
-                  {!isTransparent && (
+                  {!isTransparent && multiplyOpacity > 0 && (
                     <div
                       className={styles.garmentColorLayer}
-                      data-html2canvas-ignore="true"
                       style={{
                         ...maskStyle,
                         backgroundColor: effectiveColor,
@@ -487,17 +490,27 @@ export default function CanvasArea({
                       }}
                     />
                   )}
-                  {/* Layer 2: Color blend mode to overlay exact hue and saturation tint without flattening texture details */}
-                  {!isTransparent && (
+                  {!isTransparent && colorOpacity > 0 && (
                     <div
                       className={styles.garmentColorLayer}
-                      data-html2canvas-ignore="true"
                       style={{
                         ...maskStyle,
                         backgroundColor: effectiveColor,
                         mixBlendMode: "color",
                         opacity: colorOpacity,
                         zIndex: 2,
+                      }}
+                    />
+                  )}
+                  {darkBoostOpacity > 0 && (
+                    <div
+                      className={styles.garmentColorLayer}
+                      style={{
+                        ...maskStyle,
+                        backgroundColor: "#000000",
+                        mixBlendMode: "multiply",
+                        opacity: darkBoostOpacity,
+                        zIndex: 3,
                       }}
                     />
                   )}
@@ -605,7 +618,7 @@ export default function CanvasArea({
                       >
                         <div
                           className={styles.rndContent}
-                          style={{ transform: `rotate(${el.rotation || 0}deg)`, width: "100%", height: "100%" }}
+                          style={{ transform: `rotate(${el.rotation || 0}deg)${el.flipX ? ' scaleX(-1)' : ''}${el.flipY ? ' scaleY(-1)' : ''}`, width: "100%", height: "100%" }}
                         >
                           {el.type === "preset" ? (() => {
                             const presetDef = TEXT_PRESETS.find(p => p.id === el.presetId);
@@ -773,7 +786,7 @@ export default function CanvasArea({
                       >
                         <div
                           className={styles.rndContent}
-                          style={{ transform: `rotate(${el.rotation || 0}deg)`, width: "100%", height: "100%" }}
+                          style={{ transform: `rotate(${el.rotation || 0}deg)${el.flipX ? ' scaleX(-1)' : ''}${el.flipY ? ' scaleY(-1)' : ''}`, width: "100%", height: "100%" }}
                           onClick={(e) => handleElementClick(el, e)}
                           onTouchEnd={(e) => handleElementTouchEnd(el, e)}
                         >

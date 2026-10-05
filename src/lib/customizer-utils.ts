@@ -200,45 +200,45 @@ export function getProductColors(
   // Special Check 1: AWG Label Green / Solid Polo
   if (lowerName.includes("label green") || lowerName.includes("label solid")) {
     if (lowerName.includes("solid")) {
-      colors = ["#1E3A5F", "#DC2626", "#2563EB"]; // Denim (Navy), Red, Royal
+      colors = ["#142D4D", "#C72020", "#1A4BB8"];
     } else {
-      colors = ["#FFFFFF", "#DC2626", "#2563EB", "#7F1D1D"]; // White, Red, Royal, Maroon
+      colors = ["#FFFFFF", "#C72020", "#1A4BB8", "#5B141D"];
     }
   }
   // Special Check 2: Magic Dryfly / Softee
   else if (lowerName.includes("dryfly") || lowerName.includes("softee")) {
-    colors = ["#111111", "#FFFFFF", "#9CA3AF", "#1E3A5F"]; // Black, White, Grey Melange, Navy
+    colors = ["#0A0A0A", "#FFFFFF", "#A0A7B0", "#142D4D"];
   }
   // Special Check 3: Sports and Dryplay models (usually 10-11 options)
   else if (lowerName.includes("dryplay") || lowerName.includes("sports") || lowerName.includes("seeker")) {
-    colors = ["#111111", "#FFFFFF", "#1E3A5F", "#2563EB", "#38BDF8", "#16A34A", "#4D7C0F", "#DC2626", "#D97706", "#9CA3AF"];
+    colors = ["#0A0A0A", "#FFFFFF", "#142D4D", "#1A4BB8", "#38BDF8", "#137A3B", "#3D6510", "#C72020", "#C27506", "#A0A7B0"];
   }
   // Special Check 4: Premium Crewnecks / PIMA Cotton items (typically 5, 10 or 12 options)
   else if (lowerName.includes("pima") || lowerName.includes("crewneck") || lowerName.includes("hoodie") || lowerName.includes("jacket") || lowerName.includes("bio")) {
     const count = colorsCount || 10;
     const allBioColors = [
-      "#111111", // Jet Black
+      "#0A0A0A", // Jet Black
       "#FFFFFF", // White
-      "#1E3A5F", // Navy
-      "#4D7C0F", // Olive
-      "#7F1D1D", // Maroon
-      "#2563EB", // Royal Blue
-      "#16A34A", // Forest Green
-      "#9CA3AF", // Grey Melange
-      "#DC2626", // Independence Red
-      "#D97706", // Gold
+      "#142D4D", // Navy
+      "#3D6510", // Olive
+      "#5B141D", // Maroon
+      "#1A4BB8", // Royal Blue
+      "#137A3B", // Forest Green
+      "#A0A7B0", // Grey Melange
+      "#C72020", // Independence Red
+      "#C27506", // Gold
       "#004b6b", // Turba Blue
       "#38BDF8", // Sky Blue
     ];
 
     if (count <= 4) {
-      colors = ["#111111", "#FFFFFF", "#1E3A5F", "#9CA3AF"];
+      colors = ["#0A0A0A", "#FFFFFF", "#142D4D", "#A0A7B0"];
     } else if (count === 5) {
-      colors = ["#111111", "#FFFFFF", "#1E3A5F", "#7F1D1D", "#9CA3AF"];
+      colors = ["#0A0A0A", "#FFFFFF", "#142D4D", "#5B141D", "#A0A7B0"];
     } else if (count === 6) {
-      colors = ["#111111", "#FFFFFF", "#1E3A5F", "#7F1D1D", "#9CA3AF", "#4D7C0F"];
+      colors = ["#0A0A0A", "#FFFFFF", "#142D4D", "#5B141D", "#A0A7B0", "#3D6510"];
     } else if (count === 7) {
-      colors = ["#111111", "#FFFFFF", "#1E3A5F", "#7F1D1D", "#9CA3AF", "#4D7C0F", "#16A34A"];
+      colors = ["#0A0A0A", "#FFFFFF", "#142D4D", "#5B141D", "#A0A7B0", "#3D6510", "#137A3B"];
     } else {
       colors = allBioColors.slice(0, Math.min(count, allBioColors.length));
     }
@@ -246,14 +246,14 @@ export function getProductColors(
   // Fallback to a standard list matched to colorsCount
   else {
     const defaultColors = [
-      "#111111", // Black
+      "#0A0A0A", // Black
       "#FFFFFF", // White
-      "#1E3A5F", // Navy
-      "#9CA3AF", // Grey
-      "#4D7C0F", // Olive
-      "#7F1D1D", // Maroon
-      "#2563EB", // Royal
-      "#DC2626", // Red
+      "#142D4D", // Navy
+      "#A0A7B0", // Grey
+      "#3D6510", // Olive
+      "#5B141D", // Maroon
+      "#1A4BB8", // Royal
+      "#C72020", // Red
     ];
     colors = defaultColors;
   }
@@ -262,7 +262,7 @@ export function getProductColors(
   if (colorsCount && colorsCount > 0) {
     return colors.slice(0, colorsCount);
   }
-  return colors.length > 0 ? colors : ["#111111", "#FFFFFF", "#1E3A5F", "#9CA3AF"];
+  return colors.length > 0 ? colors : ["#0A0A0A", "#FFFFFF", "#142D4D", "#A0A7B0"];
 }
 
 export function isValidHex(hex: string): boolean {
@@ -284,11 +284,13 @@ export function normalizeHex(hex: string): string {
 
 export const COLOR_NAME_PALETTE: { hex: string; name: string; r: number; g: number; b: number }[] = [
   { hex: "#000000", name: "Black", r: 0, g: 0, b: 0 },
+  { hex: "#0A0A0A", name: "Jet Black", r: 10, g: 10, b: 10 },
   { hex: "#111111", name: "Jet Black", r: 17, g: 17, b: 17 },
   { hex: "#1F2937", name: "Charcoal", r: 31, g: 41, b: 55 },
   { hex: "#374151", name: "Anthracite", r: 55, g: 65, b: 81 },
   { hex: "#4B5563", name: "Dark Grey", r: 75, g: 85, b: 99 },
   { hex: "#6B7280", name: "Slate Grey", r: 107, g: 114, b: 128 },
+  { hex: "#A0A7B0", name: "Grey Melange", r: 160, g: 167, b: 176 },
   { hex: "#9CA3AF", name: "Grey Melange", r: 156, g: 163, b: 175 },
   { hex: "#D1D5DB", name: "Heather Grey", r: 209, g: 213, b: 219 },
   { hex: "#F3F4F6", name: "Off White", r: 243, g: 244, b: 246 },
@@ -301,10 +303,12 @@ export const COLOR_NAME_PALETTE: { hex: string; name: string; r: number; g: numb
   { hex: "#5C3A21", name: "Dark Brown", r: 92, g: 58, b: 33 },
   { hex: "#78350F", name: "Chocolate", r: 120, g: 53, b: 15 },
   { hex: "#000080", name: "Navy Blue", r: 0, g: 0, b: 128 },
+  { hex: "#142D4D", name: "Navy", r: 20, g: 45, b: 77 },
   { hex: "#172A46", name: "Navy Blue", r: 23, g: 42, b: 70 },
   { hex: "#1E3A5F", name: "Navy", r: 30, g: 58, b: 95 },
   { hex: "#004B6B", name: "Turba Blue", r: 0, g: 75, b: 107 },
   { hex: "#1E40AF", name: "Dark Blue", r: 30, g: 64, b: 175 },
+  { hex: "#1A4BB8", name: "Royal Blue", r: 26, g: 75, b: 184 },
   { hex: "#2563EB", name: "Royal Blue", r: 37, g: 99, b: 235 },
   { hex: "#3B82F6", name: "Cobalt Blue", r: 59, g: 130, b: 246 },
   { hex: "#38BDF8", name: "Sky Blue", r: 56, g: 189, b: 248 },
@@ -312,24 +316,29 @@ export const COLOR_NAME_PALETTE: { hex: string; name: string; r: number; g: numb
   { hex: "#BAE6FD", name: "Light Blue", r: 186, g: 230, b: 253 },
   { hex: "#0D9488", name: "Teal", r: 13, g: 148, b: 136 },
   { hex: "#06B6D4", name: "Cyan", r: 6, g: 182, b: 212 },
+  { hex: "#137A3B", name: "Forest Green", r: 19, g: 122, b: 59 },
   { hex: "#16A34A", name: "Forest Green", r: 22, g: 163, b: 74 },
   { hex: "#15803D", name: "Dark Green", r: 21, g: 128, b: 61 },
   { hex: "#14532D", name: "Bottle Green", r: 20, g: 83, b: 45 },
   { hex: "#22C55E", name: "Kelly Green", r: 34, g: 197, b: 94 },
+  { hex: "#3D6510", name: "Olive", r: 61, g: 101, b: 16 },
   { hex: "#4D7C0F", name: "Olive", r: 77, g: 124, b: 15 },
   { hex: "#65A30D", name: "Lime Green", r: 101, g: 163, b: 13 },
   { hex: "#84CC16", name: "Sage Green", r: 132, g: 204, b: 22 },
+  { hex: "#5B141D", name: "Maroon", r: 91, g: 20, b: 29 },
   { hex: "#800000", name: "Maroon", r: 128, g: 0, b: 0 },
   { hex: "#7A1F2B", name: "Maroon", r: 122, g: 31, b: 43 },
   { hex: "#7F1D1D", name: "Maroon", r: 127, g: 29, b: 29 },
   { hex: "#991B1B", name: "Burgundy", r: 153, g: 27, b: 27 },
   { hex: "#831843", name: "Wine", r: 131, g: 24, b: 67 },
+  { hex: "#C72020", name: "Independence Red", r: 199, g: 32, b: 32 },
   { hex: "#DC2626", name: "Independence Red", r: 220, g: 38, b: 38 },
   { hex: "#EF4444", name: "Red", r: 239, g: 68, b: 68 },
   { hex: "#B91C1C", name: "Crimson", r: 185, g: 28, b: 28 },
   { hex: "#EA580C", name: "Rust Orange", r: 234, g: 88, b: 12 },
   { hex: "#C2410C", name: "Rust", r: 194, g: 65, b: 12 },
   { hex: "#F97316", name: "Orange", r: 249, g: 115, b: 22 },
+  { hex: "#C27506", name: "Gold", r: 194, g: 117, b: 6 },
   { hex: "#D97706", name: "Gold", r: 217, g: 119, b: 6 },
   { hex: "#F59E0B", name: "Mustard", r: 245, g: 158, b: 11 },
   { hex: "#EAB308", name: "Yellow", r: 234, g: 179, b: 8 },
