@@ -1,0 +1,123 @@
+/* ============================================================
+   TURBA OPS — INTERNAL PRODUCTION DESIGN SYSTEM
+   Clean, practical, high-density theme for manufacturing ops.
+   ============================================================ */
+
+:root {
+  /* Surfaces */
+  --ops-bg-base: #090a0f;
+  --ops-bg-surface: #10121a;
+  --ops-bg-surface-hover: #161922;
+  --ops-bg-card: #13151f;
+  --ops-bg-card-subtle: #0d0f15;
+  --ops-bg-input: #0b0d13;
+  
+  /* Borders */
+  --ops-border-subtle: #1e2230;
+  --ops-border-medium: #2a3044;
+  --ops-border-strong: #3b435f;
+
+  /* Typography */
+  --ops-text-primary: #f8fafc;
+  --ops-text-secondary: #94a3b8;
+  --ops-text-muted: #64748b;
+  --ops-text-inverse: #090a0f;
+
+  /* Brand & Accents */
+  --ops-brand-gold: #d97706;
+  --ops-brand-gold-subtle: rgba(217, 119, 6, 0.12);
+  --ops-accent-blue: #3b82f6;
+  --ops-accent-blue-subtle: rgba(59, 130, 246, 0.12);
+  
+  /* Production Status Accents */
+  --ops-status-pending: #94a3b8;
+  --ops-status-in-progress: #3b82f6;
+  --ops-status-completed: #10b981;
+  --ops-status-rework: #ef4444;
+  --ops-status-urgent: #f59e0b;
+
+  /* Radii */
+  --ops-radius-sm: 4px;
+  --ops-radius-md: 6px;
+  --ops-radius-lg: 8px;
+  --ops-radius-pill: 9999px;
+
+  /* Font Families */
+  --ops-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --ops-font-mono: 'JetBrains Mono', 'SF Mono', Consolas, Menlo, monospace;
+}
+
+.ops-root {
+  min-height: 100vh;
+  background-color: var(--ops-bg-base);
+  color: var(--ops-text-primary);
+  font-family: var(--ops-font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbars for ops high-density tables */
+.ops-root ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.ops-root ::-webkit-scrollbar-track {
+  background: var(--ops-bg-base);
+}
+.ops-root ::-webkit-scrollbar-thumb {
+  background: var(--ops-border-medium);
+  border-radius: 3px;
+}
+.ops-root ::-webkit-scrollbar-thumb:hover {
+  background: var(--ops-border-strong);
+}
+
+/* High density table styles */
+.ops-table-container {
+  overflow-x: auto;
+  border: 1px solid var(--ops-border-subtle);
+  border-radius: var(--ops-radius-md);
+  background-color: var(--ops-bg-card);
+}
+
+.ops-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  text-align: left;
+}
+
+.ops-table th {
+  padding: 10px 14px;
+  background-color: var(--ops-bg-surface);
+  color: var(--ops-text-secondary);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 11px;
+  border-bottom: 1px solid var(--ops-border-medium);
+  white-space: nowrap;
+}
+
+.ops-table td {
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--ops-border-subtle);
+  color: var(--ops-text-primary);
+  vertical-align: middle;
+}
+
+.ops-table tr:hover td {
+  background-color: var(--ops-bg-surface-hover);
+}
+
+/* Monospace order tag */
+.ops-order-tag {
+  font-family: var(--ops-font-mono);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background-color: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--ops-border-subtle);
+}

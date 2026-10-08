@@ -13,19 +13,27 @@ import TurbaAiChatModal from "@/components/turba-ai/TurbaAiChatModal";
 export default function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
+  const [isOpsHost, setIsOpsHost] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+    if (typeof window !== "undefined") {
+      const h = window.location.hostname.toLowerCase();
+      if (h.startsWith("ops.") || h.startsWith("ops-")) {
+        setIsOpsHost(true);
+      }
+    }
   }, []);
   
   const isAuthPage = pathname?.startsWith("/login") || pathname?.startsWith("/register") || pathname?.startsWith("/forgot-password");
   const isAdminPage = pathname?.startsWith("/admin");
   const isDashboardPage = pathname?.startsWith("/dashboard");
   const isCustomizer = pathname?.startsWith("/customizer");
+  const isOpsPage = pathname?.startsWith("/ops") || isOpsHost;
 
-  const hideNavigation = isAuthPage || isAdminPage || isDashboardPage || isCustomizer;
-  const hideMobileNav = isAuthPage || isAdminPage || isCustomizer;
-  const hideAi = isAuthPage || isAdminPage;
+  const hideNavigation = isAuthPage || isAdminPage || isDashboardPage || isCustomizer || isOpsPage;
+  const hideMobileNav = isAuthPage || isAdminPage || isCustomizer || isOpsPage;
+  const hideAi = isAuthPage || isAdminPage || isOpsPage;
 
   return (
     <div className={mounted && !hideMobileNav ? "has-mobile-nav" : ""}>

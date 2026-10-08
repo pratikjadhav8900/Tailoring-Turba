@@ -29,6 +29,7 @@ model User {
   designs       Design[]
   orders        Order[]
   assets        UserAsset[]
+  employee      Employee?
 }
 
 model Account {
@@ -166,6 +167,14 @@ model Order {
   qcNotes               String?
   dispatchOverrideReason String?
   dispatchOverriddenBy  String?
+
+  // Turba Ops fields (Nullable, zero historical impact)
+  opsStage              OpsProductionStage?
+  dueDate               DateTime?
+  priority              String?              @default("NORMAL")
+  orderSource           String?
+  stageExecutions       ProductionStageExecution[]
+  internalNotes         InternalOrderNote[]
 }
 
 model OrderItem {
@@ -308,6 +317,7 @@ enum Role {
   USER
   ADMIN
   SUPER_ADMIN
+  EMPLOYEE
 }
 
 enum OrderStatus {
@@ -492,6 +502,7 @@ enum EventActorRole {
   SUPER_ADMIN
   SYSTEM_WORKER
   WEBHOOK
+  EMPLOYEE
 }
 
 model OrderTimelineEvent {
@@ -537,5 +548,96 @@ model OutboxNotification {
 
   @@index([status, attemptCount])
   @@index([orderId])
+}
+
+enum OpsProductionStage {
+  NEW_ORDER
+  ORDER_CONFIRMED
+  RESOURCE_FABRIC
+  CUTTING
+  STITCHING
+  BRANDING_PRINTING
+  QUALITY_CHECK
+  PACKING
+  READY_FOR_DISPATCH
+  DISPATCHED
+  CLOSED
+}
+
+enum OpsStageStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  FLAGGED_REWORK
+}
+
+model Employee {
+  id              String                      @id @default(cuid())
+  employeeCode    String                      @unique
+  name            String
+  email           String                      @unique
+  phone           String?
+  roleTitle       String
+  isActive        Boolean                     @default(true)
+  userId          String?                     @unique
+  user            User?                       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt       DateTime                    @default(now())
+  updatedAt       DateTime                    @updatedAt
+
+  stageExecutions ProductionStageExecution[]
+  notes           InternalOrderNote[]
+
+  @@index([email])
+  @@index([employeeCode])
+}
+
+model ProductionStageExecution {
+  id           String             @id @default(cuid())
+  orderId      String
+  order        Order              @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  stage        OpsProductionStage
+  status       OpsStageStatus     @default(PENDING)
+  iteration    Int                @default(1)
+  employeeId   String?
+  employee     Employee?          @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+  employeeName String
+  notes        String?
+  metadata     Json?
+  attachments  String[]           @default([])
+  startedAt    DateTime?
+  completedAt  DateTime?
+  createdAt    DateTime           @default(now())
+
+  @@index([orderId])
+  @@index([stage])
+}
+
+model InternalOrderNote {
+  id           String    @id @default(cuid())
+  orderId      String
+  order        Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  employeeId   String?
+  employee     Employee? @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+  employeeName String
+  note         String    @db.Text
+  isPinned     Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+
+  @@index([orderId])
+}
+
+model OpsNotification {
+  id          String   @id @default(cuid())
+  orderId     String?
+  orderNumber Int?
+  type        String
+  title       String
+  message     String
+  actorName   String
+  readBy      String[] @default([])
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
 }
 

@@ -93,6 +93,11 @@ export async function POST(request: NextRequest) {
     // 5. Create "PENDING" order in database storing authoritative server prices
     console.log('[DB] Creating pending order in database...');
     try {
+      const requestedSource = (notes as any)?.source === "TURBA_AI" ? "TURBA_AI" : "WEBSITE";
+      const totalItemQty = pricing.items.reduce((s: number, i: any) => s + (i.quantity || 1), 0);
+      const deliveryDays = totalItemQty < 10 ? 7 : (totalItemQty < 5000 ? 12 : 15);
+      const initialDueDate = new Date(Date.now() + deliveryDays * 24 * 60 * 60 * 1000);
+
       const order = await prisma.order.create({
         data: {
           userId: session.user.id,
@@ -102,6 +107,9 @@ export async function POST(request: NextRequest) {
           isSplitPayment: pricing.isSplitPayment,
           amountPaid: 0,
           remainingAmount: pricing.remainingAmount,
+          opsStage: "NEW_ORDER",
+          orderSource: requestedSource,
+          dueDate: initialDueDate,
           ...(finalAddressId && { shippingAddressId: finalAddressId }),
           items: {
             create: pricing.items.map((i) => ({

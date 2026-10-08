@@ -134,14 +134,19 @@ export async function POST(request: NextRequest) {
 
       // Determine order status progression (PENDING -> CONFIRMED)
       let targetStatus = existingOrder.status;
+      let targetOpsStage = existingOrder.opsStage;
       if (existingOrder.status === 'PENDING') {
         targetStatus = 'CONFIRMED';
+        if (existingOrder.opsStage === 'NEW_ORDER') {
+          targetOpsStage = 'ORDER_CONFIRMED';
+        }
       }
 
       order = await prisma.order.update({
         where: { id: existingOrder.id },
         data: {
           status: targetStatus,
+          ...(targetOpsStage ? { opsStage: targetOpsStage } : {}),
           amountPaid: netPaidPaise / 100,
           remainingAmount: balanceDuePaise / 100,
           ...(isSecondPayment
@@ -178,6 +183,37 @@ export async function POST(request: NextRequest) {
           },
         },
       });
+
+      if (targetOpsStage === 'ORDER_CONFIRMED') {
+        try {
+          await prisma.productionStageExecution.create({
+            data: {
+              orderId: existingOrder.id,
+              stage: 'ORDER_CONFIRMED',
+              status: 'COMPLETED',
+              iteration: 1,
+              employeeName: 'System / Razorpay',
+              notes: 'Payment confirmed via checkout',
+              startedAt: new Date(),
+              completedAt: new Date(),
+            },
+          });
+
+          await prisma.opsNotification.create({
+            data: {
+              orderId: existingOrder.id,
+              orderNumber: existingOrder.orderNumber,
+              type: 'STAGE_CHANGE',
+              title: `Order TT-${existingOrder.orderNumber} Confirmed`,
+              message: `Payment received for TT-${existingOrder.orderNumber}. Order confirmed and ready for Resource Allocation.`,
+              actorName: 'Razorpay Checkout',
+              readBy: [],
+            },
+          });
+        } catch (opsErr) {
+          console.error('[OPS_NOTIF_RECORD_ERROR]', opsErr);
+        }
+      }
 
       console.log(`[PAYMENT_LEDGER] Payment ${razorpay_payment_id} recorded. Net Paid: ₹${netPaidPaise/100}, Balance: ₹${balanceDuePaise/100}`);
     } catch (dbErr) {
