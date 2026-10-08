@@ -8,7 +8,6 @@ import {
   RotateCcw, 
   ArrowUp, 
   ArrowUpRight, 
-  Sparkles, 
   Bot,
   Layers,
   CheckCircle2

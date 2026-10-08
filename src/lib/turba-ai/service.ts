@@ -1,6 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
 import { findMatchingProducts } from "./catalog";
-import { TURBA_BRANDING_METHODS, TURBA_FABRIC_GUIDE } from "./knowledge";
 import { TurbaCustomerContext, TurbaMessage, TurbaQuickOption, RecommendedProduct } from "@/types/turba-ai";
 
 const SYSTEM_PROMPT = `
@@ -57,11 +56,11 @@ export interface GenerateAiResponseResult {
   updatedContext: TurbaCustomerContext;
 }
 
-// Helper to strip any Unicode emojis or pictographs
+// Helper to strip any Unicode emojis or pictographs (uses standard surrogate pairs, fully compatible with all TS targets)
 function stripEmojis(str: string): string {
   if (!str) return "";
   return str
-    .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F1E0}-\u{1F1FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{1FA00}-\u{1FAFF}\u{FE00}-\u{FE0F}]/gu, "")
+    .replace(/([\uD800-\uDBFF][\uDC00-\uDFFF])|[\u2600-\u27BF\uFE00-\uFE0F]/g, "")
     .replace(/\s{2,}/g, " ")
     .trim();
 }

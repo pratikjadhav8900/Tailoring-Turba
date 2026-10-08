@@ -3,7 +3,7 @@ import React from "react";
 import Image from "next/image";
 import { RecommendedProduct } from "@/types/turba-ai";
 import { getResizedCloudinaryUrl } from "@/lib/cloudinary-client";
-import { ArrowRight, Sparkles, ExternalLink } from "lucide-react";
+import { ArrowRight, ExternalLink } from "lucide-react";
 import styles from "./TurbaAi.module.css";
 
 interface TurbaAiProductCardProps {

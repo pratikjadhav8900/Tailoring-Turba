@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useTurbaAi } from "@/contexts/TurbaAiContext";
-import { Sparkles, MessageSquare } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import styles from "./TurbaAi.module.css";
 
 export default function TurbaAiLauncher() {
