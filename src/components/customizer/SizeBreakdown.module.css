@@ -60,14 +60,47 @@
   margin: 0;
 }
 
-/* ── Section Label ── */
+/* ── Section Label & Quick Actions ── */
+.quickActionsRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .sectionLabel {
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.07em;
   color: #64748b;
-  margin-bottom: 12px;
+  margin-bottom: 0;
+}
+
+.quickActionBtns {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.quickActionBtn {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.quickActionBtn:hover {
+  background: #0f172a;
+  color: #ffffff;
+  border-color: #0f172a;
 }
 
 /* ── Stepper Grid (2 columns on desktop, 1 on mobile) ── */

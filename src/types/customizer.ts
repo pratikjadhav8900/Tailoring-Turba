@@ -46,11 +46,15 @@ export interface DesignElement {
 }
 
 export interface SizeQuantities {
+  XS?: number;
   S?: number;
   M?: number;
   L?: number;
   XL?: number;
+  "2XL"?: number;
   XXL?: number;
+  "3XL"?: number;
+  [key: string]: number | undefined;
 }
 
 export interface CustomizerState {

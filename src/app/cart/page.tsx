@@ -150,6 +150,30 @@ export default function CartPage() {
                         </div>
                       )}
 
+                      {/* Custom size breakdown summary */}
+                      {item.customDesign?.sizes && Object.entries(item.customDesign.sizes).some(([, q]) => (q || 0) > 0) && (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '5px', margin: '6px 0 8px 0' }}>
+                          <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                            Sizes:
+                          </span>
+                          {Object.entries(item.customDesign.sizes)
+                            .filter(([, q]) => (q || 0) > 0)
+                            .map(([sz, q]) => (
+                              <span key={sz} style={{
+                                fontSize: '0.72rem',
+                                fontWeight: 700,
+                                background: '#f8fafc',
+                                color: '#0f172a',
+                                border: '1px solid #cbd5e1',
+                                padding: '2px 8px',
+                                borderRadius: '5px'
+                              }}>
+                                {sz} × {q}
+                              </span>
+                            ))}
+                        </div>
+                      )}
+
                       {/* Qty + Total row */}
                       <div className={styles.itemFooter}>
                         <div className={styles.qtyChip}>

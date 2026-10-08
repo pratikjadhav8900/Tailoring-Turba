@@ -611,9 +611,12 @@ export default function ProductDetailsClient({ product, relatedProducts }: { pro
                   Request Sample
                 </a>
                 {isCustomizable && (() => {
+                  const finalQty = Math.max(minQty, parseInt(qty as string) || minQty);
                   const studioUrl = `/customizer?id=${product.id}` +
                     (product.productType ? `&productType=${encodeURIComponent(product.productType)}` : "") +
-                    (selectedColor ? `&colorName=${encodeURIComponent(selectedColor.name)}&colorValue=${encodeURIComponent(selectedColor.value)}` : "");
+                    (selectedColor ? `&colorName=${encodeURIComponent(selectedColor.name)}&colorValue=${encodeURIComponent(selectedColor.value)}` : "") +
+                    (selectedSize ? `&size=${encodeURIComponent(selectedSize)}` : "") +
+                    `&quantity=${encodeURIComponent(String(finalQty))}`;
                   return (
                     <Link href={studioUrl} className={styles.btnStudio} style={{ textDecoration: 'none', textAlign: 'center', borderRadius: "6px" }}>
                       Design Studio

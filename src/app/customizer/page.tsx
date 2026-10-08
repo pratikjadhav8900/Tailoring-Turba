@@ -134,13 +134,59 @@ function CustomizerContent() {
       
       const isFromAi = searchParams.get('fromAi') === 'true';
       const aiQty = parseInt(searchParams.get('aiQuantity') || "0", 10);
-      let initialSizes = { S: 0, M: 0, L: 0, XL: 0, XXL: 0 };
-      if (aiQty > 0) {
+      const paramSize = searchParams.get('size') || searchParams.get('selectedSize') || searchParams.get('aiSize');
+      const paramQty = parseInt(searchParams.get('quantity') || searchParams.get('qty') || searchParams.get('aiQuantity') || "0", 10);
+
+      // Check sessionStorage if size or quantity was not in query params
+      let savedSize = paramSize;
+      let savedQty = paramQty > 0 ? paramQty : (aiQty > 0 ? aiQty : 0);
+
+      if ((!savedSize || savedQty <= 0) && productId && typeof window !== "undefined") {
+        try {
+          const rawConfig = sessionStorage.getItem(`product_config_${productId}`);
+          if (rawConfig) {
+            const parsed = JSON.parse(rawConfig);
+            if (!savedSize && parsed.selectedSize) savedSize = parsed.selectedSize;
+            if (savedQty <= 0 && parsed.qty) savedQty = Number(parsed.qty);
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+
+      const normalizeSize = (s: string) => {
+        const u = String(s).trim().toUpperCase();
+        return u === "XXL" ? "2XL" : u;
+      };
+
+      // Match product or standard apparel sizes
+      const currentProduct = dbProduct || (productId ? allProducts.find(p => String(p.id) === String(productId)) : null);
+      const productAvailableSizes: string[] = Array.isArray(currentProduct?.sizes) && currentProduct.sizes.length > 0
+        ? currentProduct.sizes.map(normalizeSize)
+        : ["S", "M", "L", "XL", "2XL", "3XL"];
+
+      const targetQty = savedQty > 0 ? savedQty : (currentProduct?.minOrderQuantity || 10);
+      let initialSizes: Record<string, number> = {};
+
+      if (savedSize) {
+        const normalizedSelected = normalizeSize(savedSize);
+        // Pre-fill each available size with 0, and the chosen size with targetQty
+        for (const s of productAvailableSizes) {
+          initialSizes[s] = (s === normalizedSelected) ? targetQty : 0;
+        }
+        if (initialSizes[normalizedSelected] === undefined) {
+          initialSizes[normalizedSelected] = targetQty;
+        }
+      } else if (isFromAi && aiQty > 0) {
         const s = Math.round(aiQty * 0.2);
         const m = Math.round(aiQty * 0.3);
         const l = Math.round(aiQty * 0.3);
         const xl = Math.max(0, aiQty - (s + m + l));
-        initialSizes = { S: s, M: m, L: l, XL: xl, XXL: 0 };
+        initialSizes = { S: s, M: m, L: l, XL: xl, "2XL": 0, "3XL": 0 };
+      } else {
+        for (const s of productAvailableSizes) {
+          initialSizes[s] = 0;
+        }
       }
 
       if (isFromAi && !hasNotifiedAiRef.current) {
@@ -185,8 +231,8 @@ function CustomizerContent() {
     return () => window.removeEventListener('history-bounds', handleBounds);
   }, []);
 
-  const totalQuantity = customizerState?.sizes 
-    ? Object.values(customizerState.sizes).reduce((a, b) => a + (b || 0), 0) 
+  const totalQuantity: number = customizerState?.sizes 
+    ? (Object.values(customizerState.sizes) as (number | undefined)[]).reduce<number>((a, b) => a + (b || 0), 0) 
     : 0;
 
   // True if the customer has placed ANY logo/image element on any side
@@ -342,12 +388,15 @@ function CustomizerContent() {
 
   const handleSizeChange = (size: string, qty: number) => {
     if (!customizerState) return;
+    const normKey = size.toUpperCase() === "XXL" ? "2XL" : size;
+    const newSizes = { ...customizerState.sizes };
+    if (normKey === "2XL" && newSizes["XXL"] !== undefined) {
+      delete newSizes["XXL"];
+    }
+    newSizes[normKey] = Math.max(0, qty);
     setCustomizerState({
       ...customizerState,
-      sizes: {
-        ...customizerState.sizes,
-        [size]: Math.max(0, qty)
-      }
+      sizes: newSizes
     });
   };
 
@@ -564,6 +613,11 @@ function CustomizerContent() {
               moq={MOQ}
               totalQuantity={totalQuantity}
               onSizeChange={handleSizeChange}
+              availableSizes={
+                Array.isArray(dbProduct?.sizes) && dbProduct.sizes.length > 0
+                  ? dbProduct.sizes
+                  : undefined
+              }
             />
             
             {/* Production Assets Section */}

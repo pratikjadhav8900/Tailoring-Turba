@@ -8,27 +8,56 @@ interface SizeBreakdownProps {
   moq: number;
   totalQuantity: number;
   onSizeChange: (size: string, qty: number) => void;
+  availableSizes?: string[];
 }
 
 const SIZE_LABELS: Record<string, { label: string; name: string }> = {
+  XS: { label: "XS", name: "Extra Small" },
   S: { label: "S", name: "Small" },
   M: { label: "M", name: "Medium" },
   L: { label: "L", name: "Large" },
   XL: { label: "XL", name: "Extra Large" },
-  XXL: { label: "XXL", name: "Double XL" },
+  "2XL": { label: "2XL", name: "Double XL" },
+  XXL: { label: "2XL", name: "Double XL" },
+  "3XL": { label: "3XL", name: "Triple XL" },
+  XXXL: { label: "3XL", name: "Triple XL" },
+  "4XL": { label: "4XL", name: "4X Large" },
+  "5XL": { label: "5XL", name: "5X Large" },
+  // Numeric shirt sizes:
+  "38": { label: "38", name: "Chest 38\" (Small)" },
+  "40": { label: "40", name: "Chest 40\" (Medium)" },
+  "42": { label: "42", name: "Chest 42\" (Large)" },
+  "44": { label: "44", name: "Chest 44\" (Extra Large)" },
+  "46": { label: "46", name: "Chest 46\" (Double XL)" },
+  "48": { label: "48", name: "Chest 48\" (Triple XL)" },
 };
 
-const ORDERED_SIZES = ["S", "M", "L", "XL", "XXL"];
+const DEFAULT_ORDERED_SIZES = ["S", "M", "L", "XL", "2XL", "3XL"];
 
 export default function SizeBreakdown({
   sizes,
   moq,
   totalQuantity,
   onSizeChange,
+  availableSizes,
 }: SizeBreakdownProps) {
-  // Ensure we include any custom keys in sizes if present, while prioritizing standard order
+  // Normalize sizes lookup so "XXL" and "2XL" work interchangeably
+  const getQty = (size: string) => {
+    if (sizes[size] !== undefined) return sizes[size];
+    if (size === "2XL" && sizes["XXL"] !== undefined) return sizes["XXL"];
+    if (size === "XXL" && sizes["2XL"] !== undefined) return sizes["2XL"];
+    return 0;
+  };
+
+  const baseOrder = (availableSizes && availableSizes.length > 0)
+    ? availableSizes.map(s => s.trim().toUpperCase() === "XXL" ? "2XL" : s.trim().toUpperCase())
+    : DEFAULT_ORDERED_SIZES;
+
   const allSizeKeys = Array.from(
-    new Set([...ORDERED_SIZES, ...Object.keys(sizes)])
+    new Set([
+      ...baseOrder,
+      ...Object.keys(sizes).map(s => s.trim().toUpperCase() === "XXL" ? "2XL" : s.trim().toUpperCase())
+    ])
   );
 
   const isMoqMet = totalQuantity >= moq;
@@ -38,6 +67,20 @@ export default function SizeBreakdown({
     const rawVal = e.target.value.replace(/[^\d]/g, "");
     const parsed = rawVal === "" ? 0 : parseInt(rawVal, 10);
     onSizeChange(size, Math.max(0, isNaN(parsed) ? 0 : parsed));
+  };
+
+  const handleDistributeEvenly = () => {
+    const target = totalQuantity >= moq ? totalQuantity : moq;
+    const count = allSizeKeys.length || 1;
+    const base = Math.floor(target / count);
+    const remainder = target % count;
+    allSizeKeys.forEach((k, idx) => {
+      onSizeChange(k, base + (idx < remainder ? 1 : 0));
+    });
+  };
+
+  const handleClearAll = () => {
+    allSizeKeys.forEach((k) => onSizeChange(k, 0));
   };
 
   return (
@@ -65,13 +108,33 @@ export default function SizeBreakdown({
         </p>
       </div>
 
-      {/* Section Label */}
-      <div className={styles.sectionLabel}>Quantity by Size</div>
+      {/* Section Label & Quick Actions */}
+      <div className={styles.quickActionsRow}>
+        <div className={styles.sectionLabel}>Quantity by Size</div>
+        <div className={styles.quickActionBtns}>
+          <button
+            type="button"
+            className={styles.quickActionBtn}
+            onClick={handleDistributeEvenly}
+            title="Distribute required order quantity evenly across sizes"
+          >
+            Distribute Evenly
+          </button>
+          <button
+            type="button"
+            className={styles.quickActionBtn}
+            onClick={handleClearAll}
+            title="Reset all size quantities to 0"
+          >
+            Clear All
+          </button>
+        </div>
+      </div>
 
       {/* Structured Stepper Grid */}
       <div className={styles.stepperGrid}>
         {allSizeKeys.map((size) => {
-          const qty = sizes[size] || 0;
+          const qty = getQty(size);
           const sizeMeta = SIZE_LABELS[size] || { label: size, name: `Size ${size}` };
           const hasQty = qty > 0;
 
@@ -102,7 +165,8 @@ export default function SizeBreakdown({
                   type="text"
                   inputMode="numeric"
                   pattern="[0-9]*"
-                  value={qty}
+                  value={qty === 0 ? "" : qty}
+                  placeholder="0"
                   onChange={(e) => handleInputChange(size, e)}
                   className={styles.qtyInput}
                   aria-label={`Quantity for size ${size}`}
