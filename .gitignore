@@ -47,4 +47,11 @@ next-env.d.ts
 /private-uploads/*
 !/private-uploads/.gitkeep
 
+# IDE and agent metadata
+/.agents/
+/.claude/
+/.windsurf/
+skills-lock.json
+
+
 

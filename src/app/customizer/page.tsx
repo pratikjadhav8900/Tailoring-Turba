@@ -40,6 +40,7 @@ function CustomizerContent() {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [dbProduct, setDbProduct] = useState<any>(null);
   const [isLoadingProduct, setIsLoadingProduct] = useState(true);
+  const hasNotifiedAiRef = useRef(false);
 
   const structuredColors = useMemo(() => {
     return getProductStructuredColors(dbProduct);
@@ -130,6 +131,28 @@ function CustomizerContent() {
     if (!customizerState) {
       const rawColor = searchParams.get('colorValue');
       const initialColor = rawColor && isValidHex(rawColor) ? normalizeHex(rawColor) : (rawColor || 'transparent');
+      
+      const isFromAi = searchParams.get('fromAi') === 'true';
+      const aiQty = parseInt(searchParams.get('aiQuantity') || "0", 10);
+      let initialSizes = { S: 0, M: 0, L: 0, XL: 0, XXL: 0 };
+      if (aiQty > 0) {
+        const s = Math.round(aiQty * 0.2);
+        const m = Math.round(aiQty * 0.3);
+        const l = Math.round(aiQty * 0.3);
+        const xl = Math.max(0, aiQty - (s + m + l));
+        initialSizes = { S: s, M: m, L: l, XL: xl, XXL: 0 };
+      }
+
+      if (isFromAi && !hasNotifiedAiRef.current) {
+        hasNotifiedAiRef.current = true;
+        setToast({
+          message: "Loaded specifications from your Turba AI consultation",
+          visible: true,
+          type: "success"
+        });
+        setTimeout(() => setToast(t => ({ ...t, visible: false })), 4000);
+      }
+
       setCustomizerState({
         garmentType: derivedGarment,
         bodyColor: initialColor,
@@ -138,7 +161,7 @@ function CustomizerContent() {
         leftElements: [],
         rightElements: [],
         fabricId: fabricId || undefined,
-        sizes: { S: 0, M: 0, L: 0, XL: 0, XXL: 0 }
+        sizes: initialSizes
       });
     } else if (dbProduct && customizerState.garmentType !== derivedGarment) {
       // Update garment type if it changes from product selection

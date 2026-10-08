@@ -83,33 +83,49 @@ export default function CanvasArea({
     return () => observer.disconnect();
   }, [isPreviewMode]);
 
+  // Helper to clamp pan boundaries based on current zoom and scale
+  const clampPan = (x: number, y: number, currentZoom: number, currentScale: number = 1) => {
+    if (currentZoom <= 1.2) {
+      return { x: 0, y: 0 };
+    }
+    // Bounded pan limits so garment stays visible within canvas viewport
+    const maxPanX = Math.round(180 * (currentZoom - 1.0) * currentScale);
+    const maxPanY = Math.round(180 * (currentZoom - 1.0) * currentScale);
+    return {
+      x: Math.max(-maxPanX, Math.min(maxPanX, x)),
+      y: Math.max(-maxPanY, Math.min(maxPanY, y))
+    };
+  };
+
   // Advanced gestures (Two-finger pan and pinch zoom)
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isGestureActive, setIsGestureActive] = useState(false);
 
   React.useEffect(() => {
-    setPan({ x: 0, y: 0 });
-  }, [isPreviewMode, activeSide]);
+    setPan(p => clampPan(p.x, p.y, zoom, deviceScale));
+  }, [isPreviewMode, activeSide, zoom, deviceScale]);
 
   const zoomRef = useRef(zoom);
+  const deviceScaleRef = useRef(deviceScale);
   const onZoomChangeRef = useRef(onZoomChange);
   const panRef = useRef(pan);
   
   React.useEffect(() => {
     zoomRef.current = zoom;
+    deviceScaleRef.current = deviceScale;
     onZoomChangeRef.current = onZoomChange;
     panRef.current = pan;
 
     // Update cursor when zoom changes
     const canvas = canvasRef.current;
     if (canvas && !isPreviewMode) {
-      if (zoom > 1.05) {
+      if (zoom > 1.2) {
         canvas.style.cursor = "grab";
       } else {
         canvas.style.cursor = "";
       }
     }
-  }, [zoom, onZoomChange, pan, isPreviewMode]);
+  }, [zoom, onZoomChange, pan, isPreviewMode, deviceScale]);
 
   React.useEffect(() => {
     const canvas = canvasRef.current;
@@ -150,13 +166,10 @@ export default function CanvasArea({
         const newZoom = zoomRef.current - delta * 0.005;
         onZoomChangeRef.current(Math.max(0.3, Math.min(3.0, newZoom)));
       } else {
-        // Trackpad panning (two-finger scroll)
-        if (zoomRef.current > 1.05) {
+        // Trackpad panning (two-finger scroll) clamped within viewport bounds
+        if (zoomRef.current > 1.2) {
           e.preventDefault();
-          setPan(p => ({
-            x: p.x - e.deltaX,
-            y: p.y - e.deltaY
-          }));
+          setPan(p => clampPan(p.x - e.deltaX, p.y - e.deltaY, zoomRef.current, deviceScaleRef.current));
         }
       }
     };
@@ -188,7 +201,7 @@ export default function CanvasArea({
         touchStartPan = { ...panRef.current };
       } else if (e.touches.length === 1) {
         // Prevent browser viewport scrolling only if zoomed in, so user can pan the shirt
-        if (zoomRef.current > 1.05) {
+        if (zoomRef.current > 1.2) {
           e.preventDefault();
         }
         setIsGestureActive(true);
@@ -211,23 +224,17 @@ export default function CanvasArea({
         const mid = getMidpoint(e.touches);
         const dx = mid.x - touchStartMid.x;
         const dy = mid.y - touchStartMid.y;
-        setPan({
-          x: touchStartPan.x + dx,
-          y: touchStartPan.y + dy
-        });
+        setPan(clampPan(touchStartPan.x + dx, touchStartPan.y + dy, zoomRef.current, deviceScaleRef.current));
         hasDraggedRef.current = true;
       } else if (e.touches.length === 1 && isSingleFingerPan) {
-        if (zoomRef.current > 1.05) {
+        if (zoomRef.current > 1.2) {
           e.preventDefault();
           const dx = e.touches[0].clientX - touchStartSingle.x;
           const dy = e.touches[0].clientY - touchStartSingle.y;
           if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
             hasDraggedRef.current = true;
           }
-          setPan({
-            x: touchStartPan.x + dx,
-            y: touchStartPan.y + dy
-          });
+          setPan(clampPan(touchStartPan.x + dx, touchStartPan.y + dy, zoomRef.current, deviceScaleRef.current));
         }
       }
     };
@@ -239,7 +246,7 @@ export default function CanvasArea({
 
     // Mouse drag handlers
     const handleMouseDown = (e: MouseEvent) => {
-      if (e.button !== 0 || zoomRef.current <= 1.05) return; // Only pan on left click when zoomed in
+      if (e.button !== 0 || zoomRef.current <= 1.2) return; // Only pan on left click when zoomed in
       const target = e.target as HTMLElement;
       // Prevent panning if clicking on a design element, handle, formatted bar or control button
       if (
@@ -271,16 +278,13 @@ export default function CanvasArea({
       if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
         hasDraggedRef.current = true;
       }
-      setPan({
-        x: startPan.x + dx,
-        y: startPan.y + dy
-      });
+      setPan(clampPan(startPan.x + dx, startPan.y + dy, zoomRef.current, deviceScaleRef.current));
     };
 
     const handleMouseUp = () => {
       if (isMouseDown) {
         isMouseDown = false;
-        canvas.style.cursor = zoomRef.current > 1.05 ? 'grab' : '';
+        canvas.style.cursor = zoomRef.current > 1.2 ? 'grab' : '';
         window.removeEventListener('mousemove', handleMouseMove);
         window.removeEventListener('mouseup', handleMouseUp);
       }
@@ -294,7 +298,7 @@ export default function CanvasArea({
     canvas.addEventListener("mousedown", handleMouseDown);
 
     // Initial cursor check
-    if (zoomRef.current > 1.05) {
+    if (zoomRef.current > 1.2) {
       canvas.style.cursor = 'grab';
     } else {
       canvas.style.cursor = '';
@@ -411,7 +415,8 @@ export default function CanvasArea({
             height: '560px',
             transform: `translate(calc(-50% + ${currentPan.x}px), calc(-50% + ${currentPan.y}px)) scale(${totalScale})`, 
             transformOrigin: "center center", 
-            transition: "none" 
+            transition: "none",
+            ['--zoom-scale' as any]: String(totalScale)
           }}
         >
           <div id={mockupId} className={styles.garmentContainer}>

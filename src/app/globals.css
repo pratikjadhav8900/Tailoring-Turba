@@ -552,10 +552,11 @@ small, .type-caption {
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 991px) {
   .whatsapp-btn-wrapper {
     right: 20px !important;
     left: auto !important;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 140px) !important;
   }
   .whatsapp-btn-container {
     width: 44px !important;

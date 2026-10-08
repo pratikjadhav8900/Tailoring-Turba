@@ -7,6 +7,8 @@ import Footer from "@/components/layout/Footer";
 import WhatsAppButton from "@/components/shared/WhatsAppButton";
 import CompareTray from "@/components/shared/CompareTray";
 import MobileNav from "@/components/layout/MobileNav";
+import TurbaAiLauncher from "@/components/turba-ai/TurbaAiLauncher";
+import TurbaAiChatModal from "@/components/turba-ai/TurbaAiChatModal";
 
 export default function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -23,6 +25,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
 
   const hideNavigation = isAuthPage || isAdminPage || isDashboardPage || isCustomizer;
   const hideMobileNav = isAuthPage || isAdminPage || isCustomizer;
+  const hideAi = isAuthPage || isAdminPage;
 
   return (
     <div className={mounted && !hideMobileNav ? "has-mobile-nav" : ""}>
@@ -43,6 +46,8 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
       {mounted && !hideNavigation && <Footer />}
       {mounted && !hideNavigation && <WhatsAppButton />}
       {mounted && !hideNavigation && <CompareTray />}
+      {mounted && !hideAi && <TurbaAiLauncher />}
+      {mounted && !hideAi && <TurbaAiChatModal />}
       {mounted && !hideMobileNav && <MobileNav />}
     </div>
   );

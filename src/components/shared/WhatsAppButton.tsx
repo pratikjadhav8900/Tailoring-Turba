@@ -19,7 +19,7 @@ export default function WhatsAppButton() {
     <>
       <div className="whatsapp-btn-wrapper" style={{
         position: "fixed",
-        bottom: "calc(env(safe-area-inset-bottom, 0px) + 90px)",
+        bottom: "calc(env(safe-area-inset-bottom, 0px) + 98px)",
         right: "24px",
         zIndex: 9999,
         display: "flex",

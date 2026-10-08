@@ -29,18 +29,18 @@ const nextConfig = {
       },
     ],
   },
-  outputFileTracingExcludes: {
-    '*': [
-      'node_modules/@swc/core/**',
-      'node_modules/@esbuild/**',
-      'node_modules/esbuild/**',
-      'node_modules/@playwright/**',
-      'node_modules/playwright/**',
-      'node_modules/vitest/**',
-      'node_modules/@testing-library/**',
-    ],
-  },
   experimental: {
+    outputFileTracingExcludes: {
+      '*': [
+        'node_modules/@swc/core/**',
+        'node_modules/@esbuild/**',
+        'node_modules/esbuild/**',
+        'node_modules/@playwright/**',
+        'node_modules/playwright/**',
+        'node_modules/vitest/**',
+        'node_modules/@testing-library/**',
+      ],
+    },
     serverActions: {
       bodySizeLimit: "2mb",
     },

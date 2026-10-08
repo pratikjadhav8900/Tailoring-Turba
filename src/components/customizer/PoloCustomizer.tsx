@@ -8,7 +8,7 @@ import Image from "next/image";
 import { GARMENTS } from "@/lib/fabric-data";
 import { ALL_PRESETS as TEXT_PRESETS } from "@/lib/presets";
 
-type ActiveTool = "Text" | "Uploads" | "Colors" | "Names" | "Guide" | "Properties" | null;
+type ActiveTool = "Templates" | "Elements" | "Text" | "Brand" | "Uploads" | "Garment" | "Properties" | null;
 
 interface Props {
   onChange?: (state: CustomizerState) => void;
@@ -271,6 +271,55 @@ export default function PoloCustomizer({
     setActiveTool(null);
   };
 
+  const addSvgElement = (element: { svg: string; name: string; color?: string }) => {
+    const id = Date.now().toString();
+    const width = 100;
+    const height = 100;
+    const x = Math.round((560 - width) / 2);
+    const y = Math.round((560 - height) / 2);
+    const newEl: DesignElement = {
+      id,
+      type: "logo",
+      x,
+      y,
+      width,
+      height,
+      value: `data:image/svg+xml,${encodeURIComponent(element.svg.replace('currentColor', element.color || '#111111'))}`,
+      color: element.color || "#111111",
+      printType: "dtf",
+      originalWidth: 400,
+      originalHeight: 400,
+    };
+    setElementsWithHistory([...elements, newEl]);
+    handleElementClick(id);
+    setActiveTool(null);
+  };
+
+  const applyTemplate = (templateElements: any[]) => {
+    const newElements = templateElements.map((el: any, i: number) => ({
+      id: `${Date.now()}-${i}`,
+      type: "text" as const,
+      x: el.x || 200,
+      y: el.y || 200,
+      width: el.width || 160,
+      height: el.height || 48,
+      value: el.value || "Text",
+      color: el.color || "#000000",
+      fontFamily: el.fontFamily || "Inter",
+      fontWeight: el.fontWeight || "bold",
+      textAlign: "center" as const,
+      rotation: 0,
+      fontSize: el.fontSize || 24,
+      textTransform: el.textTransform,
+      letterSpacing: el.letterSpacing,
+    }));
+    setElementsWithHistory([...elements, ...newElements]);
+    if (newElements.length > 0) {
+      handleElementClick(newElements[0].id);
+    }
+    setActiveTool(null);
+  };
+
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -489,6 +538,8 @@ export default function PoloCustomizer({
           onAddPreset={addPreset}
           onUploadClick={() => fileInputRef.current?.click()}
           onAddLogoUrl={addLogoFromUrl}
+          onAddSvgElement={addSvgElement}
+          onApplyTemplate={applyTemplate}
           availableColors={availableColors}
           colorsJson={colorsJson}
           textElements={elements.filter(e => e.type === "text")}

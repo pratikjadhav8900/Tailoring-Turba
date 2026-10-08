@@ -1,24 +1,21 @@
 "use client";
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
-  Type, UploadCloud, Shirt, X, Plus, ArrowUpRight, Smartphone, Trash2, LogIn, HelpCircle,
-  Sliders, ArrowLeft, LayoutTemplate, Bold, Underline, AlignLeft, Copy, ChevronUp, ChevronDown, Link2,
-  Minus, FlipHorizontal2, FlipVertical2, AlignCenterHorizontal
+  Type, UploadCloud, Shirt, X, Plus, Smartphone, Trash2, LogIn, HelpCircle,
+  Sliders, LayoutTemplate, Bold, Underline, AlignLeft, Copy, ChevronDown, ChevronLeft,
+  Minus, FlipHorizontal2, FlipVertical2, AlignCenterHorizontal, AlignCenterVertical,
+  RotateCw, Italic, Shapes, Sparkles
 } from "lucide-react";
-import { useSession, signIn } from "next-auth/react";
 import styles from "./PoloCustomizer.module.css";
-import { COLOR_PRESETS, GARMENTS } from "@/lib/fabric-data";
+import { GARMENTS } from "@/lib/fabric-data";
 import { ALL_PRESETS as TEXT_PRESETS } from "@/lib/presets";
 import { DesignElement } from "@/types/customizer";
-import { getElementDetails, getPrintableAreaDimensionsPx, SIZE_SCALES, getColorName } from "@/lib/customizer-utils";
+import { getElementDetails, getPrintableAreaDimensionsPx, SIZE_SCALES } from "@/lib/customizer-utils";
+import { TemplatesPanel, ElementsPanel, TextPanel, BrandKitPanel, UploadsPanel, GarmentPanel } from "./panels";
 
-type ActiveTool = "Text" | "Uploads" | "Colors" | "Presets" | "Guide" | "Properties" | null;
+export type ActiveTool = "Templates" | "Text" | "Uploads" | "Garment" | "Properties" | null;
 
-type UserAsset = {
-  id: string;
-  url: string;
-  createdAt: string;
-};
+type PropertiesTab = "typography" | "transform" | "print";
 
 interface ToolPanelProps {
   activeTool: ActiveTool;
@@ -30,6 +27,8 @@ interface ToolPanelProps {
   onAddPreset?: (presetId: string, text: string | string[]) => void;
   onUploadClick: () => void;
   onAddLogoUrl?: (url: string) => void;
+  onAddSvgElement?: (element: { svg: string; name: string; color?: string }) => void;
+  onApplyTemplate?: (elements: any[]) => void;
   availableColors?: string[];
   colorsJson?: any;
   textElements?: DesignElement[];
@@ -44,24 +43,28 @@ interface ToolPanelProps {
   onPreviewSizeChange?: (size: "S" | "M" | "L" | "XL" | "XXL") => void;
 }
 
-const SIDEBAR_TOOLS = [
-  { key: "Colors" as ActiveTool,  icon: Shirt,       label: "Material\ncolor" },
-  { key: "Text" as ActiveTool,    icon: Type,        label: "Text" },
-  { key: "Presets" as ActiveTool, icon: LayoutTemplate, label: "Font\ncombos" },
-  { key: "Uploads" as ActiveTool, icon: UploadCloud, label: "Uploads" },
-  { key: "Properties" as ActiveTool, icon: Sliders,  label: "Edit\nElement", hideWhenNoElement: true },
-  { key: "Guide" as ActiveTool,   icon: HelpCircle,  label: "Printing\nGuide" },
+const SIDEBAR_TOOLS: { key: ActiveTool; icon: any; label: string; hideWhenNoElement?: boolean }[] = [
+  { key: "Templates",  icon: LayoutTemplate, label: "Templates" },
+  { key: "Text",       icon: Type,           label: "Text" },
+  { key: "Uploads",    icon: UploadCloud,    label: "Uploads" },
+  { key: "Garment",    icon: Shirt,          label: "Garment" },
+  { key: "Properties", icon: Sliders,        label: "Edit", hideWhenNoElement: true },
 ];
 
-const FONTS = [
-  "Inter", "Outfit", "Oswald", "Montserrat", "Playfair Display", "Bebas Neue",
-  "Roboto", "Poppins", "Lato", "Raleway", "Aladin", "Arimo", "Abel",
-  "Abril Fatface", "Adamina", "Advent Pro", "Alegreya", "Alex Brush", "Allison",
-  "Arial", "Arial Black", "Book Antiqua", "Calibri", "Candara", "Century Gothic",
-  "Comic Sans MS", "Consolas", "Courier New", "Franklin Gothic Medium",
-  "Garamond", "Georgia", "Impact", "Lucida Console", "Lucida Sans Unicode",
-  "Microsoft Sans Serif", "Palatino Linotype", "Segoe UI", "Tahoma",
-  "Times New Roman", "Trebuchet MS", "Verdana"
+const PANEL_TITLES: Record<string, string> = {
+  Templates: "Templates",
+  Text: "Text & Typography",
+  Uploads: "Uploads",
+  Garment: "Garment & Color",
+  Properties: "Edit Element",
+};
+
+const FONT_CATEGORIES: { label: string; fonts: string[] }[] = [
+  { label: "Streetwear / Bold", fonts: ["Bebas Neue", "Impact", "Oswald", "Arial Black", "Franklin Gothic Medium"] },
+  { label: "Clean Sans", fonts: ["Inter", "Outfit", "Montserrat", "Roboto", "Poppins", "Lato", "Raleway", "Arimo", "Abel", "Advent Pro", "Segoe UI", "Calibri", "Candara", "Century Gothic", "Trebuchet MS", "Verdana", "Microsoft Sans Serif", "Tahoma"] },
+  { label: "Vintage & Retro", fonts: ["Abril Fatface", "Adamina", "Alegreya", "Playfair Display", "Book Antiqua", "Garamond", "Georgia", "Palatino Linotype", "Times New Roman"] },
+  { label: "Handwritten", fonts: ["Alex Brush", "Allison", "Aladin", "Comic Sans MS"] },
+  { label: "Monospace", fonts: ["Consolas", "Courier New", "Lucida Console", "Lucida Sans Unicode"] },
 ];
 
 const TEXT_COLORS = [
@@ -79,72 +82,49 @@ const TEXT_COLORS = [
   { name: "Teal",       hex: "#0D9488" }
 ];
 
+const CURATED_PALETTES: { label: string; colors: { name: string; hex: string }[] }[] = [
+  { label: "Core Basics", colors: [
+    { name: "Black", hex: "#111111" }, { name: "White", hex: "#FFFFFF" },
+    { name: "Heather Grey", hex: "#9CA3AF" }, { name: "Navy", hex: "#1E3A5F" },
+  ]},
+  { label: "Streetwear Neons", colors: [
+    { name: "Cyber Lime", hex: "#BEFF00" }, { name: "Electric Purple", hex: "#BF00FF" },
+    { name: "Hot Pink", hex: "#FF007F" }, { name: "Cyan", hex: "#00E5FF" },
+  ]},
+  { label: "Vintage Earth", colors: [
+    { name: "Sage", hex: "#87AE73" }, { name: "Terracotta", hex: "#C75B39" },
+    { name: "Mustard", hex: "#D4A843" }, { name: "Forest", hex: "#2D5F2E" },
+  ]},
+  { label: "Specialty Inks", colors: [
+    { name: "Metallic Gold", hex: "#D4AF37" }, { name: "Silver", hex: "#C0C0C0" },
+    { name: "Rose Gold", hex: "#B76E79" }, { name: "Copper", hex: "#B87333" },
+  ]},
+];
+
+const TEXT_SHADOW_PRESETS: { label: string; value: string }[] = [
+  { label: "None", value: "none" },
+  { label: "Soft Glow", value: "0 0 8px rgba(0,0,0,0.3)" },
+  { label: "3D Pop", value: "2px 2px 0 rgba(0,0,0,0.5), 4px 4px 0 rgba(0,0,0,0.2)" },
+  { label: "Retro Drop", value: "3px 3px 0 rgba(0,0,0,0.6)" },
+];
+
+const ROTATION_PRESETS = [0, 45, 90, 180];
 
 export default function ToolPanel({
   activeTool, bodyColor, isUploading,
   onToolSelect, onColorSelect, onAddText, onAddPreset, onUploadClick, onAddLogoUrl,
+  onAddSvgElement, onApplyTemplate,
   availableColors, colorsJson, textElements = [], onUpdateTextElement, onRemoveElement,
   activeElement, onUpdateElement, onCopyElement, garmentType, activeSide,
   previewSize = "M", onPreviewSizeChange,
 }: ToolPanelProps) {
-  const { data: session } = useSession();
   const [showColorPicker, setShowColorPicker] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
-  const [userAssets, setUserAssets] = useState<UserAsset[]>([]);
-  const [isLoadingAssets, setIsLoadingAssets] = useState(false);
-  const [presetInput, setPresetInput] = useState("");
-  const [activeCategory, setActiveCategory] = useState("All");
-
-  useEffect(() => {
-    if (activeTool !== "Uploads" || !session?.user?.id) return;
-    if (!isUploading) {
-      setIsLoadingAssets(true);
-      fetch('/api/user-assets')
-        .then(res => res.json())
-        .then(data => {
-          if (data.assets) setUserAssets(data.assets);
-        })
-        .finally(() => setIsLoadingAssets(false));
-    }
-  }, [activeTool, session, isUploading]);
-
-  const [showQrModal, setShowQrModal] = useState(false);
-  const [qrSessionId, setQrSessionId] = useState<string | null>(null);
-  const [qrStatus, setQrStatus] = useState<"waiting" | "received">("waiting");
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  const openQrModal = useCallback(() => {
-    const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    setQrSessionId(id);
-    setQrStatus("waiting");
-    setShowQrModal(true);
-    fetch(`/api/upload-session?session=${id}`).catch(() => {});
-  }, []);
-
-  const closeQrModal = useCallback(() => {
-    setShowQrModal(false);
-    setQrSessionId(null);
-    setQrStatus("waiting");
-    if (pollRef.current) clearInterval(pollRef.current);
-  }, []);
-
-  useEffect(() => {
-    if (!showQrModal || !qrSessionId) return;
-    pollRef.current = setInterval(async () => {
-      try {
-        const res = await fetch(`/api/upload-session?session=${qrSessionId}`);
-        if (!res.ok) return;
-        const data = await res.json();
-        if (data.url) {
-          setQrStatus("received");
-          if (pollRef.current) clearInterval(pollRef.current);
-          onAddLogoUrl?.(data.url);
-          setTimeout(closeQrModal, 2000);
-        }
-      } catch { }
-    }, 2000);
-    return () => { if (pollRef.current) clearInterval(pollRef.current); };
-  }, [showQrModal, qrSessionId, onAddLogoUrl, closeQrModal]);
+  const [propertiesTab, setPropertiesTab] = useState<PropertiesTab>("typography");
+  const [showFontPicker, setShowFontPicker] = useState(false);
+  const [fontSearchQuery, setFontSearchQuery] = useState("");
+  const [hexInput, setHexInput] = useState("");
+  const [showPaletteSection, setShowPaletteSection] = useState(false);
 
   useEffect(() => {
     if (!showColorPicker) return;
@@ -157,8 +137,13 @@ export default function ToolPanel({
     return () => document.removeEventListener("mousedown", handler);
   }, [showColorPicker]);
 
+  useEffect(() => {
+    if (activeElement) {
+      setPropertiesTab(activeElement.type === "logo" ? "transform" : "typography");
+    }
+  }, [activeElement?.id]);
+
   const details = activeElement ? getElementDetails(activeElement, garmentType, activeSide, previewSize) : null;
-  const printableArea = activeElement ? getPrintableAreaDimensionsPx(garmentType, activeSide) : null;
 
   const currentGarment = GARMENTS[garmentType as keyof typeof GARMENTS] || GARMENTS["round-neck"];
   const sidePrintable = (currentGarment.printableArea as any)?.[activeSide] || currentGarment.printableArea;
@@ -166,29 +151,10 @@ export default function ToolPanel({
   const printableHeightPercent = parseFloat(sidePrintable?.height || "50%") / 100;
   const printableLeftPercent = parseFloat(sidePrintable?.left || "30%") / 100;
   const printableTopPercent = parseFloat(sidePrintable?.top || "19%") / 100;
-
   const printableLeftPx = 560 * printableLeftPercent;
   const printableTopPx = 560 * printableTopPercent;
   const printableWidthPx = 560 * printableWidthPercent;
   const printableHeightPx = 560 * printableHeightPercent;
-
-  // Local input states for width & height
-  const [widthInput, setWidthInput] = useState(details ? details.widthInches.toString() : "");
-  const [heightInput, setHeightInput] = useState(details ? details.heightInches.toString() : "");
-  const [isFocusedW, setIsFocusedW] = useState(false);
-  const [isFocusedH, setIsFocusedH] = useState(false);
-
-  useEffect(() => {
-    if (details && !isFocusedW) {
-      setWidthInput(details.widthInches.toString());
-    }
-  }, [details?.widthInches, isFocusedW]);
-
-  useEffect(() => {
-    if (details && !isFocusedH) {
-      setHeightInput(details.heightInches.toString());
-    }
-  }, [details?.heightInches, isFocusedH]);
 
   const handleWidthChange = (val: number) => {
     if (!activeElement || isNaN(val) || val <= 0) return;
@@ -198,39 +164,14 @@ export default function ToolPanel({
     const pxPerInch = (printableWidthPx / physicalWidthInches) * scale;
     let newWidth = Math.round(val * pxPerInch);
     newWidth = Math.max(20, Math.min(560, newWidth));
-
     const aspectRatio = activeElement.width / activeElement.height;
     let newHeight = Math.round(newWidth / aspectRatio);
     newHeight = Math.max(20, Math.min(560, newHeight));
-
     const ratio = newWidth / activeElement.width;
     const updates: Partial<DesignElement> = { width: newWidth, height: newHeight };
     if (activeElement.type === "text" && activeElement.fontSize) {
       updates.fontSize = Math.round(activeElement.fontSize * ratio);
     }
-
-    onUpdateElement?.(activeElement.id, updates);
-  };
-
-  const handleHeightChange = (val: number) => {
-    if (!activeElement || isNaN(val) || val <= 0) return;
-    const scale = SIZE_SCALES[previewSize] || 1.0;
-    const isSleeve = activeSide === "left" || activeSide === "right";
-    const physicalWidthInches = isSleeve ? 4 : 12;
-    const pxPerInch = (printableWidthPx / physicalWidthInches) * scale;
-    let newHeight = Math.round(val * pxPerInch);
-    newHeight = Math.max(20, Math.min(560, newHeight));
-
-    const aspectRatio = activeElement.width / activeElement.height;
-    let newWidth = Math.round(newHeight * aspectRatio);
-    newWidth = Math.max(20, Math.min(560, newWidth));
-
-    const ratio = newWidth / activeElement.width;
-    const updates: Partial<DesignElement> = { width: newWidth, height: newHeight };
-    if (activeElement.type === "text" && activeElement.fontSize) {
-      updates.fontSize = Math.round(activeElement.fontSize * ratio);
-    }
-
     onUpdateElement?.(activeElement.id, updates);
   };
 
@@ -241,66 +182,41 @@ export default function ToolPanel({
     if (!activeElement) return;
     const isSleeve = activeSide === "left" || activeSide === "right";
     const physicalWidthInches = isSleeve ? 4 : 12;
-    const pxPerInch = (printableWidthPx / physicalWidthInches);
-    
+    const pxPerInch = printableWidthPx / physicalWidthInches;
     const aspectRatio = activeElement.width / activeElement.height;
     const targetPx = targetWidthInches * pxPerInch;
-    
-    let newWidth = 0;
-    let newHeight = 0;
-    
-    if (aspectRatio >= 1) {
-      newWidth = targetPx;
-      newHeight = targetPx / aspectRatio;
-    } else {
-      newHeight = targetPx;
-      newWidth = targetPx * aspectRatio;
-    }
-    
+    let newWidth: number, newHeight: number;
+    if (aspectRatio >= 1) { newWidth = targetPx; newHeight = targetPx / aspectRatio; }
+    else { newHeight = targetPx; newWidth = targetPx * aspectRatio; }
     newWidth = Math.max(20, Math.min(560, Math.round(newWidth)));
     newHeight = Math.max(20, Math.min(560, Math.round(newHeight)));
-    
-    let newX = activeElement.x;
-    let newY = activeElement.y;
-    
+    let newX = activeElement.x, newY = activeElement.y;
     if (positionType === "left-chest") {
       newX = Math.round(printableLeftPx + (printableWidthPx * 0.72) - (newWidth / 2));
       newY = Math.round(printableTopPx + (printableHeightPx * 0.25) - (newHeight / 2));
     } else if (positionType === "locker-patch") {
       newX = Math.round(printableLeftPx + (printableWidthPx / 2) - (newWidth / 2));
       newY = Math.round(printableTopPx + (printableHeightPx * 0.18) - (newHeight / 2));
-    } else if (positionType === "oversized") {
-      newX = Math.round(printableLeftPx + (printableWidthPx / 2) - (newWidth / 2));
-      newY = Math.round(printableTopPx + (printableHeightPx / 2) - (newHeight / 2));
-    } else if (positionType === "sleeve-center") {
+    } else if (positionType === "oversized" || positionType === "sleeve-center") {
       newX = Math.round(printableLeftPx + (printableWidthPx / 2) - (newWidth / 2));
       newY = Math.round(printableTopPx + (printableHeightPx / 2) - (newHeight / 2));
     } else {
       newX = Math.round(printableLeftPx + (printableWidthPx / 2) - (newWidth / 2));
       newY = Math.round(printableTopPx + (printableHeightPx * 0.38) - (newHeight / 2));
     }
-    
     newX = Math.max(0, Math.min(560 - newWidth, newX));
     newY = Math.max(0, Math.min(560 - newHeight, newY));
-    
     const ratio = newWidth / activeElement.width;
-    const updates: Partial<DesignElement> = {
-      width: newWidth,
-      height: newHeight,
-      x: newX,
-      y: newY
-    };
+    const updates: Partial<DesignElement> = { width: newWidth, height: newHeight, x: newX, y: newY };
     if (activeElement.type === "text" && activeElement.fontSize) {
       updates.fontSize = Math.round(activeElement.fontSize * ratio);
     }
-
     onUpdateElement?.(activeElement.id, updates);
   };
 
   const bump = (delta: number) => {
     if (!activeElement) return;
-    const fontSize = activeElement.fontSize || 24;
-    const next = Math.max(8, Math.min(200, fontSize + delta));
+    const next = Math.max(8, Math.min(200, (activeElement.fontSize || 24) + delta));
     onUpdateElement?.(activeElement.id, { fontSize: next });
   };
 
@@ -308,36 +224,46 @@ export default function ToolPanel({
   const currentColorName = TEXT_COLORS.find(c => c.hex.toLowerCase() === currentColor.toLowerCase())?.name || "Color";
   const currentPrintType = activeElement?.printType || "dtf";
 
-  const structuredColorsMap = useMemo(() => {
-    if (!colorsJson) return {};
-    let parsed = colorsJson;
-    if (typeof parsed === 'string') {
-      try { parsed = JSON.parse(parsed); } catch { parsed = []; }
-    }
-    if (Array.isArray(parsed)) {
-      return Object.fromEntries(
-        parsed.map(c => [String(c.value || c.hex || "").toUpperCase(), String(c.name || "")])
-      );
-    }
-    return {};
-  }, [colorsJson]);
+  const currentStrokeWidth = (() => {
+    if (!activeElement?.WebkitTextStroke) return 0;
+    const match = activeElement.WebkitTextStroke.match(/^(\d+(?:\.\d+)?)px/);
+    return match ? parseFloat(match[1]) : 0;
+  })();
+  const currentStrokeColor = (() => {
+    if (!activeElement?.WebkitTextStroke) return "#000000";
+    const parts = activeElement.WebkitTextStroke.split(" ");
+    return parts.length > 1 ? parts.slice(1).join(" ") : "#000000";
+  })();
 
-  const colorList = availableColors?.map(hex => {
-    const upper = hex.toUpperCase();
-    const customName = structuredColorsMap[upper];
-    return { hex, name: customName || getColorName(hex) };
-  }) || COLOR_PRESETS;
-  
-  const colorName = structuredColorsMap[bodyColor.toUpperCase()] || getColorName(bodyColor);
+  const filteredFonts = useMemo(() => {
+    if (!fontSearchQuery) return FONT_CATEGORIES;
+    const q = fontSearchQuery.toLowerCase();
+    return FONT_CATEGORIES.map(cat => ({
+      ...cat,
+      fonts: cat.fonts.filter(f => f.toLowerCase().includes(q))
+    })).filter(cat => cat.fonts.length > 0);
+  }, [fontSearchQuery]);
+
+  const applyTextCase = (mode: "upper" | "lower" | "title") => {
+    if (!activeElement) return;
+    if (mode === "upper") onUpdateElement?.(activeElement.id, { uppercase: true, textTransform: "uppercase" });
+    else if (mode === "lower") onUpdateElement?.(activeElement.id, { uppercase: false, textTransform: "lowercase" });
+    else onUpdateElement?.(activeElement.id, { uppercase: false, textTransform: "capitalize" });
+  };
+
+  const isTextElement = activeElement?.type === "text" || activeElement?.type === "preset";
+  const PROPERTIES_TABS: { key: PropertiesTab; label: string }[] = isTextElement
+    ? [{ key: "typography", label: "Typography" }, { key: "transform", label: "Transform" }, { key: "print", label: "Print & Finish" }]
+    : [{ key: "transform", label: "Transform" }, { key: "print", label: "Print & Finish" }];
 
   return (
     <>
+      {/* ── ICON RAIL ── */}
       <div className={styles.leftSidebar}>
         {SIDEBAR_TOOLS.map(({ key, icon: Icon, label, hideWhenNoElement }) => {
           if (hideWhenNoElement && !activeElement) return null;
           return (
-            <button
-              key={key}
+            <button key={key}
               className={`${styles.sidebarToolBtn} ${activeTool === key ? styles.sidebarToolActive : ""}`}
               onClick={() => onToolSelect(activeTool === key ? null : key)}
             >
@@ -348,305 +274,30 @@ export default function ToolPanel({
         })}
       </div>
 
+      {/* ── FLYOUT PANEL ── */}
       {activeTool && (
         <div className={styles.contextPanel}>
           <div className={styles.contextHeader}>
-            <div className={styles.contextTitle}>
-              {activeTool === "Colors"  && "Material color"}
-              {activeTool === "Text"    && "Text"}
-              {activeTool === "Presets" && "Font combos"}
-              {activeTool === "Uploads" && "Uploads"}
-              {activeTool === "Guide"   && "Printing Guide"}
-              {activeTool === "Properties" && "Edit Element"}
-            </div>
+            <div className={styles.contextTitle}>{PANEL_TITLES[activeTool] || activeTool}</div>
             <button className={styles.closeContextBtn} onClick={() => onToolSelect(null)} title="Close">
-              <X size={18} />
+              <ChevronLeft size={18} className={styles.collapseChevronDesktop} />
+              <X size={18} className={styles.collapseChevronMobile} />
             </button>
           </div>
 
-          {activeTool === "Colors" && (
-            <div className={styles.contextBody}>
-              <div className={styles.selectedColorBanner}>
-                <div className={styles.selectedColorDot} style={{ backgroundColor: bodyColor === "transparent" ? "#e5e7eb" : bodyColor }} />
-                <div>
-                  <div className={styles.selectedColorLabel}>Selected Color</div>
-                  <div className={styles.selectedColorName}>{colorName === bodyColor ? "Custom" : colorName}</div>
-                </div>
-              </div>
-              <div className={styles.colorSwatchGrid}>
-                {colorList.map((p) => {
-                  const isSelected = bodyColor.toLowerCase() === p.hex.toLowerCase();
-                  return (
-                    <button key={p.hex} onClick={() => onColorSelect(p.hex)} className={`${styles.colorSwatchCard} ${isSelected ? styles.colorSwatchCardActive : ""}`}>
-                      <div className={styles.colorSwatchBlock} style={{ backgroundColor: p.hex }}>
-                        {isSelected && <div className={styles.colorCheckmark}><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7L5.5 10L11.5 4" stroke={p.hex.toUpperCase() === "#FFFFFF" ? "#111" : "white"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></div>}
-                      </div>
-                      <span className={styles.colorSwatchName}>{p.name}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
+          {activeTool === "Templates" && <TemplatesPanel onApplyTemplate={(elements) => onApplyTemplate?.(elements)} />}
           {activeTool === "Text" && (
-            <div className={styles.contextBody}>
-              <p className={styles.ctxHint}>Edit your text below, or click on the field you'd like to edit directly on your design.</p>
-              {textElements.length > 0 && (
-                <div className={styles.textElementList}>
-                  {textElements.map((el) => (
-                    <div key={el.id} className={styles.textElementRowWrap}>
-                      <label className={styles.textElementLabel}>Text: {el.value || "Text"}</label>
-                      <div className={styles.textElementRow}>
-                        <input className={styles.textElementInput} value={el.value} onChange={(e) => onUpdateTextElement?.(el.id, e.target.value)} placeholder="Text" />
-                        <button className={styles.textElementDelete} onClick={() => onRemoveElement?.(el.id)}><Trash2 size={18} color="#111" /></button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-              <button
-                className={styles.addAssetBtn}
-                onClick={() => onAddText()}
-              >
-                <Plus size={15} /> Add Text
-              </button>
-            </div>
+            <TextPanel textElements={textElements} onAddText={onAddText} onAddPreset={onAddPreset}
+              onUpdateTextElement={onUpdateTextElement} onRemoveElement={onRemoveElement} />
+          )}
+          {activeTool === "Uploads" && <UploadsPanel isUploading={isUploading} onUploadClick={onUploadClick} onAddLogoUrl={onAddLogoUrl} />}
+          {activeTool === "Garment" && (
+            <GarmentPanel bodyColor={bodyColor} onColorSelect={onColorSelect} availableColors={availableColors} colorsJson={colorsJson} />
           )}
 
-          {/* ── PRESETS (FONT COMBINATIONS) ────────────────────────────────────────────── */}
-          {activeTool === "Presets" && (
-            <div className={styles.contextBody}>
-              <div style={{ padding: "0 16px 12px", display: "flex", flexDirection: "column", gap: "8px" }}>
-                <label style={{ fontSize: "0.78rem", fontWeight: 600, color: "#475569" }}>Categories</label>
-                <div style={{ display: "flex", gap: "8px", overflowX: "auto", paddingBottom: "4px" }}>
-                  {["All", "vintage", "anime", "literature", "brand", "y2k"].map(cat => (
-                    <button
-                      key={cat}
-                      onClick={() => setActiveCategory(cat)}
-                      style={{
-                        padding: "4px 12px",
-                        borderRadius: "16px",
-                        fontSize: "0.8rem",
-                        fontWeight: 600,
-                        textTransform: "capitalize",
-                        whiteSpace: "nowrap",
-                        border: "1px solid",
-                        borderColor: activeCategory === cat ? "#0F172A" : "#CBD5E1",
-                        background: activeCategory === cat ? "#0F172A" : "#FFFFFF",
-                        color: activeCategory === cat ? "#FFFFFF" : "#475569",
-                        cursor: "pointer",
-                        transition: "all 0.2s"
-                      }}
-                    >
-                      {cat}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div style={{ padding: "0 16px 12px", display: "flex", flexDirection: "column", gap: "8px" }}>
-                <label style={{ fontSize: "0.78rem", fontWeight: 600, color: "#475569" }}>What do you want it to say?</label>
-                <textarea
-                  value={presetInput}
-                  onChange={(e) => setPresetInput(e.target.value)}
-                  placeholder="Type your text here..."
-                  style={{
-                    width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #CBD5E1",
-                    fontSize: "0.9rem", minHeight: "60px", resize: "vertical", background: "#F8FAFC", fontFamily: "inherit"
-                  }}
-                />
-              </div>
-              <div style={{ padding: "0 16px 16px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", overflowY: "auto", maxHeight: "calc(100vh - 280px)" }}>
-                {TEXT_PRESETS.filter(p => activeCategory === "All" || p.category === activeCategory).map((preset) => {
-                  const inputLines = presetInput ? presetInput.split("\n") : [];
-                  
-                  return (
-                    <button
-                      key={preset.id}
-                      onClick={() => onAddPreset?.(preset.id, presetInput ? presetInput.split("\n") : preset.elements.map(e => e.value || ""))}
-                      style={{
-                        background: "#F8FAFC",
-                        border: "1px solid #E2E8F0",
-                        borderRadius: "12px",
-                        paddingBottom: "100%",
-                        width: "100%",
-                        position: "relative",
-                        cursor: "pointer",
-                        overflow: "hidden",
-                        transition: "transform 0.2s, border-color 0.2s",
-                        display: "block",
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = "scale(1.02)";
-                        e.currentTarget.style.borderColor = "#94A3B8";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = "scale(1)";
-                        e.currentTarget.style.borderColor = "#E2E8F0";
-                      }}
-                    >
-                      <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <div style={{ position: "absolute", width: preset.width, height: preset.height, transform: `scale(${110 / Math.max(preset.width, preset.height)})`, transformOrigin: "center center", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                          {preset.elements.map((el, i) => {
-                            let displayVal = el.value;
-                            if (presetInput) {
-                              if (preset.elements.length === 1) {
-                                displayVal = presetInput;
-                              } else {
-                                displayVal = inputLines[i] || "";
-                              }
-                            }
-                            
-                            // Auto-verticalize if the original preset was perfectly vertical
-                            const origVal = el.value || "";
-                            const origLetters = origVal.replace(/\n/g, '');
-                            const isVertical = origVal.includes('\n') && origVal.length === origLetters.length * 2 - 1;
-                            
-                            if (isVertical && displayVal && !displayVal.includes('\n')) {
-                              displayVal = displayVal.split('').join('\n');
-                            }
-                            
-                            return (
-                              <div
-                                key={i}
-                                style={{
-                                  position: el.y !== undefined ? "absolute" : "relative",
-                                  top: el.y !== undefined ? 0 : "auto",
-                                  left: el.y !== undefined ? 0 : "auto",
-                                  transform: el.y !== undefined ? `translate(${el.x || 0}px, ${el.y}px)` : "none",
-                                  color: el.color || "#000",
-                                  fontSize: `${el.fontSize}px`,
-                                  fontFamily: el.fontFamily || "Inter",
-                                  fontWeight: el.fontWeight || "normal",
-                                  fontStyle: el.fontStyle || "normal",
-                                  textTransform: el.uppercase ? "uppercase" : "none",
-                                  letterSpacing: el.letterSpacing ? `${el.letterSpacing}px` : "normal",
-                                  lineHeight: el.lineHeight || 1.2,
-                                  textShadow: el.textShadow,
-                                  WebkitTextStroke: el.WebkitTextStroke,
-                                  backgroundColor: el.backgroundColor,
-                                  backgroundImage: el.backgroundImage,
-                                  WebkitBackgroundClip: el.WebkitBackgroundClip,
-                                  WebkitTextFillColor: el.WebkitTextFillColor,
-                                  padding: el.padding,
-                                  borderRadius: el.borderRadius,
-                                  border: el.border,
-                                  borderTop: el.borderTop,
-                                  borderBottom: el.borderBottom,
-                                  borderLeft: el.borderLeft,
-                                  borderRight: el.borderRight,
-                                  whiteSpace: "pre-wrap",
-                                  textAlign: el.textAlign || "center",
-                                }}
-                              >
-                                {displayVal}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* ── UPLOADS ────────────────────────────────────────────── */}
-          {activeTool === "Uploads" && (
-            <div className={styles.contextBody}>
-              <button className={styles.addAssetBtn} onClick={onUploadClick} disabled={isUploading}>
-                <UploadCloud size={16} />
-                {isUploading ? "Uploading…" : "Upload from this device"}
-              </button>
-              <button className={`${styles.addAssetBtnOutline} ${styles.desktopOnly}`} onClick={openQrModal}>
-                <Smartphone size={16} />
-                Upload from phone
-              </button>
-
-              {session ? (
-                <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <label style={{ fontSize: '0.78rem', fontWeight: 600, color: '#475569' }}>Your Uploads</label>
-                  {isLoadingAssets ? (
-                    <div style={{ padding: '20px', textAlign: 'center', fontSize: '0.85rem', color: '#94a3b8' }}>Loading...</div>
-                  ) : userAssets.length > 0 ? (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
-                      {userAssets.map(asset => (
-                        <button 
-                          key={asset.id} 
-                          onClick={() => onAddLogoUrl?.(asset.url)}
-                          style={{
-                            aspectRatio: '1',
-                            borderRadius: '8px',
-                            border: '1px solid #E2E8F0',
-                            overflow: 'hidden',
-                            position: 'relative',
-                            background: '#F8FAFC',
-                            cursor: 'pointer'
-                          }}
-                          title="Add to design"
-                        >
-                          <img src={asset.url} alt="upload" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <div style={{ padding: '20px', textAlign: 'center', fontSize: '0.85rem', color: '#94a3b8', background: '#F8FAFC', borderRadius: '8px', border: '1px dashed #CBD5E1' }}>
-                      No previous uploads found.
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className={styles.uploadSignInWrap}>
-                  <p className={styles.ctxHint}>Sign in to access previous uploads.</p>
-                  <button className={styles.signInBtn} onClick={() => signIn()}>
-                    <LogIn size={14} /> Sign in
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ── PRINTING GUIDE ─────────────────────────────────────── */}
-          {activeTool === "Guide" && (
-            <div className={styles.contextBody} style={{ gap: '14px', display: 'flex', flexDirection: 'column' }}>
-              <p className={styles.ctxHint} style={{ marginBottom: '4px' }}>
-                Pick the right printing method for your custom design and budget:
-              </p>
-
-              <div className={styles.guideSidebarCard} style={{ borderLeft: '4px solid #3B82F6' }}>
-                <div className={styles.guideSidebarHeader}>
-                  <span className={styles.guideSidebarTitle}>DTF (Direct to Film)</span>
-                  <span className={styles.guideSidebarBadge} style={{ background: '#EFF6FF', color: '#1D4ED8' }}>Vibrant</span>
-                </div>
-                <p className={styles.guideSidebarText}><strong>Best For:</strong> Multi-color logos, fine details, and gradients.</p>
-                <p className={styles.guideSidebarText}><strong>Feel:</strong> Thin, smooth, stretchable, and durable.</p>
-              </div>
-
-              <div className={styles.guideSidebarCard} style={{ borderLeft: '4px solid #8B5CF6' }}>
-                <div className={styles.guideSidebarHeader}>
-                  <span className={styles.guideSidebarTitle}>Screen Printing</span>
-                  <span className={styles.guideSidebarBadge} style={{ background: '#F5F3FF', color: '#6D28D9' }}>Classic</span>
-                </div>
-                <p className={styles.guideSidebarText}><strong>Best For:</strong> Bold graphics, block text, and bulk orders.</p>
-                <p className={styles.guideSidebarText}><strong>Feel:</strong> Premium, matte, slightly raised vibrant texture.</p>
-              </div>
-
-              <div className={styles.guideSidebarCard} style={{ borderLeft: '4px solid #D97706' }}>
-                <div className={styles.guideSidebarHeader}>
-                  <span className={styles.guideSidebarTitle}>Embroidery</span>
-                  <span className={styles.guideSidebarBadge} style={{ background: '#FEF3C7', color: '#B45309' }}>Premium</span>
-                </div>
-                <p className={styles.guideSidebarText}><strong>Best For:</strong> High-end corporate branding, chest, and back logos.</p>
-                <p className={styles.guideSidebarText}><strong>Feel:</strong> Luxury textured, raised thread finish.</p>
-              </div>
-            </div>
-          )}
-
-          {/* ── PROPERTIES (EDIT ELEMENT) — Canva-style ─────────── */}
+          {/* ── PROPERTIES PANEL ── */}
           {activeTool === "Properties" && (
-            <div className={styles.contextBody} style={{ gap: '14px', display: 'flex', flexDirection: 'column' }}>
+            <div className={styles.contextBody} style={{ gap: '0', display: 'flex', flexDirection: 'column', padding: 0 }}>
               {!activeElement || !details ? (
                 <div style={{ textAlign: 'center', padding: '40px 20px', color: '#94a3b8' }}>
                   <p style={{ fontSize: '0.9rem', marginBottom: '8px', fontWeight: 600 }}>No element selected</p>
@@ -654,493 +305,573 @@ export default function ToolPanel({
                 </div>
               ) : (
                 <>
-                  {/* Header + DPI Badge */}
-                  <div className={styles.editDrawerHeader}>
+                  <div className={styles.editDrawerHeader} style={{ padding: '14px 18px 12px', margin: 0 }}>
                     <span className={styles.editDrawerTitle}>
                       {activeElement.type === "text" ? "Edit Text" : activeElement.type === "preset" ? "Edit Preset" : "Edit Logo"}
                     </span>
                     {activeElement.type === "logo" && details.dpi && (
-                      <span
-                        className={`${styles.dpiPill} ${
-                          details.dpi >= 300 ? styles.dpiPillGood : details.dpi >= 150 ? styles.dpiPillFair : styles.dpiPillBad
-                        }`}
+                      <span className={`${styles.dpiPill} ${details.dpi >= 300 ? styles.dpiPillGood : details.dpi >= 150 ? styles.dpiPillFair : styles.dpiPillBad}`}
                         title={`Original: ${activeElement.originalWidth}x${activeElement.originalHeight}px`}
                       >
-                        {details.dpi >= 300 ? "300+ DPI · Crisp" : details.dpi >= 150 ? `${details.dpi} DPI · Good` : `${details.dpi} DPI · Low`}
+                        {details.dpi >= 300 ? "300+ DPI" : details.dpi >= 150 ? `${details.dpi} DPI` : `${details.dpi} DPI`}
                       </span>
                     )}
                   </div>
 
-                  {/* ── TEXT CONTENT (text & preset) ─── */}
-                  {(activeElement.type === "text" || activeElement.type === "preset") && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      {activeElement.type === "preset" ? (() => {
-                        const presetDef = TEXT_PRESETS.find(p => p.id === activeElement.presetId);
-                        const isArray = Array.isArray(activeElement.presetText);
-                        const lines = isArray ? (activeElement.presetText as string[]) : [(activeElement.presetText as string) || ""];
-                        if (presetDef && presetDef.elements.length > 1) {
-                          return presetDef.elements.map((el, i) => (
-                            <input
-                              key={i}
-                              type="text"
-                              className={styles.editTextInput}
-                              value={lines[i] !== undefined ? lines[i] : (el.value || "")}
-                              onChange={(e) => {
-                                const newLines = [...lines];
-                                while (newLines.length < presetDef.elements.length) {
-                                  newLines.push(presetDef.elements[newLines.length].value || "");
-                                }
-                                newLines[i] = e.target.value;
-                                onUpdateElement?.(activeElement.id, { presetText: newLines });
-                              }}
-                              placeholder={`Text ${i + 1}`}
-                            />
-                          ));
-                        }
-                        return (
-                          <input
-                            type="text"
-                            className={styles.editTextInput}
-                            value={isArray ? lines.join("") : (activeElement.presetText as string || "")}
-                            onChange={(e) => onUpdateElement?.(activeElement.id, { presetText: e.target.value })}
-                            placeholder="Type your text..."
-                          />
-                        );
-                      })() : (
-                        <input
-                          type="text"
-                          className={styles.editTextInput}
-                          value={activeElement.value}
-                          onChange={(e) => onUpdateElement?.(activeElement.id, { value: e.target.value })}
-                          placeholder="Type your text..."
-                        />
-                      )}
-                    </div>
-                  )}
+                  <div style={{ padding: '0 18px 12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {(activeElement.type === "text" || activeElement.type === "preset") && (
+                      <>
+                        {activeElement.type === "preset" ? (() => {
+                          const presetDef = TEXT_PRESETS.find(p => p.id === activeElement.presetId);
+                          const isArray = Array.isArray(activeElement.presetText);
+                          const lines = isArray ? (activeElement.presetText as string[]) : [(activeElement.presetText as string) || ""];
+                          if (presetDef && presetDef.elements.length > 1) {
+                            return presetDef.elements.map((el, i) => (
+                              <input key={i} type="text" className={styles.editTextInput}
+                                value={lines[i] !== undefined ? lines[i] : (el.value || "")}
+                                onChange={(e) => {
+                                  const newLines = [...lines];
+                                  while (newLines.length < presetDef.elements.length) newLines.push(presetDef.elements[newLines.length].value || "");
+                                  newLines[i] = e.target.value;
+                                  onUpdateElement?.(activeElement.id, { presetText: newLines });
+                                }}
+                                placeholder={`Text ${i + 1}`} />
+                            ));
+                          }
+                          return (
+                            <input type="text" className={styles.editTextInput}
+                              value={isArray ? lines.join("") : (activeElement.presetText as string || "")}
+                              onChange={(e) => onUpdateElement?.(activeElement.id, { presetText: e.target.value })}
+                              placeholder="Type your text..." />
+                          );
+                        })() : (
+                          <input type="text" className={styles.editTextInput}
+                            value={activeElement.value}
+                            onChange={(e) => onUpdateElement?.(activeElement.id, { value: e.target.value })}
+                            placeholder="Type your text..." />
+                        )}
+                      </>
+                    )}
+                  </div>
 
-                  {/* ── FONT FAMILY (text only) ─── */}
-                  {activeElement.type === "text" && (
-                    <select
-                      className={styles.editFontSelect}
-                      style={{ fontFamily: activeElement.fontFamily || "Inter" }}
-                      value={activeElement.fontFamily || "Inter"}
-                      onChange={(e) => onUpdateElement?.(activeElement.id, { fontFamily: e.target.value })}
-                    >
-                      {FONTS.map(f => (
-                        <option key={f} value={f} style={{ fontFamily: f }}>{f}</option>
+                  <div className={styles.inspectorTabs}>
+                    <div className={styles.inspectorTabBar}>
+                      {PROPERTIES_TABS.map(tab => (
+                        <button key={tab.key}
+                          className={`${styles.inspectorTab} ${propertiesTab === tab.key ? styles.inspectorTabActive : ""}`}
+                          onClick={() => setPropertiesTab(tab.key)}>{tab.label}</button>
                       ))}
-                    </select>
-                  )}
+                    </div>
+                    <div className={styles.inspectorTabContent}>
+                      {propertiesTab === "typography" && isTextElement && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                          {activeElement.type === "text" && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                              <span className={styles.editSectionLabel}>Font Family</span>
+                              <div style={{ position: 'relative' }}>
+                                <button
+                                  className={styles.editFontSelect}
+                                  onClick={() => setShowFontPicker(v => !v)}
+                                >
+                                  <span style={{ fontFamily: activeElement.fontFamily || "Inter", fontSize: "0.92rem", fontWeight: 500 }}>
+                                    {activeElement.fontFamily || "Inter"}
+                                  </span>
+                                  <ChevronDown size={14} color="#64748B" />
+                                </button>
+                                {showFontPicker && (
+                                  <div className={styles.fontPickerDropdown}>
+                                    <input type="text" className={styles.fontPickerSearch} placeholder="Search fonts..."
+                                      value={fontSearchQuery} onChange={(e) => setFontSearchQuery(e.target.value)} autoFocus />
+                                    <div className={styles.fontPickerList}>
+                                      {filteredFonts.map(cat => (
+                                        <div key={cat.label}>
+                                          <div className={styles.fontPickerCategoryLabel}>{cat.label}</div>
+                                          {cat.fonts.map(f => (
+                                            <button key={f}
+                                              className={`${styles.fontPickerItem} ${(activeElement.fontFamily || "Inter") === f ? styles.fontPickerItemActive : ""}`}
+                                              style={{ fontFamily: f }}
+                                              onClick={() => { onUpdateElement?.(activeElement.id, { fontFamily: f }); setShowFontPicker(false); setFontSearchQuery(""); }}>
+                                              {f}
+                                            </button>
+                                          ))}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                          {activeElement.type === "text" && (
+                            <div className={styles.editFontRow}>
+                              <div className={styles.editFontSizeGroup}>
+                                <button className={styles.editFontSizeBtn} onClick={() => bump(-1)}><Minus size={14} /></button>
+                                <span className={styles.editFontSizeValue}>{activeElement.fontSize || 24}</span>
+                                <button className={styles.editFontSizeBtn} onClick={() => bump(1)}><Plus size={14} /></button>
+                              </div>
+                              <div ref={wrapRef} style={{ position: 'relative' }}>
+                                <button className={styles.editColorBtn} onClick={() => setShowColorPicker(v => !v)}>
+                                  <span className={styles.editColorDot} style={{ backgroundColor: currentColor, border: currentColor.toUpperCase() === "#FFFFFF" ? "1.5px solid #D1D5DB" : "none" }} />
+                                  <span className={styles.editColorName}>{currentColorName}</span>
+                                  <ChevronDown size={12} color="#94A3B8" />
+                                </button>
+                                {showColorPicker && (
+                                  <div className={styles.tfColorDropdown} style={{ left: 0, right: 'auto', width: '240px', zIndex: 100 }}>
+                                    <div style={{ padding: '8px 8px 6px', borderBottom: '1px solid #F1F5F9' }}>
+                                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                                        <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#94A3B8' }}>#</span>
+                                        <input type="text" value={hexInput}
+                                          onChange={(e) => setHexInput(e.target.value.replace(/[^0-9a-fA-F]/g, '').slice(0, 6))}
+                                          onKeyDown={(e) => {
+                                            if (e.key === 'Enter' && hexInput.length >= 3) {
+                                              const hex = `#${hexInput.length === 3 ? hexInput.split('').map(c => c + c).join('') : hexInput}`;
+                                              onUpdateElement?.(activeElement.id, { color: hex });
+                                              setShowColorPicker(false); setHexInput("");
+                                            }
+                                          }}
+                                          placeholder="Hex code"
+                                          style={{ flex: 1, border: '1px solid #E2E8F0', borderRadius: '6px', padding: '5px 8px', fontSize: '0.78rem', fontFamily: 'monospace', outline: 'none' }} />
+                                      </div>
+                                    </div>
+                                    <button onClick={() => setShowPaletteSection(v => !v)}
+                                      style={{ width: '100%', padding: '6px 10px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.68rem', fontWeight: 700, color: '#64748B', textAlign: 'left', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                      Curated Palettes
+                                      <ChevronDown size={10} style={{ transform: showPaletteSection ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+                                    </button>
+                                    {showPaletteSection && (
+                                      <div style={{ padding: '0 8px 8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        {CURATED_PALETTES.map(palette => (
+                                          <div key={palette.label}>
+                                            <div style={{ fontSize: '0.62rem', fontWeight: 600, color: '#94A3B8', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{palette.label}</div>
+                                            <div style={{ display: 'flex', gap: '4px' }}>
+                                              {palette.colors.map(c => (
+                                                <button key={c.hex}
+                                                  onClick={() => { onUpdateElement?.(activeElement.id, { color: c.hex }); setShowColorPicker(false); }}
+                                                  title={c.name}
+                                                  style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: c.hex, border: c.hex.toUpperCase() === '#FFFFFF' ? '1.5px solid #D1D5DB' : '1.5px solid transparent', cursor: 'pointer', transition: 'transform 0.15s' }}
+                                                  onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.15)'; }}
+                                                  onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }} />
+                                              ))}
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                    <div className={styles.tfColorDropdownGrid}>
+                                      {TEXT_COLORS.map((c) => (
+                                        <button key={c.hex}
+                                          className={`${styles.tfColorOption} ${currentColor.toLowerCase() === c.hex.toLowerCase() ? styles.tfColorOptionActive : ""}`}
+                                          onClick={() => { onUpdateElement?.(activeElement.id, { color: c.hex }); setShowColorPicker(false); }}
+                                          title={c.name}>
+                                          <span className={styles.tfColorOptionDot} style={{ backgroundColor: c.hex, border: c.hex.toUpperCase() === "#FFFFFF" ? "1.5px solid #D1D5DB" : "none" }} />
+                                          <span className={styles.tfColorOptionName}>{c.name}</span>
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                          {activeElement.type === "text" && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                              <span className={styles.editSectionLabel}>Formatting</span>
+                              <div className={styles.formatBar}>
+                                <button className={`${styles.formatBtn} ${activeElement.fontWeight === "bold" ? styles.formatBtnActive : ""}`}
+                                  onClick={() => onUpdateElement?.(activeElement.id, { fontWeight: activeElement.fontWeight === "bold" ? "normal" : "bold" })}><Bold size={16} strokeWidth={2.5} /></button>
+                                <button className={`${styles.formatBtn} ${activeElement.fontStyle === "italic" ? styles.formatBtnActive : ""}`}
+                                  onClick={() => onUpdateElement?.(activeElement.id, { fontStyle: activeElement.fontStyle === "italic" ? "normal" : "italic" })}><Italic size={16} strokeWidth={2.5} /></button>
+                                <button className={`${styles.formatBtn} ${activeElement.textDecoration === "underline" ? styles.formatBtnActive : ""}`}
+                                  onClick={() => onUpdateElement?.(activeElement.id, { textDecoration: activeElement.textDecoration === "underline" ? "none" : "underline" })}><Underline size={16} strokeWidth={2.5} /></button>
+                                <div style={{ width: 1, height: 20, background: '#CBD5E1', margin: '0 2px' }} />
+                                <button className={`${styles.formatBtn} ${activeElement.textAlign === "left" ? styles.formatBtnActive : ""}`}
+                                  onClick={() => onUpdateElement?.(activeElement.id, { textAlign: "left" })}><AlignLeft size={16} strokeWidth={2} /></button>
+                                <button className={`${styles.formatBtn} ${activeElement.textAlign === "center" || !activeElement.textAlign ? styles.formatBtnActive : ""}`}
+                                  onClick={() => onUpdateElement?.(activeElement.id, { textAlign: "center" })}>
+                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <line x1="18" y1="10" x2="6" y2="10" /><line x1="21" y1="6" x2="3" y2="6" /><line x1="21" y1="14" x2="3" y2="14" /><line x1="18" y1="18" x2="6" y2="18" />
+                                  </svg>
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                          {activeElement.type === "text" && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                              <span className={styles.editSectionLabel}>Text Case</span>
+                              <div style={{ display: 'flex', gap: '4px' }}>
+                                <button className={`${styles.caseBtn} ${activeElement.uppercase || activeElement.textTransform === "uppercase" ? styles.caseBtnActive : ""}`} onClick={() => applyTextCase("upper")}>AB</button>
+                                <button className={`${styles.caseBtn} ${activeElement.textTransform === "lowercase" ? styles.caseBtnActive : ""}`} onClick={() => applyTextCase("lower")}>ab</button>
+                                <button className={`${styles.caseBtn} ${activeElement.textTransform === "capitalize" ? styles.caseBtnActive : ""}`} onClick={() => applyTextCase("title")}>Ab</button>
+                              </div>
+                            </div>
+                          )}
+                          {activeElement.type === "text" && (<>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <span className={styles.editSectionLabel}>Letter Spacing</span>
+                                <span style={{ fontSize: '0.7rem', fontWeight: 600, color: '#0F172A' }}>{activeElement.letterSpacing ?? 0}px</span>
+                              </div>
+                              <input type="range" min={-2} max={20} step={0.5} value={activeElement.letterSpacing ?? 0}
+                                onChange={(e) => onUpdateElement?.(activeElement.id, { letterSpacing: parseFloat(e.target.value) })} className={styles.sizeSliderTrack} />
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <span className={styles.editSectionLabel}>Line Height</span>
+                                <span style={{ fontSize: '0.7rem', fontWeight: 600, color: '#0F172A' }}>{(activeElement.lineHeight ?? 1.2).toFixed(1)}</span>
+                              </div>
+                              <input type="range" min={0.8} max={3.0} step={0.1} value={activeElement.lineHeight ?? 1.2}
+                                onChange={(e) => onUpdateElement?.(activeElement.id, { lineHeight: parseFloat(e.target.value) })} className={styles.sizeSliderTrack} />
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <span className={styles.editSectionLabel}>Outline / Stroke</span>
+                                <span style={{ fontSize: '0.7rem', fontWeight: 600, color: '#0F172A' }}>{currentStrokeWidth}px</span>
+                              </div>
+                              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                <input type="range" min={0} max={8} step={0.5} value={currentStrokeWidth}
+                                  onChange={(e) => { const w = parseFloat(e.target.value); onUpdateElement?.(activeElement.id, { WebkitTextStroke: w > 0 ? `${w}px ${currentStrokeColor}` : "" }); }}
+                                  className={styles.sizeSliderTrack} style={{ flex: 1 }} />
+                                <input type="color" value={currentStrokeColor}
+                                  onChange={(e) => { if (currentStrokeWidth > 0) onUpdateElement?.(activeElement.id, { WebkitTextStroke: `${currentStrokeWidth}px ${e.target.value}` }); }}
+                                  style={{ width: '28px', height: '28px', border: '1.5px solid #E2E8F0', borderRadius: '6px', cursor: 'pointer', padding: '1px' }} />
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                              <span className={styles.editSectionLabel}>Text Shadow</span>
+                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '4px' }}>
+                                {TEXT_SHADOW_PRESETS.map(preset => {
+                                  const isActive = (activeElement.textShadow || "none") === preset.value || (!activeElement.textShadow && preset.value === "none");
+                                  return (
+                                    <button key={preset.label} className={`${styles.shadowPresetBtn} ${isActive ? styles.shadowPresetBtnActive : ""}`}
+                                      onClick={() => onUpdateElement?.(activeElement.id, { textShadow: preset.value === "none" ? "" : preset.value })}>
+                                      <span style={{ fontSize: '0.88rem', fontWeight: 700, textShadow: preset.value === "none" ? "none" : preset.value }}>A</span>
+                                      <span style={{ fontSize: '0.62rem', fontWeight: 600 }}>{preset.label}</span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </>)}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <span className={styles.editSectionLabel}>Opacity</span>
+                              <span style={{ fontSize: '0.7rem', fontWeight: 600, color: '#0F172A' }}>{Math.round((activeElement.opacity ?? 1) * 100)}%</span>
+                            </div>
+                            <input type="range" min={10} max={100} step={5} value={Math.round((activeElement.opacity ?? 1) * 100)}
+                              onChange={(e) => onUpdateElement?.(activeElement.id, { opacity: parseInt(e.target.value) / 100 })} className={styles.sizeSliderTrack} />
+                          </div>
+                        </div>
+                      )}
 
-                  {/* ── FONT SIZE + COLOR ROW (text only) ─── */}
-                  {activeElement.type === "text" && (
-                    <div className={styles.editFontRow}>
-                      <div className={styles.editFontSizeGroup}>
-                        <button className={styles.editFontSizeBtn} onClick={() => bump(-1)}><Minus size={14} /></button>
-                        <span className={styles.editFontSizeValue}>{activeElement.fontSize || 24}</span>
-                        <button className={styles.editFontSizeBtn} onClick={() => bump(1)}><Plus size={14} /></button>
-                      </div>
-                      <div ref={wrapRef} style={{ position: 'relative' }}>
-                        <button
-                          className={styles.editColorBtn}
-                          onClick={() => setShowColorPicker(v => !v)}
-                        >
-                          <span
-                            className={styles.editColorDot}
-                            style={{
-                              backgroundColor: currentColor,
-                              border: currentColor.toUpperCase() === "#FFFFFF" ? "1.5px solid #D1D5DB" : "none"
-                            }}
-                          />
-                          <span className={styles.editColorName}>{currentColorName}</span>
-                          <ChevronDown size={12} color="#94A3B8" />
-                        </button>
-                        {showColorPicker && (
-                          <div className={styles.tfColorDropdown} style={{ left: 0, right: 'auto', width: '220px', zIndex: 100 }}>
-                            <div className={styles.tfColorDropdownGrid}>
-                              {TEXT_COLORS.map((c) => {
-                                const isActive = currentColor.toLowerCase() === c.hex.toLowerCase();
-                                return (
-                                  <button
-                                    key={c.hex}
-                                    className={`${styles.tfColorOption} ${isActive ? styles.tfColorOptionActive : ""}`}
-                                    onClick={() => { onUpdateElement?.(activeElement.id, { color: c.hex }); setShowColorPicker(false); }}
-                                    title={c.name}
-                                  >
-                                    <span className={styles.tfColorOptionDot} style={{ backgroundColor: c.hex, border: c.hex.toUpperCase() === "#FFFFFF" ? "1.5px solid #D1D5DB" : "none" }} />
-                                    <span className={styles.tfColorOptionName}>{c.name}</span>
-                                  </button>
-                                );
-                              })}
+                      {propertiesTab === "transform" && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+                          {/* ── SIZE CONTROL ── */}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <div className={styles.sectionHeaderRow}>
+                              <span className={styles.editSectionLabel}>Size</span>
+                              <span className={styles.propertyValueReadout}>{details?.widthInches ? `${details.widthInches}"` : '0"'}</span>
+                            </div>
+                            <div className={styles.sizeSliderRow}>
+                              <button
+                                type="button"
+                                className={styles.sizeStepperBtn}
+                                onClick={() => { if (details && details.widthInches > 0.5) handleWidthChange(Math.round((details.widthInches - 0.5) * 10) / 10); }}
+                                title="Decrease Size"
+                                aria-label="Decrease size"
+                              >
+                                <Minus size={13} strokeWidth={2.5} />
+                              </button>
+                              <div className={styles.sizeSliderContainer}>
+                                <input
+                                  type="range"
+                                  className={styles.sizeSliderTrack}
+                                  min={activeSide === "left" || activeSide === "right" ? 0.5 : 1}
+                                  max={activeSide === "left" || activeSide === "right" ? 4 : 12}
+                                  step={0.1}
+                                  value={details?.widthInches || 1}
+                                  onChange={(e) => handleWidthChange(parseFloat(e.target.value))}
+                                  aria-label="Element size"
+                                />
+                              </div>
+                              <button
+                                type="button"
+                                className={styles.sizeStepperBtn}
+                                onClick={() => {
+                                  if (!details) return;
+                                  const max = (activeSide === "left" || activeSide === "right") ? 4 : 12;
+                                  if (details.widthInches < max) handleWidthChange(Math.round((details.widthInches + 0.5) * 10) / 10);
+                                }}
+                                title="Increase Size"
+                                aria-label="Increase size"
+                              >
+                                <Plus size={13} strokeWidth={2.5} />
+                              </button>
                             </div>
                           </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
 
-                  {/* ── FORMAT BAR (text only) ─── */}
-                  {activeElement.type === "text" && (
-                    <div className={styles.formatBar}>
-                      <button
-                        className={`${styles.formatBtn} ${activeElement.fontWeight === "bold" ? styles.formatBtnActive : ""}`}
-                        onClick={() => onUpdateElement?.(activeElement.id, { fontWeight: activeElement.fontWeight === "bold" ? "normal" : "bold" })}
-                        title="Bold"
-                      ><Bold size={16} strokeWidth={2.5} /></button>
-                      <button
-                        className={`${styles.formatBtn} ${activeElement.textDecoration === "underline" ? styles.formatBtnActive : ""}`}
-                        onClick={() => onUpdateElement?.(activeElement.id, { textDecoration: activeElement.textDecoration === "underline" ? "none" : "underline" })}
-                        title="Underline"
-                      ><Underline size={16} strokeWidth={2.5} /></button>
-                      <button
-                        className={`${styles.formatBtn} ${activeElement.uppercase ? styles.formatBtnActive : ""}`}
-                        onClick={() => onUpdateElement?.(activeElement.id, { uppercase: !activeElement.uppercase })}
-                        title="Uppercase"
-                      ><span style={{ fontSize: '0.7rem', fontWeight: 800, lineHeight: 1 }}>aA</span></button>
-                      <div style={{ width: 1, height: 20, background: '#CBD5E1', margin: '0 2px' }} />
-                      <button
-                        className={`${styles.formatBtn} ${activeElement.textAlign === "left" ? styles.formatBtnActive : ""}`}
-                        onClick={() => onUpdateElement?.(activeElement.id, { textAlign: "left" })}
-                        title="Left"
-                      ><AlignLeft size={16} strokeWidth={2} /></button>
-                      <button
-                        className={`${styles.formatBtn} ${activeElement.textAlign === "center" || !activeElement.textAlign ? styles.formatBtnActive : ""}`}
-                        onClick={() => onUpdateElement?.(activeElement.id, { textAlign: "center" })}
-                        title="Center"
-                      >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <line x1="18" y1="10" x2="6" y2="10" /><line x1="21" y1="6" x2="3" y2="6" /><line x1="21" y1="14" x2="3" y2="14" /><line x1="18" y1="18" x2="6" y2="18" />
-                        </svg>
-                      </button>
-                    </div>
-                  )}
+                          {/* ── ROTATION CONTROL ── */}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <div className={styles.sectionHeaderRow}>
+                              <span className={styles.editSectionLabel}>Rotation</span>
+                              <span className={styles.propertyValueReadout}>{activeElement.rotation || 0}°</span>
+                            </div>
+                            <div className={styles.segmentedControl}>
+                              {ROTATION_PRESETS.map(deg => (
+                                <button
+                                  key={deg}
+                                  type="button"
+                                  className={`${styles.segmentedBtn} ${(activeElement.rotation || 0) === deg ? styles.segmentedBtnActive : ""}`}
+                                  onClick={() => onUpdateElement?.(activeElement.id, { rotation: deg })}
+                                  aria-label={`Rotate ${deg} degrees`}
+                                >
+                                  {deg}°
+                                </button>
+                              ))}
+                            </div>
+                          </div>
 
-                  {/* ── SIZE SLIDER ─── */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <span className={styles.editSectionLabel}>Size</span>
-                    <div className={styles.sizeSliderWrap}>
-                      <button
-                        className={styles.sizeSliderBtn}
-                        onClick={() => {
-                          const cur = parseFloat(details.widthInches.toString());
-                          if (cur > 0.5) handleWidthChange(Math.round((cur - 0.5) * 10) / 10);
-                        }}
-                      ><Minus size={14} /></button>
-                      <input
-                        type="range"
-                        className={styles.sizeSliderTrack}
-                        min={activeSide === "left" || activeSide === "right" ? 0.5 : 1}
-                        max={activeSide === "left" || activeSide === "right" ? 4 : 12}
-                        step={0.1}
-                        value={details.widthInches}
-                        onChange={(e) => handleWidthChange(parseFloat(e.target.value))}
-                      />
-                      <button
-                        className={styles.sizeSliderBtn}
-                        onClick={() => {
-                          const cur = parseFloat(details.widthInches.toString());
-                          const max = (activeSide === "left" || activeSide === "right") ? 4 : 12;
-                          if (cur < max) handleWidthChange(Math.round((cur + 0.5) * 10) / 10);
-                        }}
-                      ><Plus size={14} /></button>
-                      <span className={styles.sizeSliderReadout}>{details.widthInches} in</span>
-                    </div>
-                  </div>
+                          {/* ── POSITION PRESETS ── */}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <div className={styles.sectionHeaderRow}>
+                              <span className={styles.editSectionLabel}>Position Presets</span>
+                            </div>
+                            <div className={styles.presetGrid2x2}>
+                              {activeSide === "front" ? (
+                                <>
+                                  <button
+                                    type="button"
+                                    className={`${styles.presetItemBtn} ${details && Math.abs(details.widthInches - 3.5) < 0.15 ? styles.presetItemBtnActive : ""}`}
+                                    onClick={() => applyPresetSizeAndPosition(3.5, "left-chest")}
+                                  >
+                                    <span className={styles.presetItemTitle}>Left Chest</span>
+                                    <span className={styles.presetItemSize}>3.5″</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className={`${styles.presetItemBtn} ${details && Math.abs(details.widthInches - 8.5) < 0.15 ? styles.presetItemBtnActive : ""}`}
+                                    onClick={() => applyPresetSizeAndPosition(8.5, "center")}
+                                  >
+                                    <span className={styles.presetItemTitle}>Center</span>
+                                    <span className={styles.presetItemSize}>8.5″</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className={`${styles.presetItemBtn} ${details && Math.abs(details.widthInches - 11.5) < 0.15 ? styles.presetItemBtnActive : ""}`}
+                                    onClick={() => applyPresetSizeAndPosition(11.5, "oversized")}
+                                  >
+                                    <span className={styles.presetItemTitle}>Oversized</span>
+                                    <span className={styles.presetItemSize}>11.5″</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className={`${styles.presetItemBtn} ${details && Math.abs(details.widthInches - 3.5) < 0.15 ? styles.presetItemBtnActive : ""}`}
+                                    onClick={() => applyPresetSizeAndPosition(3.5, "locker-patch")}
+                                  >
+                                    <span className={styles.presetItemTitle}>Back Neck</span>
+                                    <span className={styles.presetItemSize}>3.5″</span>
+                                  </button>
+                                </>
+                              ) : (activeSide === "left" || activeSide === "right") ? (
+                                <>
+                                  <button
+                                    type="button"
+                                    className={`${styles.presetItemBtn} ${details && Math.abs(details.widthInches - 1.0) < 0.15 ? styles.presetItemBtnActive : ""}`}
+                                    onClick={() => applyPresetSizeAndPosition(1.0, "sleeve-center")}
+                                  >
+                                    <span className={styles.presetItemTitle}>Mini</span>
+                                    <span className={styles.presetItemSize}>1″</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className={`${styles.presetItemBtn} ${details && Math.abs(details.widthInches - 1.5) < 0.15 ? styles.presetItemBtnActive : ""}`}
+                                    onClick={() => applyPresetSizeAndPosition(1.5, "sleeve-center")}
+                                  >
+                                    <span className={styles.presetItemTitle}>Small</span>
+                                    <span className={styles.presetItemSize}>1.5″</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className={`${styles.presetItemBtn} ${details && Math.abs(details.widthInches - 2.0) < 0.15 ? styles.presetItemBtnActive : ""}`}
+                                    onClick={() => applyPresetSizeAndPosition(2.0, "sleeve-center")}
+                                  >
+                                    <span className={styles.presetItemTitle}>Medium</span>
+                                    <span className={styles.presetItemSize}>2″</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className={`${styles.presetItemBtn} ${details && Math.abs(details.widthInches - 2.5) < 0.15 ? styles.presetItemBtnActive : ""}`}
+                                    onClick={() => applyPresetSizeAndPosition(2.5, "sleeve-center")}
+                                  >
+                                    <span className={styles.presetItemTitle}>Large</span>
+                                    <span className={styles.presetItemSize}>2.5″</span>
+                                  </button>
+                                </>
+                              ) : (
+                                <>
+                                  <button
+                                    type="button"
+                                    className={`${styles.presetItemBtn} ${details && Math.abs(details.widthInches - 3.5) < 0.15 ? styles.presetItemBtnActive : ""}`}
+                                    onClick={() => applyPresetSizeAndPosition(3.5, "locker-patch")}
+                                  >
+                                    <span className={styles.presetItemTitle}>Top Patch</span>
+                                    <span className={styles.presetItemSize}>3.5″</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className={`${styles.presetItemBtn} ${details && Math.abs(details.widthInches - 8.5) < 0.15 ? styles.presetItemBtnActive : ""}`}
+                                    onClick={() => applyPresetSizeAndPosition(8.5, "center")}
+                                  >
+                                    <span className={styles.presetItemTitle}>Center</span>
+                                    <span className={styles.presetItemSize}>8.5″</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className={`${styles.presetItemBtn} ${details && Math.abs(details.widthInches - 11.5) < 0.15 ? styles.presetItemBtnActive : ""}`}
+                                    onClick={() => applyPresetSizeAndPosition(11.5, "oversized")}
+                                    style={{ gridColumn: 'span 2' }}
+                                  >
+                                    <span className={styles.presetItemTitle}>Full Back</span>
+                                    <span className={styles.presetItemSize}>11.5″</span>
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </div>
 
-                  {/* ── PLACEMENT CARDS ─── */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <span className={styles.editSectionLabel}>Position</span>
-                    <div className={styles.placementRow}>
-                      {activeSide === "front" ? (
-                        <>
-                          <button className={styles.placementCard} onClick={() => applyPresetSizeAndPosition(3.5, "left-chest")}>
-                            <span>Left Chest</span><span className={styles.placementCardSize}>3.5"</span>
-                          </button>
-                          <button className={styles.placementCard} onClick={() => applyPresetSizeAndPosition(8.5, "center")}>
-                            <span>Center</span><span className={styles.placementCardSize}>8.5"</span>
-                          </button>
-                          <button className={styles.placementCard} onClick={() => applyPresetSizeAndPosition(11.5, "oversized")}>
-                            <span>Full Front</span><span className={styles.placementCardSize}>11.5"</span>
-                          </button>
-                          <button className={styles.placementCard} onClick={() => applyPresetSizeAndPosition(4, "left-chest")}>
-                            <span>Pocket</span><span className={styles.placementCardSize}>4"</span>
-                          </button>
-                        </>
-                      ) : (activeSide === "left" || activeSide === "right") ? (
-                        <>
-                          <button className={styles.placementCard} onClick={() => applyPresetSizeAndPosition(1.0, "sleeve-center")}>
-                            <span>Mini</span><span className={styles.placementCardSize}>1"</span>
-                          </button>
-                          <button className={styles.placementCard} onClick={() => applyPresetSizeAndPosition(1.5, "sleeve-center")}>
-                            <span>Small</span><span className={styles.placementCardSize}>1.5"</span>
-                          </button>
-                          <button className={styles.placementCard} onClick={() => applyPresetSizeAndPosition(2.0, "sleeve-center")}>
-                            <span>Medium</span><span className={styles.placementCardSize}>2"</span>
-                          </button>
-                          <button className={styles.placementCard} onClick={() => applyPresetSizeAndPosition(2.5, "sleeve-center")}>
-                            <span>Large</span><span className={styles.placementCardSize}>2.5"</span>
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <button className={styles.placementCard} onClick={() => applyPresetSizeAndPosition(3.5, "locker-patch")}>
-                            <span>Top Patch</span><span className={styles.placementCardSize}>3.5"</span>
-                          </button>
-                          <button className={styles.placementCard} onClick={() => applyPresetSizeAndPosition(8.5, "center")}>
-                            <span>Center</span><span className={styles.placementCardSize}>8.5"</span>
-                          </button>
-                          <button className={styles.placementCard} onClick={() => applyPresetSizeAndPosition(11.5, "oversized")}>
-                            <span>Full Back</span><span className={styles.placementCardSize}>11.5"</span>
-                          </button>
-                        </>
+                          {/* ── ALIGN & FLIP ── */}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <div className={styles.sectionHeaderRow}>
+                              <span className={styles.editSectionLabel}>Align & Flip</span>
+                            </div>
+                            <div className={styles.alignFlipGrid}>
+                              <button
+                                type="button"
+                                className={styles.editorToolBtn}
+                                onClick={() => { if (!activeElement) return; onUpdateElement?.(activeElement.id, { x: Math.round(printableLeftPx + (printableWidthPx / 2) - (activeElement.width / 2)) }); }}
+                                title="Center Horizontally"
+                              >
+                                <AlignCenterHorizontal size={16} strokeWidth={2} />
+                                <span>Center H</span>
+                              </button>
+                              <button
+                                type="button"
+                                className={styles.editorToolBtn}
+                                onClick={() => { if (!activeElement) return; onUpdateElement?.(activeElement.id, { y: Math.round(printableTopPx + (printableHeightPx / 2) - (activeElement.height / 2)) }); }}
+                                title="Center Vertically"
+                              >
+                                <AlignCenterVertical size={16} strokeWidth={2} />
+                                <span>Center V</span>
+                              </button>
+                              <button
+                                type="button"
+                                className={`${styles.editorToolBtn} ${activeElement.flipX ? styles.editorToolBtnActive : ""}`}
+                                onClick={() => onUpdateElement?.(activeElement.id, { flipX: !activeElement.flipX })}
+                                title="Flip Horizontally"
+                              >
+                                <FlipHorizontal2 size={16} strokeWidth={2} />
+                                <span>Flip H</span>
+                              </button>
+                              <button
+                                type="button"
+                                className={`${styles.editorToolBtn} ${activeElement.flipY ? styles.editorToolBtnActive : ""}`}
+                                onClick={() => onUpdateElement?.(activeElement.id, { flipY: !activeElement.flipY })}
+                                title="Flip Vertically"
+                              >
+                                <FlipVertical2 size={16} strokeWidth={2} />
+                                <span>Flip V</span>
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* ── ACTIONS (DUPLICATE & DELETE) ── */}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <div className={styles.sectionHeaderRow}>
+                              <span className={styles.editSectionLabel}>Actions</span>
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                              <button
+                                type="button"
+                                className={styles.actionBtnSecondary}
+                                onClick={(e) => onCopyElement?.(activeElement.id, e)}
+                              >
+                                <Copy size={15} strokeWidth={2} />
+                                <span>Duplicate</span>
+                              </button>
+                              <button
+                                type="button"
+                                className={styles.actionBtnDanger}
+                                onClick={() => onRemoveElement?.(activeElement.id)}
+                              >
+                                <Trash2 size={15} strokeWidth={2} />
+                                <span>Delete</span>
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* ── OPACITY FOR LOGO ── */}
+                          {activeElement.type === "logo" && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                              <div className={styles.sectionHeaderRow}>
+                                <span className={styles.editSectionLabel}>Opacity</span>
+                                <span className={styles.propertyValueReadout}>{Math.round((activeElement.opacity ?? 1) * 100)}%</span>
+                              </div>
+                              <div className={styles.sizeSliderRow}>
+                                <div className={styles.sizeSliderContainer}>
+                                  <input
+                                    type="range"
+                                    min={10}
+                                    max={100}
+                                    step={5}
+                                    value={Math.round((activeElement.opacity ?? 1) * 100)}
+                                    onChange={(e) => onUpdateElement?.(activeElement.id, { opacity: parseInt(e.target.value) / 100 })}
+                                    className={styles.sizeSliderTrack}
+                                    aria-label="Element opacity"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       )}
-                    </div>
-                  </div>
 
-                  {/* ── ACTION STRIP ─── */}
-                  <div className={styles.actionStrip}>
-                    <button
-                      className={styles.actionStripBtn}
-                      onClick={() => {
-                        if (!activeElement) return;
-                        const newX = Math.round(printableLeftPx + (printableWidthPx / 2) - (activeElement.width / 2));
-                        onUpdateElement?.(activeElement.id, { x: newX });
-                      }}
-                      title="Center horizontally"
-                    >
-                      <AlignCenterHorizontal size={16} />
-                      <span>Center</span>
-                    </button>
-                    <button
-                      className={`${styles.actionStripBtn} ${activeElement.flipX ? styles.actionStripBtnActive : ""}`}
-                      onClick={() => onUpdateElement?.(activeElement.id, { flipX: !activeElement.flipX })}
-                      title="Flip horizontal"
-                    >
-                      <FlipHorizontal2 size={16} />
-                      <span>Flip H</span>
-                    </button>
-                    <button
-                      className={`${styles.actionStripBtn} ${activeElement.flipY ? styles.actionStripBtnActive : ""}`}
-                      onClick={() => onUpdateElement?.(activeElement.id, { flipY: !activeElement.flipY })}
-                      title="Flip vertical"
-                    >
-                      <FlipVertical2 size={16} />
-                      <span>Flip V</span>
-                    </button>
-                    <button
-                      className={styles.actionStripBtn}
-                      onClick={(e) => onCopyElement?.(activeElement.id, e)}
-                      title="Duplicate"
-                    >
-                      <Copy size={16} />
-                      <span>Copy</span>
-                    </button>
-                    <button
-                      className={`${styles.actionStripBtn} ${styles.actionStripBtnDanger}`}
-                      onClick={() => onRemoveElement?.(activeElement.id)}
-                      title="Delete"
-                    >
-                      <Trash2 size={16} />
-                      <span>Delete</span>
-                    </button>
-                  </div>
-
-                  {/* ── PRINTING METHOD ─── */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span className={styles.editSectionLabel}>Print Method</span>
-                      <button
-                        className={styles.tfHelpBtn}
-                        onClick={() => onToolSelect("Guide")}
-                        title="View Printing Methods Guide"
-                        style={{ padding: '2px', height: 'auto', background: 'none' }}
-                      >
-                        <HelpCircle size={14} strokeWidth={2} />
-                      </button>
-                    </div>
-                    <div className={styles.printMethodGrid}>
-                      <button
-                        className={`${styles.printMethodCard} ${currentPrintType === "dtf" ? styles.printMethodCardActive : ""}`}
-                        onClick={() => onUpdateElement?.(activeElement.id, { printType: "dtf" })}
-                      >
-                        <span className={styles.printMethodName}>DTF</span>
-                        <span className={styles.printMethodTag}>Vibrant · Full Color</span>
-                      </button>
-                      <button
-                        className={`${styles.printMethodCard} ${currentPrintType === "screen" ? styles.printMethodCardActive : ""}`}
-                        onClick={() => onUpdateElement?.(activeElement.id, { printType: "screen" })}
-                      >
-                        <span className={styles.printMethodName}>Screen</span>
-                        <span className={styles.printMethodTag}>Classic Matte</span>
-                      </button>
-                      <button
-                        className={`${styles.printMethodCard} ${currentPrintType === "embroidery" ? styles.printMethodCardActive : ""}`}
-                        onClick={() => onUpdateElement?.(activeElement.id, { printType: "embroidery" })}
-                      >
-                        <span className={styles.printMethodName}>Embroidery</span>
-                        <span className={styles.printMethodTag}>Textured Stitch</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* ── COLOR TYPE ─── */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    <span className={styles.editSectionLabel}>
-                      {currentPrintType === "embroidery" ? "Embroidery Colors" : "Design Colors"}
-                    </span>
-                    <div className={styles.colorTypePills}>
-                      <button
-                        className={`${styles.colorTypePill} ${details.embroideryType === "mono" ? styles.colorTypePillActive : ""}`}
-                        onClick={() => onUpdateElement?.(activeElement.id, { embroideryType: "mono" })}
-                      >
-                        Mono Color
-                      </button>
-                      <button
-                        className={`${styles.colorTypePill} ${details.embroideryType === "multi" ? styles.colorTypePillActive : ""}`}
-                        onClick={() => onUpdateElement?.(activeElement.id, { embroideryType: "multi" })}
-                      >
-                        {currentPrintType === "embroidery" ? "Multi Color" : "Colorful"}
-                      </button>
+                      {propertiesTab === "print" && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            <span className={styles.editSectionLabel}>Print Method</span>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                              {(["dtf", "screen", "embroidery"] as const).map(pt => (
+                                <button key={pt} className={`${styles.printCardEnhanced} ${currentPrintType === pt ? styles.printCardEnhancedActive : ""}`}
+                                  onClick={() => onUpdateElement?.(activeElement.id, { printType: pt })}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
+                                    <div>
+                                      <div className={styles.printCardName}>{pt === "dtf" ? "DTF (Direct to Film)" : pt === "screen" ? "Screen Printing" : "Embroidery"}</div>
+                                      <div className={styles.printCardDesc}>{pt === "dtf" ? "Multi-color & photos" : pt === "screen" ? "Bold text & bulk" : "Premium 3D thread"}</div>
+                                    </div>
+                                    <span className={styles.printCardBadge} style={{ background: pt === "dtf" ? '#EFF6FF' : pt === "screen" ? '#F5F3FF' : '#FEF3C7', color: pt === "dtf" ? '#1D4ED8' : pt === "screen" ? '#6D28D9' : '#B45309' }}>
+                                      {pt === "dtf" ? "Vibrant" : pt === "screen" ? "Classic" : "Textured"}
+                                    </span>
+                                  </div>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            <span className={styles.editSectionLabel}>{currentPrintType === "embroidery" ? "Embroidery Colors" : "Design Colors"}</span>
+                            <div className={styles.colorTypePills}>
+                              <button className={`${styles.colorTypePill} ${details?.embroideryType === "mono" ? styles.colorTypePillActive : ""}`}
+                                onClick={() => onUpdateElement?.(activeElement.id, { embroideryType: "mono" })}>Mono Color</button>
+                              <button className={`${styles.colorTypePill} ${details?.embroideryType === "multi" ? styles.colorTypePillActive : ""}`}
+                                onClick={() => onUpdateElement?.(activeElement.id, { embroideryType: "multi" })}>{currentPrintType === "embroidery" ? "Multi Color" : "Colorful"}</button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </>
               )}
             </div>
           )}
-        </div>
-      )}
-
-      {/* ── QR CODE MODAL ──────────────────────────────────────────────── */}
-      {showQrModal && qrSessionId && (
-        <div
-          onClick={closeQrModal}
-          style={{
-            position: "fixed", inset: 0,
-            background: "rgba(10, 16, 32, 0.72)",
-            backdropFilter: "blur(6px)",
-            WebkitBackdropFilter: "blur(6px)",
-            zIndex: 9999,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "20px",
-            animation: "fadeIn 0.2s ease",
-          }}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              background: "#fff",
-              borderRadius: "20px",
-              boxShadow: "0 24px 64px rgba(0,0,0,0.28), 0 0 0 1px rgba(0,0,0,0.06)",
-              padding: "28px 28px 24px",
-              width: "100%",
-              maxWidth: "360px",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: "18px",
-              animation: "slideUp 0.25s cubic-bezier(0.34,1.56,0.64,1)",
-            }}
-          >
-            {/* Modal header */}
-            <div style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <div>
-                <div style={{ fontSize: "1rem", fontWeight: 800, color: "#0f172a", letterSpacing: "-0.01em" }}>
-                  {qrStatus === "received" ? "✅ Photo received!" : "Upload from phone"}
-                </div>
-                <div style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "2px" }}>
-                  {qrStatus === "received"
-                    ? "Your image has been added to the canvas."
-                    : "Scan with your phone camera to upload"}
-                </div>
-              </div>
-              <button
-                onClick={closeQrModal}
-                style={{ background: "#f1f5f9", border: "none", borderRadius: "8px", padding: "6px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b", flexShrink: 0, marginLeft: "12px" }}
-                title="Close"
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            {/* QR Code or Success */}
-            {qrStatus === "waiting" ? (
-              <>
-                <div style={{
-                  background: "#f8fafc",
-                  border: "1.5px solid #e2e8f0",
-                  borderRadius: "16px",
-                  padding: "12px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  width: "100%",
-                }}>
-                  {/* QR code via api.qrserver.com */}
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&format=svg&data=${encodeURIComponent(`${typeof window !== "undefined" ? window.location.origin : ""}/customizer/upload-phone?session=${qrSessionId}`)}`}
-                    alt="QR Code"
-                    width={220}
-                    height={220}
-                    style={{ borderRadius: "8px", display: "block" }}
-                  />
-                </div>
-
-                {/* Polling indicator */}
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <div style={{
-                    width: "8px", height: "8px", borderRadius: "50%",
-                    background: "#22c55e",
-                    boxShadow: "0 0 0 0 rgba(34, 197, 94, 0.6)",
-                    animation: "pulseGreen 1.5s ease infinite",
-                    flexShrink: 0,
-                  }} />
-                  <span style={{ fontSize: "0.75rem", color: "#64748b" }}>Waiting for your phone upload…</span>
-                </div>
-
-                {/* Manual link */}
-                <div style={{
-                  width: "100%", background: "#f8fafc", border: "1px solid #e2e8f0",
-                  borderRadius: "10px", padding: "10px 12px",
-                  display: "flex", alignItems: "center", gap: "8px",
-                }}>
-                  <span style={{ fontSize: "0.7rem", color: "#64748b", wordBreak: "break-all", flex: 1, fontFamily: "monospace" }}>
-                    {typeof window !== "undefined" ? window.location.origin : ""}/customizer/upload-phone?session={qrSessionId.slice(0, 20)}…
-                  </span>
-                </div>
-
-                <p style={{ fontSize: "0.72rem", color: "#94a3b8", textAlign: "center", lineHeight: 1.5, margin: 0 }}>
-                  Or type the URL on your phone. Make sure both devices are connected to the same network.
-                </p>
-              </>
-            ) : (
-              <div style={{
-                display: "flex", flexDirection: "column", alignItems: "center", gap: "12px",
-                padding: "20px",
-                background: "#f0fdf4",
-                border: "1.5px solid #bbf7d0",
-                borderRadius: "16px",
-                width: "100%",
-              }}>
-                <div style={{
-                  width: "56px", height: "56px",
-                  background: "linear-gradient(135deg, #22c55e, #15803d)",
-                  borderRadius: "50%",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  boxShadow: "0 4px 14px rgba(34, 197, 94, 0.4)",
-                }}>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                    fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="20 6 9 17 4 12"/>
-                  </svg>
-                </div>
-                <div style={{ fontSize: "0.9rem", fontWeight: 700, color: "#15803d" }}>Image added to canvas!</div>
-                <div style={{ fontSize: "0.75rem", color: "#4ade80", textAlign: "center" }}>Closing automatically…</div>
-              </div>
-            )}
-          </div>
         </div>
       )}
 
