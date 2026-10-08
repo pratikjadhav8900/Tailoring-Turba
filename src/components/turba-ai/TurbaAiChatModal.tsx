@@ -10,7 +10,8 @@ import {
   ArrowUpRight, 
   Bot,
   Layers,
-  CheckCircle2
+  CheckCircle2,
+  ChevronLeft
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import styles from "./TurbaAi.module.css";
@@ -91,9 +92,32 @@ export default function TurbaAiChatModal() {
           exit={{ opacity: 0, y: 24, scale: 0.97 }}
           transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
         >
+          {/* Mobile Drag / Dismiss Handle */}
+          <div 
+            className={styles.mobileDragHandleArea} 
+            onClick={closeChat} 
+            title="Tap or drag to close"
+            aria-label="Close Turba AI"
+            role="button"
+            tabIndex={0}
+          >
+            <span className={styles.mobileDragHandle} />
+          </div>
+
           {/* ── ATELIER HEADER (Cosmos / Luma style) ── */}
           <header className={styles.header}>
             <div className={styles.headerLeft}>
+              {/* Mobile Back Button */}
+              <button
+                type="button"
+                onClick={closeChat}
+                className={styles.backBtn}
+                title="Back to store"
+                aria-label="Back to store"
+              >
+                <ChevronLeft size={20} />
+              </button>
+
               <div className={styles.avatarOrbWrapper}>
                 <div className={styles.avatarMonogram}>
                   <span>TT</span>
@@ -125,7 +149,7 @@ export default function TurbaAiChatModal() {
               <button
                 type="button"
                 onClick={minimizeChat}
-                className={styles.headerIconBtn}
+                className={styles.headerIconBtnMinimize}
                 title="Minimize chat"
                 aria-label="Minimize Turba AI"
               >
@@ -138,7 +162,7 @@ export default function TurbaAiChatModal() {
                 title="Close chat"
                 aria-label="Close Turba AI"
               >
-                <X size={14} />
+                <X size={16} />
               </button>
             </div>
           </header>

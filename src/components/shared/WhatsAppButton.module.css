@@ -1,0 +1,91 @@
+/* ── WHATSAPP FLOATING BUTTON ─────────────────────────────── */
+.whatsappBtnWrapper {
+  position: fixed;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 92px);
+  right: 24px;
+  z-index: 9997;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-direction: row-reverse;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.whatsappBtnContainer {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #25D366;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 30px rgba(37, 211, 102, 0.4), 0 2px 8px rgba(0, 0, 0, 0.12);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  text-decoration: none;
+  position: relative;
+  outline: none;
+}
+
+.whatsappBtnContainer:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 16px 36px rgba(37, 211, 102, 0.5);
+}
+
+.whatsappPulse {
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(37, 211, 102, 0.5);
+  animation: waPulse 3s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  pointer-events: none;
+}
+
+@keyframes waPulse {
+  0%   { transform: scale(0.95); opacity: 0.9; }
+  100% { transform: scale(1.45); opacity: 0; }
+}
+
+.whatsappLabel {
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  padding: 8px 14px;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #171916;
+  pointer-events: none;
+  white-space: nowrap;
+  border: 1px solid rgba(23, 25, 22, 0.08);
+  opacity: 0;
+  transform: translateX(12px);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.whatsappBtnContainer:hover + .whatsappLabel {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Mobile: Perfectly aligned 10px above Turba AI button, clear of mobile bottom bar */
+@media (max-width: 991px) {
+  .whatsappBtnWrapper {
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 138px);
+    right: 18px;
+  }
+  
+  .whatsappBtnContainer {
+    width: 50px;
+    height: 50px;
+  }
+
+  .whatsappBtnContainer svg {
+    width: 26px;
+    height: 26px;
+  }
+
+  .whatsappLabel {
+    display: none !important;
+  }
+}

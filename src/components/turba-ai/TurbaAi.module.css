@@ -18,14 +18,14 @@
 
 @media (max-width: 991px) {
   .circleLauncherWrapper {
-    right: 20px;
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 84px);
+    right: 18px;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 78px);
   }
 }
 
 .circleLauncherBtn {
-  width: 58px;
-  height: 58px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
   background: linear-gradient(145deg, #1f2320 0%, #141614 100%);
   border: 1.5px solid rgba(213, 196, 154, 0.4);
@@ -50,6 +50,13 @@
   box-shadow: 
     0 20px 45px -8px rgba(41, 66, 56, 0.45),
     0 0 0 3px rgba(213, 196, 154, 0.2);
+}
+
+@media (max-width: 991px) {
+  .circleLauncherBtn {
+    width: 50px;
+    height: 50px;
+  }
 }
 
 .launcherInnerContent {
@@ -215,16 +222,50 @@
 
 @media (max-width: 991px) {
   .panelContainer {
+    position: fixed;
+    top: 0;
     bottom: 0;
-    right: 0;
     left: 0;
+    right: 0;
     width: 100vw;
     max-width: 100vw;
-    height: 92vh;
-    max-height: 94vh;
-    border-radius: 24px 24px 0 0;
-    border-bottom: none;
-    box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.25);
+    height: 100%;
+    height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+    z-index: 1000000;
+  }
+}
+
+/* ── MOBILE DISMISS HANDLE ─────────────────────────────────── */
+.mobileDragHandleArea {
+  display: none;
+}
+
+@media (max-width: 991px) {
+  .mobileDragHandleArea {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-top: max(8px, env(safe-area-inset-top, 0px));
+    padding-bottom: 6px;
+    background: rgba(255, 255, 255, 0.94);
+    cursor: pointer;
+    touch-action: pan-y;
+  }
+
+  .mobileDragHandle {
+    width: 40px;
+    height: 4px;
+    border-radius: 9999px;
+    background: rgba(23, 25, 22, 0.22);
+    transition: background 0.2s ease;
+  }
+
+  .mobileDragHandleArea:active .mobileDragHandle {
+    background: rgba(23, 25, 22, 0.5);
   }
 }
 
@@ -240,6 +281,39 @@
   border-bottom: 1px solid rgba(23, 25, 22, 0.06);
   position: relative;
   z-index: 2;
+}
+
+@media (max-width: 991px) {
+  .header {
+    padding: 10px 14px 12px 14px;
+  }
+}
+
+.backBtn {
+  display: none;
+}
+
+@media (max-width: 991px) {
+  .backBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid rgba(23, 25, 22, 0.1);
+    background: #ffffff;
+    color: var(--color-ink, #171916);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.16s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  }
+
+  .backBtn:active {
+    background: var(--color-surface-alt, #F3F0E8);
+    transform: scale(0.92);
+  }
 }
 
 .headerLeft {
@@ -382,14 +456,51 @@
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-.headerIconBtnClose {
+.headerIconBtnMinimize {
   composes: headerIconBtn;
+}
+
+@media (max-width: 991px) {
+  .headerIconBtnMinimize {
+    display: none;
+  }
+}
+
+.headerIconBtnClose {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid rgba(23, 25, 22, 0.12);
+  background: #ffffff;
+  color: var(--color-ink, #171916);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.16s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
 }
 
 .headerIconBtnClose:hover {
   background: #ef4444;
   border-color: #ef4444;
   color: #ffffff;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 991px) {
+  .headerIconBtnClose {
+    width: 36px;
+    height: 36px;
+    background: rgba(23, 25, 22, 0.06);
+    border-color: rgba(23, 25, 22, 0.12);
+  }
+
+  .headerIconBtnClose:active {
+    background: #ef4444;
+    color: #ffffff;
+    border-color: #ef4444;
+  }
 }
 
 /* ── MESSAGES CONTAINER ───────────────────────────────────── */
@@ -665,12 +776,14 @@
   align-items: center;
   justify-content: space-between;
   margin-top: 8px;
+  gap: 8px;
 }
 
 .priceContainer {
   display: flex;
   align-items: baseline;
   gap: 2px;
+  flex-shrink: 0;
 }
 
 .productPrice {
@@ -688,6 +801,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-shrink: 0;
 }
 
 .viewBtn {
@@ -703,6 +817,8 @@
   align-items: center;
   gap: 3px;
   transition: all 0.15s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .viewBtn:hover {
@@ -724,12 +840,41 @@
   gap: 4px;
   transition: all 0.15s ease;
   box-shadow: 0 2px 6px rgba(41, 66, 56, 0.25);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .customizeBtn:hover {
   background: #1e332b;
   transform: translateY(-1px);
   box-shadow: 0 4px 10px rgba(41, 66, 56, 0.35);
+}
+
+@media (max-width: 480px) {
+  .productCard {
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .productPriceRow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .productActions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1.3fr;
+    gap: 6px;
+  }
+
+  .viewBtn, .customizeBtn {
+    justify-content: center;
+    width: 100%;
+    padding: 6px 8px;
+    font-size: 11px;
+  }
 }
 
 /* ── TYPING INDICATOR (Fluid Luma Orb Wave) ─────────────────── */
