@@ -36,6 +36,10 @@ function OpsLoginForm() {
 
   // Load saved User ID if rememberMe was previously set
   useEffect(() => {
+    const err = searchParams.get("error");
+    if (err === "UnauthorizedRole") {
+      setError("This account does not have factory operations privileges. Please log in with your Employee User ID.");
+    }
     try {
       const saved = localStorage.getItem("turba_saved_employee_id");
       if (saved) {
@@ -45,7 +49,7 @@ function OpsLoginForm() {
     } catch {
       // ignore localStorage errors in private browsing
     }
-  }, []);
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

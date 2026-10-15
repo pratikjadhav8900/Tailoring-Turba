@@ -31,9 +31,12 @@ function applySecurityHeaders(response: NextResponse) {
 export default auth((req) => {
   const { pathname } = req.nextUrl;
   const session = req.auth;
-  const rawHost = req.headers.get("x-forwarded-host") || req.headers.get("host") || "";
-  const hostname = rawHost.toLowerCase();
+  const rawHostHeader = req.headers.get("x-forwarded-host") || req.headers.get("host") || req.nextUrl.host || "";
+  const host = rawHostHeader.split(",")[0].trim();
+  const hostname = host.split(":")[0].toLowerCase();
   const isOpsDomain = hostname.startsWith("ops.") || hostname.startsWith("ops-");
+  const proto = req.headers.get("x-forwarded-proto") || (hostname.includes("localhost") ? "http" : "https");
+  const origin = `${proto}://${host}`;
 
   // Allow QR phone upload without separate mobile login
   if (pathname === "/customizer/upload-phone") {
@@ -56,32 +59,51 @@ export default auth((req) => {
     }
 
     const isOpsLogin = pathname === "/login" || pathname === "/ops/login";
+    const userRole = (session?.user as { role?: string })?.role;
+    const isAuthorizedOpsUser = userRole === "EMPLOYEE" || userRole === "ADMIN" || userRole === "SUPER_ADMIN";
 
     // 2. Unauthenticated check for Ops Domain
-    if (!session && !isOpsLogin) {
-      const fullPath = pathname + req.nextUrl.search;
-      const callbackUrl = encodeURIComponent(fullPath);
-      return NextResponse.redirect(new URL(`/login?callbackUrl=${callbackUrl}`, req.url));
+    if (!session) {
+      if (pathname === "/ops/login") {
+        return applySecurityHeaders(NextResponse.next());
+      }
+      if (pathname === "/login") {
+        const rewriteUrl = new URL(`/ops/login${req.nextUrl.search}`, origin);
+        return applySecurityHeaders(NextResponse.rewrite(rewriteUrl));
+      }
+      // Redirect to dedicated Ops login station on this same subdomain
+      const redirectUrl = new URL("/ops/login", origin);
+      if (pathname !== "/" && pathname !== "/ops") {
+        redirectUrl.searchParams.set("callbackUrl", pathname + req.nextUrl.search);
+      }
+      return NextResponse.redirect(redirectUrl);
     }
 
-    // 3. Login page on Ops Domain: rewrite /login to /ops/login
-    if (pathname === "/login") {
-      const rewriteUrl = new URL(`/ops/login${req.nextUrl.search}`, req.url);
-      return applySecurityHeaders(NextResponse.rewrite(rewriteUrl));
+    // 3. User is authenticated with a non-staff/customer role
+    if (!isAuthorizedOpsUser) {
+      if (isOpsLogin) {
+        return applySecurityHeaders(NextResponse.next());
+      }
+      return NextResponse.redirect(new URL("/ops/login?error=UnauthorizedRole", origin));
     }
 
-    // 4. If path already starts with /ops, let it proceed directly
+    // 4. Authenticated staff accessing login page -> redirect to Ops Dashboard
+    if (isOpsLogin) {
+      return NextResponse.redirect(new URL("/ops", origin));
+    }
+
+    // 5. If path already starts with /ops, let it proceed directly
     if (pathname.startsWith("/ops")) {
       return applySecurityHeaders(NextResponse.next());
     }
 
-    // 5. Rewrite public ops paths into internal /ops directory
+    // 6. Rewrite public ops paths into internal /ops directory
     // Examples:
     //   / -> /ops
     //   /orders -> /ops/orders
-    //   /orders/1001 -> /ops/orders/1001
+    //   /tasks -> /ops/tasks
     const internalPath = pathname === "/" ? "/ops" : `/ops${pathname}`;
-    const rewriteUrl = new URL(`${internalPath}${req.nextUrl.search}`, req.url);
+    const rewriteUrl = new URL(`${internalPath}${req.nextUrl.search}`, origin);
     return applySecurityHeaders(NextResponse.rewrite(rewriteUrl));
   }
 
@@ -99,16 +121,16 @@ export default auth((req) => {
     if (!session) {
       const fullPath = req.nextUrl.pathname + req.nextUrl.search;
       const callbackUrl = encodeURIComponent(fullPath);
-      return NextResponse.redirect(new URL(`/login?callbackUrl=${callbackUrl}`, req.url));
+      return NextResponse.redirect(new URL(`/login?callbackUrl=${callbackUrl}`, origin));
     }
   }
 
   // Admin Routes
   if (pathname.startsWith("/admin")) {
-    if (!session) return NextResponse.redirect(new URL("/login", req.url));
+    if (!session) return NextResponse.redirect(new URL("/login", origin));
     const role = (session.user as { role?: string })?.role;
     if (role !== "ADMIN" && role !== "SUPER_ADMIN") {
-      return NextResponse.redirect(new URL("/", req.url));
+      return NextResponse.redirect(new URL("/", origin));
     }
   }
 
@@ -117,7 +139,11 @@ export default auth((req) => {
     if (!session) {
       const fullPath = req.nextUrl.pathname + req.nextUrl.search;
       const callbackUrl = encodeURIComponent(fullPath);
-      return NextResponse.redirect(new URL(`/ops/login?callbackUrl=${callbackUrl}`, req.url));
+      return NextResponse.redirect(new URL(`/ops/login?callbackUrl=${callbackUrl}`, origin));
+    }
+    const role = (session.user as { role?: string })?.role;
+    if (role !== "EMPLOYEE" && role !== "ADMIN" && role !== "SUPER_ADMIN") {
+      return NextResponse.redirect(new URL("/ops/login?error=UnauthorizedRole", origin));
     }
   }
 
