@@ -142,7 +142,9 @@ export async function GET(req: NextRequest) {
       tasks: formattedTasks,
       totalCount: formattedTasks.length,
       currentEmployeeId: auth.context.employee.id,
+      currentEmployeeCode: auth.context.employee.employeeCode,
       currentEmployeeName: auth.context.employee.name,
+      currentUserRole: auth.context.userRole,
     });
   } catch (error: any) {
     console.error("[OPS_GET_TASKS_ERROR]", error);

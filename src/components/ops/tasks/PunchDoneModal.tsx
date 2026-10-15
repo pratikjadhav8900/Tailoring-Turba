@@ -8,6 +8,7 @@ import {
   IndianRupee,
   Loader2,
   Sparkles,
+  AlertCircle,
 } from "lucide-react";
 import type { OpsTaskItem } from "@/types/ops";
 
@@ -16,6 +17,7 @@ interface PunchDoneModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  isPunchingOnBehalf?: boolean;
 }
 
 export const PunchDoneModal: React.FC<PunchDoneModalProps> = ({
@@ -23,6 +25,7 @@ export const PunchDoneModal: React.FC<PunchDoneModalProps> = ({
   isOpen,
   onClose,
   onSuccess,
+  isPunchingOnBehalf = false,
 }) => {
   const [vendorName, setVendorName] = useState("");
   const [vendorCost, setVendorCost] = useState("");
@@ -69,14 +72,14 @@ export const PunchDoneModal: React.FC<PunchDoneModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
       <div className="w-full max-w-md bg-white border border-[#E5E7EB] rounded-2xl shadow-2xl overflow-hidden">
         {/* Header */}
-        <div className="px-5 py-4 border-b border-[#ECEEF2] flex items-center justify-between bg-emerald-50/50">
+        <div className={`px-5 py-4 border-b border-[#ECEEF2] flex items-center justify-between ${isPunchingOnBehalf ? "bg-amber-50/60" : "bg-emerald-50/50"}`}>
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs">
+            <div className={`w-8 h-8 rounded-xl ${isPunchingOnBehalf ? "bg-amber-600" : "bg-emerald-600"} text-white flex items-center justify-center shadow-xs`}>
               <Check className="w-4 h-4 stroke-[2.5]" />
             </div>
             <div>
               <h4 className="text-sm font-bold text-[#111827]">
-                Punch Done — {task.title}
+                {isPunchingOnBehalf ? `Punch on Behalf — ${task.title}` : `Punch Done — ${task.title}`}
               </h4>
               <p className="text-[11px] text-[#00A86B] font-semibold">
                 Order {task.formattedOrderNumber} • {task.orderTotalPieces || "Garment"} pcs
@@ -97,6 +100,18 @@ export const PunchDoneModal: React.FC<PunchDoneModalProps> = ({
           {error && (
             <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 font-medium">
               {error}
+            </div>
+          )}
+
+          {isPunchingOnBehalf && (
+            <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-bold block">Punching on Behalf</span>
+                <span className="text-[11px] leading-relaxed">
+                  You are recording completion on behalf of assigned worker <strong>{task.employeeName}</strong>. This will be audited in the timeline.
+                </span>
+              </div>
             </div>
           )}
 

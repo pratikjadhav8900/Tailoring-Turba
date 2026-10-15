@@ -30,6 +30,10 @@ export default function WorkerTasksPage() {
   const [selectedTaskForDone, setSelectedTaskForDone] = useState<OpsTaskItem | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentWorkerName, setCurrentWorkerName] = useState("");
+  const [currentEmployeeId, setCurrentEmployeeId] = useState("");
+  const [currentEmployeeCode, setCurrentEmployeeCode] = useState("");
+  const [currentUserRole, setCurrentUserRole] = useState("");
+  const [punchOnBehalf, setPunchOnBehalf] = useState(false);
 
   const getRoleLabel = (name?: string) => {
     if (!name) return "Worker";
@@ -51,6 +55,9 @@ export default function WorkerTasksPage() {
         const data = await res.json();
         setTasks(data.tasks || []);
         setCurrentWorkerName(data.currentEmployeeName || "Operator");
+        setCurrentEmployeeId(data.currentEmployeeId || "");
+        setCurrentEmployeeCode(data.currentEmployeeCode || "");
+        setCurrentUserRole(data.currentUserRole || "");
       }
     } catch (e) {
       console.error("Failed to load tasks", e);
@@ -274,14 +281,47 @@ export default function WorkerTasksPage() {
                     </span>
 
                     {!isDone && (
-                      <button
-                        type="button"
-                        onClick={() => setSelectedTaskForDone(task)}
-                        className="px-5 py-2 rounded-xl bg-[#00A86B] hover:bg-[#00925d] text-white text-xs font-bold flex items-center gap-2 shadow-xs transition-transform active:scale-95"
-                      >
-                        <Check className="w-4 h-4 stroke-[3]" />
-                        <span>Punch Done</span>
-                      </button>
+                      <div>
+                        {currentEmployeeId && task.employeeId && currentEmployeeId === task.employeeId ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPunchOnBehalf(false);
+                              setSelectedTaskForDone(task);
+                            }}
+                            className="px-5 py-2 rounded-xl bg-[#00A86B] hover:bg-[#00925d] text-white text-xs font-bold flex items-center gap-2 shadow-xs transition-transform active:scale-95"
+                          >
+                            <Check className="w-4 h-4 stroke-[3]" />
+                            <span>Punch Done</span>
+                          </button>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <span className="text-[11px] font-semibold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200 flex items-center gap-1.5">
+                              <Clock className="w-3.5 h-3.5 text-amber-600 animate-pulse" />
+                              <span>Awaiting {task.employeeName}</span>
+                            </span>
+
+                            {(currentUserRole === "ADMIN" ||
+                              currentUserRole === "SUPER_ADMIN" ||
+                              ["TT001", "TT002", "TT003"].includes(currentEmployeeCode) ||
+                              currentWorkerName.includes("Pratik") ||
+                              currentWorkerName.includes("Neeraj") ||
+                              currentWorkerName.includes("Sanjay")) && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setPunchOnBehalf(true);
+                                  setSelectedTaskForDone(task);
+                                }}
+                                className="text-xs font-semibold text-[#6B7280] hover:text-[#111827] px-3 py-1.5 rounded-lg hover:bg-[#F3F4F6] border border-[#ECEEF2] transition-colors"
+                                title={`Record completion on behalf of ${task.employeeName}`}
+                              >
+                                Punch on Behalf
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -295,9 +335,14 @@ export default function WorkerTasksPage() {
           <PunchDoneModal
             task={selectedTaskForDone}
             isOpen={!!selectedTaskForDone}
-            onClose={() => setSelectedTaskForDone(null)}
+            isPunchingOnBehalf={punchOnBehalf}
+            onClose={() => {
+              setSelectedTaskForDone(null);
+              setPunchOnBehalf(false);
+            }}
             onSuccess={() => {
               setSelectedTaskForDone(null);
+              setPunchOnBehalf(false);
               fetchTasks();
             }}
           />

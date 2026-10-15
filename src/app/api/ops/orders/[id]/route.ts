@@ -210,6 +210,13 @@ export async function GET(
         metadata: e.metadata as any,
         createdAt: e.createdAt,
       })),
+      currentEmployee: {
+        id: auth.context.employee.id,
+        employeeCode: auth.context.employee.employeeCode,
+        name: auth.context.employee.name,
+        roleTitle: auth.context.employee.roleTitle,
+      },
+      currentUserRole: auth.context.userRole,
     });
   } catch (error: any) {
     console.error("[OPS_GET_ORDER_DETAIL_ERROR]", error);

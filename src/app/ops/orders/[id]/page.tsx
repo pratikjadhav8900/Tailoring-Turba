@@ -47,6 +47,8 @@ export default function OpsOrderDetailPage() {
   const [order, setOrder] = useState<OpsOrder | null>(null);
   const [activityEvents, setActivityEvents] = useState<OpsActivityEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentEmployee, setCurrentEmployee] = useState<any>(null);
+  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
 
   // Modals
   const [isAdvanceModalOpen, setIsAdvanceModalOpen] = useState(false);
@@ -74,6 +76,8 @@ export default function OpsOrderDetailPage() {
         const data = await res.json();
         setOrder(data.order);
         setActivityEvents(data.activityEvents || []);
+        setCurrentEmployee(data.currentEmployee || null);
+        setCurrentUserRole(data.currentUserRole || null);
         setPriority(data.order.priority || "NORMAL");
         if (data.order.dueDate) {
           setDueDateInput(new Date(data.order.dueDate).toISOString().split("T")[0]);
@@ -361,6 +365,8 @@ export default function OpsOrderDetailPage() {
               order={order}
               onOpenAssignModal={() => setIsTaskModalOpen(true)}
               onTaskUpdated={fetchOrderDetail}
+              currentEmployee={currentEmployee}
+              currentUserRole={currentUserRole}
             />
           </OpsCard>
         </div>
@@ -419,6 +425,8 @@ export default function OpsOrderDetailPage() {
                 order={order}
                 onOpenAssignModal={() => setIsTaskModalOpen(true)}
                 onTaskUpdated={fetchOrderDetail}
+                currentEmployee={currentEmployee}
+                currentUserRole={currentUserRole}
               />
             </OpsCard>
 

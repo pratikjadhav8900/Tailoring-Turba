@@ -19,14 +19,54 @@ interface OrderTasksListProps {
   order: OpsOrder;
   onOpenAssignModal: () => void;
   onTaskUpdated: () => void;
+  currentEmployee?: {
+    id: string;
+    employeeCode: string;
+    name: string;
+    roleTitle?: string;
+  } | null;
+  currentUserRole?: string | null;
 }
 
 export const OrderTasksList: React.FC<OrderTasksListProps> = ({
   order,
   onOpenAssignModal,
   onTaskUpdated,
+  currentEmployee,
+  currentUserRole,
 }) => {
   const [selectedTaskForDone, setSelectedTaskForDone] = useState<OpsTaskItem | null>(null);
+  const [punchOnBehalf, setPunchOnBehalf] = useState(false);
+  const [currentUser, setCurrentUser] = useState<{
+    id: string;
+    employeeCode: string;
+    name: string;
+  } | null>(currentEmployee || null);
+
+  React.useEffect(() => {
+    if (currentEmployee) {
+      setCurrentUser(currentEmployee);
+      return;
+    }
+    // Fallback: resolve session if not passed as prop
+    fetch("/api/ops/auth/session")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d?.authenticated && d.employee) {
+          setCurrentUser(d.employee);
+        }
+      })
+      .catch(() => {});
+  }, [currentEmployee]);
+
+  const isManager = Boolean(
+    currentUserRole === "ADMIN" ||
+    currentUserRole === "SUPER_ADMIN" ||
+    ["TT001", "TT002", "TT003"].includes(currentUser?.employeeCode || "") ||
+    currentUser?.name?.includes("Pratik") ||
+    currentUser?.name?.includes("Neeraj") ||
+    currentUser?.name?.includes("Sanjay")
+  );
 
   const getRoleLabel = (name?: string) => {
     if (!name) return "Worker";
@@ -187,14 +227,42 @@ export const OrderTasksList: React.FC<OrderTasksListProps> = ({
                   </span>
 
                   {!isCompleted && (
-                    <button
-                      type="button"
-                      onClick={() => setSelectedTaskForDone(task)}
-                      className="px-3 py-1 rounded-lg bg-[#00A86B] hover:bg-[#00925d] text-white font-bold text-xs flex items-center gap-1 shadow-xs transition-transform active:scale-95"
-                    >
-                      <Check className="w-3 h-3 stroke-[3]" />
-                      <span>Punch Done</span>
-                    </button>
+                    <div>
+                      {currentUser?.id && task.employeeId && currentUser.id === task.employeeId ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPunchOnBehalf(false);
+                            setSelectedTaskForDone(task);
+                          }}
+                          className="px-3.5 py-1 rounded-lg bg-[#00A86B] hover:bg-[#00925d] text-white font-bold text-xs flex items-center gap-1 shadow-xs transition-transform active:scale-95"
+                        >
+                          <Check className="w-3 h-3 stroke-[3]" />
+                          <span>Punch Done</span>
+                        </button>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200 flex items-center gap-1">
+                            <Clock className="w-3 h-3 text-amber-600 animate-pulse" />
+                            <span>Awaiting worker punch</span>
+                          </span>
+
+                          {isManager && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setPunchOnBehalf(true);
+                                setSelectedTaskForDone(task);
+                              }}
+                              className="text-[10px] font-semibold text-[#6B7280] hover:text-[#111827] px-2 py-0.5 rounded-md hover:bg-[#F3F4F6] border border-[#E5E7EB] transition-colors"
+                              title={`Record completion on behalf of ${task.employeeName}`}
+                            >
+                              Punch on Behalf
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
@@ -208,9 +276,14 @@ export const OrderTasksList: React.FC<OrderTasksListProps> = ({
         <PunchDoneModal
           task={selectedTaskForDone}
           isOpen={!!selectedTaskForDone}
-          onClose={() => setSelectedTaskForDone(null)}
+          isPunchingOnBehalf={punchOnBehalf}
+          onClose={() => {
+            setSelectedTaskForDone(null);
+            setPunchOnBehalf(false);
+          }}
           onSuccess={() => {
             setSelectedTaskForDone(null);
+            setPunchOnBehalf(false);
             onTaskUpdated();
           }}
         />
