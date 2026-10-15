@@ -15,14 +15,13 @@ function OpsDashboardContent() {
   const [stats, setStats] = useState<OpsDashboardStats | null>(null);
   const [recentOrders, setRecentOrders] = useState<OpsOrder[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedYear, setSelectedYear] = useState("This Years");
 
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
       const [statsRes, ordersRes] = await Promise.all([
         fetch("/api/ops/dashboard/stats"),
-        fetch("/api/ops/orders?limit=10&stage=ACTIVE"),
+        fetch("/api/ops/orders?limit=10"),
       ]);
 
       if (statsRes.ok) {
@@ -44,45 +43,6 @@ function OpsDashboardContent() {
   useEffect(() => {
     fetchDashboardData();
   }, []);
-
-  const months = [
-    { name: "Jan", height: 45 },
-    { name: "Feb", height: 60 },
-    { name: "Mar", height: 75 },
-    { name: "Apr", height: 65 },
-    { name: "May", height: 85 },
-    { name: "Jun", height: 70 },
-    { name: "Jul", height: 100, active: true },
-    { name: "Aug", height: 50 },
-    { name: "Sep", height: 65 },
-    { name: "Oct", height: 80 },
-    { name: "Nov", height: 55 },
-    { name: "Dec", height: 70 },
-  ];
-
-  // 7x5 heatmap pattern from the reference design
-  const heatmapGrid = [
-    [0, 0, 1, 0, 0],
-    [0, 1, 2, 1, 0],
-    [1, 2, 3, 2, 1],
-    [0, 1, 3, 1, 0],
-    [0, 0, 2, 0, 0],
-    [0, 0, 3, 0, 0],
-    [0, 0, 0, 0, 0],
-  ];
-
-  const getHeatmapColor = (val: number) => {
-    switch (val) {
-      case 3:
-        return "bg-[#00A86B]";
-      case 2:
-        return "bg-[#34D399]";
-      case 1:
-        return "bg-[#A7F3D0]";
-      default:
-        return "bg-[#F3F4F6]";
-    }
-  };
 
   return (
     <OpsLayout
@@ -111,11 +71,11 @@ function OpsDashboardContent() {
                 </div>
                 <div className="my-3 flex items-baseline">
                   <span className="text-3xl font-extrabold tracking-tight text-[#111827]">
-                    ₹{stats?.grossRevenue ? stats.grossRevenue.toLocaleString("en-IN") : "3,54,100"}
+                    ₹{(stats?.grossRevenue || 0).toLocaleString("en-IN")}
                   </span>
                 </div>
                 <div className="text-[11px] text-[#9CA3AF] font-medium">
-                  Total factory order volume
+                  {stats?.totalPieces ? `${stats.totalPieces} pcs across batches` : "Total factory order volume"}
                 </div>
               </div>
 
@@ -134,15 +94,15 @@ function OpsDashboardContent() {
                 </div>
                 <div className="my-3 flex items-baseline">
                   <span className="text-3xl font-extrabold tracking-tight text-[#111827]">
-                    ₹{stats?.avgOrderValue ? stats.avgOrderValue.toLocaleString("en-IN") : "8,750"}
+                    ₹{(stats?.avgOrderValue || 0).toLocaleString("en-IN")}
                   </span>
                 </div>
                 <div className="text-[11px] text-[#9CA3AF] font-medium">
-                  Average bulk transaction size
+                  Average per order size
                 </div>
               </div>
 
-              {/* Card 3: Total Order */}
+              {/* Card 3: Total Orders */}
               <div className="bg-white border border-[#ECEEF2] rounded-[22px] p-6 shadow-xs relative flex flex-col justify-between">
                 <div className="flex items-start justify-between">
                   <span className="text-xs font-semibold text-[#6B7280]">
@@ -157,17 +117,17 @@ function OpsDashboardContent() {
                 </div>
                 <div className="my-3 flex items-baseline">
                   <span className="text-3xl font-extrabold tracking-tight text-[#111827]">
-                    {stats?.totalOrdersCount ?? stats?.totalActiveOrders ?? 401}
+                    {stats?.totalOrdersCount ?? 0}
                   </span>
                   <span className="ml-1.5 text-sm font-semibold text-[#6B7280]">orders</span>
                 </div>
                 <div className="text-[11px] text-[#9CA3AF] font-medium">
-                  {stats?.totalActiveOrders ? `${stats.totalActiveOrders} in active production` : "All production batches"}
+                  {stats?.totalActiveOrders ?? 0} in active production
                 </div>
               </div>
             </div>
 
-            {/* 2. MIDDLE ROW: Transaction Activity Bar Chart & Sale Performance Gauge */}
+            {/* 2. MIDDLE ROW: Transaction Activity Bar Chart & Task Completion Radial Gauge */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
               {/* Transaction Activity Bar Chart (8 cols) */}
               <div className="lg:col-span-8 bg-white border border-[#ECEEF2] rounded-[22px] p-6 shadow-xs flex flex-col justify-between">
@@ -178,7 +138,7 @@ function OpsDashboardContent() {
                       Transaction Activity
                     </span>
                     <div className="text-2xl font-extrabold text-[#111827] mt-0.5">
-                      ₹{stats?.grossRevenue ? stats.grossRevenue.toLocaleString("en-IN") : "3,54,100"}
+                      ₹{(stats?.grossRevenue || 0).toLocaleString("en-IN")}
                     </div>
                   </div>
 
@@ -187,43 +147,42 @@ function OpsDashboardContent() {
                     <div className="hidden sm:flex items-center gap-3 text-xs font-medium text-[#6B7280]">
                       <span className="flex items-center gap-1.5">
                         <span className="w-2 h-2 rounded-full bg-[#00A86B]" />
-                        Total Transaction
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-[#D1D5DB]" />
-                        Success Transaction
+                        Monthly Invoiced
                       </span>
                     </div>
 
                     {/* Time Filter Pill */}
-                    <button className="px-3.5 py-1.5 rounded-full bg-[#F4F6F9] border border-[#ECEEF2] text-xs font-semibold text-[#111827] flex items-center gap-1.5 shadow-2xs">
-                      <span>{selectedYear}</span>
-                      <ChevronDown className="w-3.5 h-3.5 text-[#6B7280]" />
-                    </button>
+                    <div className="px-3 py-1 rounded-full bg-[#F4F6F9] border border-[#ECEEF2] text-xs font-semibold text-[#111827] flex items-center gap-1.5">
+                      <span>{new Date().getFullYear()} Batches</span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Custom Hatched Bar Chart */}
+                {/* Custom Bar Chart from Real Monthly Activity */}
                 <div className="relative pt-8 pb-2 overflow-x-auto scrollbar-none -mx-2 px-2">
                   <div className="min-w-[460px] sm:min-w-0 relative">
                     {/* Dotted Average Line */}
                     <div className="absolute top-16 left-8 right-0 border-b border-dashed border-[#D1D5DB] flex items-center">
                       <span className="absolute -top-3.5 left-0 px-2 py-0.5 rounded-md bg-black text-white text-[10px] font-bold">
-                        Avg. ₹25.3k
+                        Avg. ₹{Math.round((stats?.selectedYearAverageMonthlyRevenue || 0) / 1000)}k / mo
                       </span>
                     </div>
 
                     {/* Y Axis Grid Labels */}
                     <div className="flex items-end justify-between h-48 gap-2 px-2">
-                      {months.map((m) => (
+                      {(stats?.monthlyActivity || []).map((m) => (
                         <div key={m.name} className="flex-1 flex flex-col items-center h-full justify-end group">
-                          <div className="w-full max-w-[28px] flex flex-col justify-end items-center h-full">
+                          <div className="w-full max-w-[28px] flex flex-col justify-end items-center h-full relative">
+                            {/* Hover Tooltip */}
+                            <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-8 px-2 py-1 rounded-md bg-black text-white text-[9px] font-bold whitespace-nowrap pointer-events-none z-10">
+                              ₹{m.revenue.toLocaleString("en-IN")} ({m.orderCount} orders)
+                            </div>
                             <div
                               style={{ height: `${m.height}%` }}
                               className={`w-full transition-all duration-300 ${
-                                m.active
+                                m.revenue > 0
                                   ? "bg-[#00A86B] rounded-xl shadow-md shadow-[#00A86B]/30"
-                                  : "hatched-bar hover:opacity-80"
+                                  : "bg-[#F3F4F6] rounded-xl hover:bg-[#E5E7EB]"
                               }`}
                             />
                           </div>
@@ -241,12 +200,20 @@ function OpsDashboardContent() {
                 </div>
               </div>
 
-              {/* Sale Performance Radial Semi-Gauge (4 cols) */}
+              {/* Real Task Completion Radial Gauge (4 cols) */}
               <div className="lg:col-span-4 bg-white border border-[#ECEEF2] rounded-[22px] p-6 shadow-xs flex flex-col justify-between">
                 <div>
-                  <h3 className="text-sm font-bold text-[#111827]">
-                    Sale Performance
-                  </h3>
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-bold text-[#111827]">
+                      Production Task Completion
+                    </h3>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      Real-time
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-[#6B7280] mt-0.5">
+                    Floor execution fulfillment rate
+                  </p>
                 </div>
 
                 {/* Radial Gauge SVG */}
@@ -257,72 +224,123 @@ function OpsDashboardContent() {
                       d="M 20 100 A 80 80 0 0 1 180 100"
                       fill="none"
                       stroke="#F3F4F6"
-                      strokeWidth="22"
+                      strokeWidth="20"
                       strokeLinecap="round"
                     />
-                    {/* Active Vibrant Emerald Arc (76%) */}
+                    {/* Active Vibrant Emerald Arc (Real Completion Rate) */}
                     <path
-                      d="M 20 100 A 80 80 0 0 1 155 45"
+                      d="M 20 100 A 80 80 0 0 1 180 100"
                       fill="none"
                       stroke="#00A86B"
-                      strokeWidth="22"
+                      strokeWidth="20"
                       strokeLinecap="round"
+                      strokeDasharray={251.33}
+                      strokeDashoffset={
+                        251.33 * (1 - (stats?.taskPerformance?.completionRate ?? 0) / 100)
+                      }
+                      className="transition-all duration-700 ease-out"
                     />
                   </svg>
 
                   <div className="absolute top-14 flex flex-col items-center">
                     <span className="text-3xl font-extrabold text-[#111827]">
-                      76%
+                      {stats?.taskPerformance?.completionRate ?? 0}%
                     </span>
                     <span className="text-[11px] text-[#9CA3AF] font-medium mt-0.5">
-                      Since yesterday
+                      {stats?.taskPerformance?.completedTasks ?? 0} of {stats?.taskPerformance?.totalTasks ?? 0} tasks done
                     </span>
                   </div>
                 </div>
 
                 {/* Legend Bottom */}
                 <div className="space-y-2 pt-2 border-t border-[#F3F4F6] text-xs text-[#6B7280] font-medium">
-                  <div className="flex items-center gap-2">
-                    <span className="w-4 h-1.5 rounded-full bg-[#00A86B]" />
-                    <span>Total Sales per day</span>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-3 h-3 rounded-full bg-[#00A86B]" />
+                      <span>Completed Floor Tasks</span>
+                    </div>
+                    <span className="font-bold text-[#111827]">
+                      {stats?.taskPerformance?.completedTasks ?? 0}
+                    </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="w-4 h-1.5 rounded-full bg-[#A7F3D0]" />
-                    <span>Average Sale</span>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-3 h-3 rounded-full bg-[#A7F3D0]" />
+                      <span>In Progress Tasks</span>
+                    </div>
+                    <span className="font-bold text-[#111827]">
+                      {stats?.taskPerformance?.inProgressTasks ?? 0}
+                    </span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* 3. BOTTOM ROW: Active User Heatmap & Recent Transactions Table */}
+            {/* 3. BOTTOM ROW: Real Factory Workforce & Recent Transactions Table */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-              {/* Active User Heatmap (4 cols) */}
+              {/* Factory Floor Workforce Card (4 cols) */}
               <div className="lg:col-span-4 bg-white border border-[#ECEEF2] rounded-[22px] p-6 shadow-xs flex flex-col justify-between">
                 <div>
-                  <h3 className="text-sm font-bold text-[#111827]">
-                    Active User
-                  </h3>
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-bold text-[#111827]">
+                      Factory Floor Workforce
+                    </h3>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      Live Floor
+                    </span>
+                  </div>
                   <div className="text-2xl font-extrabold text-[#111827] mt-1">
-                    1.428 <span className="text-xs font-semibold text-[#10B981]">+2.4%</span>
+                    {stats?.workers?.length || 2}{" "}
+                    <span className="text-xs font-semibold text-[#6B7280]">
+                      Active Workers
+                    </span>
                   </div>
                 </div>
 
-                <div className="my-4">
-                  <div className="grid grid-cols-5 gap-1.5 max-w-[200px]">
-                    {heatmapGrid.map((row, rIdx) =>
-                      row.map((cell, cIdx) => (
-                        <div
-                          key={`${rIdx}-${cIdx}`}
-                          className={`w-7 h-7 rounded-lg ${getHeatmapColor(cell)}`}
-                        />
-                      ))
-                    )}
-                  </div>
+                <div className="my-3 space-y-2">
+                  {stats?.workers && stats.workers.length > 0 ? (
+                    stats.workers.map((w) => (
+                      <div
+                        key={w.id}
+                        className="p-2.5 rounded-xl bg-[#F8F9FB] border border-[#ECEEF2] flex items-center justify-between"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-7 h-7 rounded-lg bg-emerald-100 text-[#00A86B] font-bold text-xs flex items-center justify-center">
+                            {w.name.charAt(0)}
+                          </div>
+                          <div>
+                            <div className="font-bold text-xs text-[#111827]">{w.name}</div>
+                            <div className="text-[10px] text-[#6B7280]">
+                              {w.employeeCode} • {w.roleTitle}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                            {w.completedTasks} done
+                          </span>
+                          {w.inProgressTasks > 0 ? (
+                            <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded-md border border-amber-200">
+                              {w.inProgressTasks} active
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-[#9CA3AF]">
+                              Ready
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-xs text-[#9CA3AF] py-4 text-center">
+                      No floor workers found
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex items-center justify-between text-xs text-[#6B7280] font-medium pt-2 border-t border-[#F3F4F6]">
-                  <span>Low activity</span>
-                  <span>High activity</span>
+                  <span>Volume: <strong className="text-[#111827]">{stats?.totalPieces || 0} pcs</strong></span>
+                  <span>Clients: <strong className="text-[#111827]">{stats?.totalRegisteredClients || 0}</strong></span>
                 </div>
               </div>
 
@@ -330,13 +348,13 @@ function OpsDashboardContent() {
               <div className="lg:col-span-8 bg-white border border-[#ECEEF2] rounded-[22px] p-6 shadow-xs">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-sm font-bold text-[#111827]">
-                    Recent Transaction
+                    Recent Orders & Transactions
                   </h3>
                   <Link
                     href="/ops/orders"
                     className="text-xs font-semibold text-[#00A86B] hover:underline"
                   >
-                    See all
+                    See all ({stats?.totalOrdersCount ?? recentOrders.length})
                   </Link>
                 </div>
 
@@ -350,16 +368,16 @@ function OpsDashboardContent() {
                             className="rounded border-[#D1D5DB] text-[#00A86B] focus:ring-0"
                           />
                         </th>
-                        <th>ID</th>
-                        <th>Product</th>
+                        <th>Order</th>
+                        <th>Customer / Items</th>
                         <th>Quantity</th>
-                        <th>Price</th>
-                        <th className="text-right">Status</th>
+                        <th>Total Amount</th>
+                        <th className="text-right">Stage / Status</th>
                       </tr>
                     </thead>
                     <tbody>
                       {recentOrders.length > 0 ? (
-                        recentOrders.slice(0, 4).map((order) => (
+                        recentOrders.slice(0, 8).map((order) => (
                           <tr key={order.id}>
                             <td>
                               <input
@@ -376,96 +394,36 @@ function OpsDashboardContent() {
                               </Link>
                             </td>
                             <td className="font-semibold text-xs text-[#111827]">
-                              {order.items[0]?.productName || "Vintage T-shirt"}
+                              <div>{order.customer?.name || "Customer"}</div>
+                              <div className="text-[10px] text-[#9CA3AF] font-normal">
+                                {order.items[0]?.productName || "Custom Apparel"}
+                              </div>
                             </td>
                             <td className="font-medium text-xs text-[#6B7280]">
-                              {order.totalQuantity}
+                              {order.totalQuantity} pcs
                             </td>
                             <td className="font-semibold text-xs text-[#111827]">
-                              ₹{order.totalAmount ? Number(order.totalAmount).toLocaleString("en-IN") : "44,000"}
+                              ₹{order.totalAmount ? Number(order.totalAmount).toLocaleString("en-IN") : "0"}
                             </td>
                             <td className="text-right">
-                              <OpsBadge
-                                status={
-                                  order.currentExecution?.status || "COMPLETED"
-                                }
-                                size="sm"
-                              />
+                              <span
+                                className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${
+                                  order.status === "DELIVERED"
+                                    ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                                    : "bg-blue-50 text-blue-800 border-blue-200"
+                                }`}
+                              >
+                                {order.opsStage ? order.opsStage.replace(/_/g, " ") : order.status}
+                              </span>
                             </td>
                           </tr>
                         ))
                       ) : (
-                        <>
-                          <tr>
-                            <td>
-                              <input
-                                type="checkbox"
-                                className="rounded border-[#D1D5DB] text-[#00A86B] focus:ring-0"
-                              />
-                            </td>
-                            <td className="font-mono text-xs font-semibold text-[#6B7280]">
-                              #847-392
-                            </td>
-                            <td className="font-semibold text-xs text-[#111827]">
-                              Vintage T-shirt
-                            </td>
-                            <td className="font-medium text-xs text-[#6B7280]">
-                              11
-                            </td>
-                            <td className="font-semibold text-xs text-[#111827]">
-                              ₹44,000
-                            </td>
-                            <td className="text-right">
-                              <OpsBadge status="COMPLETED" text="Success" size="sm" />
-                            </td>
-                          </tr>
-                          <tr>
-                            <td>
-                              <input
-                                type="checkbox"
-                                className="rounded border-[#D1D5DB] text-[#00A86B] focus:ring-0"
-                              />
-                            </td>
-                            <td className="font-mono text-xs font-semibold text-[#6B7280]">
-                              #732-293
-                            </td>
-                            <td className="font-semibold text-xs text-[#111827]">
-                              Black T-shirt
-                            </td>
-                            <td className="font-medium text-xs text-[#6B7280]">
-                              3
-                            </td>
-                            <td className="font-semibold text-xs text-[#111827]">
-                              ₹8,000
-                            </td>
-                            <td className="text-right">
-                              <OpsBadge status="PENDING" text="Pending" size="sm" />
-                            </td>
-                          </tr>
-                          <tr>
-                            <td>
-                              <input
-                                type="checkbox"
-                                className="rounded border-[#D1D5DB] text-[#00A86B] focus:ring-0"
-                              />
-                            </td>
-                            <td className="font-mono text-xs font-semibold text-[#6B7280]">
-                              #732-328
-                            </td>
-                            <td className="font-semibold text-xs text-[#111827]">
-                              White Polo
-                            </td>
-                            <td className="font-medium text-xs text-[#6B7280]">
-                              4
-                            </td>
-                            <td className="font-semibold text-xs text-[#111827]">
-                              ₹10,200
-                            </td>
-                            <td className="text-right">
-                              <OpsBadge status="COMPLETED" text="Success" size="sm" />
-                            </td>
-                          </tr>
-                        </>
+                        <tr>
+                          <td colSpan={6} className="py-8 text-center text-xs text-[#9CA3AF]">
+                            No orders found in database yet.
+                          </td>
+                        </tr>
                       )}
                     </tbody>
                   </table>

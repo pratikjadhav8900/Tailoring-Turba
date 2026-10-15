@@ -187,6 +187,24 @@ export interface OpsNotificationItem {
   createdAt: Date | string;
 }
 
+export interface OpsMonthlyActivity {
+  name: string;
+  monthIndex: number;
+  revenue: number;
+  orderCount: number;
+  height: number;
+  active?: boolean;
+}
+
+export interface OpsWorkerPerformance {
+  id: string;
+  name: string;
+  employeeCode: string;
+  roleTitle: string;
+  completedTasks: number;
+  inProgressTasks: number;
+}
+
 export interface OpsDashboardStats {
   totalActiveOrders: number;
   urgentOrdersCount: number;
@@ -194,9 +212,21 @@ export interface OpsDashboardStats {
   stageCounts: Record<OpsProductionStage, number>;
   reworkCount: number; // Orders currently FLAGGED_REWORK
   completedTodayCount: number;
-  grossRevenue?: number;
-  avgOrderValue?: number;
-  totalOrdersCount?: number;
+  grossRevenue: number;
+  avgOrderValue: number;
+  totalOrdersCount: number;
+  totalPaidRevenue: number;
+  totalPieces: number;
+  totalRegisteredClients: number;
+  taskPerformance: {
+    totalTasks: number;
+    completedTasks: number;
+    inProgressTasks: number;
+    completionRate: number; // 0 - 100
+  };
+  workers: OpsWorkerPerformance[];
+  monthlyActivity: OpsMonthlyActivity[];
+  selectedYearAverageMonthlyRevenue: number;
 }
 
 export interface OpsStageTransitionPayload {
