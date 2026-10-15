@@ -150,7 +150,7 @@ export const OpsLayout: React.FC<OpsLayoutProps> = ({
           onOpenMobileSidebar={() => setIsMobileSidebarOpen(true)}
         />
 
-        <main className="flex-1 p-5 sm:p-7 lg:p-8 bg-[#FDFDFE] overflow-y-auto">
+        <main className="flex-1 p-3.5 sm:p-7 lg:p-8 bg-[#FDFDFE] overflow-y-auto">
           {children}
         </main>
       </div>

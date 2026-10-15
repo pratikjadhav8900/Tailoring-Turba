@@ -134,6 +134,18 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
   // Load catalog products
   useEffect(() => {
     async function loadProducts() {
@@ -569,40 +581,41 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs select-none overflow-y-auto">
-      <div className="relative w-full max-w-3xl bg-white rounded-2xl border border-[#ECEEF2] shadow-2xl overflow-hidden my-6 max-h-[92vh] flex flex-col font-sans">
-        {/* Header */}
-        <div className="p-4 sm:p-5 border-b border-[#ECEEF2] flex items-center justify-between bg-white shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-[#00A86B]/10 text-[#00A86B] flex items-center justify-center font-bold">
+    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-sm select-none overflow-y-auto">
+      <div className="relative w-full max-w-3xl bg-white rounded-t-2xl sm:rounded-2xl border border-[#ECEEF2] shadow-2xl overflow-hidden my-0 sm:my-6 h-[94vh] sm:h-auto sm:max-h-[92vh] flex flex-col font-sans">
+        {/* Header - Sticky so it never scrolls away or overlaps */}
+        <div className="p-3.5 sm:p-5 border-b border-[#ECEEF2] flex items-center justify-between bg-white shrink-0 sticky top-0 z-20">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1 pr-2">
+            <div className="w-8 h-8 rounded-lg bg-[#00A86B]/10 text-[#00A86B] flex items-center justify-center font-bold shrink-0">
               <Plus className="w-4 h-4" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-sm font-bold text-[#111827]">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <h2 className="text-sm font-bold text-[#111827] truncate">
                   New Production Order
                 </h2>
-                <span className="px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-[#00A86B] text-[10px] font-bold">
-                  Ops Direct Intake
+                <span className="px-1.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-[#00A86B] text-[9px] sm:text-[10px] font-bold shrink-0">
+                  Direct Intake
                 </span>
               </div>
-              <p className="text-[11px] text-[#6B7280]">
-                Record manual customer order with quotation auto-fill & production assets
+              <p className="text-[10px] sm:text-[11px] text-[#6B7280] truncate">
+                Record manual customer order with quotation auto-fill
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 shrink-0">
             <button
               type="button"
               onClick={handleResetForm}
-              className="px-2.5 py-1 rounded-lg border border-[#E5E7EB] text-[11px] font-semibold text-[#6B7280] hover:text-[#111827] hover:bg-[#F9FAFB] transition-colors"
+              className="px-2 py-1 rounded-lg border border-[#E5E7EB] text-[10px] sm:text-[11px] font-semibold text-[#6B7280] hover:text-[#111827] hover:bg-[#F9FAFB] transition-colors whitespace-nowrap"
               title="Clear all fields to a blank form"
             >
-              Reset to Blank
+              Reset
             </button>
             <button
               onClick={onClose}
               className="p-1.5 rounded-full hover:bg-[#F3F4F6] text-[#6B7280] transition-colors"
+              aria-label="Close"
             >
               <X className="w-4 h-4" />
             </button>
@@ -639,7 +652,7 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
 
           {/* Section: Quotation Auto-Fill Dropzone */}
           <div className="p-4 rounded-2xl bg-gradient-to-br from-[#F8FAFC] via-[#F4F6F9] to-[#EFF6FF] border border-[#E2E8F0] space-y-3">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
               <div className="flex items-center gap-2">
                 <div className="w-6 h-6 rounded-md bg-[#2563EB]/10 text-[#2563EB] flex items-center justify-center font-bold">
                   <Sparkles className="w-3.5 h-3.5" />
@@ -1509,13 +1522,13 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
           </div>
 
           {/* Modal Footer */}
-          <div className="pt-4 border-t border-[#ECEEF2] flex items-center justify-between shrink-0">
+          <div className="pt-4 border-t border-[#ECEEF2] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shrink-0">
             <div className="text-xs text-[#6B7280]">
               <span className="font-bold text-[#111827]">{totalQuantity} total pcs</span> across{" "}
               <span className="font-bold text-[#111827]">{items.length} styles</span>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 justify-end">
               <OpsButton type="button" variant="ghost" size="sm" onClick={onClose}>
                 Cancel
               </OpsButton>

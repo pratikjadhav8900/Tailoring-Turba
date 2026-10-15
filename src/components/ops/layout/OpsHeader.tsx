@@ -24,21 +24,22 @@ export const OpsHeader: React.FC<OpsHeaderProps> = ({
   onOpenMobileSidebar,
 }) => {
   return (
-    <header className="h-[68px] px-6 sm:px-8 border-b border-[#ECEEF2] bg-white flex items-center justify-between shrink-0 select-none">
+    <header className="h-[64px] sm:h-[68px] px-4 sm:px-8 border-b border-[#ECEEF2] bg-white flex items-center justify-between shrink-0 select-none sticky top-0 z-30">
       {/* Title & Subtitle */}
-      <div className="flex items-center gap-3.5">
+      <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0 pr-2">
         <button
           onClick={onOpenMobileSidebar}
-          className="md:hidden p-2 text-[#4B5563] hover:text-[#111827] bg-white border border-[#ECEEF2] rounded-xl shadow-xs"
+          className="md:hidden p-2 text-[#4B5563] hover:text-[#111827] bg-white border border-[#ECEEF2] rounded-xl shadow-xs shrink-0"
+          aria-label="Open sidebar"
         >
           <Menu className="w-4 h-4" />
         </button>
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#111827] font-sans leading-none">
+        <div className="min-w-0">
+          <h1 className="text-base sm:text-2xl font-bold tracking-tight text-[#111827] font-sans leading-tight truncate">
             {title}
           </h1>
           {subtitle && (
-            <p className="text-xs text-[#9CA3AF] mt-1 font-sans leading-none">
+            <p className="text-[11px] sm:text-xs text-[#9CA3AF] mt-0.5 font-sans leading-none truncate">
               {subtitle}
             </p>
           )}

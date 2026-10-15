@@ -204,37 +204,39 @@ function OpsDashboardContent() {
                 </div>
 
                 {/* Custom Hatched Bar Chart */}
-                <div className="relative pt-8 pb-2">
-                  {/* Dotted Average Line */}
-                  <div className="absolute top-16 left-8 right-0 border-b border-dashed border-[#D1D5DB] flex items-center">
-                    <span className="absolute -top-3.5 left-0 px-2 py-0.5 rounded-md bg-black text-white text-[10px] font-bold">
-                      Avg. ₹25.3k
-                    </span>
-                  </div>
+                <div className="relative pt-8 pb-2 overflow-x-auto scrollbar-none -mx-2 px-2">
+                  <div className="min-w-[460px] sm:min-w-0 relative">
+                    {/* Dotted Average Line */}
+                    <div className="absolute top-16 left-8 right-0 border-b border-dashed border-[#D1D5DB] flex items-center">
+                      <span className="absolute -top-3.5 left-0 px-2 py-0.5 rounded-md bg-black text-white text-[10px] font-bold">
+                        Avg. ₹25.3k
+                      </span>
+                    </div>
 
-                  {/* Y Axis Grid Labels */}
-                  <div className="flex items-end justify-between h-48 gap-2 px-2">
-                    {months.map((m) => (
-                      <div key={m.name} className="flex-1 flex flex-col items-center h-full justify-end group">
-                        <div className="w-full max-w-[28px] flex flex-col justify-end items-center h-full">
-                          <div
-                            style={{ height: `${m.height}%` }}
-                            className={`w-full transition-all duration-300 ${
-                              m.active
-                                ? "bg-[#00A86B] rounded-xl shadow-md shadow-[#00A86B]/30"
-                                : "hatched-bar hover:opacity-80"
+                    {/* Y Axis Grid Labels */}
+                    <div className="flex items-end justify-between h-48 gap-2 px-2">
+                      {months.map((m) => (
+                        <div key={m.name} className="flex-1 flex flex-col items-center h-full justify-end group">
+                          <div className="w-full max-w-[28px] flex flex-col justify-end items-center h-full">
+                            <div
+                              style={{ height: `${m.height}%` }}
+                              className={`w-full transition-all duration-300 ${
+                                m.active
+                                  ? "bg-[#00A86B] rounded-xl shadow-md shadow-[#00A86B]/30"
+                                  : "hatched-bar hover:opacity-80"
+                              }`}
+                            />
+                          </div>
+                          <span
+                            className={`text-[11px] mt-3 font-semibold ${
+                              m.active ? "text-[#00A86B] font-bold" : "text-[#9CA3AF]"
                             }`}
-                          />
+                          >
+                            {m.name}
+                          </span>
                         </div>
-                        <span
-                          className={`text-[11px] mt-3 font-semibold ${
-                            m.active ? "text-[#00A86B] font-bold" : "text-[#9CA3AF]"
-                          }`}
-                        >
-                          {m.name}
-                        </span>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
