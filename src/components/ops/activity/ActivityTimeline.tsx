@@ -1,7 +1,6 @@
 import React from "react";
 import {
   Clock,
-  CheckCircle2,
   AlertTriangle,
   ArrowRight,
   FileText,
@@ -17,7 +16,7 @@ interface ActivityTimelineProps {
 export const ActivityTimeline: React.FC<ActivityTimelineProps> = ({ events }) => {
   if (!events || events.length === 0) {
     return (
-      <div className="text-center py-6 text-xs text-slate-500">
+      <div className="text-center py-6 text-xs text-[#829386] bg-[#FAF9F5] rounded border border-[#e2e0d8] font-mono">
         No recorded activity yet.
       </div>
     );
@@ -26,24 +25,24 @@ export const ActivityTimeline: React.FC<ActivityTimelineProps> = ({ events }) =>
   const getEventIcon = (type: string) => {
     switch (type) {
       case "OPS_STAGE_REWORK_FLAGGED":
-        return <AlertTriangle className="w-3.5 h-3.5 text-red-400" />;
+        return <AlertTriangle className="w-3.5 h-3.5 text-[#8b2020]" />;
       case "OPS_STAGE_TRANSITION":
       case "OPS_STAGE_OVERRIDDEN":
-        return <ArrowRight className="w-3.5 h-3.5 text-amber-400" />;
+        return <ArrowRight className="w-3.5 h-3.5 text-[#294238]" />;
       case "OPS_INTERNAL_NOTE_ADDED":
-        return <FileText className="w-3.5 h-3.5 text-blue-400" />;
+        return <FileText className="w-3.5 h-3.5 text-[#c49d32]" />;
       case "DISPATCHED":
       case "SHIPMENT_BOOKED":
-        return <Truck className="w-3.5 h-3.5 text-emerald-400" />;
+        return <Truck className="w-3.5 h-3.5 text-[#3a6b3a]" />;
       case "OPS_ORDER_CREATED":
-        return <PlusCircle className="w-3.5 h-3.5 text-purple-400" />;
+        return <PlusCircle className="w-3.5 h-3.5 text-[#294238]" />;
       default:
-        return <Clock className="w-3.5 h-3.5 text-slate-400" />;
+        return <Clock className="w-3.5 h-3.5 text-[#829386]" />;
     }
   };
 
   return (
-    <div className="relative pl-6 space-y-4 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-[#1e2230]">
+    <div className="relative pl-6 space-y-3.5 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-[#e2e0d8]">
       {events.map((event) => {
         const isRework = event.eventType === "OPS_STAGE_REWORK_FLAGGED";
 
@@ -51,10 +50,10 @@ export const ActivityTimeline: React.FC<ActivityTimelineProps> = ({ events }) =>
           <div key={event.id} className="relative group text-xs">
             {/* Timeline Dot */}
             <div
-              className={`absolute -left-6 top-0.5 w-4.5 h-4.5 rounded-full flex items-center justify-center border ${
+              className={`absolute -left-6 top-1 w-5 h-5 rounded-full flex items-center justify-center border shadow-xs ${
                 isRework
-                  ? "bg-red-500/10 border-red-500/40"
-                  : "bg-[#11131a] border-[#2a3044]"
+                  ? "bg-[#8b2020]/10 border-[#8b2020]/40"
+                  : "bg-white border-[#c8c5bc]"
               }`}
             >
               {getEventIcon(event.eventType)}
@@ -62,17 +61,17 @@ export const ActivityTimeline: React.FC<ActivityTimelineProps> = ({ events }) =>
 
             {/* Content Card */}
             <div
-              className={`p-2.5 rounded border ${
+              className={`p-3 rounded border shadow-xs transition-all ${
                 isRework
-                  ? "bg-red-500/[0.05] border-red-500/30 text-red-200"
-                  : "bg-[#0b0d13] border-[#1e2230] text-slate-300"
+                  ? "bg-[#8b2020]/5 border-[#8b2020]/30 text-[#8b2020]"
+                  : "bg-[#FAF9F5] border-[#e2e0d8] text-[#4a4a45]"
               }`}
             >
               <div className="flex items-center justify-between text-[11px] mb-1">
-                <span className="font-semibold text-slate-100">
+                <span className="font-bold text-[#171916] font-mono">
                   {event.title}
                 </span>
-                <span className="text-slate-500">
+                <span className="text-[#829386] font-mono">
                   {new Date(event.createdAt).toLocaleDateString("en-IN", {
                     day: "numeric",
                     month: "short",
@@ -83,21 +82,15 @@ export const ActivityTimeline: React.FC<ActivityTimelineProps> = ({ events }) =>
               </div>
 
               {event.description && (
-                <p className="text-xs text-slate-300 leading-relaxed mb-1.5">
+                <p className="text-xs text-[#4a4a45] leading-relaxed mb-1.5 font-sans">
                   {event.description}
                 </p>
               )}
 
-              <div className="flex items-center justify-between text-[10px] text-slate-500 mt-1 pt-1 border-t border-white/[0.04]">
+              <div className="flex items-center justify-between text-[10px] text-[#829386] mt-1 pt-1.5 border-t border-[#e2e0d8] font-mono">
                 <span>
-                  Actor: <strong className="text-slate-400 font-medium">{event.actorName}</strong> ({event.actorRole})
+                  Operator: <strong className="text-[#171916] font-semibold">{event.actorName}</strong> ({event.actorRole})
                 </span>
-                {event.metadata && typeof event.metadata === "object" && (
-                  <span className="font-mono text-slate-400">
-                    {Object.keys(event.metadata).length > 0 &&
-                      "metadata recorded"}
-                  </span>
-                )}
               </div>
             </div>
           </div>

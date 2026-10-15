@@ -9,7 +9,16 @@ import type {
 export type { OpsProductionStage, OpsStageStatus, OrderStatus, Role, EventActorRole };
 
 export type OpsPriority = "NORMAL" | "URGENT" | "RUSH";
-export type OpsOrderSource = "WEBSITE" | "TURBA_AI" | "MANUAL_OPS";
+export type OpsOrderSource =
+  | "WEBSITE"
+  | "TURBA_AI"
+  | "MANUAL_OPS"
+  | "WHATSAPP"
+  | "NATURAL"
+  | "PHONE"
+  | "INSTAGRAM"
+  | "REFERRAL"
+  | (string & {});
 
 export interface OpsEmployee {
   id: string;
@@ -169,6 +178,9 @@ export interface OpsDashboardStats {
   stageCounts: Record<OpsProductionStage, number>;
   reworkCount: number; // Orders currently FLAGGED_REWORK
   completedTodayCount: number;
+  grossRevenue?: number;
+  avgOrderValue?: number;
+  totalOrdersCount?: number;
 }
 
 export interface OpsStageTransitionPayload {
@@ -185,4 +197,33 @@ export interface OpsReworkPayload {
   reason: string;
   notes?: string;
   attachments?: string[];
+}
+
+export interface OpsTaskItem {
+  id: string;
+  orderId: string;
+  orderNumber: number;
+  formattedOrderNumber: string;
+  stage: OpsProductionStage;
+  taskKey: string;
+  title: string;
+  status: OpsStageStatus;
+  iteration: number;
+  employeeId?: string | null;
+  employeeName: string;
+  assignedBy: string;
+  instructions?: string;
+  notes?: string | null;
+  vendorName?: string | null;
+  vendorCost?: number | null;
+  startedAt?: Date | string | null;
+  completedAt?: Date | string | null;
+  createdAt: Date | string;
+  orderCustomer?: string;
+  orderCompany?: string | null;
+  orderPriority?: OpsPriority;
+  orderDueDate?: Date | string | null;
+  orderTotalPieces?: number;
+  orderStage?: OpsProductionStage | null;
+  orderSource?: string | null;
 }

@@ -47,23 +47,23 @@ export const InternalNotesPanel: React.FC<InternalNotesPanelProps> = ({
   return (
     <div className="space-y-4">
       {/* Note input form */}
-      <form onSubmit={handleAddNote} className="space-y-2">
+      <form onSubmit={handleAddNote} className="space-y-2.5">
         <textarea
           rows={3}
           value={newNote}
           onChange={(e) => setNewNote(e.target.value)}
           placeholder="Add an internal note (visible only to team)..."
-          className="w-full bg-[#0b0d13] border border-[#1e2230] focus:border-amber-500 rounded p-2.5 text-xs text-slate-100 placeholder:text-slate-500 outline-none resize-none transition-colors"
+          className="w-full bg-[#FAF9F5] border border-[#e2e0d8] focus:border-[#294238] focus:bg-white focus:ring-1 focus:ring-[#294238]/20 rounded p-3 text-xs text-[#171916] placeholder:text-[#829386] outline-none resize-none transition-all font-sans"
         />
         <div className="flex items-center justify-between">
-          <label className="flex items-center gap-1.5 text-xs text-slate-400 cursor-pointer select-none">
+          <label className="flex items-center gap-1.5 text-xs text-[#4a4a45] cursor-pointer select-none font-medium">
             <input
               type="checkbox"
               checked={isPinned}
               onChange={(e) => setIsPinned(e.target.checked)}
-              className="rounded bg-slate-900 border-slate-700 text-amber-500 focus:ring-0"
+              className="rounded bg-[#FAF9F5] border-[#c8c5bc] text-[#294238] focus:ring-0"
             />
-            <Pin className="w-3 h-3 text-amber-400" />
+            <Pin className="w-3.5 h-3.5 text-[#c49d32]" />
             <span>Pin note to top</span>
           </label>
           <OpsButton
@@ -79,28 +79,28 @@ export const InternalNotesPanel: React.FC<InternalNotesPanelProps> = ({
       </form>
 
       {/* Notes list */}
-      <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
+      <div className="space-y-2.5 max-h-96 overflow-y-auto pr-1">
         {notes.length === 0 ? (
-          <div className="text-center py-6 text-xs text-slate-500 flex flex-col items-center gap-1">
-            <MessageSquare className="w-5 h-5 text-slate-600" />
-            <span>No internal notes yet.</span>
+          <div className="text-center py-6 text-xs text-[#829386] flex flex-col items-center gap-1.5 bg-[#FAF9F5] rounded border border-[#e2e0d8]">
+            <MessageSquare className="w-5 h-5 text-[#829386]/60" />
+            <span className="font-medium">No internal notes yet.</span>
           </div>
         ) : (
           notes.map((n) => (
             <div
               key={n.id}
-              className={`p-3 rounded border text-xs ${
+              className={`p-3.5 rounded border text-xs shadow-xs transition-all ${
                 n.isPinned
-                  ? "bg-amber-500/[0.05] border-amber-500/30 text-slate-200"
-                  : "bg-[#0b0d13] border-[#1e2230] text-slate-300"
+                  ? "bg-[#c49d32]/10 border-[#c49d32]/40 text-[#171916]"
+                  : "bg-[#FAF9F5] border-[#e2e0d8] text-[#4a4a45]"
               }`}
             >
-              <div className="flex items-center justify-between mb-1.5 text-[11px] text-slate-400">
-                <div className="flex items-center gap-1.5 font-medium text-slate-200">
-                  {n.isPinned && <Pin className="w-3 h-3 text-amber-400 fill-amber-400" />}
+              <div className="flex items-center justify-between mb-1.5 text-[11px] text-[#829386]">
+                <div className="flex items-center gap-1.5 font-bold text-[#171916] font-mono">
+                  {n.isPinned && <Pin className="w-3 h-3 text-[#c49d32] fill-[#c49d32]" />}
                   <span>{n.employeeName}</span>
                 </div>
-                <span>
+                <span className="font-mono">
                   {new Date(n.createdAt).toLocaleDateString("en-IN", {
                     day: "numeric",
                     month: "short",
@@ -109,7 +109,7 @@ export const InternalNotesPanel: React.FC<InternalNotesPanelProps> = ({
                   })}
                 </span>
               </div>
-              <p className="whitespace-pre-wrap leading-relaxed text-slate-200">
+              <p className="whitespace-pre-wrap leading-relaxed text-[#171916] font-sans">
                 {n.note}
               </p>
             </div>

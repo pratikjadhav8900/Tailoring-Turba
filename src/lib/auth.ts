@@ -127,7 +127,7 @@ const providersList: any[] = [
         searchIdentifier = parsedPhone.number;
       }
 
-      const user = await prisma.user.findFirst({
+      let user = await prisma.user.findFirst({
         where: {
           OR: [
             { email: { equals: searchIdentifier, mode: "insensitive" } },
@@ -135,6 +135,20 @@ const providersList: any[] = [
           ]
         }
       });
+
+      // If user not found directly by email/phone, check if searchIdentifier is an Employee Code (e.g. TT001, EMP-001)
+      if (!user) {
+        const emp = await prisma.employee.findFirst({
+          where: {
+            employeeCode: { equals: searchIdentifier, mode: "insensitive" },
+            isActive: true,
+          },
+          include: { user: true },
+        });
+        if (emp?.user) {
+          user = emp.user;
+        }
+      }
 
       if (!user || !user.password) {
         throw new InvalidCredentialsError();

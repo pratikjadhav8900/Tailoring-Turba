@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { OpsLayout } from "@/components/ops/layout/OpsLayout";
@@ -14,6 +14,9 @@ import { ReworkModal } from "@/components/ops/stages/ReworkModal";
 import { ResourceAllocationModal } from "@/components/ops/stages/ResourceAllocationModal";
 import { InternalNotesPanel } from "@/components/ops/notes/InternalNotesPanel";
 import { ActivityTimeline } from "@/components/ops/activity/ActivityTimeline";
+import { Step2PaymentCard } from "@/components/ops/payments/Step2PaymentCard";
+import { OrderTasksList } from "@/components/ops/tasks/OrderTasksList";
+import { TaskAssignmentModal } from "@/components/ops/tasks/TaskAssignmentModal";
 import type { OpsOrder, OpsActivityEvent, OpsPriority } from "@/types/ops";
 import {
   ArrowLeft,
@@ -23,12 +26,16 @@ import {
   ChevronRight,
   ExternalLink,
   Download,
-  Truck,
   User,
+  UserCheck,
   MapPin,
-  CheckCircle,
-  Clock,
   Printer,
+  FileText,
+  Upload,
+  Plus,
+  UploadCloud,
+  Paperclip,
+  Trash2,
 } from "lucide-react";
 
 export default function OpsOrderDetailPage() {
@@ -44,11 +51,18 @@ export default function OpsOrderDetailPage() {
   const [isAdvanceModalOpen, setIsAdvanceModalOpen] = useState(false);
   const [isReworkModalOpen, setIsReworkModalOpen] = useState(false);
   const [isResourceModalOpen, setIsResourceModalOpen] = useState(false);
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
 
   // Metadata edit states
   const [priority, setPriority] = useState<OpsPriority>("NORMAL");
   const [dueDateInput, setDueDateInput] = useState<string>("");
   const [isSavingMetadata, setIsSavingMetadata] = useState(false);
+
+  // Asset & Mockup upload states
+  const [isUploadingAsset, setIsUploadingAsset] = useState(false);
+  const [isUploadingMockup, setIsUploadingMockup] = useState(false);
+  const assetFileInputRef = useRef<HTMLInputElement>(null);
+  const mockupFileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchOrderDetail = async () => {
     setLoading(true);
@@ -96,10 +110,89 @@ export default function OpsOrderDetailPage() {
     }
   };
 
+  const handleUploadAsset = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    setIsUploadingAsset(true);
+    try {
+      const uploadedUrls: string[] = [];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await fetch("/api/ops/upload", {
+          method: "POST",
+          body: formData,
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.url) uploadedUrls.push(data.url);
+        }
+      }
+
+      if (uploadedUrls.length > 0) {
+        await fetch(`/api/ops/orders/${orderId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ newPrintFiles: uploadedUrls }),
+        });
+        fetchOrderDetail();
+      }
+    } catch (err) {
+      console.error("Asset upload failed", err);
+    } finally {
+      setIsUploadingAsset(false);
+      if (assetFileInputRef.current) assetFileInputRef.current.value = "";
+    }
+  };
+
+  const handleUploadMockup = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploadingMockup(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/ops/upload", {
+        method: "POST",
+        body: formData,
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.url) {
+          await fetch(`/api/ops/orders/${orderId}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ newMockupUrl: data.url }),
+          });
+          fetchOrderDetail();
+        }
+      }
+    } catch (err) {
+      console.error("Mockup upload failed", err);
+    } finally {
+      setIsUploadingMockup(false);
+      if (mockupFileInputRef.current) mockupFileInputRef.current.value = "";
+    }
+  };
+
+  const handleRemoveAsset = async (fileUrl: string) => {
+    try {
+      await fetch(`/api/ops/orders/${orderId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ removePrintFile: fileUrl }),
+      });
+      fetchOrderDetail();
+    } catch (err) {
+      console.error("Failed to remove asset", err);
+    }
+  };
+
   if (loading) {
     return (
       <OpsLayout pageTitle="Loading Order...">
-        <OpsLoadingState message="Fetching single source of truth order record..." />
+        <OpsLoadingState message="Fetching order details..." />
       </OpsLayout>
     );
   }
@@ -107,7 +200,7 @@ export default function OpsOrderDetailPage() {
   if (!order) {
     return (
       <OpsLayout pageTitle="Order Not Found">
-        <div className="p-8 text-center text-slate-400">
+        <div className="p-8 text-center text-[#9CA3AF]">
           <p>Order not found or invalid identifier.</p>
           <Link href="/ops/orders">
             <OpsButton variant="secondary" size="sm" className="mt-4">
@@ -122,81 +215,91 @@ export default function OpsOrderDetailPage() {
   const isQCStage = order.opsStage === "QUALITY_CHECK";
 
   return (
-    <OpsLayout pageTitle={`Order ${order.formattedOrderNumber}`}>
-      <div className="space-y-6 max-w-7xl mx-auto">
-        {/* Top Navigation & Action Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-[#1e2230]">
+    <OpsLayout
+      pageTitle={`Order ${order.formattedOrderNumber}`}
+      pageSubtitle={`Created on ${new Date(order.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })} • Source: ${order.orderSource || "Website"}`}
+      headerAction={
+        <div className="flex items-center gap-2">
+          <OpsButton
+            variant="secondary"
+            size="sm"
+            onClick={() => setIsTaskModalOpen(true)}
+            leftIcon={<UserCheck className="w-3.5 h-3.5 text-[#00A86B]" />}
+          >
+            Assign Tasks
+          </OpsButton>
+
+          <OpsButton
+            variant="secondary"
+            size="sm"
+            onClick={() => setIsResourceModalOpen(true)}
+            leftIcon={<Layers className="w-3.5 h-3.5 text-[#00A86B]" />}
+          >
+            Fabric Allocation
+          </OpsButton>
+
+          {isQCStage && (
+            <OpsButton
+              variant="danger"
+              size="sm"
+              onClick={() => setIsReworkModalOpen(true)}
+              leftIcon={<AlertTriangle className="w-3.5 h-3.5" />}
+            >
+              Flag Defect
+            </OpsButton>
+          )}
+
+          <OpsButton
+            variant="primary"
+            size="sm"
+            onClick={() => setIsAdvanceModalOpen(true)}
+            rightIcon={<ChevronRight className="w-3.5 h-3.5" />}
+          >
+            Advance Stage
+          </OpsButton>
+        </div>
+      }
+    >
+      <div className="space-y-6 w-full">
+        {/* Top Breadcrumb & Status */}
+        <div className="flex items-center justify-between pb-2">
           <div className="flex items-center gap-3">
             <Link href="/ops/orders">
-              <button className="p-1.5 rounded bg-[#10121a] hover:bg-[#161825] border border-[#1e2230] text-slate-400 hover:text-slate-100 transition-colors">
+              <button className="w-9 h-9 rounded-full bg-white hover:bg-[#F4F6F9] border border-[#ECEEF2] text-[#4B5563] hover:text-[#111827] flex items-center justify-center transition-colors shadow-2xs">
                 <ArrowLeft className="w-4 h-4" />
               </button>
             </Link>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-xl font-bold font-mono tracking-tight text-slate-100">
-                  {order.formattedOrderNumber}
-                </h2>
-                <OpsBadge stage={order.opsStage} />
-                <OpsBadge
-                  status={order.currentExecution?.status || "PENDING"}
-                />
-              </div>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Created on {new Date(order.createdAt).toLocaleDateString("en-IN", {
-                  day: "numeric",
-                  month: "long",
-                  year: "numeric",
-                })} • Source: {order.orderSource || "Website"}
-              </p>
+            <div className="flex items-center gap-2.5">
+              <span className="text-xl font-extrabold text-[#111827] font-mono">
+                {order.formattedOrderNumber}
+              </span>
+              <OpsBadge stage={order.opsStage} />
+              <OpsBadge
+                status={order.currentExecution?.status || "PENDING"}
+              />
+              {order.orderSource && <OpsBadge source={order.orderSource} />}
             </div>
-          </div>
-
-          {/* Quick Action Controls */}
-          <div className="flex flex-wrap items-center gap-2">
-            <OpsButton
-              variant="secondary"
-              size="sm"
-              onClick={() => setIsResourceModalOpen(true)}
-              leftIcon={<Layers className="w-3.5 h-3.5 text-amber-400" />}
-            >
-              Fabric Allocation
-            </OpsButton>
-
-            {isQCStage && (
-              <OpsButton
-                variant="danger"
-                size="sm"
-                onClick={() => setIsReworkModalOpen(true)}
-                leftIcon={<AlertTriangle className="w-3.5 h-3.5" />}
-              >
-                Flag Defect / Rework
-              </OpsButton>
-            )}
-
-            <OpsButton
-              variant="primary"
-              size="sm"
-              onClick={() => setIsAdvanceModalOpen(true)}
-              rightIcon={<ChevronRight className="w-3.5 h-3.5" />}
-            >
-              Advance Stage
-            </OpsButton>
           </div>
         </div>
 
-        {/* Production Stage Visual Progress Bar */}
+        {/* Production Stage Stepper */}
         <StageProgressBar
           currentStage={order.opsStage}
           currentStatus={order.currentExecution?.status}
           iteration={order.currentExecution?.iteration}
         />
 
-        {/* Metadata Controls Bar (Priority & Due Date Editor) */}
-        <div className="p-3 rounded-lg bg-[#10121a] border border-[#1e2230] flex flex-wrap items-center justify-between gap-4 text-xs">
-          <div className="flex items-center gap-4">
+        {/* Step 2 Payment Status & 60% Advance Gate */}
+        <Step2PaymentCard
+          order={order}
+          onPaymentRecorded={fetchOrderDetail}
+        />
+
+        {/* Metadata Controls Bar */}
+        <div className="p-4 rounded-[20px] bg-white border border-[#ECEEF2] flex flex-wrap items-center justify-between gap-4 text-xs shadow-xs">
+          <div className="flex flex-wrap items-center gap-6">
             <div className="flex items-center gap-2">
-              <span className="text-slate-400 font-medium">Priority:</span>
+              <span className="text-[#9CA3AF] font-semibold">Priority:</span>
               <select
                 value={priority}
                 onChange={(e) => {
@@ -205,7 +308,7 @@ export default function OpsOrderDetailPage() {
                   handleUpdateMetadata(p, undefined);
                 }}
                 disabled={isSavingMetadata}
-                className="bg-[#0b0d13] border border-[#1e2230] text-slate-200 text-xs rounded px-2 py-1 outline-none"
+                className="bg-[#F4F6F9] border border-[#ECEEF2] text-[#111827] text-xs font-semibold rounded-full px-3 py-1 outline-none focus:border-[#00A86B]"
               >
                 <option value="NORMAL">Normal</option>
                 <option value="URGENT">Urgent</option>
@@ -214,8 +317,8 @@ export default function OpsOrderDetailPage() {
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-slate-400 font-medium flex items-center gap-1">
-                <Calendar className="w-3.5 h-3.5 text-amber-500" />
+              <span className="text-[#9CA3AF] font-semibold flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5 text-[#00A86B]" />
                 Target Due Date:
               </span>
               <input
@@ -226,64 +329,73 @@ export default function OpsOrderDetailPage() {
                   handleUpdateMetadata(undefined, e.target.value);
                 }}
                 disabled={isSavingMetadata}
-                className="bg-[#0b0d13] border border-[#1e2230] text-slate-200 text-xs rounded px-2 py-1 outline-none"
+                className="bg-[#F4F6F9] border border-[#ECEEF2] text-[#111827] text-xs font-semibold rounded-full px-3 py-1 outline-none focus:border-[#00A86B]"
               />
             </div>
           </div>
 
-          <div className="text-slate-400 font-mono text-[11px]">
-            Total Manufacturing Volume: <strong className="text-slate-200">{order.totalQuantity} pcs</strong>
+          <div className="text-[#9CA3AF] font-medium text-xs">
+            Total Volume: <strong className="text-[#111827] text-sm">{order.totalQuantity} pcs</strong>
           </div>
         </div>
 
         {/* 2-Column Responsive Workspace Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* LEFT COLUMN: Customer, Products, Specs, Artwork, Dispatch (7 cols) */}
+          {/* LEFT COLUMN: Tasks, Customer, Products, Specs, Artwork, Dispatch (7 cols) */}
           <div className="lg:col-span-7 space-y-6">
+            {/* Worker Production Tasks Card */}
+            <OpsCard title="Production Delegation & Worker Tasks">
+              <OrderTasksList
+                order={order}
+                onOpenAssignModal={() => setIsTaskModalOpen(true)}
+                onTaskUpdated={fetchOrderDetail}
+              />
+            </OpsCard>
+
             {/* Customer & Delivery Information Card */}
             <OpsCard title="Customer & Delivery Details">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                <div>
-                  <div className="flex items-center gap-1.5 font-semibold text-slate-200 mb-1">
-                    <User className="w-3.5 h-3.5 text-amber-500" />
+                <div className="p-4 rounded-xl bg-[#F8F9FB] border border-[#ECEEF2]">
+                  <div className="flex items-center gap-1.5 font-bold text-[#111827] mb-2">
+                    <User className="w-4 h-4 text-[#00A86B]" />
                     <span>Customer Information</span>
                   </div>
-                  <div className="space-y-1 text-slate-300">
-                    <div>{order.customer.name || "Customer"}</div>
+                  <div className="space-y-1 text-[#4B5563]">
+                    <div className="font-bold text-sm text-[#111827]">{order.customer.name || "Customer"}</div>
                     {order.customer.companyName && (
-                      <div className="text-slate-400 font-medium">
+                      <div className="text-[#00A86B] font-semibold">
                         {order.customer.companyName}
                       </div>
                     )}
-                    <div className="text-slate-400">{order.customer.email || "No email"}</div>
-                    <div className="text-slate-400">{order.customer.phone || "No phone"}</div>
+                    <div className="text-[#9CA3AF]">{order.customer.email || "No email"}</div>
+                    <div className="text-[#9CA3AF] font-mono">{order.customer.phone || "No phone"}</div>
                     {order.customer.gstNumber && (
-                      <div className="text-slate-400 font-mono">
+                      <div className="text-[#9CA3AF] font-mono text-[11px]">
                         GST: {order.customer.gstNumber}
                       </div>
                     )}
                   </div>
                 </div>
 
-                <div>
-                  <div className="flex items-center gap-1.5 font-semibold text-slate-200 mb-1">
-                    <MapPin className="w-3.5 h-3.5 text-amber-500" />
+                <div className="p-4 rounded-xl bg-[#F8F9FB] border border-[#ECEEF2]">
+                  <div className="flex items-center gap-1.5 font-bold text-[#111827] mb-2">
+                    <MapPin className="w-4 h-4 text-[#00A86B]" />
                     <span>Shipping Address</span>
                   </div>
                   {order.shippingAddress ? (
-                    <div className="space-y-0.5 text-slate-300 leading-relaxed">
-                      <div>{order.shippingAddress.name}</div>
+                    <div className="space-y-1 text-[#4B5563] leading-relaxed">
+                      <div className="font-bold text-[#111827]">{order.shippingAddress.name}</div>
                       <div>{order.shippingAddress.street}</div>
                       <div>
                         {order.shippingAddress.city}, {order.shippingAddress.state} -{" "}
-                        <strong className="text-slate-200 font-mono">
+                        <strong className="text-[#111827] font-mono">
                           {order.shippingAddress.postalCode}
                         </strong>
                       </div>
-                      <div>{order.shippingAddress.country}</div>
+                      <div className="text-[#9CA3AF]">{order.shippingAddress.country}</div>
                     </div>
                   ) : (
-                    <div className="text-slate-500">
+                    <div className="text-[#9CA3AF] italic">
                       No shipping address recorded on file.
                     </div>
                   )}
@@ -293,50 +405,115 @@ export default function OpsOrderDetailPage() {
 
             {/* Garment Products & Size Breakdown Table */}
             <OpsCard title="Garment Specifications & Sizing Breakdown">
-              <div className="space-y-6">
+              <div className="space-y-5">
                 {order.items.map((item, idx) => {
-                  const sizes = item.customState?.sizes || {};
+                  const custom = (item.customState as any) || {};
+                  const sizes = custom.sizes || {};
                   const sizeKeys = Object.keys(sizes);
+                  const fabricDisplay = item.fabric || custom.fabric;
+                  const colorDisplay = custom.color;
+                  const brandDisplay = custom.brand;
+                  const typeDisplay = item.fit || custom.garmentType;
+                  const logoName = custom.logoName;
+                  const logoType = custom.logoType;
+                  const logoPos = custom.logoPosition;
+                  const sizeNote = custom.sizeNote || custom.notes;
 
                   return (
                     <div
                       key={item.id}
-                      className="p-3.5 rounded-lg bg-[#0b0d13] border border-[#1e2230] space-y-3"
+                      className="p-4 rounded-xl bg-[#F8F9FB] border border-[#ECEEF2] space-y-3 shadow-2xs"
                     >
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h4 className="text-xs font-bold text-slate-100">
+                      {/* Item Header */}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <h4 className="text-sm font-bold text-[#111827] truncate">
                             #{idx + 1} — {item.productName}
                           </h4>
-                          <div className="text-[11px] text-slate-400 flex flex-wrap gap-x-3 gap-y-1 mt-0.5">
-                            {item.fabric && <span>Fabric: {item.fabric}</span>}
-                            {item.gsm && <span>GSM: {item.gsm}</span>}
-                            {item.fit && <span>Fit: {item.fit}</span>}
+                          <div className="text-xs text-[#6B7280] flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 font-medium">
+                            {fabricDisplay && (
+                              <span>
+                                Fabric: <strong className="text-[#111827]">{fabricDisplay}</strong>
+                              </span>
+                            )}
+                            {colorDisplay && (
+                              <span>
+                                Color: <strong className="text-[#111827]">{colorDisplay}</strong>
+                              </span>
+                            )}
+                            {typeDisplay && (
+                              <span>
+                                Type: <strong className="text-[#111827]">{typeDisplay}</strong>
+                              </span>
+                            )}
+                            {brandDisplay && (
+                              <span>
+                                Brand: <strong className="text-[#111827]">{brandDisplay}</strong>
+                              </span>
+                            )}
+                            {item.gsm && (
+                              <span>
+                                GSM: <strong className="text-[#111827]">{item.gsm}</strong>
+                              </span>
+                            )}
                           </div>
                         </div>
-                        <div className="text-right">
-                          <span className="font-mono text-sm font-bold text-amber-400">
+
+                        {/* Quantity Badge (shrink-0 + whitespace-nowrap prevents line-wrap and overlap) */}
+                        <div className="shrink-0 text-right">
+                          <span className="inline-flex items-center justify-center font-mono text-xs sm:text-sm font-bold text-[#00A86B] px-2.5 py-1 rounded-full bg-[#E6F7F0] border border-[#B3E8D3] whitespace-nowrap shadow-2xs">
                             {item.quantity} pcs
                           </span>
                         </div>
                       </div>
 
+                      {/* Branding / Logo Details Badge */}
+                      {(logoName || logoType || logoPos || custom.branding) && (
+                        <div className="p-2.5 rounded-lg bg-white border border-[#E5E7EB] text-xs text-[#374151] flex flex-wrap items-center gap-2">
+                          <span className="font-bold text-[#111827] text-[11px] uppercase tracking-wider">
+                            Branding:
+                          </span>
+                          {logoType && (
+                            <span className="px-2 py-0.5 rounded-md bg-[#EFF6FF] text-[#2563EB] font-bold text-[10px] border border-[#DBEAFE]">
+                              {logoType}
+                            </span>
+                          )}
+                          {logoName && (
+                            <span className="font-semibold text-[#111827]">
+                              Logo: {logoName}
+                            </span>
+                          )}
+                          {logoPos && (
+                            <span className="text-[#6B7280]">
+                              ({logoPos})
+                            </span>
+                          )}
+                        </div>
+                      )}
+
                       {/* Size Matrix Breakdown */}
                       {sizeKeys.length > 0 ? (
                         <div>
-                          <div className="text-[10px] uppercase font-bold tracking-wider text-slate-400 mb-1">
-                            Cutting Size Breakdown
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className="text-[10px] uppercase font-bold tracking-wider text-[#6B7280]">
+                              Cutting Size Breakdown
+                            </span>
+                            {custom.sizeRange && (
+                              <span className="text-[10px] text-[#9CA3AF] font-medium">
+                                Range: {custom.sizeRange}
+                              </span>
+                            )}
                           </div>
                           <div className="grid grid-cols-4 sm:grid-cols-6 gap-1.5">
                             {sizeKeys.map((size) => (
                               <div
                                 key={size}
-                                className="p-1.5 rounded bg-[#131520] border border-[#1e2230] text-center"
+                                className="p-2 rounded-lg bg-white border border-[#ECEEF2] text-center shadow-2xs"
                               >
-                                <div className="text-[10px] text-slate-400 font-bold uppercase">
+                                <div className="text-[10px] text-[#6B7280] font-bold uppercase">
                                   {size}
                                 </div>
-                                <div className="text-xs font-bold font-mono text-slate-100">
+                                <div className="text-xs font-bold font-mono text-[#111827] mt-0.5">
                                   {sizes[size]}
                                 </div>
                               </div>
@@ -344,17 +521,24 @@ export default function OpsOrderDetailPage() {
                           </div>
                         </div>
                       ) : (
-                        <div className="text-xs text-slate-500">
+                        <div className="text-xs text-[#9CA3AF] italic">
                           Total Quantity: {item.quantity} pcs (No segmented size matrix specified).
                         </div>
                       )}
 
+                      {/* Size Surcharge / Production Note */}
+                      {sizeNote && (
+                        <div className="text-[11px] text-[#B45309] bg-amber-50/70 border border-amber-200 px-2.5 py-1 rounded-lg">
+                          {sizeNote}
+                        </div>
+                      )}
+
                       {/* Print Tech Specifications */}
-                      {item.customState?.printTechnology && (
-                        <div className="text-xs text-slate-300 flex items-center gap-1.5 pt-2 border-t border-white/[0.04]">
-                          <Printer className="w-3.5 h-3.5 text-purple-400" />
+                      {custom.printTechnology && (
+                        <div className="text-xs text-[#4B5563] flex items-center gap-2 pt-2 border-t border-[#ECEEF2]">
+                          <Printer className="w-3.5 h-3.5 text-[#00A86B]" />
                           <span>
-                            Print Method: <strong>{item.customState.printTechnology}</strong>
+                            Print Method: <strong className="text-[#111827]">{custom.printTechnology}</strong>
                           </span>
                         </div>
                       )}
@@ -365,73 +549,194 @@ export default function OpsOrderDetailPage() {
             </OpsCard>
 
             {/* Artwork & Mockup Preview Card */}
-            <OpsCard title="Production Artwork & Visual Mockups">
+            <OpsCard
+              title="Production Artwork & Visual Mockups"
+              headerAction={
+                <div className="flex items-center gap-2">
+                  <input
+                    type="file"
+                    ref={assetFileInputRef}
+                    onChange={handleUploadAsset}
+                    multiple
+                    accept=".cdr,.ai,.eps,.svg,.pdf,.png,.jpg,.jpeg,.psd,.zip"
+                    className="hidden"
+                  />
+                  <input
+                    type="file"
+                    ref={mockupFileInputRef}
+                    onChange={handleUploadMockup}
+                    accept="image/png,image/jpeg,image/webp"
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => assetFileInputRef.current?.click()}
+                    disabled={isUploadingAsset}
+                    className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-[#00A86B]/10 text-[#00A86B] hover:bg-[#00A86B]/20 flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                  >
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>{isUploadingAsset ? "Uploading..." : "Upload Vector / CDR"}</span>
+                  </button>
+                </div>
+              }
+            >
               <div className="space-y-4">
                 {/* Visual Mockups */}
                 <div>
-                  <div className="text-[11px] font-semibold text-slate-300 mb-2">
-                    Garment Placement Mockups
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold text-[#6B7280] uppercase tracking-wider">
+                      Garment Placement Mockups
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => mockupFileInputRef.current?.click()}
+                      disabled={isUploadingMockup}
+                      className="text-[11px] font-semibold text-[#2563EB] hover:text-[#1D4ED8] flex items-center gap-1"
+                    >
+                      <Plus className="w-3 h-3" />
+                      <span>{isUploadingMockup ? "Uploading..." : "Add Mockup Photo"}</span>
+                    </button>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {order.items.flatMap((item) =>
+
+                  {(() => {
+                    const mockups = order.items.flatMap((item) =>
                       [
                         { label: "Front", url: item.mockupUrl },
                         { label: "Back", url: item.mockupUrlBack },
                         { label: "Left Sleeve", url: item.mockupUrlLeft },
                         { label: "Right Sleeve", url: item.mockupUrlRight },
                       ].filter((m) => !!m.url)
-                    ).map((m, i) => (
-                      <div
-                        key={i}
-                        className="p-2 rounded bg-[#0b0d13] border border-[#1e2230] flex flex-col items-center"
-                      >
-                        <div className="w-full aspect-square bg-[#10121a] rounded overflow-hidden flex items-center justify-center mb-1">
-                          <img
-                            src={m.url!}
-                            alt={m.label}
-                            className="object-contain w-full h-full"
-                          />
+                    );
+
+                    if (mockups.length === 0) {
+                      return (
+                        <div
+                          onClick={() => mockupFileInputRef.current?.click()}
+                          className="p-4 rounded-xl border border-dashed border-[#E5E7EB] bg-[#F9FAFB] hover:bg-[#F3F4F6] cursor-pointer transition-colors text-center space-y-1.5"
+                        >
+                          <div className="w-7 h-7 rounded-full bg-white border border-[#E5E7EB] mx-auto flex items-center justify-center text-[#6B7280]">
+                            <UploadCloud className="w-3.5 h-3.5 text-[#2563EB]" />
+                          </div>
+                          <div className="text-xs font-semibold text-[#111827]">
+                            No placement mockup attached yet
+                          </div>
+                          <p className="text-[11px] text-[#6B7280]">
+                            Click to upload product render or factory sample photo (PNG, JPG)
+                          </p>
                         </div>
-                        <span className="text-[10px] text-slate-400 uppercase font-semibold">
-                          {m.label}
-                        </span>
+                      );
+                    }
+
+                    return (
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        {mockups.map((m, i) => (
+                          <div
+                            key={i}
+                            className="p-3 rounded-xl bg-[#F8F9FB] border border-[#ECEEF2] flex flex-col items-center shadow-2xs"
+                          >
+                            <div className="w-full aspect-square bg-white border border-[#ECEEF2] rounded-lg overflow-hidden flex items-center justify-center mb-2">
+                              <img
+                                src={m.url!}
+                                alt={m.label}
+                                className="object-contain w-full h-full"
+                              />
+                            </div>
+                            <span className="text-[10px] text-[#4B5563] uppercase font-bold">
+                              {m.label}
+                            </span>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
+                    );
+                  })()}
                 </div>
 
-                {/* Print Files */}
-                <div>
-                  <div className="text-[11px] font-semibold text-slate-300 mb-2">
-                    High-Resolution Print Assets
+                {/* Print Files & Logos */}
+                <div className="pt-3 border-t border-[#ECEEF2]">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold text-[#6B7280] uppercase tracking-wider">
+                      High-Resolution Print Assets & Logos
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => assetFileInputRef.current?.click()}
+                      disabled={isUploadingAsset}
+                      className="text-[11px] font-semibold text-[#00A86B] hover:text-[#00925D] flex items-center gap-1"
+                    >
+                      <Plus className="w-3 h-3" />
+                      <span>Attach Vector / CDR</span>
+                    </button>
                   </div>
-                  {order.items.flatMap((i) => i.printFiles).length === 0 ? (
-                    <div className="text-xs text-slate-500">
-                      No external print vector files attached to items.
-                    </div>
-                  ) : (
-                    <div className="space-y-1.5">
-                      {order.items.flatMap((i) => i.printFiles).map((fileUrl, idx) => (
+
+                  {(() => {
+                    const allFiles = Array.from(
+                      new Set(order.items.flatMap((i) => i.printFiles || []))
+                    );
+
+                    if (allFiles.length === 0) {
+                      return (
                         <div
-                          key={idx}
-                          className="p-2.5 rounded bg-[#0b0d13] border border-[#1e2230] flex items-center justify-between text-xs"
+                          onClick={() => assetFileInputRef.current?.click()}
+                          className="p-4 rounded-xl border border-dashed border-[#E5E7EB] bg-[#F9FAFB] hover:bg-[#F3F4F6] cursor-pointer transition-colors text-center space-y-1.5"
                         >
-                          <span className="text-slate-300 font-mono truncate max-w-sm">
-                            {fileUrl.split("/").pop()}
-                          </span>
-                          <a
-                            href={fileUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-amber-500 hover:text-amber-400 flex items-center gap-1 font-medium"
-                          >
-                            <ExternalLink className="w-3.5 h-3.5" />
-                            <span>Open File</span>
-                          </a>
+                          <div className="w-7 h-7 rounded-full bg-white border border-[#E5E7EB] mx-auto flex items-center justify-center text-[#6B7280]">
+                            <Paperclip className="w-3.5 h-3.5 text-[#00A86B]" />
+                          </div>
+                          <div className="text-xs font-semibold text-[#111827]">
+                            No external print vector files attached
+                          </div>
+                          <p className="text-[11px] text-[#6B7280]">
+                            Click to upload CorelDraw (.cdr), Adobe Illustrator (.ai), SVG, or high-res logo
+                          </p>
                         </div>
-                      ))}
-                    </div>
-                  )}
+                      );
+                    }
+
+                    return (
+                      <div className="space-y-2">
+                        {allFiles.map((fileUrl, idx) => {
+                          const fileName = fileUrl.split("/").pop() || `Asset-${idx + 1}`;
+                          const ext = fileName.split(".").pop()?.toUpperCase() || "FILE";
+
+                          return (
+                            <div
+                              key={idx}
+                              className="p-3 rounded-xl bg-white border border-[#ECEEF2] flex items-center justify-between text-xs shadow-2xs hover:border-[#CBD5E1] transition-all gap-2"
+                            >
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <span className="px-2 py-0.5 rounded-md font-mono text-[10px] font-bold bg-[#F3F4F6] text-[#1F2937] border border-[#E5E7EB]">
+                                  {ext}
+                                </span>
+                                <span className="font-semibold text-[#111827] truncate font-mono text-xs">
+                                  {fileName}
+                                </span>
+                              </div>
+
+                              <div className="flex items-center gap-2 shrink-0">
+                                <a
+                                  href={fileUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="px-2 py-1 rounded-md text-[11px] font-semibold bg-[#00A86B]/10 text-[#00A86B] hover:bg-[#00A86B]/20 flex items-center gap-1 transition-colors"
+                                >
+                                  <ExternalLink className="w-3 h-3" />
+                                  <span>View</span>
+                                </a>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveAsset(fileUrl)}
+                                  className="p-1 rounded text-[#9CA3AF] hover:text-red-500 transition-colors"
+                                  title="Remove File"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
             </OpsCard>
@@ -440,19 +745,19 @@ export default function OpsOrderDetailPage() {
             <OpsCard title="Logistics & Dispatch Information">
               <div className="space-y-3 text-xs">
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="p-2.5 rounded bg-[#0b0d13] border border-[#1e2230]">
-                    <span className="text-[10px] text-slate-500 block uppercase">
+                  <div className="p-3.5 rounded-xl bg-[#F8F9FB] border border-[#ECEEF2]">
+                    <span className="text-[10px] text-[#9CA3AF] block font-semibold uppercase">
                       Courier Partner
                     </span>
-                    <span className="font-semibold text-slate-200">
+                    <span className="font-bold text-[#111827] mt-0.5 block">
                       {order.courierName || "Bigship Logistics (Pending Booking)"}
                     </span>
                   </div>
-                  <div className="p-2.5 rounded bg-[#0b0d13] border border-[#1e2230]">
-                    <span className="text-[10px] text-slate-500 block uppercase">
+                  <div className="p-3.5 rounded-xl bg-[#F8F9FB] border border-[#ECEEF2]">
+                    <span className="text-[10px] text-[#9CA3AF] block font-semibold uppercase">
                       AWB / Tracking Number
                     </span>
-                    <span className="font-mono font-semibold text-slate-200">
+                    <span className="font-mono font-bold text-[#111827] mt-0.5 block">
                       {order.awbNumber || "Not generated yet"}
                     </span>
                   </div>
@@ -464,9 +769,9 @@ export default function OpsOrderDetailPage() {
                       href={order.labelUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="px-3 py-1.5 rounded bg-[#1c202d] text-slate-200 border border-[#2a3044] hover:bg-[#252b3d] flex items-center gap-1.5"
+                      className="px-4 py-2.5 rounded-full bg-white text-[#111827] border border-[#ECEEF2] hover:bg-[#F4F6F9] flex items-center gap-2 text-xs font-semibold shadow-xs transition-colors"
                     >
-                      <Download className="w-3.5 h-3.5" />
+                      <Download className="w-4 h-4 text-[#00A86B]" />
                       <span>Download Shipping Label</span>
                     </a>
                   </div>
@@ -494,30 +799,30 @@ export default function OpsOrderDetailPage() {
             <OpsCard title="Stage Execution Runs">
               <div className="space-y-2.5 max-h-96 overflow-y-auto pr-1">
                 {order.stageExecutions.length === 0 ? (
-                  <div className="text-xs text-slate-500 text-center py-4">
+                  <div className="text-xs text-[#9CA3AF] text-center py-4 italic">
                     No stage executions recorded yet.
                   </div>
                 ) : (
                   order.stageExecutions.map((exec) => (
                     <div
                       key={exec.id}
-                      className="p-2.5 rounded bg-[#0b0d13] border border-[#1e2230] text-xs"
+                      className="p-3.5 rounded-xl bg-[#F8F9FB] border border-[#ECEEF2] text-xs space-y-1.5"
                     >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-semibold text-slate-200">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-[#111827] font-mono">
                           {exec.stage} (Iteration #{exec.iteration})
                         </span>
                         <OpsBadge status={exec.status} size="sm" />
                       </div>
-                      <div className="text-[11px] text-slate-400">
-                        Operator: <strong className="text-slate-300">{exec.employeeName}</strong>
+                      <div className="text-[11px] text-[#6B7280]">
+                        Operator: <strong className="text-[#111827]">{exec.employeeName}</strong>
                       </div>
                       {exec.notes && (
-                        <p className="text-[11px] text-slate-300 mt-1 italic">
+                        <p className="text-[11px] text-[#4B5563] italic bg-white p-2.5 rounded-lg border border-[#ECEEF2]">
                           "{exec.notes}"
                         </p>
                       )}
-                      <div className="text-[10px] text-slate-500 mt-1.5 flex justify-between">
+                      <div className="text-[10px] text-[#9CA3AF] font-mono pt-1 flex justify-between">
                         <span>
                           {new Date(exec.createdAt).toLocaleDateString("en-IN", {
                             day: "numeric",
@@ -541,9 +846,19 @@ export default function OpsOrderDetailPage() {
         orderId={order.id}
         orderNumber={order.orderNumber}
         currentStage={order.opsStage}
+        totalAmount={order.totalAmount}
+        amountPaid={order.amountPaid}
         isOpen={isAdvanceModalOpen}
         onClose={() => setIsAdvanceModalOpen(false)}
         onSuccess={fetchOrderDetail}
+      />
+
+      {/* Task Assignment Modal for Workers */}
+      <TaskAssignmentModal
+        order={order}
+        isOpen={isTaskModalOpen}
+        onClose={() => setIsTaskModalOpen(false)}
+        onTaskAssigned={fetchOrderDetail}
       />
 
       {/* Defect / Rework Modal */}

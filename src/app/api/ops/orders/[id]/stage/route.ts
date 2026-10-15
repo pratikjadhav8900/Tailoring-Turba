@@ -170,13 +170,17 @@ export async function POST(
       });
     }
 
-    // 2. Standard Stage Progression Validation
+    // 2. Standard Stage Progression Validation (includes 60% advance payment rule)
     const validation = validateStageTransition(
       currentStage,
       targetStage,
       currentStatus,
       isOverride,
-      overrideReason
+      overrideReason,
+      {
+        totalAmount: order.totalAmount,
+        amountPaid: order.amountPaid || 0,
+      }
     );
 
     if (!validation.allowed) {
@@ -184,6 +188,7 @@ export async function POST(
         {
           error: validation.error,
           isOverrideRequired: validation.isOverrideRequired,
+          isPaymentBlocked: validation.isPaymentBlocked,
         },
         { status: 400 }
       );

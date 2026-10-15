@@ -65,19 +65,19 @@ export const ResourceAllocationModal: React.FC<ResourceAllocationModalProps> = (
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-      <div className="w-full max-w-lg bg-[#10121a] border border-[#1e2230] rounded-lg shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#171916]/60 backdrop-blur-sm">
+      <div className="w-full max-w-lg bg-white border border-[#e2e0d8] rounded-lg shadow-2xl overflow-hidden">
         {/* Header */}
-        <div className="px-5 py-3.5 border-b border-[#1e2230] flex items-center justify-between">
-          <div className="flex items-center gap-2 text-amber-500">
+        <div className="px-5 py-3.5 border-b border-[#e2e0d8] flex items-center justify-between bg-[#FAF9F5]">
+          <div className="flex items-center gap-2 text-[#294238]">
             <Layers className="w-4 h-4 shrink-0" />
-            <h3 className="text-sm font-semibold text-slate-100">
+            <h3 className="text-sm font-bold text-[#171916] font-mono uppercase tracking-wider">
               Resource & Fabric Allocation — TT-{orderNumber}
             </h3>
           </div>
           <button
             onClick={onClose}
-            className="p-1 text-slate-400 hover:text-slate-100 rounded"
+            className="p-1 text-[#829386] hover:text-[#171916] rounded"
           >
             <X className="w-4 h-4" />
           </button>
@@ -86,14 +86,14 @@ export const ResourceAllocationModal: React.FC<ResourceAllocationModalProps> = (
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-5 space-y-3.5">
           {error && (
-            <div className="p-3 rounded bg-red-500/10 border border-red-500/30 text-red-400 text-xs">
+            <div className="p-3 rounded bg-[#8b2020]/10 border border-[#8b2020]/30 text-[#8b2020] text-xs font-mono font-medium">
               {error}
             </div>
           )}
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">
+              <label className="block text-xs font-semibold text-[#171916] mb-1 font-mono uppercase text-[11px]">
                 Fabric Supplier
               </label>
               <input
@@ -101,11 +101,11 @@ export const ResourceAllocationModal: React.FC<ResourceAllocationModalProps> = (
                 value={fabricSupplier}
                 onChange={(e) => setFabricSupplier(e.target.value)}
                 placeholder="e.g. Vardhman Mills"
-                className="w-full bg-[#0b0d13] border border-[#1e2230] focus:border-amber-500 rounded p-2 text-xs text-slate-100 outline-none"
+                className="w-full bg-[#FAF9F5] border border-[#e2e0d8] focus:border-[#294238] focus:bg-white rounded p-2 text-xs text-[#171916] outline-none font-sans"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">
+              <label className="block text-xs font-semibold text-[#171916] mb-1 font-mono uppercase text-[11px]">
                 Roll / Batch #
               </label>
               <input
@@ -113,14 +113,14 @@ export const ResourceAllocationModal: React.FC<ResourceAllocationModalProps> = (
                 value={fabricBatchNumber}
                 onChange={(e) => setFabricBatchNumber(e.target.value)}
                 placeholder="e.g. ROLL-884A"
-                className="w-full bg-[#0b0d13] border border-[#1e2230] focus:border-amber-500 rounded p-2 text-xs text-slate-100 outline-none"
+                className="w-full bg-[#FAF9F5] border border-[#e2e0d8] focus:border-[#294238] focus:bg-white rounded p-2 text-xs text-[#171916] font-mono outline-none"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">
+              <label className="block text-xs font-semibold text-[#171916] mb-1 font-mono uppercase text-[11px]">
                 Allocated Meters
               </label>
               <input
@@ -129,11 +129,11 @@ export const ResourceAllocationModal: React.FC<ResourceAllocationModalProps> = (
                 value={metersAllocated}
                 onChange={(e) => setMetersAllocated(e.target.value)}
                 placeholder="e.g. 45.5"
-                className="w-full bg-[#0b0d13] border border-[#1e2230] focus:border-amber-500 rounded p-2 text-xs text-slate-100 outline-none"
+                className="w-full bg-[#FAF9F5] border border-[#e2e0d8] focus:border-[#294238] focus:bg-white rounded p-2 text-xs text-[#171916] font-mono outline-none"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">
+              <label className="block text-xs font-semibold text-[#171916] mb-1 font-mono uppercase text-[11px]">
                 Thread Color Code
               </label>
               <input
@@ -141,26 +141,26 @@ export const ResourceAllocationModal: React.FC<ResourceAllocationModalProps> = (
                 value={threadColorCode}
                 onChange={(e) => setThreadColorCode(e.target.value)}
                 placeholder="e.g. Coats #1094 Navy"
-                className="w-full bg-[#0b0d13] border border-[#1e2230] focus:border-amber-500 rounded p-2 text-xs text-slate-100 outline-none"
+                className="w-full bg-[#FAF9F5] border border-[#e2e0d8] focus:border-[#294238] focus:bg-white rounded p-2 text-xs text-[#171916] font-mono outline-none"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1">
+            <label className="block text-xs font-semibold text-[#171916] mb-1 font-mono uppercase text-[11px]">
               Trims & Accessories Allocated
             </label>
             <input
-              type="text"
-              value={trimsAllocated}
-              onChange={(e) => setTrimsAllocated(e.target.value)}
-              placeholder="e.g. Ribbed collars, woven neck labels, size tags"
-              className="w-full bg-[#0b0d13] border border-[#1e2230] focus:border-amber-500 rounded p-2 text-xs text-slate-100 outline-none"
+                type="text"
+                value={trimsAllocated}
+                onChange={(e) => setTrimsAllocated(e.target.value)}
+                placeholder="e.g. Ribbed collars, woven neck labels, size tags"
+                className="w-full bg-[#FAF9F5] border border-[#e2e0d8] focus:border-[#294238] focus:bg-white rounded p-2 text-xs text-[#171916] font-sans outline-none"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1">
+            <label className="block text-xs font-semibold text-[#171916] mb-1 font-mono uppercase text-[11px]">
               Notes
             </label>
             <textarea
@@ -168,11 +168,11 @@ export const ResourceAllocationModal: React.FC<ResourceAllocationModalProps> = (
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="e.g. Fabric inspected for GSM consistency and shade variation..."
-              className="w-full bg-[#0b0d13] border border-[#1e2230] focus:border-amber-500 rounded p-2 text-xs text-slate-100 outline-none resize-none"
+              className="w-full bg-[#FAF9F5] border border-[#e2e0d8] focus:border-[#294238] focus:bg-white rounded p-2 text-xs text-[#171916] font-sans outline-none resize-none"
             />
           </div>
 
-          <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#1e2230]">
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#e2e0d8]">
             <OpsButton type="button" variant="ghost" size="sm" onClick={onClose}>
               Cancel
             </OpsButton>

@@ -14,6 +14,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const stage = searchParams.get("stage") as OpsProductionStage | "ALL" | "ACTIVE" | null;
     const priority = searchParams.get("priority");
+    const source = searchParams.get("source");
     const search = searchParams.get("search")?.trim();
     const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "25", 10)));
@@ -33,6 +34,11 @@ export async function GET(req: NextRequest) {
     // Filter by priority
     if (priority && priority !== "ALL") {
       where.priority = priority;
+    }
+
+    // Filter by lead source (e.g. WHATSAPP, NATURAL, WEBSITE, PHONE, INSTAGRAM)
+    if (source && source !== "ALL") {
+      where.orderSource = source;
     }
 
     // Search by orderNumber, customer name, email, or phone
@@ -113,15 +119,17 @@ export async function GET(req: NextRequest) {
           }
         }
 
+        const customGarmentName = customState?.productName || item.product?.name || "Garment";
+
         return {
           id: item.id,
           orderId: item.orderId,
           productId: item.productId,
-          productName: item.product?.name || "Garment",
+          productName: customGarmentName,
           productSku: item.product?.sku,
-          fabric: item.product?.fabric,
-          gsm: item.product?.gsm,
-          fit: item.product?.fit,
+          fabric: customState?.fabric || item.product?.fabric,
+          gsm: customState?.gsm || item.product?.gsm,
+          fit: customState?.fit || item.product?.fit,
           quantity: item.quantity,
           price: item.price,
           customState,
@@ -242,10 +250,18 @@ export async function POST(req: NextRequest) {
       customerEmail,
       customerName,
       customerPhone,
+      customerCompanyName,
+      customerGstNumber,
+      shippingAddress, // { name, street, city, state, postalCode, country }
       items,
       dueDate,
       priority = "NORMAL",
+      orderSource = "WHATSAPP", // Lead Source: WHATSAPP, NATURAL, WEBSITE, PHONE, INSTAGRAM, REFERRAL, etc.
+      initialStage = "NEW_ORDER",
+      amountPaid = 0,
+      totalAmount: customTotalAmount,
       internalNote,
+      productionAssets = [],
     } = body;
 
     if (!items || !Array.isArray(items) || items.length === 0) {
@@ -255,20 +271,48 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Resolve or find User for the order
+    // 1. Resolve or find/create User for the customer
     let targetUserId = customerId;
-    if (!targetUserId && customerEmail) {
-      const existingUser = await prisma.user.findUnique({
-        where: { email: customerEmail },
-      });
+    if (!targetUserId) {
+      let existingUser = null;
+      if (customerPhone) {
+        existingUser = await prisma.user.findFirst({
+          where: { phone: customerPhone.trim() },
+        });
+      }
+      if (!existingUser && customerEmail) {
+        existingUser = await prisma.user.findFirst({
+          where: { email: { equals: customerEmail.trim(), mode: "insensitive" } },
+        });
+      }
+
       if (existingUser) {
         targetUserId = existingUser.id;
+        // Enrich user info if newly provided
+        const updateData: any = {};
+        if (customerCompanyName && !existingUser.companyName) updateData.companyName = customerCompanyName.trim();
+        if (customerGstNumber && !existingUser.gstNumber) updateData.gstNumber = customerGstNumber.trim();
+        if (customerName && existingUser.name === "Customer") updateData.name = customerName.trim();
+        if (customerPhone && !existingUser.phone) updateData.phone = customerPhone.trim();
+        if (Object.keys(updateData).length > 0) {
+          await prisma.user.update({
+            where: { id: existingUser.id },
+            data: updateData,
+          });
+        }
       } else {
+        const phoneClean = customerPhone ? customerPhone.replace(/\D/g, "") : "";
+        const fallbackEmail = customerEmail && customerEmail.trim()
+          ? customerEmail.trim().toLowerCase()
+          : `direct-${phoneClean || Date.now()}@orders.tailoringturba.com`;
+
         const newUser = await prisma.user.create({
           data: {
-            email: customerEmail,
-            name: customerName || "Customer",
-            phone: customerPhone,
+            email: fallbackEmail,
+            name: customerName?.trim() || "B2B Customer",
+            phone: customerPhone?.trim() || null,
+            companyName: customerCompanyName?.trim() || null,
+            gstNumber: customerGstNumber?.trim() || null,
             role: "USER",
           },
         });
@@ -277,18 +321,35 @@ export async function POST(req: NextRequest) {
     }
 
     if (!targetUserId) {
-      // Fallback: assign to the current employee user if no customer specified
       targetUserId = auth.context.userId;
     }
 
-    // Calculate total quantity and amount
-    const totalQuantity = items.reduce((sum: number, it: any) => sum + (it.quantity || 1), 0);
-    const totalAmount = items.reduce(
-      (sum: number, it: any) => sum + (it.price || 0) * (it.quantity || 1),
+    // 2. Resolve default product fallback for relational integrity
+    const fallbackProduct = await prisma.product.findFirst({
+      select: { id: true, name: true, basePrice: true },
+    });
+
+    if (!fallbackProduct) {
+      return NextResponse.json(
+        { error: "No products exist in database to link order items." },
+        { status: 500 }
+      );
+    }
+
+    // 3. Calculate total quantity and amount
+    const totalQuantity = items.reduce((sum: number, it: any) => sum + (Number(it.quantity) || 1), 0);
+    const computedTotalAmount = items.reduce(
+      (sum: number, it: any) => sum + (Number(it.price) || 0) * (Number(it.quantity) || 1),
       0
     );
+    const finalTotalAmount = customTotalAmount !== undefined && customTotalAmount !== null && Number(customTotalAmount) > 0
+      ? Number(customTotalAmount)
+      : computedTotalAmount;
 
-    // Compute placeholder dueDate if not explicitly provided
+    const parsedAmountPaid = Math.max(0, Number(amountPaid) || 0);
+    const remainingAmount = Math.max(0, finalTotalAmount - parsedAmountPaid);
+
+    // 4. Compute delivery date
     let finalDueDate: Date | null = null;
     if (dueDate) {
       finalDueDate = new Date(dueDate);
@@ -297,29 +358,73 @@ export async function POST(req: NextRequest) {
       finalDueDate = new Date(Date.now() + maxDays * 24 * 60 * 60 * 1000);
     }
 
-    // Transactionally create Order, Items, initial Stage Execution, and Timeline
+    // 5. Handle shipping address if provided
+    let shippingAddressId: string | null = null;
+    if (shippingAddress && (shippingAddress.street || shippingAddress.city)) {
+      const addr = await prisma.address.create({
+        data: {
+          userId: targetUserId,
+          name: shippingAddress.name || customerName || "Customer",
+          street: shippingAddress.street || "",
+          city: shippingAddress.city || "",
+          state: shippingAddress.state || "",
+          postalCode: shippingAddress.postalCode || "",
+          country: shippingAddress.country || "India",
+          updatedAt: new Date(),
+        },
+      });
+      shippingAddressId = addr.id;
+    }
+
+    // 6. Transactionally create Order, OrderItems, Stage Execution, Timeline & Notification
     const newOrder = await prisma.$transaction(async (tx) => {
       const order = await tx.order.create({
         data: {
           userId: targetUserId,
-          totalAmount,
-          status: "CONFIRMED",
-          amountPaid: 0,
-          remainingAmount: totalAmount,
-          // CRITICAL REQUIREMENT: Explicitly set opsStage to NEW_ORDER and orderSource to MANUAL_OPS
-          opsStage: "NEW_ORDER",
-          orderSource: "MANUAL_OPS",
+          totalAmount: finalTotalAmount,
+          status: parsedAmountPaid >= finalTotalAmount ? "CONFIRMED" : "PENDING",
+          amountPaid: parsedAmountPaid,
+          remainingAmount,
+          isSplitPayment: parsedAmountPaid > 0 && remainingAmount > 0,
+          shippingAddressId,
+          opsStage: initialStage || "NEW_ORDER",
+          orderSource: orderSource.trim().toUpperCase(),
           dueDate: finalDueDate,
           priority: priority || "NORMAL",
           items: {
-            create: items.map((it: any) => ({
-              productId: it.productId,
-              quantity: it.quantity || 1,
-              price: it.price || 0,
-              customStateJson: it.customState ? JSON.stringify(it.customState) : null,
-              printFiles: it.printFiles || [],
-              mockupUrl: it.mockupUrl || null,
-            })),
+            create: items.map((it: any) => {
+              const itemProductId = it.productId || fallbackProduct.id;
+              const customState = {
+                productName: it.productName || it.name || "Custom Garment",
+                sizes: it.sizeBreakdown || it.sizes || null,
+                fabric: it.fabric || null,
+                brand: it.brand || null,
+                garmentType: it.garmentType || null,
+                color: it.color || null,
+                logoRequired: it.logoRequired ?? null,
+                logoName: it.logoName || null,
+                logoType: it.logoType || null,
+                logoPosition: it.logoPosition || null,
+                sizeRange: it.sizeRange || null,
+                sizeNote: it.sizeNote || null,
+                branding: it.branding || null,
+                notes: it.notes || it.sizeNote || null,
+              };
+
+              return {
+                productId: itemProductId,
+                quantity: Number(it.quantity) || 1,
+                price: Number(it.price) || 0,
+                customStateJson: JSON.stringify(customState),
+                printFiles:
+                  Array.isArray(it.printFiles) && it.printFiles.length > 0
+                    ? it.printFiles
+                    : Array.isArray(productionAssets)
+                    ? productionAssets
+                    : [],
+                mockupUrl: it.mockupUrl || null,
+              };
+            }),
           },
         },
       });
@@ -328,12 +433,12 @@ export async function POST(req: NextRequest) {
       await tx.productionStageExecution.create({
         data: {
           orderId: order.id,
-          stage: "NEW_ORDER",
+          stage: initialStage || "NEW_ORDER",
           status: "IN_PROGRESS",
           iteration: 1,
           employeeId: auth.context.employee.id,
           employeeName: auth.context.employee.name,
-          notes: "Manual order created via Turba Ops",
+          notes: `Order created via Turba Ops (${orderSource.toUpperCase()} intake)`,
           startedAt: new Date(),
         },
       });
@@ -346,6 +451,7 @@ export async function POST(req: NextRequest) {
             employeeId: auth.context.employee.id,
             employeeName: auth.context.employee.name,
             note: internalNote.trim(),
+            isPinned: true,
           },
         });
       }
@@ -355,17 +461,20 @@ export async function POST(req: NextRequest) {
         data: {
           orderId: order.id,
           eventType: "OPS_ORDER_CREATED",
-          title: "Order Created in Turba Ops",
-          description: `Order TT-${order.orderNumber} manually entered by ${auth.context.employee.name}`,
+          title: `Order TT-${order.orderNumber} Created`,
+          description: `Direct intake recorded by ${auth.context.employee.name} via ${orderSource.toUpperCase()}`,
           actorId: auth.context.employee.id,
           actorName: auth.context.employee.name,
           actorRole: "EMPLOYEE",
           isCustomerVisible: false,
           metadata: {
-            orderSource: "MANUAL_OPS",
+            orderSource: orderSource.toUpperCase(),
             totalQuantity,
-            totalAmount,
+            totalAmount: finalTotalAmount,
+            amountPaid: parsedAmountPaid,
+            remainingAmount,
             priority,
+            productionAssets: Array.isArray(productionAssets) ? productionAssets : [],
           },
         },
       });
@@ -376,10 +485,10 @@ export async function POST(req: NextRequest) {
           orderId: order.id,
           orderNumber: order.orderNumber,
           type: "STAGE_CHANGE",
-          title: `New Order TT-${order.orderNumber}`,
-          message: `Order TT-${order.orderNumber} entered into New Order by ${auth.context.employee.name}`,
+          title: `New Order TT-${order.orderNumber} (${orderSource.toUpperCase()})`,
+          message: `Direct order TT-${order.orderNumber} (${totalQuantity} pcs) entered by ${auth.context.employee.name}`,
           actorName: auth.context.employee.name,
-          readBy: [auth.context.employee.id], // Creator already acknowledged
+          readBy: [auth.context.employee.id],
         },
       });
 
@@ -394,10 +503,13 @@ export async function POST(req: NextRequest) {
         formattedOrderNumber: `TT-${newOrder.orderNumber}`,
         opsStage: newOrder.opsStage,
         orderSource: newOrder.orderSource,
+        totalAmount: newOrder.totalAmount,
+        amountPaid: newOrder.amountPaid,
+        remainingAmount: newOrder.remainingAmount,
       },
     });
   } catch (error: any) {
     console.error("[OPS_CREATE_ORDER_ERROR]", error);
-    return NextResponse.json({ error: "Failed to create manual order" }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Failed to create manual order" }, { status: 500 });
   }
 }

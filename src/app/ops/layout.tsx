@@ -11,5 +11,5 @@ export default function RootOpsLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <div className="ops-root bg-[#090a0f] text-slate-100">{children}</div>;
+  return <div className="ops-root w-full min-h-screen bg-[#FDFDFE] text-[#111827]">{children}</div>;
 }

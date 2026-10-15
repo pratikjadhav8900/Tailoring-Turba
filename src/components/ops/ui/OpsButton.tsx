@@ -2,7 +2,7 @@ import React from "react";
 import { Loader2 } from "lucide-react";
 
 interface OpsButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "danger" | "ghost" | "outline";
+  variant?: "primary" | "secondary" | "danger" | "ghost" | "outline" | "circle";
   size?: "sm" | "md" | "lg";
   isLoading?: boolean;
   leftIcon?: React.ReactNode;
@@ -21,30 +21,32 @@ export const OpsButton: React.FC<OpsButtonProps> = ({
   ...props
 }) => {
   const baseStyles =
-    "inline-flex items-center justify-center font-medium rounded transition-colors focus:outline-none focus:ring-1 focus:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed select-none";
+    "inline-flex items-center justify-center font-semibold transition-all focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed select-none font-sans";
 
   const sizeStyles = {
-    sm: "px-2.5 py-1 text-xs gap-1.5",
-    md: "px-3.5 py-1.5 text-sm gap-2",
-    lg: "px-5 py-2.5 text-base gap-2.5",
+    sm: "px-3.5 py-1.5 text-xs gap-1.5 rounded-full",
+    md: "px-5 py-2.5 text-xs gap-2 rounded-full",
+    lg: "px-6 py-3 text-sm gap-2.5 rounded-full",
   }[size];
 
   const variantStyles = {
     primary:
-      "bg-amber-600 hover:bg-amber-500 text-white border border-amber-500/50 shadow-sm",
+      "bg-[#00A86B] hover:bg-[#00925d] text-white shadow-md shadow-[#00A86B]/20 active:scale-98",
     secondary:
-      "bg-[#1c202d] hover:bg-[#252b3d] text-slate-200 border border-[#2a3044]",
+      "bg-[#F4F6F9] hover:bg-[#E5E8ED] text-[#111827] border border-[#ECEEF2]",
     danger:
-      "bg-red-600/90 hover:bg-red-600 text-white border border-red-500/50",
+      "bg-[#EF4444] hover:bg-[#DC2626] text-white shadow-sm",
     ghost:
-      "bg-transparent hover:bg-white/5 text-slate-300 hover:text-white",
+      "bg-transparent hover:bg-[#F4F6F9] text-[#6B7280] hover:text-[#111827]",
     outline:
-      "bg-transparent hover:bg-white/5 text-slate-200 border border-slate-700",
+      "bg-white hover:bg-[#F9FAFB] text-[#111827] border border-[#ECEEF2] shadow-xs",
+    circle:
+      "w-9 h-9 p-0 rounded-full bg-[#F4F6F9] hover:bg-[#E5E8ED] text-[#4B5563] hover:text-[#111827]",
   }[variant];
 
   return (
     <button
-      className={`${baseStyles} ${sizeStyles} ${variantStyles} ${className}`}
+      className={`${baseStyles} ${variant === "circle" ? variantStyles : `${sizeStyles} ${variantStyles}`} ${className}`}
       disabled={disabled || isLoading}
       {...props}
     >

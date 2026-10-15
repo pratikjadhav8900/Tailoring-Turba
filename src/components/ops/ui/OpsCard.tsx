@@ -20,24 +20,26 @@ export const OpsCard: React.FC<OpsCardProps> = ({
 }) => {
   const paddingClass = {
     none: "",
-    sm: "p-3",
-    md: "p-4.5",
-    lg: "p-6",
+    sm: "p-4",
+    md: "p-5 sm:p-6",
+    lg: "p-6 sm:p-7",
   }[padding];
 
   return (
     <div
-      className={`bg-[#10121a] border border-[#1e2230] rounded-lg shadow-sm ${className}`}
+      className={`bg-white border border-[#ECEEF2] rounded-[22px] shadow-[0_2px_12px_rgba(0,0,0,0.02)] ${className}`}
       {...props}
     >
       {(title || headerAction) && (
-        <div className="px-4.5 py-3 border-b border-[#1e2230] flex items-center justify-between">
+        <div className="px-5 sm:px-6 pt-5 pb-3 flex items-center justify-between">
           <div>
             {title && (
-              <h3 className="text-sm font-semibold text-slate-100">{title}</h3>
+              <h3 className="text-sm sm:text-base font-bold text-[#111827] font-sans">
+                {title}
+              </h3>
             )}
             {subtitle && (
-              <p className="text-xs text-slate-400 mt-0.5">{subtitle}</p>
+              <p className="text-xs text-[#9CA3AF] mt-0.5">{subtitle}</p>
             )}
           </div>
           {headerAction && <div>{headerAction}</div>}

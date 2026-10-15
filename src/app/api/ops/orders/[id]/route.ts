@@ -83,11 +83,11 @@ export async function GET(
         id: item.id,
         orderId: item.orderId,
         productId: item.productId,
-        productName: item.product?.name || "Garment",
+        productName: customState?.productName || item.product?.name || "Garment",
         productSku: item.product?.sku,
-        fabric: item.product?.fabric,
-        gsm: item.product?.gsm,
-        fit: item.product?.fit,
+        fabric: customState?.fabric || item.product?.fabric,
+        gsm: customState?.gsm || item.product?.gsm,
+        fit: customState?.garmentType || item.product?.fit,
         quantity: item.quantity,
         price: item.price,
         customState,
@@ -247,6 +247,45 @@ export async function PATCH(
         from: existingOrder.priority,
         to: priority,
       };
+    }
+
+    if (Array.isArray(body.newPrintFiles) && body.newPrintFiles.length > 0) {
+      const items = await prisma.orderItem.findMany({
+        where: { orderId: existingOrder.id },
+        select: { id: true, printFiles: true },
+      });
+      for (const it of items) {
+        const combined = Array.from(new Set([...it.printFiles, ...body.newPrintFiles]));
+        await prisma.orderItem.update({
+          where: { id: it.id },
+          data: { printFiles: combined },
+        });
+      }
+      auditChanges.printFiles = { from: "previous", to: body.newPrintFiles };
+    }
+
+    if (typeof body.removePrintFile === "string" && body.removePrintFile.trim()) {
+      const fileToRemove = body.removePrintFile.trim();
+      const items = await prisma.orderItem.findMany({
+        where: { orderId: existingOrder.id },
+        select: { id: true, printFiles: true },
+      });
+      for (const it of items) {
+        const filtered = it.printFiles.filter((f) => f !== fileToRemove);
+        await prisma.orderItem.update({
+          where: { id: it.id },
+          data: { printFiles: filtered },
+        });
+      }
+      auditChanges.removePrintFile = { from: fileToRemove, to: "removed" };
+    }
+
+    if (typeof body.newMockupUrl === "string" && body.newMockupUrl.trim()) {
+      await prisma.orderItem.updateMany({
+        where: { orderId: existingOrder.id },
+        data: { mockupUrl: body.newMockupUrl.trim() },
+      });
+      auditChanges.mockupUrl = { from: "previous", to: body.newMockupUrl };
     }
 
     const updated = await prisma.$transaction(async (tx) => {

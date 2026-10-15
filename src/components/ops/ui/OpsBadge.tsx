@@ -6,8 +6,8 @@ interface OpsBadgeProps {
   stage?: OpsProductionStage | null;
   status?: OpsStageStatus;
   priority?: OpsPriority;
+  source?: string | null;
   text?: string;
-  variant?: "stage" | "status" | "priority" | "neutral" | "warning" | "danger" | "success";
   size?: "sm" | "md";
   className?: string;
 }
@@ -16,116 +16,150 @@ export const OpsBadge: React.FC<OpsBadgeProps> = ({
   stage,
   status,
   priority,
+  source,
   text,
-  variant,
   size = "md",
   className = "",
 }) => {
   let label = text || "";
-  let bg = "rgba(148, 163, 184, 0.1)";
-  let border = "rgba(148, 163, 184, 0.25)";
-  let color = "#cbd5e1";
+  let bg = "#F4F6F9";
+  let border = "#E5E8ED";
+  let color = "#4B5563";
 
-  if (stage) {
+  if (source) {
+    const s = source.toUpperCase();
+    switch (s) {
+      case "WHATSAPP":
+        label = "WhatsApp";
+        bg = "#ECFDF5";
+        border = "#A7F3D0";
+        color = "#059669";
+        break;
+      case "NATURAL":
+      case "WALK_IN":
+      case "DIRECT":
+        label = "Natural / Direct";
+        bg = "#EFF6FF";
+        border = "#BFDBFE";
+        color = "#2563EB";
+        break;
+      case "WEBSITE":
+        label = "Website";
+        bg = "#F3F4F6";
+        border = "#E5E7EB";
+        color = "#4B5563";
+        break;
+      case "PHONE":
+      case "CALL":
+        label = "Phone Call";
+        bg = "#FFFBEB";
+        border = "#FDE68A";
+        color = "#D97706";
+        break;
+      case "INSTAGRAM":
+      case "SOCIAL":
+        label = "Instagram";
+        bg = "#FDF2F8";
+        border = "#FBCFE8";
+        color = "#DB2777";
+        break;
+      case "REFERRAL":
+        label = "Referral";
+        bg = "#F5F3FF";
+        border = "#DDD6FE";
+        color = "#7C3AED";
+        break;
+      case "TURBA_AI":
+        label = "Turba AI";
+        bg = "#F0FDF4";
+        border = "#BBF7D0";
+        color = "#16A34A";
+        break;
+      case "MANUAL_OPS":
+        label = "Manual Intake";
+        bg = "#F8FAFC";
+        border = "#E2E8F0";
+        color = "#475569";
+        break;
+      default:
+        label = source;
+        bg = "#F4F6F9";
+        border = "#E5E8ED";
+        color = "#4B5563";
+        break;
+    }
+  } else if (stage) {
     label = STAGE_DISPLAY_NAMES[stage] || stage;
     switch (stage) {
       case "NEW_ORDER":
-        bg = "rgba(148, 163, 184, 0.12)";
-        border = "rgba(148, 163, 184, 0.3)";
-        color = "#e2e8f0";
+        bg = "#F4F6F9";
+        border = "#E5E8ED";
+        color = "#4B5563";
         break;
       case "ORDER_CONFIRMED":
-        bg = "rgba(14, 165, 233, 0.12)";
-        border = "rgba(14, 165, 233, 0.3)";
-        color = "#38bdf8";
-        break;
       case "RESOURCE_FABRIC":
-        bg = "rgba(217, 119, 6, 0.12)";
-        border = "rgba(217, 119, 6, 0.3)";
-        color = "#fbbf24";
-        break;
       case "CUTTING":
-        bg = "rgba(234, 88, 12, 0.12)";
-        border = "rgba(234, 88, 12, 0.3)";
-        color = "#fb923c";
-        break;
       case "STITCHING":
-        bg = "rgba(59, 130, 246, 0.12)";
-        border = "rgba(59, 130, 246, 0.3)";
-        color = "#60a5fa";
-        break;
       case "BRANDING_PRINTING":
-        bg = "rgba(168, 85, 247, 0.12)";
-        border = "rgba(168, 85, 247, 0.3)";
-        color = "#c084fc";
+        bg = "#E6F7F0";
+        border = "#B3E8D3";
+        color = "#00A86B";
         break;
       case "QUALITY_CHECK":
-        bg = "rgba(244, 63, 94, 0.12)";
-        border = "rgba(244, 63, 94, 0.3)";
-        color = "#fb7185";
+        bg = "#FEF2F2";
+        border = "#FECACA";
+        color = "#EF4444";
         break;
       case "PACKING":
-        bg = "rgba(20, 184, 166, 0.12)";
-        border = "rgba(20, 184, 166, 0.3)";
-        color = "#2dd4bf";
-        break;
       case "READY_FOR_DISPATCH":
-        bg = "rgba(16, 185, 129, 0.12)";
-        border = "rgba(16, 185, 129, 0.3)";
-        color = "#34d399";
-        break;
       case "DISPATCHED":
-        bg = "rgba(16, 185, 129, 0.2)";
-        border = "rgba(16, 185, 129, 0.4)";
-        color = "#10b981";
-        break;
       case "CLOSED":
-        bg = "rgba(100, 116, 139, 0.15)";
-        border = "rgba(100, 116, 139, 0.3)";
-        color = "#94a3b8";
+        bg = "#ECFDF5";
+        border = "#A7F3D0";
+        color = "#059669";
         break;
     }
   } else if (status) {
-    label = status === "FLAGGED_REWORK" ? "Rework Flagged" : status.replace("_", " ");
+    label = status === "FLAGGED_REWORK" ? "Rework" : status === "COMPLETED" ? "Success" : status === "PENDING" ? "Pending" : "In Progress";
     switch (status) {
       case "PENDING":
-        bg = "rgba(148, 163, 184, 0.12)";
-        border = "rgba(148, 163, 184, 0.25)";
-        color = "#94a3b8";
+        bg = "#FFFBEB";
+        border = "#FDE68A";
+        color = "#D97706";
         break;
       case "IN_PROGRESS":
-        bg = "rgba(59, 130, 246, 0.12)";
-        border = "rgba(59, 130, 246, 0.3)";
-        color = "#60a5fa";
+        bg = "#E6F7F0";
+        border = "#B3E8D3";
+        color = "#00A86B";
         break;
       case "COMPLETED":
-        bg = "rgba(16, 185, 129, 0.12)";
-        border = "rgba(16, 185, 129, 0.3)";
-        color = "#34d399";
+        bg = "#ECFDF5";
+        border = "#A7F3D0";
+        color = "#059669";
         break;
       case "FLAGGED_REWORK":
-        bg = "rgba(239, 68, 68, 0.15)";
-        border = "rgba(239, 68, 68, 0.4)";
-        color = "#f87171";
+        bg = "#FEF2F2";
+        border = "#FECACA";
+        color = "#DC2626";
         break;
     }
   } else if (priority) {
     label = priority;
     switch (priority) {
       case "NORMAL":
-        bg = "rgba(148, 163, 184, 0.08)";
-        border = "rgba(148, 163, 184, 0.2)";
-        color = "#94a3b8";
+        bg = "#F4F6F9";
+        border = "#E5E8ED";
+        color = "#6B7280";
         break;
       case "URGENT":
-        bg = "rgba(245, 158, 11, 0.15)";
-        border = "rgba(245, 158, 11, 0.35)";
-        color = "#fbbf24";
+        bg = "#FFFBEB";
+        border = "#FDE68A";
+        color = "#D97706";
         break;
       case "RUSH":
-        bg = "rgba(239, 68, 68, 0.18)";
-        border = "rgba(239, 68, 68, 0.45)";
-        color = "#f87171";
+        bg = "#FEF2F2";
+        border = "#FECACA";
+        color = "#EF4444";
         break;
     }
   }
@@ -134,8 +168,8 @@ export const OpsBadge: React.FC<OpsBadgeProps> = ({
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 font-medium rounded ${
-        isSmall ? "px-1.5 py-0.5 text-[11px]" : "px-2.5 py-1 text-xs"
+      className={`inline-flex items-center gap-1.5 font-semibold rounded-full ${
+        isSmall ? "px-2.5 py-0.5 text-[11px]" : "px-3.5 py-1 text-xs"
       } ${className}`}
       style={{
         backgroundColor: bg,
@@ -143,11 +177,10 @@ export const OpsBadge: React.FC<OpsBadgeProps> = ({
         borderWidth: "1px",
         borderStyle: "solid",
         color,
-        letterSpacing: "0.01em",
       }}
     >
       {status === "FLAGGED_REWORK" && (
-        <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
+        <span className="w-1.5 h-1.5 rounded-full bg-[#EF4444] animate-pulse" />
       )}
       {label}
     </span>

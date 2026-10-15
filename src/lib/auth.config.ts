@@ -10,6 +10,7 @@ if (!process.env.AUTH_SECRET && process.env.NEXTAUTH_SECRET) {
  * No Prisma, no bcrypt — safe for Next.js Middleware (Edge Runtime).
  */
 export const authConfig: NextAuthConfig = {
+  trustHost: true,
   providers: [], // Providers are added in auth.ts (Node.js only)
   session: { strategy: "jwt" },
   callbacks: {

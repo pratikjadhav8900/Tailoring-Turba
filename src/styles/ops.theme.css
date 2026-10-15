@@ -1,123 +1,162 @@
 /* ============================================================
-   TURBA OPS — INTERNAL PRODUCTION DESIGN SYSTEM
-   Clean, practical, high-density theme for manufacturing ops.
+   TURBA OPS — PREMIUM MODERN DASHBOARD DESIGN SYSTEM
+   Exact aesthetic match to ultra-clean soft-white / coral modern UI.
    ============================================================ */
 
 :root {
   /* Surfaces */
-  --ops-bg-base: #090a0f;
-  --ops-bg-surface: #10121a;
-  --ops-bg-surface-hover: #161922;
-  --ops-bg-card: #13151f;
-  --ops-bg-card-subtle: #0d0f15;
-  --ops-bg-input: #0b0d13;
+  --ops-bg-canvas: #F4F6F9;        /* Soft gray-white background canvas */
+  --ops-bg-surface: #FFFFFF;       /* Pure white floating container & cards */
+  --ops-bg-surface-subtle: #F8F9FB;/* Subtle card / inner container fill */
+  --ops-bg-hover: #F1F3F7;          /* Hover state */
+  --ops-bg-sidebar: #FFFFFF;       /* White sidebar matching reference */
   
   /* Borders */
-  --ops-border-subtle: #1e2230;
-  --ops-border-medium: #2a3044;
-  --ops-border-strong: #3b435f;
+  --ops-border-subtle: #ECEEF2;    /* Ultra-light border */
+  --ops-border-card: #E5E8ED;      /* Card outline */
+  --ops-border-active: #00A86B;    /* Vibrant accent border */
 
   /* Typography */
-  --ops-text-primary: #f8fafc;
-  --ops-text-secondary: #94a3b8;
-  --ops-text-muted: #64748b;
-  --ops-text-inverse: #090a0f;
+  --ops-text-primary: #111827;     /* High contrast deep black */
+  --ops-text-secondary: #4B5563;   /* Slate body */
+  --ops-text-muted: #9CA3AF;       /* Light gray labels */
+  --ops-text-dim: #D1D5DB;         /* Inactive month / grid items */
 
-  /* Brand & Accents */
-  --ops-brand-gold: #d97706;
-  --ops-brand-gold-subtle: rgba(217, 119, 6, 0.12);
-  --ops-accent-blue: #3b82f6;
-  --ops-accent-blue-subtle: rgba(59, 130, 246, 0.12);
-  
-  /* Production Status Accents */
-  --ops-status-pending: #94a3b8;
-  --ops-status-in-progress: #3b82f6;
-  --ops-status-completed: #10b981;
-  --ops-status-rework: #ef4444;
-  --ops-status-urgent: #f59e0b;
+  /* Vibrant Accent (Emerald Green matching login page) */
+  --ops-accent-primary: #00A86B;   /* Vibrant primary emerald green */
+  --ops-accent-hover: #00925D;
+  --ops-accent-light: #E6F7F0;     /* Soft emerald tint */
+  --ops-accent-subtle: #D1F2E5;
 
-  /* Radii */
-  --ops-radius-sm: 4px;
-  --ops-radius-md: 6px;
-  --ops-radius-lg: 8px;
+  /* Status Accents */
+  --ops-success: #10B981;
+  --ops-success-bg: #ECFDF5;
+  --ops-success-border: #A7F3D0;
+  --ops-warning: #F59E0B;
+  --ops-warning-bg: #FFFBEB;
+  --ops-warning-border: #FDE68A;
+  --ops-danger: #EF4444;
+  --ops-danger-bg: #FEF2F2;
+  --ops-danger-border: #FECACA;
+
+  /* Geometry & Shadows */
+  --ops-radius-outer: 28px;
+  --ops-radius-card: 20px;
+  --ops-radius-btn: 14px;
   --ops-radius-pill: 9999px;
+  --ops-shadow-canvas: 0 10px 40px -10px rgba(0, 0, 0, 0.05);
+  --ops-shadow-card: 0 2px 12px rgba(0, 0, 0, 0.02);
+  --ops-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.05);
 
-  /* Font Families */
-  --ops-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --ops-font-mono: 'JetBrains Mono', 'SF Mono', Consolas, Menlo, monospace;
+  /* Fonts */
+  --ops-font-sans: 'General Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --ops-font-mono: 'JetBrains Mono', monospace;
 }
 
 .ops-root {
   min-height: 100vh;
-  background-color: var(--ops-bg-base);
+  width: 100%;
+  background-color: var(--ops-bg-surface);
   color: var(--ops-text-primary);
   font-family: var(--ops-font-sans);
   font-size: 14px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  padding: 0;
+  margin: 0;
 }
 
-/* Scrollbars for ops high-density tables */
+@media (min-width: 1024px) {
+  .ops-root {
+    padding: 0;
+  }
+}
+
+/* App Shell Outer Frame — Full Bleed 100% Screen */
+.ops-app-frame {
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  background: var(--ops-bg-surface);
+  border-radius: 0;
+  box-shadow: none;
+  border: none;
+  overflow: hidden;
+  display: flex;
+}
+
+/* Striped Hatched Chart Bars (matching the reference chart) */
+.hatched-bar {
+  background: repeating-linear-gradient(
+    -45deg,
+    #ECEEF2,
+    #ECEEF2 3px,
+    #F8F9FB 3px,
+    #F8F9FB 6px
+  );
+  border-radius: 12px;
+}
+
+.hatched-bar-active {
+  background: var(--ops-accent-primary);
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(0, 168, 107, 0.35);
+}
+
+/* Clean Modern Table */
+.ops-clean-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 6px;
+  font-size: 13px;
+  text-align: left;
+}
+
+.ops-clean-table th {
+  padding: 8px 16px;
+  color: var(--ops-text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.ops-clean-table td {
+  padding: 14px 16px;
+  background: #FFFFFF;
+  color: var(--ops-text-primary);
+  vertical-align: middle;
+  border-top: 1px solid var(--ops-border-subtle);
+  border-bottom: 1px solid var(--ops-border-subtle);
+}
+
+.ops-clean-table tr td:first-child {
+  border-left: 1px solid var(--ops-border-subtle);
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px;
+}
+
+.ops-clean-table tr td:last-child {
+  border-right: 1px solid var(--ops-border-subtle);
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 12px;
+}
+
+.ops-clean-table tr:hover td {
+  background-color: var(--ops-bg-surface-subtle);
+}
+
+/* Scrollbars */
 .ops-root ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 .ops-root ::-webkit-scrollbar-track {
-  background: var(--ops-bg-base);
+  background: transparent;
 }
 .ops-root ::-webkit-scrollbar-thumb {
-  background: var(--ops-border-medium);
-  border-radius: 3px;
+  background: #D1D5DB;
+  border-radius: 9999px;
 }
 .ops-root ::-webkit-scrollbar-thumb:hover {
-  background: var(--ops-border-strong);
-}
-
-/* High density table styles */
-.ops-table-container {
-  overflow-x: auto;
-  border: 1px solid var(--ops-border-subtle);
-  border-radius: var(--ops-radius-md);
-  background-color: var(--ops-bg-card);
-}
-
-.ops-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-  text-align: left;
-}
-
-.ops-table th {
-  padding: 10px 14px;
-  background-color: var(--ops-bg-surface);
-  color: var(--ops-text-secondary);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  font-size: 11px;
-  border-bottom: 1px solid var(--ops-border-medium);
-  white-space: nowrap;
-}
-
-.ops-table td {
-  padding: 11px 14px;
-  border-bottom: 1px solid var(--ops-border-subtle);
-  color: var(--ops-text-primary);
-  vertical-align: middle;
-}
-
-.ops-table tr:hover td {
-  background-color: var(--ops-bg-surface-hover);
-}
-
-/* Monospace order tag */
-.ops-order-tag {
-  font-family: var(--ops-font-mono);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  padding: 2px 6px;
-  border-radius: 4px;
-  background-color: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--ops-border-subtle);
+  background: #9CA3AF;
 }

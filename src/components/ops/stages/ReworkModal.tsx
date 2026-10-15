@@ -68,19 +68,19 @@ export const ReworkModal: React.FC<ReworkModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-      <div className="w-full max-w-lg bg-[#10121a] border border-red-500/40 rounded-lg shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#171916]/60 backdrop-blur-sm">
+      <div className="w-full max-w-lg bg-white border border-[#e2e0d8] rounded-lg shadow-2xl overflow-hidden">
         {/* Header */}
-        <div className="px-5 py-3.5 bg-red-500/10 border-b border-red-500/30 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-red-400">
+        <div className="px-5 py-3.5 bg-[#8b2020]/10 border-b border-[#8b2020]/25 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-[#8b2020]">
             <AlertTriangle className="w-4 h-4 shrink-0" />
-            <h3 className="text-sm font-semibold text-slate-100">
+            <h3 className="text-sm font-bold text-[#171916] font-mono uppercase tracking-wider">
               Flag Defect & Initiate Rework — TT-{orderNumber}
             </h3>
           </div>
           <button
             onClick={onClose}
-            className="p-1 text-slate-400 hover:text-slate-100 rounded"
+            className="p-1 text-[#829386] hover:text-[#171916] rounded"
           >
             <X className="w-4 h-4" />
           </button>
@@ -89,23 +89,23 @@ export const ReworkModal: React.FC<ReworkModalProps> = ({
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           {error && (
-            <div className="p-3 rounded bg-red-500/10 border border-red-500/30 text-red-400 text-xs">
+            <div className="p-3 rounded bg-[#8b2020]/10 border border-[#8b2020]/30 text-[#8b2020] text-xs font-mono font-medium">
               {error}
             </div>
           )}
 
-          <div className="p-3 rounded bg-red-500/[0.05] border border-red-500/20 text-xs text-red-300 leading-relaxed">
-            Flagging rework marks the order with <strong className="text-red-400">FLAGGED_REWORK</strong> and returns it to the selected production stage with an incremented iteration counter. Once corrected, it will return directly to Quality Inspection.
+          <div className="p-3.5 rounded bg-[#FAF9F5] border border-[#e2e0d8] text-xs text-[#4a4a45] leading-relaxed">
+            Flagging rework marks the order with <strong className="text-[#8b2020] font-mono">FLAGGED_REWORK</strong> and returns it to the selected production stage with an incremented iteration counter. Once corrected, it returns directly to Quality Inspection.
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1.5">
+            <label className="block text-xs font-semibold text-[#171916] mb-1.5 font-mono uppercase text-[11px]">
               Select Defective Stage to Return To
             </label>
             <select
               value={targetStage}
               onChange={(e) => setTargetStage(e.target.value as OpsProductionStage)}
-              className="w-full bg-[#0b0d13] border border-[#1e2230] focus:border-red-500 rounded p-2 text-xs text-slate-100 outline-none"
+              className="w-full bg-[#FAF9F5] border border-[#e2e0d8] focus:border-[#8b2020] focus:bg-white rounded p-2 text-xs text-[#171916] font-mono outline-none"
             >
               {REWORKABLE_STAGES.map((s) => (
                 <option key={s} value={s}>
@@ -116,7 +116,7 @@ export const ReworkModal: React.FC<ReworkModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1.5">
+            <label className="block text-xs font-semibold text-[#171916] mb-1.5 font-mono uppercase text-[11px]">
               Defect & Rework Rationale (Required)
             </label>
             <textarea
@@ -125,11 +125,11 @@ export const ReworkModal: React.FC<ReworkModalProps> = ({
               value={reworkReason}
               onChange={(e) => setReworkReason(e.target.value)}
               placeholder="Detail the specific defects found (e.g. Broken seams along right collar, collar misaligned on 5 size L pieces)..."
-              className="w-full bg-[#0b0d13] border border-[#1e2230] focus:border-red-500 rounded p-2.5 text-xs text-slate-100 placeholder:text-slate-600 outline-none resize-none"
+              className="w-full bg-[#FAF9F5] border border-[#e2e0d8] focus:border-[#8b2020] focus:bg-white rounded p-2.5 text-xs text-[#171916] placeholder:text-[#829386] outline-none resize-none font-sans"
             />
           </div>
 
-          <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#1e2230]">
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#e2e0d8]">
             <OpsButton type="button" variant="ghost" size="sm" onClick={onClose}>
               Cancel
             </OpsButton>

@@ -76,6 +76,13 @@ export async function GET() {
       },
     });
 
+    // 6. Aggregate financial metrics (Rupees)
+    const revenueAgg = await prisma.order.aggregate({
+      _sum: { totalAmount: true },
+      _avg: { totalAmount: true },
+      _count: { _all: true },
+    });
+
     const stats: OpsDashboardStats = {
       totalActiveOrders,
       urgentOrdersCount,
@@ -83,6 +90,9 @@ export async function GET() {
       stageCounts,
       reworkCount,
       completedTodayCount,
+      grossRevenue: Math.round(revenueAgg._sum.totalAmount || 0),
+      avgOrderValue: Math.round(revenueAgg._avg.totalAmount || 0),
+      totalOrdersCount: revenueAgg._count._all || 0,
     };
 
     return NextResponse.json({ stats });
