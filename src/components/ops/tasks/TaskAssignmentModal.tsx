@@ -38,6 +38,50 @@ interface TaskDraft {
   instructions: string;
 }
 
+const STANDARD_WORKER_TASKS: Array<{
+  stage: OpsProductionStage;
+  key: string;
+  title: string;
+  defaultDescription: string;
+}> = [
+  {
+    stage: "RESOURCE_FABRIC",
+    key: "FABRIC_PROCUREMENT",
+    title: "Fabric Procurement",
+    defaultDescription: "Source & verify fabric meterage, color matching & GSM.",
+  },
+  {
+    stage: "RESOURCE_FABRIC",
+    key: "STITCHING",
+    title: "Garment Stitching",
+    defaultDescription: "Pattern cutting and garment stitching per size breakdown.",
+  },
+  {
+    stage: "BRANDING_PRINTING",
+    key: "PRINT_EMBROIDERY",
+    title: "Print / Embroidery",
+    defaultDescription: "Execute printing/embroidery placement with vendor or in-house.",
+  },
+  {
+    stage: "PACKING",
+    key: "KAJE_BUTTON",
+    title: "Kaje Button",
+    defaultDescription: "Execute buttonholes (kaje) and stitch buttons on all pieces.",
+  },
+  {
+    stage: "PACKING",
+    key: "PRESSING_PACKING",
+    title: "Press & Pack",
+    defaultDescription: "Steam press / iron, attach brand tags, polybag packing.",
+  },
+  {
+    stage: "DISPATCHED",
+    key: "DISPATCH",
+    title: "Dispatch Run",
+    defaultDescription: "Weigh carton, generate shipping label / courier handover.",
+  },
+];
+
 export const TaskAssignmentModal: React.FC<TaskAssignmentModalProps> = ({
   order,
   isOpen,
@@ -49,10 +93,13 @@ export const TaskAssignmentModal: React.FC<TaskAssignmentModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Current stage subtasks as default
-  const activeStage = order.opsStage || "RESOURCE_FABRIC";
-  const defaultTemplates = STAGE_SUBTASKS[activeStage] || [];
+  // Active production stage (if order is in Step 1 or 2, default production tasks to Step 3 Procurement)
+  const activeStage: OpsProductionStage =
+    order.opsStage === "NEW_ORDER" || order.opsStage === "ORDER_CONFIRMED" || !order.opsStage
+      ? "RESOURCE_FABRIC"
+      : order.opsStage;
 
+  const defaultTemplates = STAGE_SUBTASKS[activeStage] || [];
   const [selectedTasks, setSelectedTasks] = useState<TaskDraft[]>([]);
 
   // Lock body scroll when modal is open
@@ -79,29 +126,20 @@ export const TaskAssignmentModal: React.FC<TaskAssignmentModalProps> = ({
           const workerList: WorkerOption[] = data.workers || [];
           setWorkers(workerList);
 
-          // Initialize first default task template
+          // Initialize first default task template (always a real floor task)
           const firstWorkerId = workerList[0]?.id || "";
-          if (defaultTemplates.length > 0) {
-            setSelectedTasks([
-              {
-                stage: activeStage,
-                taskKey: defaultTemplates[0].key,
-                title: defaultTemplates[0].title,
-                assignedToId: firstWorkerId,
-                instructions: defaultTemplates[0].defaultDescription,
-              },
-            ]);
-          } else {
-            setSelectedTasks([
-              {
-                stage: activeStage,
-                taskKey: activeStage,
-                title: STAGE_DISPLAY_NAMES[activeStage] || "Production Task",
-                assignedToId: firstWorkerId,
-                instructions: "",
-              },
-            ]);
-          }
+          const firstTemplate =
+            defaultTemplates.length > 0 ? defaultTemplates[0] : STANDARD_WORKER_TASKS[0];
+
+          setSelectedTasks([
+            {
+              stage: firstTemplate.stage,
+              taskKey: firstTemplate.key,
+              title: firstTemplate.title,
+              assignedToId: firstWorkerId,
+              instructions: firstTemplate.defaultDescription,
+            },
+          ]);
         }
       } catch (e) {
         console.error("Failed to fetch workers", e);
@@ -117,14 +155,37 @@ export const TaskAssignmentModal: React.FC<TaskAssignmentModalProps> = ({
 
   const handleAddTaskDraft = (stage: OpsProductionStage, templateKey?: string, title?: string, desc?: string) => {
     const defaultWorkerId = workers[0]?.id || "";
+    // Non-production stages (NEW_ORDER, ORDER_CONFIRMED) route to first factory stage
+    const effectiveStage =
+      stage === "NEW_ORDER" || stage === "ORDER_CONFIRMED" ? "RESOURCE_FABRIC" : stage;
+
     setSelectedTasks((prev) => [
       ...prev,
       {
-        stage,
-        taskKey: templateKey || stage,
-        title: title || STAGE_DISPLAY_NAMES[stage] || "Production Task",
+        stage: effectiveStage,
+        taskKey: templateKey || effectiveStage,
+        title: title || (STANDARD_WORKER_TASKS.find((t) => t.stage === effectiveStage)?.title) || "Production Task",
         assignedToId: defaultWorkerId,
         instructions: desc || "",
+      },
+    ]);
+  };
+
+  const handleAddNextParallelTask = () => {
+    const defaultWorkerId = workers[0]?.id || "";
+    const existingKeys = new Set(selectedTasks.map((t) => t.taskKey));
+    const nextTemplate =
+      STANDARD_WORKER_TASKS.find((tpl) => !existingKeys.has(tpl.key)) ||
+      STANDARD_WORKER_TASKS[selectedTasks.length % STANDARD_WORKER_TASKS.length];
+
+    setSelectedTasks((prev) => [
+      ...prev,
+      {
+        stage: nextTemplate.stage,
+        taskKey: nextTemplate.key,
+        title: nextTemplate.title,
+        assignedToId: defaultWorkerId,
+        instructions: nextTemplate.defaultDescription,
       },
     ]);
   };
@@ -230,22 +291,15 @@ export const TaskAssignmentModal: React.FC<TaskAssignmentModalProps> = ({
             </div>
 
             <div className="flex flex-wrap gap-2">
-              {[
-                { stage: "RESOURCE_FABRIC" as const, key: "FABRIC_PROCUREMENT", label: "Fabric Procurement" },
-                { stage: "RESOURCE_FABRIC" as const, key: "STITCHING", label: "Garment Stitching" },
-                { stage: "BRANDING_PRINTING" as const, key: "PRINT_EMBROIDERY", label: "Print / Embroidery" },
-                { stage: "PACKING" as const, key: "KAJE_BUTTON", label: "Kaje Button" },
-                { stage: "PACKING" as const, key: "PRESSING_PACKING", label: "Press & Pack" },
-                { stage: "DISPATCHED" as const, key: "DISPATCH", label: "Dispatch Run" },
-              ].map((tpl) => (
+              {STANDARD_WORKER_TASKS.map((tpl) => (
                 <button
                   key={tpl.key}
                   type="button"
-                  onClick={() => handleAddTaskDraft(tpl.stage, tpl.key, tpl.label)}
+                  onClick={() => handleAddTaskDraft(tpl.stage, tpl.key, tpl.title, tpl.defaultDescription)}
                   className="px-3 py-1.5 rounded-xl bg-[#F4F6F9] hover:bg-emerald-50 hover:text-emerald-800 hover:border-emerald-300 border border-[#ECEEF2] text-[#374151] font-semibold text-xs flex items-center gap-1.5 transition-all shadow-2xs"
                 >
                   <Plus className="w-3 h-3 text-[#00A86B]" />
-                  <span>{tpl.label}</span>
+                  <span>{tpl.title}</span>
                 </button>
               ))}
             </div>
@@ -322,8 +376,9 @@ export const TaskAssignmentModal: React.FC<TaskAssignmentModalProps> = ({
                       onChange={(e) => handleUpdateTaskDraft(idx, { stage: e.target.value as OpsProductionStage })}
                       className="w-full bg-white border border-[#D1D5DB] rounded-xl px-3 py-2 text-xs font-semibold text-[#111827] focus:border-[#00A86B] outline-none"
                     >
-                      {STAGE_SUBTASKS &&
-                        Object.keys(STAGE_DISPLAY_NAMES).map((s) => (
+                      {Object.keys(STAGE_DISPLAY_NAMES)
+                        .filter((s) => s !== "NEW_ORDER" && s !== "ORDER_CONFIRMED")
+                        .map((s) => (
                           <option key={s} value={s}>
                             {STAGE_DISPLAY_NAMES[s as OpsProductionStage]}
                           </option>
@@ -353,7 +408,7 @@ export const TaskAssignmentModal: React.FC<TaskAssignmentModalProps> = ({
           <div className="flex items-center justify-between pt-4 border-t border-[#ECEEF2] shrink-0">
             <button
               type="button"
-              onClick={() => handleAddTaskDraft(activeStage)}
+              onClick={handleAddNextParallelTask}
               className="px-3.5 py-2 rounded-xl bg-[#F4F6F9] hover:bg-[#E5E7EB] text-[#374151] font-semibold text-xs flex items-center gap-1.5 transition-colors"
             >
               <Plus className="w-3.5 h-3.5 text-[#00A86B]" />
