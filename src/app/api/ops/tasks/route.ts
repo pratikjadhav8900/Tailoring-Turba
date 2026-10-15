@@ -272,11 +272,13 @@ export async function POST(req: NextRequest) {
             orderNumber: order.orderNumber,
             type: "TASK_ASSIGNED",
             title: `New Task: ${t.title} (TT-${order.orderNumber})`,
-            message: `${auth.context.employee.name} assigned you: "${t.title}" for Order TT-${order.orderNumber}.${t.instructions ? ` Note: "${t.instructions}"` : ""}`,
+            message: `${auth.context.employee.name} assigned ${workerName}: "${t.title}" for Order TT-${order.orderNumber}.${t.instructions ? ` Note: "${t.instructions}"` : ""}`,
             actorName: auth.context.employee.name,
             readBy: [], // unread
             metadata: {
               targetWorkerId: t.assignedToId,
+              workerName,
+              targetRole: "WORKER",
               orderId: order.id,
               orderNumber: order.orderNumber,
               taskTitle: t.title,

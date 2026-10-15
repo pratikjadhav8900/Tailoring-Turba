@@ -5,6 +5,69 @@ import type { OpsNotificationItem } from "@/types/ops";
 
 export const dynamic = "force-dynamic";
 
+/**
+ * Determine if an employee is a shop-floor worker (e.g. Ajay TT005, Mahesh TT004).
+ * Founders/managers (Neeraj TT001, Sanjay TT002, Pratik TT003) are never workers.
+ */
+function isWorkerRole(employee: { employeeCode?: string | null; roleTitle?: string | null }): boolean {
+  if (!employee) return false;
+  const code = (employee.employeeCode || "").trim().toUpperCase();
+  const role = (employee.roleTitle || "").trim().toLowerCase();
+
+  // Explicit worker codes
+  if (code === "TT004" || code === "TT005") return true;
+
+  // Management codes are always management
+  if (code === "TT001" || code === "TT002" || code === "TT003") return false;
+
+  // Title-based fallback
+  return (
+    role.includes("worker") ||
+    role.includes("craftsman") ||
+    role.includes("tailor") ||
+    role.includes("cutter")
+  );
+}
+
+/**
+ * Rule: Workers must ONLY receive:
+ * 1) Tasks assigned specifically to THEM.
+ * 2) New Order alerts (so they know when new orders arrive).
+ * 3) NOTHING ELSE (no task completions, other workers' tasks, payments, rework, etc.).
+ */
+function isAllowedForWorker(
+  notification: {
+    type: string;
+    title?: string | null;
+    metadata?: any;
+  },
+  workerId: string
+): boolean {
+  const meta = (notification.metadata || {}) as Record<string, any>;
+
+  // 1. Task assigned specifically to this worker
+  if (notification.type === "TASK_ASSIGNED") {
+    const target = meta.targetWorkerId || meta.assignedWorkerId || meta.workerId;
+    return target === workerId;
+  }
+
+  // 2. New Order announcements
+  if (
+    notification.type === "ORDER_CREATED" ||
+    notification.type === "NEW_ORDER" ||
+    meta.isNewOrder === true ||
+    (notification.type === "STAGE_CHANGE" &&
+      typeof notification.title === "string" &&
+      (notification.title.toLowerCase().includes("new order") ||
+        notification.title.toLowerCase().includes("order confirmed")))
+  ) {
+    return true;
+  }
+
+  // Workers must never see TASK_COMPLETED, payments, stage advances, or other workers' tasks
+  return false;
+}
+
 export async function GET(req: NextRequest) {
   const auth = await requireOpsAuth();
   if (auth.errorResponse) return auth.errorResponse;
@@ -12,41 +75,64 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const unreadOnly = searchParams.get("unreadOnly") === "true";
-    const employeeId = auth.context.employee.id;
+    const employee = auth.context.employee;
+    const employeeId = employee.id;
 
-    const where: any = {};
-    if (unreadOnly) {
-      where.NOT = {
-        readBy: { has: employeeId },
-      };
-    }
+    const isWorker = isWorkerRole(employee);
 
-    const notifications = await prisma.opsNotification.findMany({
-      where,
+    // Fetch recent notifications
+    const allNotifications = await prisma.opsNotification.findMany({
       orderBy: { createdAt: "desc" },
-      take: 50,
+      take: 100,
     });
 
-    const unreadCount = await prisma.opsNotification.count({
-      where: {
-        NOT: {
-          readBy: { has: employeeId },
-        },
-      },
-    });
+    // Filter strictly based on employee role
+    const filteredNotifications = isWorker
+      ? allNotifications.filter((n) => isAllowedForWorker(n, employeeId))
+      : allNotifications;
 
-    const items: OpsNotificationItem[] = notifications.map((n) => ({
-      id: n.id,
-      orderId: n.orderId,
-      orderNumber: n.orderNumber,
-      type: n.type,
-      title: n.title,
-      message: n.message,
-      actorName: n.actorName,
-      isReadByMe: n.readBy.includes(employeeId),
-      readByCount: n.readBy.length,
-      createdAt: n.createdAt,
-    }));
+    // Unread count strictly for this user's visible notifications
+    const unreadCount = filteredNotifications.filter(
+      (n) => !n.readBy.includes(employeeId)
+    ).length;
+
+    // If caller requested unreadOnly (e.g. badge polling in layout)
+    const resultList = unreadOnly
+      ? filteredNotifications.filter((n) => !n.readBy.includes(employeeId))
+      : filteredNotifications;
+
+    const items: OpsNotificationItem[] = resultList.slice(0, 50).map((n) => {
+      const meta = (n.metadata || {}) as Record<string, any>;
+      let message = n.message;
+
+      // Personalize message for worker vs management view
+      if (n.type === "TASK_ASSIGNED") {
+        const target = meta.targetWorkerId || meta.assignedWorkerId;
+        const taskTitle = meta.taskTitle || "task";
+        const orderNum = n.orderNumber ? `TT-${n.orderNumber}` : "";
+
+        if (isWorker && target === employeeId) {
+          if (!message.includes("assigned you")) {
+            message = `${n.actorName} assigned you: "${taskTitle}"${orderNum ? ` for Order ${orderNum}` : ""}.`;
+          }
+        } else if (!isWorker && meta.workerName && message.includes("assigned you:")) {
+          message = message.replace("assigned you:", `assigned ${meta.workerName}:`);
+        }
+      }
+
+      return {
+        id: n.id,
+        orderId: n.orderId,
+        orderNumber: n.orderNumber,
+        type: n.type,
+        title: n.title,
+        message,
+        actorName: n.actorName,
+        isReadByMe: n.readBy.includes(employeeId),
+        readByCount: n.readBy.length,
+        createdAt: n.createdAt,
+      };
+    });
 
     return NextResponse.json({ notifications: items, unreadCount });
   } catch (error: any) {
@@ -62,19 +148,26 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { notificationId, markAllRead } = body;
-    const employeeId = auth.context.employee.id;
+    const employee = auth.context.employee;
+    const employeeId = employee.id;
+    const isWorker = isWorkerRole(employee);
 
     if (markAllRead) {
-      // Find all notifications not yet read by this employee and push employeeId
+      // Find all unread notifications
       const unreadNotifs = await prisma.opsNotification.findMany({
         where: {
           NOT: { readBy: { has: employeeId } },
         },
-        select: { id: true, readBy: true },
+        select: { id: true, type: true, title: true, metadata: true, readBy: true },
       });
 
+      // If worker, only mark read notifications that belong to them
+      const relevantNotifs = isWorker
+        ? unreadNotifs.filter((n) => isAllowedForWorker(n, employeeId))
+        : unreadNotifs;
+
       await Promise.all(
-        unreadNotifs.map((n) =>
+        relevantNotifs.map((n) =>
           prisma.opsNotification.update({
             where: { id: n.id },
             data: {
@@ -84,7 +177,7 @@ export async function POST(req: NextRequest) {
         )
       );
 
-      return NextResponse.json({ success: true, count: unreadNotifs.length });
+      return NextResponse.json({ success: true, count: relevantNotifs.length });
     }
 
     if (!notificationId) {
@@ -96,10 +189,15 @@ export async function POST(req: NextRequest) {
 
     const target = await prisma.opsNotification.findUnique({
       where: { id: notificationId },
-      select: { id: true, readBy: true },
+      select: { id: true, type: true, title: true, metadata: true, readBy: true },
     });
 
     if (target && !target.readBy.includes(employeeId)) {
+      // Ensure worker cannot read or manipulate notifications they shouldn't see
+      if (isWorker && !isAllowedForWorker(target, employeeId)) {
+        return NextResponse.json({ success: true });
+      }
+
       await prisma.opsNotification.update({
         where: { id: target.id },
         data: {
@@ -114,3 +212,4 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Failed to update notification." }, { status: 500 });
   }
 }
+

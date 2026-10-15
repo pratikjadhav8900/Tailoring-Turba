@@ -203,11 +203,16 @@ export async function POST(request: NextRequest) {
             data: {
               orderId: existingOrder.id,
               orderNumber: existingOrder.orderNumber,
-              type: 'STAGE_CHANGE',
-              title: `Order TT-${existingOrder.orderNumber} Confirmed`,
+              type: 'ORDER_CREATED',
+              title: `New Order TT-${existingOrder.orderNumber} Confirmed`,
               message: `Payment received for TT-${existingOrder.orderNumber}. Order confirmed and ready for Resource Allocation.`,
               actorName: 'Razorpay Checkout',
               readBy: [],
+              metadata: {
+                isNewOrder: true,
+                orderId: existingOrder.id,
+                orderNumber: existingOrder.orderNumber,
+              },
             },
           });
         } catch (opsErr) {

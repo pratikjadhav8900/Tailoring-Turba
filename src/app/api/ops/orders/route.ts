@@ -484,11 +484,16 @@ export async function POST(req: NextRequest) {
         data: {
           orderId: order.id,
           orderNumber: order.orderNumber,
-          type: "STAGE_CHANGE",
+          type: "ORDER_CREATED",
           title: `New Order TT-${order.orderNumber} (${orderSource.toUpperCase()})`,
           message: `Direct order TT-${order.orderNumber} (${totalQuantity} pcs) entered by ${auth.context.employee.name}`,
           actorName: auth.context.employee.name,
           readBy: [auth.context.employee.id],
+          metadata: {
+            isNewOrder: true,
+            orderId: order.id,
+            orderNumber: order.orderNumber,
+          },
         },
       });
 

@@ -133,10 +133,13 @@ export async function PATCH(
             actorName: auth.context.employee.name,
             readBy: [auth.context.employee.id], // marked read by worker who finished it, unread for managers
             metadata: {
+              targetRole: "MANAGEMENT",
               orderId: task.orderId,
               orderNumber: task.order.orderNumber,
               taskTitle,
               workerName: auth.context.employee.name,
+              completedForWorkerName: task.employeeName,
+              completedForWorkerId: task.employeeId,
               notes,
               vendorName,
             },
