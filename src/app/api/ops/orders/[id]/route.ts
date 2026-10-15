@@ -59,6 +59,9 @@ export async function GET(
           orderBy: { createdAt: "desc" },
           take: 1,
         },
+        paymentTransactions: {
+          orderBy: { createdAt: "desc" },
+        },
       },
     });
 
@@ -179,6 +182,18 @@ export async function GET(
       awbNumber: latestShipment?.awbNumber || order.bigshipTrackingId,
       labelUrl: latestShipment?.labelUrl || order.bigshipLabelUrl,
       manifestUrl: latestShipment?.manifestUrl || order.bigshipManifestUrl,
+      paymentTransactions: order.paymentTransactions?.map((tx) => ({
+        id: tx.id,
+        orderId: tx.orderId,
+        amountPaise: tx.amountPaise,
+        currency: tx.currency,
+        type: tx.type,
+        status: tx.status,
+        provider: tx.provider,
+        providerPaymentId: tx.providerPaymentId,
+        referenceNote: tx.referenceNote,
+        createdAt: tx.createdAt,
+      })) || [],
     };
 
     return NextResponse.json({

@@ -17,6 +17,7 @@ import { ActivityTimeline } from "@/components/ops/activity/ActivityTimeline";
 import { Step2PaymentCard } from "@/components/ops/payments/Step2PaymentCard";
 import { OrderTasksList } from "@/components/ops/tasks/OrderTasksList";
 import { TaskAssignmentModal } from "@/components/ops/tasks/TaskAssignmentModal";
+import { OrderDetailsModal } from "@/components/ops/orders/OrderDetailsModal";
 import type { OpsOrder, OpsActivityEvent, OpsPriority } from "@/types/ops";
 import {
   ArrowLeft,
@@ -52,6 +53,7 @@ export default function OpsOrderDetailPage() {
   const [isReworkModalOpen, setIsReworkModalOpen] = useState(false);
   const [isResourceModalOpen, setIsResourceModalOpen] = useState(false);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 
   // Metadata edit states
   const [priority, setPriority] = useState<OpsPriority>("NORMAL");
@@ -219,7 +221,7 @@ export default function OpsOrderDetailPage() {
       pageTitle={`Order ${order.formattedOrderNumber}`}
       pageSubtitle={`Created on ${new Date(order.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })} • Source: ${order.orderSource || "Website"}`}
       headerAction={
-        <div className="flex items-center gap-2">
+        <div className="hidden sm:flex items-center gap-2">
           <OpsButton
             variant="secondary"
             size="sm"
@@ -260,26 +262,73 @@ export default function OpsOrderDetailPage() {
         </div>
       }
     >
-      <div className="space-y-6 w-full">
+      <div className="space-y-4 sm:space-y-6 w-full pb-24 sm:pb-6">
         {/* Top Breadcrumb & Status */}
-        <div className="flex items-center justify-between pb-2">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1">
+          <div className="flex items-center gap-2.5">
             <Link href="/ops/orders">
-              <button className="w-9 h-9 rounded-full bg-white hover:bg-[#F4F6F9] border border-[#ECEEF2] text-[#4B5563] hover:text-[#111827] flex items-center justify-center transition-colors shadow-2xs">
+              <button
+                className="w-9 h-9 rounded-full bg-white hover:bg-[#F4F6F9] border border-[#ECEEF2] text-[#4B5563] hover:text-[#111827] flex items-center justify-center transition-colors shadow-2xs shrink-0 cursor-pointer"
+                title="Back to Orders"
+              >
                 <ArrowLeft className="w-4 h-4" />
               </button>
             </Link>
-            <div className="flex items-center gap-2.5">
-              <span className="text-xl font-extrabold text-[#111827] font-mono">
+            <div className="flex items-center gap-2 flex-wrap min-w-0">
+              <span className="text-xl font-extrabold text-[#111827] font-mono shrink-0">
                 {order.formattedOrderNumber}
               </span>
-              <OpsBadge stage={order.opsStage} />
+              <OpsBadge stage={order.opsStage} size="sm" />
               <OpsBadge
                 status={order.currentExecution?.status || "PENDING"}
+                size="sm"
               />
-              {order.orderSource && <OpsBadge source={order.orderSource} />}
+              {order.orderSource && <OpsBadge source={order.orderSource} size="sm" />}
             </div>
           </div>
+
+          {/* Desktop/Tablet Dedicated View Order Details Button */}
+          <button
+            type="button"
+            onClick={() => setIsDetailsModalOpen(true)}
+            className="hidden sm:inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-50 to-teal-50 hover:from-emerald-100 hover:to-teal-100 border border-emerald-300/80 text-[#065F46] font-bold text-xs shadow-2xs transition-all cursor-pointer"
+          >
+            <FileText className="w-4 h-4 text-[#00A86B]" />
+            <span>View Full Order Details</span>
+            <span className="text-[10px] font-mono bg-emerald-100 px-1.5 py-0.2 rounded-md">
+              {order.totalQuantity} pcs
+            </span>
+          </button>
+        </div>
+
+        {/* Mobile Designated Button: Prominent, Uncluttered, 1-Tap Access to Specs & Ledger */}
+        <div className="sm:hidden">
+          <button
+            type="button"
+            onClick={() => setIsDetailsModalOpen(true)}
+            className="w-full py-3 px-3.5 rounded-2xl bg-gradient-to-r from-emerald-50 via-teal-50/70 to-emerald-50 hover:from-emerald-100 hover:to-teal-100 border border-emerald-300 text-[#065F46] flex items-center justify-between shadow-xs transition-all active:scale-[0.99] cursor-pointer"
+          >
+            <div className="flex items-center gap-2.5 text-left min-w-0">
+              <div className="w-8 h-8 rounded-xl bg-white text-[#00A86B] border border-emerald-200 flex items-center justify-center shrink-0 shadow-2xs">
+                <FileText className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs font-bold text-[#111827] flex items-center gap-1.5">
+                  <span>View Order Details</span>
+                  <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-emerald-100 text-[#065F46]">
+                    {order.totalQuantity} pcs
+                  </span>
+                </div>
+                <p className="text-[11px] text-[#6B7280] truncate">
+                  Specs, Sizes Matrix, Address, Ledger & Art
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-1 text-xs font-bold text-[#00A86B] shrink-0 pl-2">
+              <span>Open</span>
+              <ChevronRight className="w-4 h-4" />
+            </div>
+          </button>
         </div>
 
         {/* Production Stage Stepper */}
@@ -289,11 +338,32 @@ export default function OpsOrderDetailPage() {
           iteration={order.currentExecution?.iteration}
         />
 
-        {/* Step 2 Payment Status & 60% Advance Gate */}
-        <Step2PaymentCard
-          order={order}
-          onPaymentRecorded={fetchOrderDetail}
-        />
+        {/* Payment Status & 60% Advance Gate: Compact on Mobile, Full on Desktop */}
+        <div className="lg:hidden">
+          <Step2PaymentCard
+            order={order}
+            onPaymentRecorded={fetchOrderDetail}
+            compact={true}
+          />
+        </div>
+        <div className="hidden lg:block">
+          <Step2PaymentCard
+            order={order}
+            onPaymentRecorded={fetchOrderDetail}
+            compact={false}
+          />
+        </div>
+
+        {/* Active Worker Tasks on Mobile (Clean Card for Mobile Floor Tracking) */}
+        <div className="lg:hidden">
+          <OpsCard title="Production Tasks & Delegations">
+            <OrderTasksList
+              order={order}
+              onOpenAssignModal={() => setIsTaskModalOpen(true)}
+              onTaskUpdated={fetchOrderDetail}
+            />
+          </OpsCard>
+        </div>
 
         {/* Metadata Controls Bar */}
         <div className="p-4 rounded-[20px] bg-white border border-[#ECEEF2] flex flex-wrap items-center justify-between gap-4 text-xs shadow-xs">
@@ -339,8 +409,8 @@ export default function OpsOrderDetailPage() {
           </div>
         </div>
 
-        {/* 2-Column Responsive Workspace Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* 2-Column Responsive Workspace Grid (Desktop Only: hidden on mobile to eliminate clutter!) */}
+        <div className="hidden lg:grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* LEFT COLUMN: Tasks, Customer, Products, Specs, Artwork, Dispatch (7 cols) */}
           <div className="lg:col-span-7 space-y-6">
             {/* Worker Production Tasks Card */}
@@ -877,6 +947,54 @@ export default function OpsOrderDetailPage() {
         isOpen={isResourceModalOpen}
         onClose={() => setIsResourceModalOpen(false)}
         onSuccess={fetchOrderDetail}
+      />
+
+      {/* Mobile Docked Sticky Bottom Action Bar (Thumb-friendly, uncluttered) */}
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 p-3 bg-white/95 backdrop-blur-md border-t border-[#ECEEF2] z-40 flex items-center gap-2 shadow-lg">
+        <button
+          type="button"
+          onClick={() => setIsTaskModalOpen(true)}
+          className="flex-1 py-2.5 px-3 rounded-xl bg-[#F4F6F9] hover:bg-[#E5E7EB] text-[#111827] text-xs font-bold border border-[#ECEEF2] flex items-center justify-center gap-1.5 transition-colors active:scale-98 cursor-pointer"
+        >
+          <UserCheck className="w-4 h-4 text-[#00A86B]" />
+          <span>Assign Task</span>
+        </button>
+
+        {isQCStage && (
+          <button
+            type="button"
+            onClick={() => setIsReworkModalOpen(true)}
+            className="py-2.5 px-3 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 text-xs font-bold border border-red-200 flex items-center justify-center gap-1.5 transition-colors active:scale-98 cursor-pointer"
+          >
+            <AlertTriangle className="w-4 h-4 text-red-600" />
+            <span>Defect</span>
+          </button>
+        )}
+
+        <button
+          type="button"
+          onClick={() => setIsAdvanceModalOpen(true)}
+          className="flex-1 py-2.5 px-4 rounded-xl bg-[#00A86B] hover:bg-[#00925d] text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition-colors active:scale-98 cursor-pointer"
+        >
+          <span>Advance Stage</span>
+          <ChevronRight className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Dedicated Comprehensive Order Details Modal (Specs, Sizes, Client, Ledger, Art) */}
+      <OrderDetailsModal
+        order={order}
+        isOpen={isDetailsModalOpen}
+        onClose={() => setIsDetailsModalOpen(false)}
+        activityEvents={activityEvents}
+        onRefresh={fetchOrderDetail}
+        onUploadAsset={handleUploadAsset}
+        onUploadMockup={handleUploadMockup}
+        onRemoveAsset={handleRemoveAsset}
+        isUploadingAsset={isUploadingAsset}
+        isUploadingMockup={isUploadingMockup}
+        assetFileInputRef={assetFileInputRef}
+        mockupFileInputRef={mockupFileInputRef}
       />
     </OpsLayout>
   );

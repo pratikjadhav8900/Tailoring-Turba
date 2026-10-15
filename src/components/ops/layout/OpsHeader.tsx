@@ -47,7 +47,7 @@ export const OpsHeader: React.FC<OpsHeaderProps> = ({
       </div>
 
       {/* Action Controls matching reference */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
         {headerAction ? (
           headerAction
         ) : (
@@ -60,7 +60,7 @@ export const OpsHeader: React.FC<OpsHeaderProps> = ({
         {/* Circular Notification Bell */}
         <button
           onClick={onOpenNotifications}
-          className="relative w-9 h-9 rounded-full bg-white border border-[#ECEEF2] hover:border-[#D1D5DB] text-[#4B5563] hover:text-[#111827] flex items-center justify-center shadow-xs transition-all cursor-pointer"
+          className="relative w-9 h-9 rounded-full bg-white border border-[#ECEEF2] hover:border-[#D1D5DB] text-[#4B5563] hover:text-[#111827] flex items-center justify-center shadow-xs transition-all cursor-pointer shrink-0"
           title="Notifications"
         >
           <Bell className="w-4 h-4" />

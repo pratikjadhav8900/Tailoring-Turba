@@ -55,6 +55,18 @@ export const TaskAssignmentModal: React.FC<TaskAssignmentModalProps> = ({
 
   const [selectedTasks, setSelectedTasks] = useState<TaskDraft[]>([]);
 
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
   useEffect(() => {
     if (!isOpen) return;
 
@@ -170,27 +182,28 @@ export const TaskAssignmentModal: React.FC<TaskAssignmentModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
-      <div className="w-full max-w-2xl bg-white border border-[#E5E7EB] rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+      <div className="w-full max-w-2xl bg-white border border-[#E5E7EB] rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden flex flex-col h-[90vh] sm:h-auto sm:max-h-[90vh]">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-[#ECEEF2] flex items-center justify-between bg-[#F8F9FB] shrink-0">
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-sm sm:text-base font-bold text-[#111827]">
-                Assign Tasks to Workers — TT-{order.orderNumber}
+        <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-b border-[#ECEEF2] flex items-center justify-between bg-[#F8F9FB] shrink-0 sticky top-0 z-10">
+          <div className="min-w-0 flex-1 pr-2">
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+              <h3 className="text-sm sm:text-base font-bold text-[#111827] truncate">
+                Assign Tasks — TT-{order.orderNumber}
               </h3>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                Parallel Multi-Tasking
+              <span className="text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
+                Multi-Tasking
               </span>
             </div>
-            <p className="text-xs text-[#6B7280] mt-0.5">
-              Assign single or simultaneous tasks to Mahesh or Ajay with specific floor instructions.
+            <p className="text-[11px] text-[#6B7280] mt-0.5 truncate">
+              Assign tasks to workers with floor instructions
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="w-7 h-7 rounded-lg text-[#6B7280] hover:text-[#111827] hover:bg-[#E5E7EB] flex items-center justify-center"
+            className="w-7 h-7 rounded-lg text-[#6B7280] hover:text-[#111827] hover:bg-[#E5E7EB] flex items-center justify-center shrink-0"
+            aria-label="Close"
           >
             ✕
           </button>

@@ -143,6 +143,22 @@ export interface OpsOrder {
   awbNumber?: string | null;
   labelUrl?: string | null;
   manifestUrl?: string | null;
+
+  // Payments Ledger
+  paymentTransactions?: OpsPaymentTransaction[];
+}
+
+export interface OpsPaymentTransaction {
+  id: string;
+  orderId: string;
+  amountPaise: number;
+  currency: string;
+  type: string;
+  status: string;
+  provider: string;
+  providerPaymentId?: string | null;
+  referenceNote?: string | null;
+  createdAt: Date | string;
 }
 
 export interface OpsActivityEvent {
