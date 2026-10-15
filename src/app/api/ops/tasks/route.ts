@@ -46,6 +46,14 @@ export async function GET(req: NextRequest) {
       where.status = "COMPLETED";
     }
 
+    // Exclude automatic intake creation milestones (stage NEW_ORDER without explicit worker delegation)
+    where.NOT = [
+      {
+        stage: "NEW_ORDER",
+        notes: { contains: "Order created via Turba Ops" },
+      },
+    ];
+
     const tasks = await prisma.productionStageExecution.findMany({
       where,
       orderBy: [

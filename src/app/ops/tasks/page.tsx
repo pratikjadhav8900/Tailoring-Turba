@@ -31,6 +31,14 @@ export default function WorkerTasksPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentWorkerName, setCurrentWorkerName] = useState("");
 
+  const getRoleLabel = (name?: string) => {
+    if (!name) return "Worker";
+    if (name.includes("Neeraj")) return "Founder";
+    if (name.includes("Sanjay")) return "Co-Founder";
+    if (name.includes("Pratik")) return "Tech & Ops";
+    return "Worker";
+  };
+
   const fetchTasks = async () => {
     setLoading(true);
     try {
@@ -221,7 +229,7 @@ export default function WorkerTasksPage() {
                     <div className="flex items-center gap-2 text-xs text-[#6B7280]">
                       <span className="flex items-center gap-1 font-semibold text-[#374151]">
                         <User className="w-3.5 h-3.5 text-[#00A86B]" />
-                        Worker: {task.employeeName}
+                        {getRoleLabel(task.employeeName)}: {task.employeeName}
                       </span>
                       {task.orderCustomer && (
                         <span>• Customer: {task.orderCustomer}</span>

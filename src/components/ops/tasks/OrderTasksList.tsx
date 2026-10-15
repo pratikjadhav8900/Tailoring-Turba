@@ -28,8 +28,25 @@ export const OrderTasksList: React.FC<OrderTasksListProps> = ({
 }) => {
   const [selectedTaskForDone, setSelectedTaskForDone] = useState<OpsTaskItem | null>(null);
 
-  // Derive tasks from order.stageExecutions
-  const tasks: OpsTaskItem[] = (order.stageExecutions || []).map((exec) => {
+  const getRoleLabel = (name?: string) => {
+    if (!name) return "Worker";
+    if (name.includes("Neeraj")) return "Founder";
+    if (name.includes("Sanjay")) return "Co-Founder";
+    if (name.includes("Pratik")) return "Tech & Ops";
+    return "Worker";
+  };
+
+  // Derive worker tasks from order.stageExecutions
+  // Filter out system intake creation milestones (stage NEW_ORDER without explicit taskTitle)
+  const tasks: OpsTaskItem[] = (order.stageExecutions || [])
+    .filter((exec) => {
+      const meta = (exec.metadata as Record<string, any>) || {};
+      if (exec.stage === "NEW_ORDER" && !meta.taskTitle) {
+        return false;
+      }
+      return true;
+    })
+    .map((exec) => {
     const meta = (exec.metadata as Record<string, any>) || {};
     const title = meta.taskTitle || meta.title || STAGE_DISPLAY_NAMES[exec.stage] || exec.stage;
 
@@ -131,10 +148,10 @@ export const OrderTasksList: React.FC<OrderTasksListProps> = ({
                     </span>
                   </div>
 
-                  {/* Worker Badge */}
+                  {/* Worker / Assignee Badge */}
                   <div className="flex items-center gap-1.5 text-[11px] font-semibold text-[#4B5563] bg-[#F4F6F9] px-2.5 py-1 rounded-lg border border-[#E5E7EB]">
                     <User className="w-3 h-3 text-[#00A86B]" />
-                    <span>Worker: <strong>{task.employeeName}</strong></span>
+                    <span>{getRoleLabel(task.employeeName)}: <strong>{task.employeeName}</strong></span>
                   </div>
                 </div>
 
