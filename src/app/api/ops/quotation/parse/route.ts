@@ -13,8 +13,7 @@ export const dynamic = "force-dynamic";
  */
 async function extractTextFromPdf(buffer: Buffer): Promise<string> {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const pdfParse = require("pdf-parse/lib/pdf-parse.js");
+    const { default: pdfParse } = await import("pdf-parse/lib/pdf-parse.js");
     const data = await pdfParse(buffer);
     return data?.text || "";
   } catch (err) {
