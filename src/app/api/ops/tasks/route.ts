@@ -102,9 +102,18 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    const formattedTasks = tasks.map((t) => {
-      const meta = (t.metadata as Record<string, any>) || {};
-      const totalPieces = t.order.items.reduce((sum, item) => sum + (item.quantity || 0), 0);
+    const formattedTasks = tasks
+      .filter((t) => {
+        const meta = (t.metadata as Record<string, any>) || {};
+        if (meta.isStageMilestone) return false;
+        if (!meta.taskTitle && !meta.taskKey && !meta.assignedById && !meta.isExplicitTask && !meta.assignedWorkerName) {
+          return false;
+        }
+        return true;
+      })
+      .map((t) => {
+        const meta = (t.metadata as Record<string, any>) || {};
+        const totalPieces = t.order.items.reduce((sum, item) => sum + (item.quantity || 0), 0);
 
       return {
         id: t.id,
@@ -159,6 +168,21 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const auth = await requireOpsAuth();
   if (auth.errorResponse) return auth.errorResponse;
+
+  const isManagement =
+    auth.context.userRole === "ADMIN" ||
+    auth.context.userRole === "SUPER_ADMIN" ||
+    ["TT001", "TT002", "TT003"].includes(auth.context.employee.employeeCode) ||
+    auth.context.employee.name.includes("Pratik") ||
+    auth.context.employee.name.includes("Neeraj") ||
+    auth.context.employee.name.includes("Sanjay");
+
+  if (!isManagement) {
+    return NextResponse.json(
+      { error: "Access denied: Workers cannot assign tasks. Only factory management can delegate work." },
+      { status: 403 }
+    );
+  }
 
   try {
     const body = await req.json();

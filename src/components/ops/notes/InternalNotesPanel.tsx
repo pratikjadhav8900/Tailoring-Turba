@@ -53,54 +53,54 @@ export const InternalNotesPanel: React.FC<InternalNotesPanelProps> = ({
           value={newNote}
           onChange={(e) => setNewNote(e.target.value)}
           placeholder="Add an internal note (visible only to team)..."
-          className="w-full bg-[#FAF9F5] border border-[#e2e0d8] focus:border-[#294238] focus:bg-white focus:ring-1 focus:ring-[#294238]/20 rounded p-3 text-xs text-[#171916] placeholder:text-[#829386] outline-none resize-none transition-all font-sans"
+          className="w-full bg-[#F8F9FA] border border-[#ECEEF2] focus:border-[#00A86B] focus:bg-white rounded-xl p-3 text-xs text-[#111827] placeholder:text-[#9CA3AF] outline-none resize-none transition-all font-sans"
         />
         <div className="flex items-center justify-between">
-          <label className="flex items-center gap-1.5 text-xs text-[#4a4a45] cursor-pointer select-none font-medium">
+          <label className="flex items-center gap-1.5 text-xs text-[#4B5563] cursor-pointer select-none font-medium">
             <input
               type="checkbox"
               checked={isPinned}
               onChange={(e) => setIsPinned(e.target.checked)}
-              className="rounded bg-[#FAF9F5] border-[#c8c5bc] text-[#294238] focus:ring-0"
+              className="w-4 h-4 rounded border-[#D1D5DB] text-[#00A86B] focus:ring-[#00A86B] focus:ring-offset-0 cursor-pointer"
             />
-            <Pin className="w-3.5 h-3.5 text-[#c49d32]" />
+            <Pin className="w-3.5 h-3.5 text-amber-500" />
             <span>Pin note to top</span>
           </label>
-          <OpsButton
+          <button
             type="submit"
-            size="sm"
-            variant="primary"
-            isLoading={loading}
-            rightIcon={<Send className="w-3 h-3" />}
+            disabled={loading || !newNote.trim()}
+            className="px-4 py-2 rounded-xl bg-[#00A86B] hover:bg-[#00925d] text-white text-xs font-bold shadow-xs transition-all active:scale-98 cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
           >
-            Add Note
-          </OpsButton>
+            {loading && <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+            <Send className="w-3 h-3" />
+            <span>Add Note</span>
+          </button>
         </div>
       </form>
 
       {/* Notes list */}
       <div className="space-y-2.5 max-h-96 overflow-y-auto pr-1">
         {notes.length === 0 ? (
-          <div className="text-center py-6 text-xs text-[#829386] flex flex-col items-center gap-1.5 bg-[#FAF9F5] rounded border border-[#e2e0d8]">
-            <MessageSquare className="w-5 h-5 text-[#829386]/60" />
+          <div className="text-center py-6 text-xs text-[#6B7280] flex flex-col items-center gap-1.5 bg-[#F8F9FB] rounded-xl border border-[#ECEEF2]">
+            <MessageSquare className="w-5 h-5 text-[#9CA3AF]" />
             <span className="font-medium">No internal notes yet.</span>
           </div>
         ) : (
           notes.map((n) => (
             <div
               key={n.id}
-              className={`p-3.5 rounded border text-xs shadow-xs transition-all ${
+              className={`p-3.5 rounded-xl border text-xs shadow-xs transition-all ${
                 n.isPinned
-                  ? "bg-[#c49d32]/10 border-[#c49d32]/40 text-[#171916]"
-                  : "bg-[#FAF9F5] border-[#e2e0d8] text-[#4a4a45]"
+                  ? "bg-amber-50/70 border-amber-200 text-[#111827]"
+                  : "bg-[#F8F9FB] border-[#ECEEF2] text-[#374151]"
               }`}
             >
-              <div className="flex items-center justify-between mb-1.5 text-[11px] text-[#829386]">
-                <div className="flex items-center gap-1.5 font-bold text-[#171916] font-mono">
-                  {n.isPinned && <Pin className="w-3 h-3 text-[#c49d32] fill-[#c49d32]" />}
+              <div className="flex items-center justify-between mb-1.5 text-[11px] text-[#6B7280]">
+                <div className="flex items-center gap-1.5 font-bold text-[#111827] font-sans">
+                  {n.isPinned && <Pin className="w-3 h-3 text-amber-600 fill-amber-600" />}
                   <span>{n.employeeName}</span>
                 </div>
-                <span className="font-mono">
+                <span className="font-mono text-[10px] text-[#9CA3AF]">
                   {new Date(n.createdAt).toLocaleDateString("en-IN", {
                     day: "numeric",
                     month: "short",
@@ -109,7 +109,7 @@ export const InternalNotesPanel: React.FC<InternalNotesPanelProps> = ({
                   })}
                 </span>
               </div>
-              <p className="whitespace-pre-wrap leading-relaxed text-[#171916] font-sans">
+              <p className="whitespace-pre-wrap leading-relaxed text-[#111827] font-sans">
                 {n.note}
               </p>
             </div>

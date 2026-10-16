@@ -144,6 +144,10 @@ export interface OpsOrder {
   labelUrl?: string | null;
   manifestUrl?: string | null;
 
+  // Attached Quotation Document
+  quotationUrl?: string | null;
+  quotationFileName?: string | null;
+
   // Payments Ledger
   paymentTransactions?: OpsPaymentTransaction[];
 }

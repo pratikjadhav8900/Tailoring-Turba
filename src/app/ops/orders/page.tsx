@@ -22,6 +22,10 @@ import {
   RefreshCw,
   Plus,
   MessageCircle,
+  Building2,
+  X,
+  FileText,
+  ExternalLink,
 } from "lucide-react";
 
 function OpsOrdersContent() {
@@ -67,6 +71,14 @@ function OpsOrdersContent() {
       setLoading(false);
     }
   };
+
+  // Live search debounce (300ms) so typing filters immediately
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchOrders();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   useEffect(() => {
     fetchOrders();
@@ -137,16 +149,26 @@ function OpsOrdersContent() {
       <div className="space-y-4 w-full">
         {/* Filter and Control Bar */}
         <div className="p-3.5 bg-white border border-[#ECEEF2] rounded-2xl flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 shadow-xs">
-          {/* Search Input */}
-          <form onSubmit={handleSearchSubmit} className="relative flex-1 max-w-lg">
+          {/* Search Input with Clear Button */}
+          <form onSubmit={handleSearchSubmit} className="relative flex-1 max-w-xl">
             <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#9CA3AF]" />
             <input
               type="text"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Search by TT-..., customer, phone, brand..."
-              className="w-full bg-[#F8F9FB] border border-[#ECEEF2] focus:border-[#00A86B] focus:bg-white rounded-xl pl-10 pr-3.5 py-2 text-xs text-[#111827] placeholder:text-[#9CA3AF] outline-none font-sans transition-all shadow-2xs"
+              placeholder="Search by company (e.g. Kone Elevators), TT-..., customer, phone..."
+              className="w-full bg-[#F8F9FB] border border-[#ECEEF2] focus:border-[#00A86B] focus:bg-white rounded-xl pl-10 pr-9 py-2 text-xs text-[#111827] placeholder:text-[#9CA3AF] outline-none font-sans transition-all shadow-2xs"
             />
+            {searchInput && (
+              <button
+                type="button"
+                onClick={() => setSearchInput("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-[#E5E7EB] text-[#9CA3AF] hover:text-[#111827] transition-colors"
+                title="Clear search"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </form>
 
           {/* Filter Dropdowns and Actions */}
@@ -314,14 +336,28 @@ function OpsOrdersContent() {
                     key={order.id}
                     className="p-4 rounded-2xl bg-white border border-[#ECEEF2] shadow-xs space-y-3"
                   >
-                    {/* Header Row: Order ID & Tags */}
+                    {/* Header Row: Order ID, PDF tag & Tags */}
                     <div className="flex items-center justify-between gap-2">
-                      <Link
-                        href={`/ops/orders/${order.id}`}
-                        className="font-mono font-extrabold text-sm text-[#111827] hover:text-[#00A86B] transition-colors"
-                      >
-                        {order.formattedOrderNumber}
-                      </Link>
+                      <div className="flex items-center gap-2">
+                        <Link
+                          href={`/ops/orders/${order.id}`}
+                          className="font-mono font-extrabold text-sm text-[#111827] hover:text-[#00A86B] transition-colors"
+                        >
+                          {order.formattedOrderNumber}
+                        </Link>
+                        {order.quotationUrl && (
+                          <a
+                            href={order.quotationUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors"
+                            title="View Quotation PDF"
+                          >
+                            <FileText className="w-3 h-3 text-red-500" />
+                            <span>PDF</span>
+                          </a>
+                        )}
+                      </div>
                       <div className="flex items-center gap-1.5 flex-wrap justify-end">
                         {order.orderSource && (
                           <OpsBadge source={order.orderSource} size="sm" />
@@ -332,14 +368,21 @@ function OpsOrdersContent() {
 
                     {/* Customer & Garment Item summary */}
                     <div className="p-3 rounded-xl bg-[#F8F9FB] border border-[#ECEEF2] space-y-1">
-                      <div className="font-bold text-xs text-[#111827]">
-                        {order.customer.name || "Customer"}
-                      </div>
-                      {order.customer.companyName && (
-                        <div className="text-[11px] text-[#4B5563]">
-                          {order.customer.companyName}
+                      {order.customer.companyName ? (
+                        <div className="font-bold text-xs text-[#111827] flex items-center gap-1.5">
+                          <Building2 className="w-3.5 h-3.5 text-[#2563EB] shrink-0" />
+                          <span className="truncate">{order.customer.companyName}</span>
+                        </div>
+                      ) : (
+                        <div className="font-bold text-xs text-[#111827]">
+                          {order.customer.name || "Customer"}
                         </div>
                       )}
+                      <div className="text-[11px] text-[#4B5563]">
+                        {order.customer.companyName && order.customer.name && order.customer.name !== order.customer.companyName
+                          ? `${order.customer.name} • ${order.customer.phone || ""}`
+                          : order.customer.phone || "-"}
+                      </div>
                       <div className="text-xs text-[#111827] font-medium pt-1 border-t border-[#ECEEF2]/60 mt-1">
                         {order.items.map((i) => i.productName).join(", ")}
                       </div>
@@ -416,19 +459,42 @@ function OpsOrdersContent() {
                     {orders.map((order) => (
                       <tr key={order.id} className="hover:bg-[#F9FAFB] transition-colors">
                         <td className="py-3 px-3 font-mono font-bold text-[#111827]">
-                          <Link
-                            href={`/ops/orders/${order.id}`}
-                            className="hover:text-[#00A86B] transition-colors"
-                          >
-                            {order.formattedOrderNumber}
-                          </Link>
+                          <div className="flex items-center gap-1.5">
+                            <Link
+                              href={`/ops/orders/${order.id}`}
+                              className="hover:text-[#00A86B] transition-colors"
+                            >
+                              {order.formattedOrderNumber}
+                            </Link>
+                            {order.quotationUrl && (
+                              <a
+                                href={order.quotationUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-colors"
+                                title="View Quotation PDF"
+                              >
+                                <FileText className="w-3 h-3 text-red-500" />
+                                <span>PDF</span>
+                              </a>
+                            )}
+                          </div>
                         </td>
                         <td className="py-3 px-3">
                           <div className="font-bold text-[#111827]">
-                            {order.customer.name || "Customer"}
+                            {order.customer.companyName ? (
+                              <span className="flex items-center gap-1.5">
+                                <Building2 className="w-3.5 h-3.5 text-[#2563EB] shrink-0" />
+                                <span>{order.customer.companyName}</span>
+                              </span>
+                            ) : (
+                              order.customer.name || "Customer"
+                            )}
                           </div>
                           <div className="text-[10px] text-[#6B7280]">
-                            {order.customer.companyName || order.customer.phone || "-"}
+                            {order.customer.companyName && order.customer.name && order.customer.name !== order.customer.companyName
+                              ? `${order.customer.name} • ${order.customer.phone || ""}`
+                              : order.customer.phone || "-"}
                           </div>
                         </td>
                         <td className="py-3 px-3">

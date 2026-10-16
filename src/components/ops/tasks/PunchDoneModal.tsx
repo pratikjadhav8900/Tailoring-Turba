@@ -18,6 +18,8 @@ interface PunchDoneModalProps {
   onClose: () => void;
   onSuccess: () => void;
   isPunchingOnBehalf?: boolean;
+  initialNotes?: string;
+  initialVendorName?: string;
 }
 
 export const PunchDoneModal: React.FC<PunchDoneModalProps> = ({
@@ -26,12 +28,42 @@ export const PunchDoneModal: React.FC<PunchDoneModalProps> = ({
   onClose,
   onSuccess,
   isPunchingOnBehalf = false,
+  initialNotes = "",
+  initialVendorName = "",
 }) => {
-  const [vendorName, setVendorName] = useState("");
-  const [vendorCost, setVendorCost] = useState("");
-  const [notes, setNotes] = useState("");
+  const isProcurement =
+    task.stage === "RESOURCE_FABRIC" ||
+    task.title?.toLowerCase().includes("procure") ||
+    task.taskKey?.toLowerCase().includes("procure");
+
+  const [vendorName, setVendorName] = useState(
+    initialVendorName || task.vendorName || (isProcurement && initialNotes ? initialNotes : "")
+  );
+  const [vendorCost, setVendorCost] = useState(
+    task.vendorCost ? String(task.vendorCost) : ""
+  );
+  const [notes, setNotes] = useState(
+    initialNotes || (task.notes && task.notes !== task.instructions ? task.notes : "")
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Sync state if initial props change on open
+  React.useEffect(() => {
+    if (isOpen) {
+      if (initialVendorName || task.vendorName) {
+        setVendorName(initialVendorName || task.vendorName || "");
+      } else if (isProcurement && initialNotes) {
+        setVendorName(initialNotes);
+      }
+      if (initialNotes || (task.notes && task.notes !== task.instructions)) {
+        setNotes(initialNotes || (task.notes && task.notes !== task.instructions ? task.notes : ""));
+      }
+      if (task.vendorCost) {
+        setVendorCost(String(task.vendorCost));
+      }
+    }
+  }, [isOpen, initialNotes, initialVendorName, task]);
 
   if (!isOpen) return null;
 
@@ -69,12 +101,12 @@ export const PunchDoneModal: React.FC<PunchDoneModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
-      <div className="w-full max-w-md bg-white border border-[#E5E7EB] rounded-2xl shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
+      <div className="w-full max-w-md bg-white border border-[#E5E7EB] rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className={`px-5 py-4 border-b border-[#ECEEF2] flex items-center justify-between ${isPunchingOnBehalf ? "bg-amber-50/60" : "bg-emerald-50/50"}`}>
+        <div className={`px-4 sm:px-5 py-3.5 sm:py-4 border-b border-[#ECEEF2] flex items-center justify-between shrink-0 ${isPunchingOnBehalf ? "bg-amber-50/60" : "bg-emerald-50/50"}`}>
           <div className="flex items-center gap-2.5">
-            <div className={`w-8 h-8 rounded-xl ${isPunchingOnBehalf ? "bg-amber-600" : "bg-emerald-600"} text-white flex items-center justify-center shadow-xs`}>
+            <div className={`w-8 h-8 rounded-xl ${isPunchingOnBehalf ? "bg-amber-600" : "bg-emerald-600"} text-white flex items-center justify-center shadow-xs shrink-0`}>
               <Check className="w-4 h-4 stroke-[2.5]" />
             </div>
             <div>
@@ -96,7 +128,7 @@ export const PunchDoneModal: React.FC<PunchDoneModalProps> = ({
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-5 space-y-4 text-xs">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-5 space-y-4 text-xs overflow-y-auto flex-1">
           {error && (
             <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 font-medium">
               {error}
@@ -124,12 +156,16 @@ export const PunchDoneModal: React.FC<PunchDoneModalProps> = ({
             </p>
           </div>
 
-          {/* Optional Vendor Details */}
+          {/* Optional Vendor / Procurement Details */}
           <div className="space-y-3 pt-1">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-[#374151] flex items-center gap-1.5">
                 <Building2 className="w-3.5 h-3.5 text-[#00A86B]" />
-                <span>Vendor / Job-Worker Details (Optional)</span>
+                <span>
+                  {isProcurement
+                    ? "Procured From / Supplier (Optional)"
+                    : "Vendor / Job-Worker Details (Optional)"}
+                </span>
               </label>
               <span className="text-[10px] font-semibold text-[#9CA3AF] bg-[#F3F4F6] px-2 py-0.5 rounded-full">
                 Optional
@@ -141,7 +177,11 @@ export const PunchDoneModal: React.FC<PunchDoneModalProps> = ({
                 type="text"
                 value={vendorName}
                 onChange={(e) => setVendorName(e.target.value)}
-                placeholder="e.g. Sharma Embroidery, Om Sai Screen Print, Mill name..."
+                placeholder={
+                  isProcurement
+                    ? "e.g. Shanti Fabrics, Surat Mills, Gandhi Market, Supplier name..."
+                    : "e.g. Sharma Embroidery, Om Sai Screen Print, Mill name..."
+                }
                 className="w-full px-3.5 py-2.5 rounded-xl border border-[#D1D5DB] text-xs text-[#111827] focus:border-[#00A86B] outline-none"
               />
             </div>
@@ -153,7 +193,11 @@ export const PunchDoneModal: React.FC<PunchDoneModalProps> = ({
                 min="0"
                 value={vendorCost}
                 onChange={(e) => setVendorCost(e.target.value)}
-                placeholder="Job-work cost / challan amount (Optional ₹)"
+                placeholder={
+                  isProcurement
+                    ? "Procurement cost / bill amount (Optional ₹)"
+                    : "Job-work cost / challan amount (Optional ₹)"
+                }
                 className="w-full pl-7 pr-3.5 py-2 rounded-xl border border-[#D1D5DB] text-xs text-[#111827] focus:border-[#00A86B] outline-none"
               />
             </div>
@@ -163,30 +207,38 @@ export const PunchDoneModal: React.FC<PunchDoneModalProps> = ({
           <div>
             <label className="block text-xs font-bold text-[#374151] mb-1 flex items-center gap-1.5">
               <FileText className="w-3.5 h-3.5 text-[#00A86B]" />
-              <span>Completion Notes / Remarks (Optional)</span>
+              <span>
+                {isProcurement
+                  ? "Procurement Notes / Details (Optional)"
+                  : "Completion Notes / Remarks (Optional)"}
+              </span>
             </label>
             <textarea
               rows={2}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="e.g. Embroidery completed with 50 pcs in golden yellow thread. Ready for next step."
+              placeholder={
+                isProcurement
+                  ? "e.g. Procured 60m pure cotton fabric, challan verified, ready for cutting."
+                  : "e.g. Embroidery completed with 50 pcs in golden yellow thread. Ready for next step."
+              }
               className="w-full px-3.5 py-2 rounded-xl border border-[#D1D5DB] text-xs text-[#111827] focus:border-[#00A86B] outline-none resize-none"
             />
           </div>
 
           {/* Submit Action */}
-          <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#ECEEF2]">
+          <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 pt-3 border-t border-[#ECEEF2]">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl border border-[#D1D5DB] text-xs font-semibold text-[#4B5563] hover:bg-[#F3F4F6]"
+              className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-[#D1D5DB] text-xs font-semibold text-[#4B5563] hover:bg-[#F3F4F6] text-center"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-6 py-2.5 rounded-xl bg-[#00A86B] hover:bg-[#00925d] text-white text-xs font-bold flex items-center gap-2 shadow-xs transition-all active:scale-98 disabled:opacity-50"
+              className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-[#00A86B] hover:bg-[#00925d] text-white text-xs font-bold flex items-center justify-center gap-2 shadow-xs transition-all active:scale-98 disabled:opacity-50"
             >
               {isSubmitting ? (
                 <>

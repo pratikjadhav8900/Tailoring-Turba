@@ -457,30 +457,6 @@ function OpsLoginForm() {
                   className="w-full bg-white border border-[#D1D5DB] rounded-lg px-3.5 py-2.5 text-xs sm:text-sm text-[#111827] placeholder:text-[#9CA3AF] focus:border-[#00A86B] focus:ring-2 focus:ring-[#00A86B]/20 outline-none transition-all shadow-2xs"
                 />
               </div>
-
-              {/* Quick Profile Select Chips */}
-              <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                <span className="text-[10px] text-[#9CA3AF]">Quick select:</span>
-                {[
-                  { label: "Neeraj (Founder)", id: "TT001", pw: "turba@neeraj123" },
-                  { label: "Sanjay", id: "TT002", pw: "turba@sanjay123" },
-                  { label: "Pratik", id: "TT003", pw: "turba@pratik123" },
-                  { label: "Mahesh (Worker)", id: "TT004", pw: "worker@mahesh123" },
-                  { label: "Ajay (Worker)", id: "TT005", pw: "worker@ajay123" },
-                ].map((u) => (
-                  <button
-                    key={u.id}
-                    type="button"
-                    onClick={() => {
-                      setUserId(u.id);
-                      setPassword(u.pw);
-                    }}
-                    className="px-2 py-0.5 rounded-md bg-[#F4F6F9] hover:bg-emerald-50 text-[10px] font-semibold text-[#4B5563] hover:text-[#00A86B] border border-[#E5E7EB] transition-colors"
-                  >
-                    {u.label}
-                  </button>
-                ))}
-              </div>
             </div>
 
             {/* Field 2: Password */}

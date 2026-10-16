@@ -121,6 +121,11 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
   // Quotation Upload & AI Parse
   const [isParsingQuotation, setIsParsingQuotation] = useState(false);
   const [quotationSuccessMsg, setQuotationSuccessMsg] = useState<string | null>(null);
+  const [uploadedQuotationFile, setUploadedQuotationFile] = useState<{
+    url: string;
+    fileName: string;
+    fileSize?: number;
+  } | null>(null);
   const [showPasteText, setShowPasteText] = useState(false);
   const [pastedText, setPastedText] = useState("");
   const quotationFileInputRef = useRef<HTMLInputElement>(null);
@@ -240,6 +245,7 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
     setAmountPaid(0);
     setInternalNote("");
     setProductionAssets([]);
+    setUploadedQuotationFile(null);
     setItems([
       {
         productName: "",
@@ -314,6 +320,14 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
 
       if (!res.ok) {
         throw new Error(data.error || "Failed to parse quotation document.");
+      }
+
+      if (data.fileUrl) {
+        setUploadedQuotationFile({
+          url: data.fileUrl,
+          fileName: data.fileName || file.name,
+          fileSize: data.fileSize || file.size,
+        });
       }
 
       applyParsedQuotation(data.quotation);
@@ -523,6 +537,8 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
         amountPaid: Math.min(finalTotalAmount, Math.max(0, Number(amountPaid) || 0)),
         internalNote: internalNote.trim() || undefined,
         productionAssets: productionAssets.map((a) => a.url),
+        quotationUrl: uploadedQuotationFile?.url || undefined,
+        quotationFileName: uploadedQuotationFile?.fileName || undefined,
         shippingAddress:
           showAddress && (street || city)
             ? {
@@ -622,11 +638,13 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
           </div>
         </div>
 
-        {/* Scrollable Form Body */}
+        {/* Form Container with Fixed Footer */}
         <form
           onSubmit={handleSubmit}
-          className="p-4 sm:p-6 overflow-y-auto space-y-6 flex-1 text-xs text-[#111827]"
+          className="flex-1 flex flex-col min-h-0 overflow-hidden text-xs text-[#111827]"
         >
+          {/* Scrollable Form Body */}
+          <div className="p-4 sm:p-6 overflow-y-auto space-y-6 flex-1">
           {error && (
             <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2 font-medium">
               <AlertTriangle className="w-4 h-4 shrink-0 text-red-500" />
@@ -686,32 +704,88 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
               className="hidden"
             />
 
-            {/* Dropzone button */}
-            <div
-              onClick={() => quotationFileInputRef.current?.click()}
-              className={`p-4 border-2 border-dashed rounded-xl cursor-pointer transition-all flex flex-col items-center justify-center gap-2 ${
-                isParsingQuotation
-                  ? "border-[#2563EB] bg-[#EFF6FF]"
-                  : "border-[#CBD5E1] hover:border-[#2563EB] bg-white hover:bg-[#F8FAFC]"
-              }`}
-            >
-              {isParsingQuotation ? (
-                <div className="flex items-center gap-2 text-[#2563EB] font-bold text-xs py-1">
-                  <Loader2 className="w-4 h-4 animate-spin text-[#2563EB]" />
-                  <span>Scanning Quotation PDF & Extracting Garment Specifications...</span>
+            {/* Uploaded File Preview Card or Dropzone */}
+            {uploadedQuotationFile ? (
+              <div className="p-3.5 rounded-xl bg-white border border-[#CBD5E1] shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-xl bg-red-50 text-red-600 border border-red-200 flex items-center justify-center shrink-0">
+                    <FileText className="w-5 h-5 text-red-500" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs font-bold text-[#1E293B] truncate max-w-[200px] sm:max-w-xs">
+                        {uploadedQuotationFile.fileName}
+                      </span>
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        Quotation Attached
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-[#64748B] flex items-center gap-2 mt-0.5">
+                      {uploadedQuotationFile.fileSize ? (
+                        <span>{(uploadedQuotationFile.fileSize / 1024).toFixed(0)} KB</span>
+                      ) : null}
+                      <span>•</span>
+                      <span>Auto-filled & saved with order</span>
+                    </div>
+                  </div>
                 </div>
-              ) : (
-                <>
-                  <div className="flex items-center gap-2 text-[#334155] font-semibold">
-                    <UploadCloud className="w-5 h-5 text-[#2563EB]" />
-                    <span>Click to Upload Quotation (PDF, PNG, JPG)</span>
+
+                <div className="flex items-center gap-2 shrink-0 justify-end">
+                  <a
+                    href={uploadedQuotationFile.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1.5 rounded-lg bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-colors"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    <span>View PDF</span>
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => quotationFileInputRef.current?.click()}
+                    className="px-2.5 py-1.5 rounded-lg border border-[#E2E8F0] hover:bg-[#F8FAFC] text-[#475569] text-xs font-semibold flex items-center gap-1 transition-colors"
+                  >
+                    <FileUp className="w-3.5 h-3.5" />
+                    <span>Replace</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setUploadedQuotationFile(null)}
+                    className="p-1.5 rounded-lg text-[#94A3B8] hover:text-red-500 hover:bg-red-50 transition-colors"
+                    title="Remove quotation document"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* Dropzone button */
+              <div
+                onClick={() => quotationFileInputRef.current?.click()}
+                className={`p-4 border-2 border-dashed rounded-xl cursor-pointer transition-all flex flex-col items-center justify-center gap-2 ${
+                  isParsingQuotation
+                    ? "border-[#2563EB] bg-[#EFF6FF]"
+                    : "border-[#CBD5E1] hover:border-[#2563EB] bg-white hover:bg-[#F8FAFC]"
+                }`}
+              >
+                {isParsingQuotation ? (
+                  <div className="flex items-center gap-2 text-[#2563EB] font-bold text-xs py-1">
+                    <Loader2 className="w-4 h-4 animate-spin text-[#2563EB]" />
+                    <span>Scanning Quotation PDF & Extracting Garment Specifications...</span>
                   </div>
-                  <div className="text-[11px] text-[#64748B]">
-                    Supports official Vyapar / Tailoring Turba PDF quotes & scanned documents
-                  </div>
-                </>
-              )}
-            </div>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-2 text-[#334155] font-semibold">
+                      <UploadCloud className="w-5 h-5 text-[#2563EB]" />
+                      <span>Click to Upload Quotation (PDF, PNG, JPG)</span>
+                    </div>
+                    <div className="text-[11px] text-[#64748B]">
+                      Supports official Vyapar / Tailoring Turba PDF quotes & scanned documents
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
 
             {/* Optional Paste Text Box */}
             {showPasteText && (
@@ -1508,21 +1582,24 @@ export const CreateOrderModal: React.FC<CreateOrderModalProps> = ({
 
             {/* Internal Factory Notes */}
             <div>
-              <label className="block font-semibold text-[#4B5563] mb-1">
+              <label className="block font-semibold text-[#4B5563] mb-1.5">
                 Internal Production Notes & Terms
               </label>
               <textarea
-                rows={2}
+                rows={3}
                 placeholder="e.g. Quotation #452. 60% advance received. Customer requested embroidery sampling before bulk production."
                 value={internalNote}
                 onChange={(e) => setInternalNote(e.target.value)}
-                className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl px-3 py-2 text-xs outline-none font-sans"
+                className="w-full bg-[#F9FAFB] border border-[#E5E7EB] rounded-xl p-3 text-xs outline-none font-sans min-h-[85px] leading-relaxed resize-y focus:border-[#00A86B] focus:bg-white transition-all shadow-2xs"
               />
             </div>
           </div>
+          {/* Close Section 6 */}
+          </div>
+          {/* Close Scrollable Form Body */}
 
-          {/* Modal Footer */}
-          <div className="pt-4 border-t border-[#ECEEF2] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shrink-0">
+          {/* Fixed / Sticky Modal Footer: perfectly aligned and separated */}
+          <div className="p-4 sm:px-6 bg-white border-t border-[#ECEEF2] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shrink-0 rounded-b-2xl shadow-xs z-10">
             <div className="text-xs text-[#6B7280]">
               <span className="font-bold text-[#111827]">{totalQuantity} total pcs</span> across{" "}
               <span className="font-bold text-[#111827]">{items.length} styles</span>

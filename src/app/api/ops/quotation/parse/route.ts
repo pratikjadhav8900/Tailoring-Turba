@@ -82,12 +82,28 @@ export async function POST(req: NextRequest) {
       const bytes = await file.arrayBuffer();
       const buffer = Buffer.from(bytes);
       const mimeType = file.type || "application/octet-stream";
-      const fileName = file.name.toLowerCase();
+      const originalFileName = (file.name || "").toLowerCase();
+      // Persist the uploaded quotation document to public/uploads/quotations for long-term audit & viewing
+      let fileUrl = "";
+      try {
+        const fs = await import("fs/promises");
+        const path = await import("path");
+        const uploadsDir = path.join(process.cwd(), "public", "uploads", "quotations");
+        await fs.mkdir(uploadsDir, { recursive: true });
+
+        const safeBaseName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_");
+        const savedFilename = `quote-${Date.now()}-${safeBaseName}`;
+        const filePath = path.join(uploadsDir, savedFilename);
+        await fs.writeFile(filePath, buffer);
+        fileUrl = `/uploads/quotations/${savedFilename}`;
+      } catch (saveErr) {
+        console.warn("[QuotationParse] Failed to persist quotation file to disk:", saveErr);
+      }
 
       // Check if file is PDF
       const isPdf =
         mimeType === "application/pdf" ||
-        fileName.endsWith(".pdf") ||
+        originalFileName.endsWith(".pdf") ||
         (buffer.length >= 4 &&
           buffer[0] === 0x25 &&
           buffer[1] === 0x50 &&
@@ -101,6 +117,9 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({
             success: true,
             quotation,
+            fileUrl: fileUrl || undefined,
+            fileName: file.name,
+            fileSize: file.size,
             source: "PDF_NATIVE_TEXT",
           });
         }
@@ -111,6 +130,9 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({
             success: true,
             quotation: geminiResult,
+            fileUrl: fileUrl || undefined,
+            fileName: file.name,
+            fileSize: file.size,
             source: "AI_VISION",
           });
         }
@@ -119,6 +141,8 @@ export async function POST(req: NextRequest) {
           {
             error:
               "Could not extract text from this PDF. If this is a photo/scanned paper quote without text, please copy the text or configure Gemini Vision.",
+            fileUrl: fileUrl || undefined,
+            fileName: file.name,
           },
           { status: 422 }
         );
@@ -127,10 +151,10 @@ export async function POST(req: NextRequest) {
       // If file is Image (PNG, JPEG, WebP)
       const isImage =
         mimeType.startsWith("image/") ||
-        fileName.endsWith(".png") ||
-        fileName.endsWith(".jpg") ||
-        fileName.endsWith(".jpeg") ||
-        fileName.endsWith(".webp");
+        originalFileName.endsWith(".png") ||
+        originalFileName.endsWith(".jpg") ||
+        originalFileName.endsWith(".jpeg") ||
+        originalFileName.endsWith(".webp");
 
       if (isImage) {
         const effectiveMime = mimeType.startsWith("image/") ? mimeType : "image/jpeg";
@@ -139,6 +163,9 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({
             success: true,
             quotation: geminiResult,
+            fileUrl: fileUrl || undefined,
+            fileName: file.name,
+            fileSize: file.size,
             source: "AI_VISION",
           });
         }
@@ -147,6 +174,8 @@ export async function POST(req: NextRequest) {
           {
             error:
               "Image uploaded, but AI Vision (GEMINI_API_KEY) is not configured in your environment. You can upload a PDF quotation directly (works 100% offline) or paste the quotation text into the modal.",
+            fileUrl: fileUrl || undefined,
+            fileName: file.name,
           },
           { status: 422 }
         );

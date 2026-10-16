@@ -17,6 +17,21 @@ export async function POST(
   const auth = await requireOpsAuth();
   if (auth.errorResponse) return auth.errorResponse;
 
+  const isManagement =
+    auth.context.userRole === "ADMIN" ||
+    auth.context.userRole === "SUPER_ADMIN" ||
+    ["TT001", "TT002", "TT003"].includes(auth.context.employee.employeeCode) ||
+    auth.context.employee.name.includes("Pratik") ||
+    auth.context.employee.name.includes("Neeraj") ||
+    auth.context.employee.name.includes("Sanjay");
+
+  if (!isManagement) {
+    return NextResponse.json(
+      { error: "Access denied: Workers cannot advance order workflow stages. Only factory management can advance stages." },
+      { status: 403 }
+    );
+  }
+
   try {
     const orderId = params.id;
     const isNumeric = /^\d+$/.test(orderId);
@@ -104,13 +119,17 @@ export async function POST(
             stage: targetStage as OpsProductionStage,
             status: "FLAGGED_REWORK",
             iteration: nextIteration,
-            employeeId: auth.context.employee.id,
-            employeeName: auth.context.employee.name,
+            employeeId: null,
+            employeeName: "Unassigned",
             notes: `Rework initiated from QC: ${reworkReason}`,
             metadata: {
               ...(metadata || {}),
+              isStageMilestone: true,
+              isExplicitTask: false,
               reworkReason,
               initiatedFrom: "QUALITY_CHECK",
+              transitionedById: auth.context.employee.id,
+              transitionedByName: auth.context.employee.name,
             },
             attachments,
             startedAt: new Date(),
@@ -171,12 +190,18 @@ export async function POST(
     }
 
     // 2. Standard Stage Progression Validation (includes 60% advance payment rule)
+    // Factory management is authorized to transition stages directly
+    const effectiveOverride = Boolean(isOverride || isManagement);
+    const effectiveOverrideReason =
+      overrideReason ||
+      (notes && notes.length >= 5 ? notes : `Authorized by ${auth.context.employee.name}`);
+
     const validation = validateStageTransition(
       currentStage,
       targetStage,
       currentStatus,
-      isOverride,
-      overrideReason,
+      effectiveOverride,
+      effectiveOverrideReason,
       {
         totalAmount: order.totalAmount,
         amountPaid: order.amountPaid || 0,
@@ -199,32 +224,54 @@ export async function POST(
 
     // Execute standard forward or override transition
     const transitionResult = await prisma.$transaction(async (tx) => {
-      // Complete previous stage execution if present
-      if (latestExecution && latestExecution.stage === currentStage) {
-        await tx.productionStageExecution.update({
+      let executionRecord;
+      const isOrderCloseEvent = targetStage === "CLOSED" && determinedStatus === "COMPLETED";
+
+      // If completing current stage (e.g. Closing/Completing when already at CLOSED)
+      if (currentStage === targetStage && latestExecution) {
+        executionRecord = await tx.productionStageExecution.update({
           where: { id: latestExecution.id },
           data: {
-            status: "COMPLETED",
-            completedAt: new Date(),
+            status: determinedStatus,
+            completedAt: determinedStatus === "COMPLETED" ? new Date() : latestExecution.completedAt,
+            notes: notes || latestExecution.notes,
+          },
+        });
+      } else {
+        // Complete previous stage execution if present
+        if (latestExecution && latestExecution.stage === currentStage) {
+          await tx.productionStageExecution.update({
+            where: { id: latestExecution.id },
+            data: {
+              status: "COMPLETED",
+              completedAt: new Date(),
+            },
+          });
+        }
+
+        // Create new stage execution (Macro stage milestone, not an assigned worker task)
+        executionRecord = await tx.productionStageExecution.create({
+          data: {
+            orderId: order.id,
+            stage: targetStage,
+            status: determinedStatus,
+            iteration: latestExecution?.iteration || 1,
+            employeeId: null,
+            employeeName: "Unassigned",
+            notes: notes || null,
+            metadata: {
+              ...(metadata || {}),
+              isStageMilestone: true,
+              isExplicitTask: false,
+              transitionedById: auth.context.employee.id,
+              transitionedByName: auth.context.employee.name,
+            },
+            attachments,
+            startedAt: new Date(),
+            completedAt: determinedStatus === "COMPLETED" ? new Date() : null,
           },
         });
       }
-
-      // Create new stage execution
-      const newExecution = await tx.productionStageExecution.create({
-        data: {
-          orderId: order.id,
-          stage: targetStage,
-          status: determinedStatus,
-          iteration: latestExecution?.iteration || 1,
-          employeeId: auth.context.employee.id,
-          employeeName: auth.context.employee.name,
-          notes: notes || null,
-          metadata: metadata || null,
-          attachments,
-          startedAt: new Date(),
-        },
-      });
 
       // Update Order's opsStage
       await tx.order.update({
@@ -239,18 +286,27 @@ export async function POST(
 
       // Audit Timeline
       const stageName = STAGE_DISPLAY_NAMES[targetStage as OpsProductionStage] || targetStage;
-      const eventTitle = isOverride
+      const isExplicitOverride = Boolean(isOverride && overrideReason);
+      const eventTitle = isOrderCloseEvent
+        ? `Order Completed & Closed`
+        : isExplicitOverride
         ? `Stage Overridden to ${stageName}`
         : `Moved to ${stageName}`;
 
       await tx.orderTimelineEvent.create({
         data: {
           orderId: order.id,
-          eventType: isOverride ? "OPS_STAGE_OVERRIDDEN" : "OPS_STAGE_TRANSITION",
+          eventType: isOrderCloseEvent
+            ? "ORDER_COMPLETED"
+            : isExplicitOverride
+            ? "OPS_STAGE_OVERRIDDEN"
+            : "OPS_STAGE_TRANSITION",
           title: eventTitle,
-          description: isOverride
-            ? `Override reason: ${overrideReason}`
-            : notes || `Stage advanced by ${auth.context.employee.name}`,
+          description:
+            notes ||
+            (isOrderCloseEvent
+              ? `Order finalized and marked completed by ${auth.context.employee.name}`
+              : `Stage advanced to ${stageName} by ${auth.context.employee.name}`),
           actorId: auth.context.employee.id,
           actorName: auth.context.employee.name,
           actorRole: "EMPLOYEE",
@@ -258,9 +314,10 @@ export async function POST(
           metadata: {
             fromStage: currentStage,
             toStage: targetStage,
-            isOverride,
-            overrideReason,
-            notes,
+            status: determinedStatus,
+            isOverride: isExplicitOverride,
+            overrideReason: isExplicitOverride ? overrideReason : undefined,
+            notes: notes || undefined,
           },
         },
       });
@@ -270,15 +327,19 @@ export async function POST(
         data: {
           orderId: order.id,
           orderNumber: order.orderNumber,
-          type: "STAGE_CHANGE",
-          title: `TT-${order.orderNumber} → ${stageName}`,
-          message: `Order TT-${order.orderNumber} updated to ${stageName} by ${auth.context.employee.name}`,
+          type: isOrderCloseEvent ? "ORDER_DELIVERED" : "STAGE_CHANGE",
+          title: isOrderCloseEvent
+            ? `TT-${order.orderNumber} Completed & Closed`
+            : `TT-${order.orderNumber} → ${stageName}`,
+          message: isOrderCloseEvent
+            ? `Order TT-${order.orderNumber} was finalized and closed by ${auth.context.employee.name}`
+            : `Order TT-${order.orderNumber} updated to ${stageName} by ${auth.context.employee.name}`,
           actorName: auth.context.employee.name,
           readBy: [auth.context.employee.id],
         },
       });
 
-      return newExecution;
+      return executionRecord;
     });
 
     return NextResponse.json({

@@ -11,6 +11,21 @@ export async function POST(
   const auth = await requireOpsAuth();
   if (auth.errorResponse) return auth.errorResponse;
 
+  const isManagement =
+    auth.context.userRole === "ADMIN" ||
+    auth.context.userRole === "SUPER_ADMIN" ||
+    ["TT001", "TT002", "TT003"].includes(auth.context.employee.employeeCode) ||
+    auth.context.employee.name.includes("Pratik") ||
+    auth.context.employee.name.includes("Neeraj") ||
+    auth.context.employee.name.includes("Sanjay");
+
+  if (!isManagement) {
+    return NextResponse.json(
+      { error: "Access denied: Workers cannot allocate fabric resources." },
+      { status: 403 }
+    );
+  }
+
   try {
     const orderId = params.id;
     const isNumeric = /^\d+$/.test(orderId);

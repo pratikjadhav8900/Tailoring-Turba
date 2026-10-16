@@ -9,7 +9,7 @@ import {
 import type { OpsOrder } from "@/types/ops";
 import { OpsBadge } from "../ui/OpsBadge";
 import { StageActionModal } from "../stages/StageActionModal";
-import { ChevronRight, Clock, AlertTriangle } from "lucide-react";
+import { ChevronRight, Clock, AlertTriangle, Check } from "lucide-react";
 
 interface OpsKanbanBoardProps {
   orders: OpsOrder[];
@@ -130,13 +130,43 @@ export const OpsKanbanBoard: React.FC<OpsKanbanBoardProps> = ({
                             </div>
                           )}
 
-                          <button
-                            onClick={() => setSelectedOrderForStage(order)}
-                            title="Advance Stage"
-                            className="p-1.5 rounded-full bg-[#F4F6F9] hover:bg-[#00A86B] text-[#4B5563] hover:text-white transition-all shadow-xs"
-                          >
-                            <ChevronRight className="w-3.5 h-3.5" />
-                          </button>
+                          {(() => {
+                            const isLastStage = order.opsStage === "CLOSED";
+                            const isOrderCompleted = isLastStage && order.status === "DELIVERED";
+
+                            if (isOrderCompleted) {
+                              return (
+                                <span
+                                  title="Order Completed"
+                                  className="p-1 rounded-full bg-emerald-100 text-emerald-700 shrink-0"
+                                >
+                                  <Check className="w-3.5 h-3.5" />
+                                </span>
+                              );
+                            }
+
+                            if (isLastStage) {
+                              return (
+                                <button
+                                  onClick={() => setSelectedOrderForStage(order)}
+                                  title="Complete & Close Order"
+                                  className="p-1.5 rounded-full bg-emerald-50 hover:bg-[#00A86B] text-emerald-700 hover:text-white transition-all shadow-xs shrink-0 cursor-pointer"
+                                >
+                                  <Check className="w-3.5 h-3.5" />
+                                </button>
+                              );
+                            }
+
+                            return (
+                              <button
+                                onClick={() => setSelectedOrderForStage(order)}
+                                title="Advance Stage"
+                                className="p-1.5 rounded-full bg-[#F4F6F9] hover:bg-[#00A86B] text-[#4B5563] hover:text-white transition-all shadow-xs shrink-0 cursor-pointer"
+                              >
+                                <ChevronRight className="w-3.5 h-3.5" />
+                              </button>
+                            );
+                          })()}
                         </div>
                       </div>
                     </div>

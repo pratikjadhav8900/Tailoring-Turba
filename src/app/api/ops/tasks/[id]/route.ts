@@ -20,7 +20,7 @@ export async function PATCH(
     const body = await req.json();
 
     const {
-      status = "COMPLETED",
+      status: reqStatus,
       notes,
       vendorName,
       vendorCost,
@@ -58,21 +58,24 @@ export async function PATCH(
       );
     }
 
+    const status = reqStatus !== undefined ? reqStatus : (notes !== undefined || vendorName !== undefined ? task.status : "COMPLETED");
+    const isMarkingCompleted = status === "COMPLETED";
+
     const existingMeta = (task.metadata as Record<string, any>) || {};
     const taskTitle = existingMeta.taskTitle || existingMeta.title || task.stage.replace(/_/g, " ");
 
     const updatedMetadata = {
       ...existingMeta,
-      vendorName: vendorName?.trim() || existingMeta.vendorName || null,
-      vendorCost: vendorCost ? Number(vendorCost) : existingMeta.vendorCost || null,
+      vendorName: vendorName !== undefined ? (vendorName?.trim() || null) : (existingMeta.vendorName || null),
+      vendorCost: vendorCost !== undefined ? (vendorCost ? Number(vendorCost) : null) : (existingMeta.vendorCost || null),
       completedByEmployeeId: auth.context.employee.id,
       completedByEmployeeName: auth.context.employee.name,
       punchedOnBehalf: !isAssignedWorker && isManagement,
       assignedWorkerName: task.employeeName,
-      completionTimestamp: new Date().toISOString(),
+      workerNote: notes !== undefined ? (notes?.trim() || null) : (existingMeta.workerNote || null),
+      lastUpdatedTimestamp: new Date().toISOString(),
+      ...(isMarkingCompleted ? { completionTimestamp: new Date().toISOString() } : {}),
     };
-
-    const isMarkingCompleted = status === "COMPLETED";
 
     const updatedExecution = await prisma.$transaction(async (tx) => {
       // 1. Update task execution
@@ -80,25 +83,34 @@ export async function PATCH(
         where: { id: taskId },
         data: {
           status: status as any,
-          notes: notes?.trim() || task.notes,
+          notes: notes !== undefined ? (notes?.trim() || null) : task.notes,
           metadata: updatedMetadata,
           attachments: attachments.length > 0 ? attachments : task.attachments,
-          completedAt: isMarkingCompleted ? new Date() : null,
+          completedAt: isMarkingCompleted ? (task.completedAt || new Date()) : (status === "IN_PROGRESS" || status === "PENDING" ? null : task.completedAt),
         },
       });
 
       // 2. Add Timeline Audit Event
-      const vendorDetailStr = vendorName ? ` [Vendor: ${vendorName}${vendorCost ? ` • ₹${vendorCost}` : ""}]` : "";
+      const finalVendorName = vendorName !== undefined ? vendorName?.trim() : existingMeta.vendorName;
+      const finalCost = vendorCost !== undefined ? vendorCost : existingMeta.vendorCost;
+      const vendorDetailStr = finalVendorName ? ` [Vendor: ${finalVendorName}${finalCost ? ` • ₹${finalCost}` : ""}]` : "";
       const onBehalfStr = !isAssignedWorker ? ` (on behalf of ${task.employeeName})` : "";
+
+      const eventTitle = isMarkingCompleted
+        ? `✓ Done: ${taskTitle} (${auth.context.employee.name}${onBehalfStr})`
+        : `Note Added: ${taskTitle} (${auth.context.employee.name}${onBehalfStr})`;
+
       const description = notes?.trim()
         ? `${notes}${onBehalfStr}${vendorDetailStr}`
-        : `Completed by ${auth.context.employee.name}${onBehalfStr}${vendorDetailStr}`;
+        : (isMarkingCompleted
+            ? `Completed by ${auth.context.employee.name}${onBehalfStr}${vendorDetailStr}`
+            : `Updated by ${auth.context.employee.name}${onBehalfStr}${vendorDetailStr}`);
 
       await tx.orderTimelineEvent.create({
         data: {
           orderId: task.orderId,
           eventType: isMarkingCompleted ? "TASK_COMPLETED" : "TASK_UPDATED",
-          title: `✓ Done: ${taskTitle} (${auth.context.employee.name}${onBehalfStr})`,
+          title: eventTitle,
           description,
           actorId: auth.context.employee.id,
           actorName: auth.context.employee.name,
@@ -110,14 +122,14 @@ export async function PATCH(
             workerName: auth.context.employee.name,
             assignedWorkerName: task.employeeName,
             punchedOnBehalf: !isAssignedWorker,
-            notes,
-            vendorName,
-            vendorCost,
+            notes: notes !== undefined ? notes : task.notes,
+            vendorName: finalVendorName,
+            vendorCost: finalCost,
           },
         },
       });
 
-      // 3. Dispatch Notification to Neeraj, Sanjay, and Pratik
+      // 3. Dispatch Notification to Neeraj, Sanjay, and Pratik if completed
       if (isMarkingCompleted) {
         const actorLabel = isAssignedWorker
           ? auth.context.employee.name
@@ -129,7 +141,7 @@ export async function PATCH(
             orderNumber: task.order.orderNumber,
             type: "TASK_COMPLETED",
             title: `Task Completed: ${taskTitle} (TT-${task.order.orderNumber})`,
-            message: `${actorLabel} punched DONE on "${taskTitle}" for Order TT-${task.order.orderNumber}.${notes ? ` Note: "${notes}"` : ""}${vendorName ? ` (Vendor: ${vendorName})` : ""}`,
+            message: `${actorLabel} punched DONE on "${taskTitle}" for Order TT-${task.order.orderNumber}.${notes ? ` Note: "${notes}"` : ""}${finalVendorName ? ` (Vendor: ${finalVendorName})` : ""}`,
             actorName: auth.context.employee.name,
             readBy: [auth.context.employee.id], // marked read by worker who finished it, unread for managers
             metadata: {
@@ -141,7 +153,7 @@ export async function PATCH(
               completedForWorkerName: task.employeeName,
               completedForWorkerId: task.employeeId,
               notes,
-              vendorName,
+              vendorName: finalVendorName,
             },
           },
         });

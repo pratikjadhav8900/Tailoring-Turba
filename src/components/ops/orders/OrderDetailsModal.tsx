@@ -25,6 +25,8 @@ import {
   CheckCircle2,
   Clock,
   ShieldCheck,
+  Copy,
+  Check,
 } from "lucide-react";
 
 interface OrderDetailsModalProps {
@@ -59,6 +61,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
   mockupFileInputRef,
 }) => {
   const [activeTab, setActiveTab] = useState<DetailTab>("SPECS");
+  const [copiedId, setCopiedId] = useState(false);
 
   // Prevent background scrolling while modal is open
   useEffect(() => {
@@ -97,6 +100,26 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
               <span className="font-mono text-base font-extrabold text-[#111827]">
                 {order.formattedOrderNumber}
               </span>
+              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white border border-[#E5E7EB] text-[#4B5563] text-[11px] font-mono shadow-2xs">
+                <span className="text-[#9CA3AF] text-[9px] font-bold uppercase">ID:</span>
+                <span className="font-semibold text-[#111827]">{order.id.slice(0, 8)}...</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(order.id);
+                    setCopiedId(true);
+                    setTimeout(() => setCopiedId(false), 2000);
+                  }}
+                  className="p-0.5 rounded hover:bg-[#F3F4F6] text-[#6B7280] hover:text-[#111827] transition-colors"
+                  title={`Copy unique order ID: ${order.id}`}
+                >
+                  {copiedId ? (
+                    <Check className="w-3 h-3 text-[#00A86B]" />
+                  ) : (
+                    <Copy className="w-3 h-3" />
+                  )}
+                </button>
+              </div>
               <OpsBadge stage={order.opsStage} size="sm" />
               <OpsBadge status={order.currentExecution?.status || "PENDING"} size="sm" />
             </div>
@@ -230,6 +253,50 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                   Total Units: <strong className="text-[#111827]">{order.totalQuantity} pcs</strong>
                 </span>
               </div>
+
+              {/* Official Quotation Document Card */}
+              {order.quotationUrl && (
+                <div className="p-3.5 sm:p-4 rounded-xl bg-gradient-to-r from-blue-50/80 via-indigo-50/40 to-white border border-blue-200 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-xl bg-red-50 text-red-600 border border-red-200 flex items-center justify-center shrink-0 shadow-2xs">
+                      <FileText className="w-5 h-5 text-red-500" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs font-bold text-[#111827] truncate">
+                          {order.quotationFileName || "Quotation-Document.pdf"}
+                        </span>
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700 border border-blue-200">
+                          Official Quotation
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-[#6B7280] mt-0.5">
+                        Uploaded customer quotation PDF attached during order intake
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <a
+                      href={order.quotationUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3.5 py-1.5 rounded-lg bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-colors"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      <span>View PDF</span>
+                    </a>
+                    <a
+                      href={order.quotationUrl}
+                      download={order.quotationFileName || "quotation.pdf"}
+                      className="p-1.5 rounded-lg border border-[#CBD5E1] bg-white hover:bg-[#F8FAFC] text-[#475569] transition-colors"
+                      title="Download PDF"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
+                </div>
+              )}
 
               {order.items.map((item, idx) => {
                 const custom = (item.customState as any) || {};
@@ -630,6 +697,43 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                   );
                 })()}
               </div>
+
+              {/* Official Quotation Document */}
+              {order.quotationUrl && (
+                <div className="p-4 rounded-xl bg-[#F8F9FB] border border-[#ECEEF2] space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold uppercase tracking-wider text-[11px] text-[#6B7280]">
+                      Official Quotation Document
+                    </span>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700">
+                      PDF Linked
+                    </span>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-white border border-[#ECEEF2] flex items-center justify-between gap-3 shadow-2xs">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-8 h-8 rounded-lg bg-red-50 text-red-600 border border-red-200 flex items-center justify-center shrink-0">
+                        <FileText className="w-4 h-4 text-red-500" />
+                      </div>
+                      <span className="font-semibold text-[#111827] truncate font-mono text-xs">
+                        {order.quotationFileName || "Quotation-Document.pdf"}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <a
+                        href={order.quotationUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#2563EB] hover:bg-[#1D4ED8] text-white flex items-center gap-1 transition-colors shadow-2xs"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                        <span>View PDF</span>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* High-Resolution Print Assets & Vector Files */}
               <div className="p-4 rounded-xl bg-[#F8F9FB] border border-[#ECEEF2] space-y-3">

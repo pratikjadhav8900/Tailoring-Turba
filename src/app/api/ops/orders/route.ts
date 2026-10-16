@@ -41,16 +41,35 @@ export async function GET(req: NextRequest) {
       where.orderSource = source;
     }
 
-    // Search by orderNumber, customer name, email, or phone
+    // Search by orderNumber, unique ID, company name, customer name, email, or phone
     if (search) {
-      const numericOrderNumber = parseInt(search.replace(/\D/g, ""), 10);
-      where.OR = [
+      const trimmedSearch = search.trim();
+      const numericOrderNumber = parseInt(trimmedSearch.replace(/\D/g, ""), 10);
+      const searchWords = trimmedSearch.split(/\s+/).filter(Boolean);
+
+      const conditions: any[] = [
         ...(isNaN(numericOrderNumber) ? [] : [{ orderNumber: numericOrderNumber }]),
-        { user: { name: { contains: search, mode: "insensitive" } } },
-        { user: { email: { contains: search, mode: "insensitive" } } },
-        { user: { phone: { contains: search, mode: "insensitive" } } },
-        { user: { companyName: { contains: search, mode: "insensitive" } } },
+        { id: { contains: trimmedSearch, mode: "insensitive" } },
+        { user: { name: { contains: trimmedSearch, mode: "insensitive" } } },
+        { user: { companyName: { contains: trimmedSearch, mode: "insensitive" } } },
+        { user: { email: { contains: trimmedSearch, mode: "insensitive" } } },
+        { user: { phone: { contains: trimmedSearch, mode: "insensitive" } } },
+        { shippingAddress: { name: { contains: trimmedSearch, mode: "insensitive" } } },
       ];
+
+      // If search has multiple words (e.g. "kone elevators" or "kone elvators"), check each word individually against company and customer names
+      if (searchWords.length > 1) {
+        for (const word of searchWords) {
+          if (word.length >= 2) {
+            conditions.push(
+              { user: { companyName: { contains: word, mode: "insensitive" } } },
+              { user: { name: { contains: word, mode: "insensitive" } } }
+            );
+          }
+        }
+      }
+
+      where.OR = conditions;
     }
 
     const [orders, totalCount] = await Promise.all([
@@ -100,6 +119,7 @@ export async function GET(req: NextRequest) {
             orderBy: { createdAt: "desc" },
             take: 1,
           },
+          orderSheet: true,
         },
       }),
       prisma.order.count({ where }),
@@ -221,6 +241,8 @@ export async function GET(req: NextRequest) {
         awbNumber: latestShipment?.awbNumber || order.bigshipTrackingId,
         labelUrl: latestShipment?.labelUrl || order.bigshipLabelUrl,
         manifestUrl: latestShipment?.manifestUrl || order.bigshipManifestUrl,
+        quotationUrl: (order.orderSheet?.sheetData as any)?.quotationUrl || null,
+        quotationFileName: (order.orderSheet?.sheetData as any)?.quotationFileName || null,
       };
     });
 
@@ -262,6 +284,8 @@ export async function POST(req: NextRequest) {
       totalAmount: customTotalAmount,
       internalNote,
       productionAssets = [],
+      quotationUrl,
+      quotationFileName,
     } = body;
 
     if (!items || !Array.isArray(items) || items.length === 0) {
@@ -290,7 +314,9 @@ export async function POST(req: NextRequest) {
         targetUserId = existingUser.id;
         // Enrich user info if newly provided
         const updateData: any = {};
-        if (customerCompanyName && !existingUser.companyName) updateData.companyName = customerCompanyName.trim();
+        if (customerCompanyName && customerCompanyName.trim()) {
+          updateData.companyName = customerCompanyName.trim();
+        }
         if (customerGstNumber && !existingUser.gstNumber) updateData.gstNumber = customerGstNumber.trim();
         if (customerName && existingUser.name === "Customer") updateData.name = customerName.trim();
         if (customerPhone && !existingUser.phone) updateData.phone = customerPhone.trim();
@@ -456,6 +482,20 @@ export async function POST(req: NextRequest) {
         });
       }
 
+      // If quotation PDF/file was uploaded, store it in OrderSheet
+      if (quotationUrl) {
+        await tx.orderSheet.create({
+          data: {
+            orderId: order.id,
+            sheetData: {
+              quotationUrl,
+              quotationFileName: quotationFileName || "quotation.pdf",
+              uploadedAt: new Date().toISOString(),
+            },
+          },
+        });
+      }
+
       // Order timeline audit log
       await tx.orderTimelineEvent.create({
         data: {
@@ -475,6 +515,8 @@ export async function POST(req: NextRequest) {
             remainingAmount,
             priority,
             productionAssets: Array.isArray(productionAssets) ? productionAssets : [],
+            quotationUrl: quotationUrl || null,
+            quotationFileName: quotationFileName || null,
           },
         },
       });
@@ -511,6 +553,8 @@ export async function POST(req: NextRequest) {
         totalAmount: newOrder.totalAmount,
         amountPaid: newOrder.amountPaid,
         remainingAmount: newOrder.remainingAmount,
+        quotationUrl: quotationUrl || null,
+        quotationFileName: quotationFileName || null,
       },
     });
   } catch (error: any) {

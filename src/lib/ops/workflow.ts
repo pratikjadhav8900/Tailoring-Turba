@@ -187,8 +187,38 @@ export function validateStageTransition(
     return { allowed: true };
   }
 
-  const currentIndex = STAGE_SEQUENCE.indexOf(currentStage);
-  const targetIndex = STAGE_SEQUENCE.indexOf(targetStage);
+  // Rework flow: returning from inspection/packing to earlier reworkable stage or returning back after rework
+  if (
+    (currentStage === "QUALITY_CHECK" || currentStage === "PACKING") &&
+    REWORKABLE_STAGES.includes(targetStage)
+  ) {
+    return { allowed: true, isRework: true };
+  }
+
+  if (
+    REWORKABLE_STAGES.includes(currentStage as OpsProductionStage) &&
+    (targetStage === "QUALITY_CHECK" || targetStage === "PACKING") &&
+    currentStatus === "FLAGGED_REWORK"
+  ) {
+    return { allowed: true, isRework: true };
+  }
+
+  const LEGACY_STAGE_INDEX: Partial<Record<OpsProductionStage, number>> = {
+    CUTTING: 2,
+    STITCHING: 3,
+    QUALITY_CHECK: 4,
+    READY_FOR_DISPATCH: 5,
+  };
+
+  const currentIndex =
+    STAGE_SEQUENCE.indexOf(currentStage) !== -1
+      ? STAGE_SEQUENCE.indexOf(currentStage)
+      : LEGACY_STAGE_INDEX[currentStage] ?? -1;
+
+  const targetIndex =
+    STAGE_SEQUENCE.indexOf(targetStage) !== -1
+      ? STAGE_SEQUENCE.indexOf(targetStage)
+      : LEGACY_STAGE_INDEX[targetStage] ?? -1;
 
   if (currentIndex === -1 || targetIndex === -1) {
     return { allowed: false, error: "Invalid stage identifier." };

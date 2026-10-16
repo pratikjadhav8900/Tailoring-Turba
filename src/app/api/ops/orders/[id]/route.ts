@@ -62,6 +62,7 @@ export async function GET(
         paymentTransactions: {
           orderBy: { createdAt: "desc" },
         },
+        orderSheet: true,
       },
     });
 
@@ -182,6 +183,8 @@ export async function GET(
       awbNumber: latestShipment?.awbNumber || order.bigshipTrackingId,
       labelUrl: latestShipment?.labelUrl || order.bigshipLabelUrl,
       manifestUrl: latestShipment?.manifestUrl || order.bigshipManifestUrl,
+      quotationUrl: (order.orderSheet?.sheetData as any)?.quotationUrl || null,
+      quotationFileName: (order.orderSheet?.sheetData as any)?.quotationFileName || null,
       paymentTransactions: order.paymentTransactions?.map((tx) => ({
         id: tx.id,
         orderId: tx.orderId,
@@ -249,6 +252,21 @@ export async function PATCH(
 
     if (!existingOrder) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    }
+
+    const isManagement =
+      auth.context.userRole === "ADMIN" ||
+      auth.context.userRole === "SUPER_ADMIN" ||
+      ["TT001", "TT002", "TT003"].includes(auth.context.employee.employeeCode) ||
+      auth.context.employee.name.includes("Pratik") ||
+      auth.context.employee.name.includes("Neeraj") ||
+      auth.context.employee.name.includes("Sanjay");
+
+    if ((dueDate !== undefined || priority !== undefined) && !isManagement) {
+      return NextResponse.json(
+        { error: "Access denied: Only factory management can modify order priority or target due date." },
+        { status: 403 }
+      );
     }
 
     const updateData: any = {};

@@ -106,18 +106,23 @@ export const StageProgressBar: React.FC<StageProgressBarProps> = ({
               const isPassed = currentIndex > idx;
 
               if (isCurrent) {
+                const isCompleted = currentStatus === "COMPLETED";
                 return (
                   <div
                     key={stage}
                     className="shrink-0 px-3 py-1.5 rounded-xl bg-[#00A86B] text-white flex items-center gap-2 shadow-xs border border-[#00A86B]"
                   >
                     <span className="w-4 h-4 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] font-bold font-mono">
-                      {idx + 1}
+                      {isCompleted ? <Check className="w-3 h-3 stroke-[3]" /> : idx + 1}
                     </span>
                     <span className="text-xs font-bold whitespace-nowrap">
                       {STAGE_DISPLAY_NAMES[stage]}
                     </span>
-                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                    {isCompleted ? (
+                      <Check className="w-3.5 h-3.5 text-white stroke-[2.5]" />
+                    ) : (
+                      <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                    )}
                   </div>
                 );
               }
@@ -233,7 +238,11 @@ export const StageProgressBar: React.FC<StageProgressBarProps> = ({
               <div
                 className={`w-6 h-6 rounded-full flex items-center justify-center mb-1 text-[11px] font-mono font-bold ${stepNumberBg}`}
               >
-                {isPassed ? <Check className="w-3.5 h-3.5 stroke-[2.5]" /> : idx + 1}
+                {isPassed || (isCurrent && currentStatus === "COMPLETED") ? (
+                  <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                ) : (
+                  idx + 1
+                )}
               </div>
               <div
                 className={`text-[11px] font-semibold leading-tight truncate w-full ${stepTextColor}`}

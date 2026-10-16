@@ -68,19 +68,28 @@ export const ReworkModal: React.FC<ReworkModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#171916]/60 backdrop-blur-sm">
-      <div className="w-full max-w-lg bg-white border border-[#e2e0d8] rounded-lg shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+      <div className="w-full max-w-lg bg-white border border-[#ECEEF2] rounded-2xl shadow-2xl overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="px-5 py-3.5 bg-[#8b2020]/10 border-b border-[#8b2020]/25 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-[#8b2020]">
-            <AlertTriangle className="w-4 h-4 shrink-0" />
-            <h3 className="text-sm font-bold text-[#171916] font-mono uppercase tracking-wider">
-              Flag Defect & Initiate Rework — TT-{orderNumber}
-            </h3>
+        <div className="px-5 py-4 border-b border-red-100 bg-red-50/50 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-red-100 flex items-center justify-center text-red-600 shrink-0">
+              <AlertTriangle className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-sm sm:text-base font-bold text-red-900 font-sans">
+                Flag Defect & Initiate Rework
+              </h3>
+              <p className="text-[11px] text-red-600 font-semibold font-mono">
+                Order TT-{orderNumber}
+              </p>
+            </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="p-1 text-[#829386] hover:text-[#171916] rounded"
+            className="w-8 h-8 rounded-full text-[#6B7280] hover:text-[#111827] hover:bg-white/80 flex items-center justify-center transition-colors cursor-pointer"
+            title="Close"
           >
             <X className="w-4 h-4" />
           </button>
@@ -89,23 +98,23 @@ export const ReworkModal: React.FC<ReworkModalProps> = ({
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           {error && (
-            <div className="p-3 rounded bg-[#8b2020]/10 border border-[#8b2020]/30 text-[#8b2020] text-xs font-mono font-medium">
+            <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-semibold font-sans">
               {error}
             </div>
           )}
 
-          <div className="p-3.5 rounded bg-[#FAF9F5] border border-[#e2e0d8] text-xs text-[#4a4a45] leading-relaxed">
-            Flagging rework marks the order with <strong className="text-[#8b2020] font-mono">FLAGGED_REWORK</strong> and returns it to the selected production stage with an incremented iteration counter. Once corrected, it returns directly to Quality Inspection.
+          <div className="p-3.5 rounded-xl bg-red-50/60 border border-red-200 text-xs text-red-900 leading-relaxed font-sans">
+            Flagging rework marks the order with <strong className="font-semibold text-red-700">FLAGGED_REWORK</strong> and returns it to the selected production stage with an incremented iteration counter. Once corrected, it returns directly to Quality Inspection.
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-[#171916] mb-1.5 font-mono uppercase text-[11px]">
+            <label className="block text-xs font-bold text-[#111827] mb-1.5 font-sans">
               Select Defective Stage to Return To
             </label>
             <select
               value={targetStage}
               onChange={(e) => setTargetStage(e.target.value as OpsProductionStage)}
-              className="w-full bg-[#FAF9F5] border border-[#e2e0d8] focus:border-[#8b2020] focus:bg-white rounded p-2 text-xs text-[#171916] font-mono outline-none"
+              className="w-full bg-[#F8F9FA] border border-[#ECEEF2] focus:border-red-500 focus:bg-white rounded-xl p-2.5 text-xs text-[#111827] font-sans font-semibold outline-none transition-all cursor-pointer"
             >
               {REWORKABLE_STAGES.map((s) => (
                 <option key={s} value={s}>
@@ -116,7 +125,7 @@ export const ReworkModal: React.FC<ReworkModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-[#171916] mb-1.5 font-mono uppercase text-[11px]">
+            <label className="block text-xs font-bold text-[#111827] mb-1.5 font-sans">
               Defect & Rework Rationale (Required)
             </label>
             <textarea
@@ -125,23 +134,27 @@ export const ReworkModal: React.FC<ReworkModalProps> = ({
               value={reworkReason}
               onChange={(e) => setReworkReason(e.target.value)}
               placeholder="Detail the specific defects found (e.g. Broken seams along right collar, collar misaligned on 5 size L pieces)..."
-              className="w-full bg-[#FAF9F5] border border-[#e2e0d8] focus:border-[#8b2020] focus:bg-white rounded p-2.5 text-xs text-[#171916] placeholder:text-[#829386] outline-none resize-none font-sans"
+              className="w-full bg-[#F8F9FA] border border-[#ECEEF2] focus:border-red-500 focus:bg-white rounded-xl p-3 text-xs text-[#111827] placeholder:text-[#9CA3AF] outline-none resize-none font-sans transition-all"
             />
           </div>
 
-          <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#e2e0d8]">
-            <OpsButton type="button" variant="ghost" size="sm" onClick={onClose}>
-              Cancel
-            </OpsButton>
-            <OpsButton
-              type="submit"
-              variant="danger"
-              size="sm"
-              isLoading={loading}
-              leftIcon={<AlertTriangle className="w-3.5 h-3.5" />}
+          <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-[#ECEEF2]">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 rounded-xl text-xs font-semibold text-[#4B5563] hover:text-[#111827] hover:bg-[#F3F4F6] transition-colors cursor-pointer"
             >
-              Confirm Rework
-            </OpsButton>
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold shadow-md shadow-red-600/20 transition-all active:scale-98 cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+            >
+              {loading && <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+              <AlertTriangle className="w-3.5 h-3.5" />
+              <span>Confirm Rework</span>
+            </button>
           </div>
         </form>
       </div>

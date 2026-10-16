@@ -29,6 +29,7 @@ import {
   Download,
   User,
   UserCheck,
+  CheckCircle2,
   MapPin,
   Printer,
   FileText,
@@ -37,6 +38,8 @@ import {
   UploadCloud,
   Paperclip,
   Trash2,
+  Copy,
+  Check,
 } from "lucide-react";
 
 export default function OpsOrderDetailPage() {
@@ -56,6 +59,7 @@ export default function OpsOrderDetailPage() {
   const [isResourceModalOpen, setIsResourceModalOpen] = useState(false);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [copiedId, setCopiedId] = useState(false);
 
   // Metadata edit states
   const [priority, setPriority] = useState<OpsPriority>("NORMAL");
@@ -219,51 +223,85 @@ export default function OpsOrderDetailPage() {
   }
 
   const isQCStage = order.opsStage === "QUALITY_CHECK";
+  const isLastStage = order.opsStage === "CLOSED";
+  const isOrderCompleted =
+    isLastStage &&
+    (order.currentExecution?.status === "COMPLETED" || order.status === "DELIVERED");
+  const isManager = Boolean(
+    currentUserRole === "ADMIN" ||
+    currentUserRole === "SUPER_ADMIN" ||
+    ["TT001", "TT002", "TT003"].includes(currentEmployee?.employeeCode || "") ||
+    currentEmployee?.name?.includes("Pratik") ||
+    currentEmployee?.name?.includes("Neeraj") ||
+    currentEmployee?.name?.includes("Sanjay")
+  );
 
   return (
     <OpsLayout
       pageTitle={`Order ${order.formattedOrderNumber}`}
       pageSubtitle={`Created on ${new Date(order.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })} • Source: ${order.orderSource || "Website"}`}
       headerAction={
-        <div className="hidden sm:flex items-center gap-2">
-          <OpsButton
-            variant="secondary"
-            size="sm"
-            onClick={() => setIsTaskModalOpen(true)}
-            leftIcon={<UserCheck className="w-3.5 h-3.5 text-[#00A86B]" />}
-          >
-            Assign Tasks
-          </OpsButton>
+        isManager ? (
+          <div className="hidden sm:flex items-center gap-2">
+            {!isOrderCompleted && !isLastStage && (
+              <OpsButton
+                variant="secondary"
+                size="sm"
+                onClick={() => setIsTaskModalOpen(true)}
+                leftIcon={<UserCheck className="w-3.5 h-3.5 text-[#00A86B]" />}
+              >
+                Assign Tasks
+              </OpsButton>
+            )}
 
-          <OpsButton
-            variant="secondary"
-            size="sm"
-            onClick={() => setIsResourceModalOpen(true)}
-            leftIcon={<Layers className="w-3.5 h-3.5 text-[#00A86B]" />}
-          >
-            Fabric Allocation
-          </OpsButton>
+            {!isOrderCompleted && !isLastStage && (
+              <OpsButton
+                variant="secondary"
+                size="sm"
+                onClick={() => setIsResourceModalOpen(true)}
+                leftIcon={<Layers className="w-3.5 h-3.5 text-[#00A86B]" />}
+              >
+                Fabric Allocation
+              </OpsButton>
+            )}
 
-          {isQCStage && (
-            <OpsButton
-              variant="danger"
-              size="sm"
-              onClick={() => setIsReworkModalOpen(true)}
-              leftIcon={<AlertTriangle className="w-3.5 h-3.5" />}
-            >
-              Flag Defect
-            </OpsButton>
-          )}
+            {isQCStage && (
+              <OpsButton
+                variant="danger"
+                size="sm"
+                onClick={() => setIsReworkModalOpen(true)}
+                leftIcon={<AlertTriangle className="w-3.5 h-3.5" />}
+              >
+                Flag Defect
+              </OpsButton>
+            )}
 
-          <OpsButton
-            variant="primary"
-            size="sm"
-            onClick={() => setIsAdvanceModalOpen(true)}
-            rightIcon={<ChevronRight className="w-3.5 h-3.5" />}
-          >
-            Advance Stage
-          </OpsButton>
-        </div>
+            {isOrderCompleted ? (
+              <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-[#00A86B] text-xs font-bold font-sans">
+                <CheckCircle2 className="w-4 h-4 text-[#00A86B]" />
+                <span>Order Completed</span>
+              </div>
+            ) : isLastStage ? (
+              <OpsButton
+                variant="primary"
+                size="sm"
+                onClick={() => setIsAdvanceModalOpen(true)}
+                leftIcon={<CheckCircle2 className="w-3.5 h-3.5" />}
+              >
+                Complete Order
+              </OpsButton>
+            ) : (
+              <OpsButton
+                variant="primary"
+                size="sm"
+                onClick={() => setIsAdvanceModalOpen(true)}
+                rightIcon={<ChevronRight className="w-3.5 h-3.5" />}
+              >
+                Advance Stage
+              </OpsButton>
+            )}
+          </div>
+        ) : undefined
       }
     >
       <div className="space-y-4 sm:space-y-6 w-full pb-24 sm:pb-6">
@@ -282,6 +320,26 @@ export default function OpsOrderDetailPage() {
               <span className="text-xl font-extrabold text-[#111827] font-mono shrink-0">
                 {order.formattedOrderNumber}
               </span>
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-[#E5E7EB] text-[#4B5563] text-xs font-mono shadow-2xs">
+                <span className="text-[#9CA3AF] text-[10px] font-bold uppercase">ID:</span>
+                <span className="font-semibold text-[#111827]">{order.id}</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(order.id);
+                    setCopiedId(true);
+                    setTimeout(() => setCopiedId(false), 2000);
+                  }}
+                  className="p-0.5 rounded hover:bg-[#F3F4F6] text-[#6B7280] hover:text-[#111827] transition-colors ml-0.5"
+                  title={`Copy unique order ID: ${order.id}`}
+                >
+                  {copiedId ? (
+                    <Check className="w-3.5 h-3.5 text-[#00A86B]" />
+                  ) : (
+                    <Copy className="w-3.5 h-3.5" />
+                  )}
+                </button>
+              </div>
               <OpsBadge stage={order.opsStage} size="sm" />
               <OpsBadge
                 status={order.currentExecution?.status || "PENDING"}
@@ -304,6 +362,50 @@ export default function OpsOrderDetailPage() {
             </span>
           </button>
         </div>
+
+        {/* Attached Official Quotation Document Banner */}
+        {order.quotationUrl && (
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-blue-50/90 via-indigo-50/50 to-white border border-blue-200 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-red-50 text-red-600 border border-red-200 flex items-center justify-center shrink-0 shadow-2xs">
+                <FileText className="w-5 h-5 text-red-500" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs sm:text-sm font-bold text-[#111827] truncate">
+                    {order.quotationFileName || "Quotation-Document.pdf"}
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700 border border-blue-200">
+                    Official Quotation PDF
+                  </span>
+                </div>
+                <p className="text-[11px] text-[#6B7280] mt-0.5">
+                  Uploaded customer quotation document attached during order intake
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <a
+                href={order.quotationUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold flex items-center gap-1.5 shadow-2xs transition-colors"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span>View Quotation PDF</span>
+              </a>
+              <a
+                href={order.quotationUrl}
+                download={order.quotationFileName || `Quotation-${order.formattedOrderNumber}.pdf`}
+                className="p-2 rounded-xl border border-[#CBD5E1] bg-white hover:bg-[#F8FAFC] text-[#475569] transition-colors"
+                title="Download PDF"
+              >
+                <Download className="w-4 h-4" />
+              </a>
+            </div>
+          </div>
+        )}
 
         {/* Mobile Designated Button: Prominent, Uncluttered, 1-Tap Access to Specs & Ledger */}
         <div className="sm:hidden">
@@ -360,13 +462,14 @@ export default function OpsOrderDetailPage() {
 
         {/* Active Worker Tasks on Mobile (Clean Card for Mobile Floor Tracking) */}
         <div className="lg:hidden">
-          <OpsCard title="Production Tasks & Delegations">
+          <OpsCard title="Production Tasks & Delegations" padding="sm">
             <OrderTasksList
               order={order}
               onOpenAssignModal={() => setIsTaskModalOpen(true)}
               onTaskUpdated={fetchOrderDetail}
               currentEmployee={currentEmployee}
               currentUserRole={currentUserRole}
+              isManager={isManager}
             />
           </OpsCard>
         </div>
@@ -383,8 +486,9 @@ export default function OpsOrderDetailPage() {
                   setPriority(p);
                   handleUpdateMetadata(p, undefined);
                 }}
-                disabled={isSavingMetadata}
-                className="bg-[#F4F6F9] border border-[#ECEEF2] text-[#111827] text-xs font-semibold rounded-full px-3 py-1 outline-none focus:border-[#00A86B]"
+                disabled={isSavingMetadata || !isManager}
+                className="bg-[#F4F6F9] border border-[#ECEEF2] text-[#111827] text-xs font-semibold rounded-full px-3 py-1 outline-none focus:border-[#00A86B] disabled:opacity-60 disabled:cursor-not-allowed"
+                title={!isManager ? "Only factory supervisors can adjust order priority" : undefined}
               >
                 <option value="NORMAL">Normal</option>
                 <option value="URGENT">Urgent</option>
@@ -404,8 +508,9 @@ export default function OpsOrderDetailPage() {
                   setDueDateInput(e.target.value);
                   handleUpdateMetadata(undefined, e.target.value);
                 }}
-                disabled={isSavingMetadata}
-                className="bg-[#F4F6F9] border border-[#ECEEF2] text-[#111827] text-xs font-semibold rounded-full px-3 py-1 outline-none focus:border-[#00A86B]"
+                disabled={isSavingMetadata || !isManager}
+                className="bg-[#F4F6F9] border border-[#ECEEF2] text-[#111827] text-xs font-semibold rounded-full px-3 py-1 outline-none focus:border-[#00A86B] disabled:opacity-60 disabled:cursor-not-allowed"
+                title={!isManager ? "Only factory supervisors can adjust target due dates" : undefined}
               />
             </div>
           </div>
@@ -427,6 +532,7 @@ export default function OpsOrderDetailPage() {
                 onTaskUpdated={fetchOrderDetail}
                 currentEmployee={currentEmployee}
                 currentUserRole={currentUserRole}
+                isManager={isManager}
               />
             </OpsCard>
 
@@ -957,37 +1063,59 @@ export default function OpsOrderDetailPage() {
         onSuccess={fetchOrderDetail}
       />
 
-      {/* Mobile Docked Sticky Bottom Action Bar (Thumb-friendly, uncluttered) */}
-      <div className="sm:hidden fixed bottom-0 left-0 right-0 p-3 bg-white/95 backdrop-blur-md border-t border-[#ECEEF2] z-40 flex items-center gap-2 shadow-lg">
-        <button
-          type="button"
-          onClick={() => setIsTaskModalOpen(true)}
-          className="flex-1 py-2.5 px-3 rounded-xl bg-[#F4F6F9] hover:bg-[#E5E7EB] text-[#111827] text-xs font-bold border border-[#ECEEF2] flex items-center justify-center gap-1.5 transition-colors active:scale-98 cursor-pointer"
-        >
-          <UserCheck className="w-4 h-4 text-[#00A86B]" />
-          <span>Assign Task</span>
-        </button>
+      {/* Mobile Docked Sticky Bottom Action Bar (Management Only) */}
+      {isManager && (
+        <div className="sm:hidden fixed bottom-0 left-0 right-0 p-3 bg-white/95 backdrop-blur-md border-t border-[#ECEEF2] z-40 flex items-center gap-2 shadow-lg">
+          {isOrderCompleted ? (
+            <div className="w-full py-2.5 px-4 rounded-xl bg-emerald-50 border border-emerald-200 text-[#00A86B] text-xs font-bold flex items-center justify-center gap-2 font-sans">
+              <CheckCircle2 className="w-4 h-4 text-[#00A86B]" />
+              <span>Order Delivered & Completed</span>
+            </div>
+          ) : (
+            <>
+              {!isLastStage && (
+                <button
+                  type="button"
+                  onClick={() => setIsTaskModalOpen(true)}
+                  className="flex-1 py-2.5 px-3 rounded-xl bg-[#F4F6F9] hover:bg-[#E5E7EB] text-[#111827] text-xs font-bold border border-[#ECEEF2] flex items-center justify-center gap-1.5 transition-colors active:scale-98 cursor-pointer font-sans"
+                >
+                  <UserCheck className="w-4 h-4 text-[#00A86B]" />
+                  <span>Assign Task</span>
+                </button>
+              )}
 
-        {isQCStage && (
-          <button
-            type="button"
-            onClick={() => setIsReworkModalOpen(true)}
-            className="py-2.5 px-3 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 text-xs font-bold border border-red-200 flex items-center justify-center gap-1.5 transition-colors active:scale-98 cursor-pointer"
-          >
-            <AlertTriangle className="w-4 h-4 text-red-600" />
-            <span>Defect</span>
-          </button>
-        )}
+              {isQCStage && (
+                <button
+                  type="button"
+                  onClick={() => setIsReworkModalOpen(true)}
+                  className="py-2.5 px-3 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 text-xs font-bold border border-red-200 flex items-center justify-center gap-1.5 transition-colors active:scale-98 cursor-pointer font-sans"
+                >
+                  <AlertTriangle className="w-4 h-4 text-red-600" />
+                  <span>Defect</span>
+                </button>
+              )}
 
-        <button
-          type="button"
-          onClick={() => setIsAdvanceModalOpen(true)}
-          className="flex-1 py-2.5 px-4 rounded-xl bg-[#00A86B] hover:bg-[#00925d] text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition-colors active:scale-98 cursor-pointer"
-        >
-          <span>Advance Stage</span>
-          <ChevronRight className="w-4 h-4" />
-        </button>
-      </div>
+              <button
+                type="button"
+                onClick={() => setIsAdvanceModalOpen(true)}
+                className="flex-1 py-2.5 px-4 rounded-xl bg-[#00A86B] hover:bg-[#00925d] text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs transition-colors active:scale-98 cursor-pointer font-sans"
+              >
+                {isLastStage ? (
+                  <>
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Complete Order</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Advance Stage</span>
+                    <ChevronRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            </>
+          )}
+        </div>
+      )}
 
       {/* Dedicated Comprehensive Order Details Modal (Specs, Sizes, Client, Ledger, Art) */}
       <OrderDetailsModal

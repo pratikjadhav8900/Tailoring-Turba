@@ -12,10 +12,10 @@ export const OpsLoadingState: React.FC<OpsLoadingStateProps> = ({
 }) => {
   return (
     <div
-      className={`flex flex-col items-center justify-center p-12 text-[#829386] gap-3 ${className}`}
+      className={`flex flex-col items-center justify-center p-12 text-[#6B7280] gap-3 ${className}`}
     >
-      <Loader2 className="w-6 h-6 animate-spin text-[#294238]" />
-      <span className="text-xs font-mono font-medium tracking-wide">{message}</span>
+      <Loader2 className="w-7 h-7 animate-spin text-[#00A86B]" />
+      <span className="text-xs font-sans font-semibold tracking-wide text-[#374151]">{message}</span>
     </div>
   );
 };
