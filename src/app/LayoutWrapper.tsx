@@ -22,6 +22,23 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
       if (h.startsWith("ops.") || h.startsWith("ops-")) {
         setIsOpsHost(true);
       }
+
+      // Ignore third-party browser extension injection crashes (e.g. Urban VPN M_ID error)
+      const handleExtensionError = (event: ErrorEvent) => {
+        if (
+          event.filename?.startsWith("chrome-extension://") ||
+          event.filename?.startsWith("moz-extension://") ||
+          event.message?.includes("M_ID")
+        ) {
+          event.stopImmediatePropagation();
+          event.preventDefault();
+        }
+      };
+
+      window.addEventListener("error", handleExtensionError, true);
+      return () => {
+        window.removeEventListener("error", handleExtensionError, true);
+      };
     }
   }, []);
   

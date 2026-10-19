@@ -69,31 +69,31 @@ const OpsSidebarInner: React.FC<OpsSidebarProps> = ({
     },
     {
       label: "Chat",
-      href: "/ops",
+      href: "/ops/chat",
       icon: <MessageSquare className="w-4 h-4" />,
-      isActive: false,
-      badge: unreadNotificationsCount > 0 ? unreadNotificationsCount : 16,
+      isActive: pathname === "/ops/chat",
+      badge: unreadNotificationsCount > 0 ? unreadNotificationsCount : undefined,
     },
   ];
 
   const otherMenu = [
     {
       label: "Account",
-      href: "/ops",
+      href: "/ops/account",
       icon: <User className="w-4 h-4" />,
-      isActive: false,
+      isActive: pathname === "/ops/account",
     },
     {
       label: "Settings",
-      href: "/ops",
+      href: "/ops/settings",
       icon: <Settings className="w-4 h-4" />,
-      isActive: false,
+      isActive: pathname === "/ops/settings",
     },
     {
       label: "Help Center",
-      href: "/ops",
+      href: "/ops/help",
       icon: <HelpCircle className="w-4 h-4" />,
-      isActive: false,
+      isActive: pathname === "/ops/help",
     },
   ];
 
@@ -154,7 +154,7 @@ const OpsSidebarInner: React.FC<OpsSidebarProps> = ({
                 </div>
 
                 {item.badge !== undefined && (
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#F3F4F6] text-[#4B5563]">
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#00A86B] text-white">
                     {item.badge}
                   </span>
                 )}
@@ -174,10 +174,22 @@ const OpsSidebarInner: React.FC<OpsSidebarProps> = ({
                 key={item.label}
                 href={item.href}
                 onClick={onCloseMobile}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-[#6B7280] hover:text-[#111827] hover:bg-[#F9FAFB] transition-colors"
+                className={`relative flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                  item.isActive
+                    ? "text-[#111827] bg-[#F4F6F9]"
+                    : "text-[#6B7280] hover:text-[#111827] hover:bg-[#F9FAFB]"
+                }`}
               >
-                <span className="text-[#9CA3AF]">{item.icon}</span>
-                <span>{item.label}</span>
+                {item.isActive && (
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-[#00A86B] rounded-r-full" />
+                )}
+
+                <div className="flex items-center gap-3">
+                  <span className={item.isActive ? "text-[#00A86B]" : "text-[#9CA3AF]"}>
+                    {item.icon}
+                  </span>
+                  <span>{item.label}</span>
+                </div>
               </Link>
             ))}
           </nav>

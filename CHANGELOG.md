@@ -4,6 +4,43 @@ All meaningful architectural and functional changes to this repository are docum
 
 ---
 
+## 2026-10-19 — 19:50 IST
+
+### Turba Ops Feature Expansion — Account, Settings, Help Center & Team Chat
+
+### What Changed
+
+- **Staff Account & Identity Module (`/ops/account`)**:
+  - Implemented `src/app/ops/account/page.tsx` and `src/app/api/ops/account/route.ts`.
+  - Displays authenticated employee details, employee code (`TT001`–`TT005`), role title, and system role.
+  - Summarizes real-time operational statistics (active in-flight tasks, completed stages, authored notes).
+  - Provides editable contact information (phone, display name) with validation and instant synchronization.
+  - Lists live assigned tasks with priority tags, item quantities, and direct links to inspect orders.
+  - Highlights the Equal Operational Authority policy across all 5 team members with transparent audit trails.
+- **Workstation Settings & Preferences (`/ops/settings`)**:
+  - Implemented `src/app/ops/settings/page.tsx`.
+  - Configures audio chimes with volume slider and interactive "Test Chime" synthesizer.
+  - Customizes notification triggers (New Orders, Urgent/Rush 24h/48h Orders, QC Rework Flagged, Ready for Dispatch).
+  - Workstation floor defaults: Table vs. Kanban pipeline view, and My Tasks vs. All Floor Tasks.
+  - Streamlined UI strictly focused on operator preferences without developer diagnostics.
+- **Manufacturing Help Center & SOP Rulebook (`/ops/help`)**:
+  - Implemented `src/app/ops/help/page.tsx`.
+  - Interactive 11-stage manufacturing pipeline stepper detailing entrance conditions, station responsibilities, and mandatory exit gates.
+  - Step-by-step QC rework guide: defect flagging, audit notes, iteration incrementing, and rollback targeting.
+  - Priority matrix rules (Normal vs. Urgent 48h vs. Rush 24h).
+  - Internal escalation directory with direct call links for all 5 team members.
+- **Floor Team Broadcast & Real-Time Chat (`/ops/chat`)**:
+  - Implemented `src/app/ops/chat/page.tsx` and `src/app/api/ops/chat/route.ts`.
+  - Four internal production channels: `#general-floor`, `#urgent-alerts`, `#order-queries`, `#dispatch-handover`.
+  - Real-time message feed with employee code badges, role titles, and order tagging (`#1048`).
+  - Priority broadcasting for `URGENT FLOOR ALERT` and `OFFICIAL ANNOUNCEMENT`.
+  - Multi-user presence directory showing online status for all 5 team members.
+- **Sidebar Integration (`src/components/ops/layout/OpsSidebar.tsx`)**:
+  - Wired up all 4 routes (`/ops/chat`, `/ops/account`, `/ops/settings`, `/ops/help`) with active emerald pill styling.
+  - Auto-cleared placeholder fallback counts and enabled live notifications badge.
+
+---
+
 ## 2026-10-08 — 20:30 IST
 
 ### Turba Ops Phase 3 — Integration, Subdomain Routing & QA
