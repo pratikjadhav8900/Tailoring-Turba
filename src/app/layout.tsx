@@ -42,6 +42,45 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" translate="no" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                function isExtensionNoise(e) {
+                  try {
+                    var msg = (e && (e.message || (e.error && e.error.message) || '')) + '';
+                    var file = (e && e.filename) || '';
+                    var stack = (e && e.error && e.error.stack) || '';
+                    var combined = (msg + ' ' + file + ' ' + stack).toLowerCase();
+                    return combined.indexOf('chrome-extension://') !== -1 ||
+                           combined.indexOf('moz-extension://') !== -1 ||
+                           combined.indexOf('m_id') !== -1 ||
+                           combined.indexOf('executors/200') !== -1;
+                  } catch (_) {
+                    return false;
+                  }
+                }
+                window.addEventListener('error', function(e) {
+                  if (isExtensionNoise(e)) {
+                    e.stopImmediatePropagation();
+                    e.preventDefault();
+                    return true;
+                  }
+                }, true);
+                window.addEventListener('unhandledrejection', function(e) {
+                  var reason = (e && e.reason) || {};
+                  if (isExtensionNoise({ message: reason.message, filename: reason.fileName, error: reason })) {
+                    e.stopImmediatePropagation();
+                    e.preventDefault();
+                    return true;
+                  }
+                }, true);
+              })();
+            `,
+          }}
+        />
+      </head>
       <body suppressHydrationWarning>
         <JsonLd />
         <Toaster position="bottom-center" toastOptions={{ style: { background: '#333', color: '#fff', borderRadius: '8px' } }} />

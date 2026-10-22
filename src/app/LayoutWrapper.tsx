@@ -25,10 +25,12 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
 
       // Ignore third-party browser extension injection crashes (e.g. Urban VPN M_ID error)
       const handleExtensionError = (event: ErrorEvent) => {
+        const msg = (event.message || "") + " " + (event.filename || "") + " " + (event.error?.stack || "");
         if (
           event.filename?.startsWith("chrome-extension://") ||
           event.filename?.startsWith("moz-extension://") ||
-          event.message?.includes("M_ID")
+          msg.includes("M_ID") ||
+          msg.includes("executors/200")
         ) {
           event.stopImmediatePropagation();
           event.preventDefault();
