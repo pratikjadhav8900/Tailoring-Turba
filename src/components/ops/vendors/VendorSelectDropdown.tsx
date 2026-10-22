@@ -1,15 +1,16 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
-import { Search, Plus, Check, Building2, ChevronDown, MapPin, Tag } from "lucide-react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import { Search, Plus, Check, Building2, ChevronDown, MapPin, Tag, Layers, Scissors, Palette } from "lucide-react";
 import type { OpsVendorPartner, OpsProductionStage, PartnerType } from "@/types/ops";
 import { VendorModal } from "./VendorModal";
 
-interface VendorSelectDropdownProps {
+export interface VendorSelectDropdownProps {
   value?: string | null; // vendorId
   onChange: (vendorId: string, vendor: OpsVendorPartner) => void;
   allowedPartnerTypes?: PartnerType[];
   stage?: OpsProductionStage;
+  taskKey?: string;
   label?: string;
   required?: boolean;
   placeholder?: string;
@@ -22,14 +23,81 @@ export const EXTERNAL_WORK_STAGES: OpsProductionStage[] = [
   "BRANDING_PRINTING",
 ];
 
+export function resolveAllowedPartnerTypes(
+  allowedPartnerTypes?: PartnerType[],
+  stage?: OpsProductionStage,
+  taskKey?: string
+): { targetTypes: PartnerType[]; categoryLabel: string } {
+  if (allowedPartnerTypes && allowedPartnerTypes.length > 0) {
+    const isProcurementOnly = allowedPartnerTypes.every(
+      (t) => t === "RAW_MATERIAL_SUPPLIER" || t === "FINISHED_GOODS_SUPPLIER"
+    );
+    const isPrintOnly = allowedPartnerTypes.every((t) => t === "PRINTING_EMBROIDERY_PARTNER");
+    const isTailorOnly = allowedPartnerTypes.every((t) => t === "TAILOR_MANUFACTURER");
+
+    const categoryLabel = isProcurementOnly
+      ? "Procurement Vendors"
+      : isPrintOnly
+      ? "Print & Embroidery Partners"
+      : isTailorOnly
+      ? "Tailors & Stitching Partners"
+      : "Filtered Directory";
+
+    return { targetTypes: allowedPartnerTypes, categoryLabel };
+  }
+
+  // Explicit subtask key matches
+  if (taskKey === "PRINT_EMBROIDERY") {
+    return {
+      targetTypes: ["PRINTING_EMBROIDERY_PARTNER"],
+      categoryLabel: "Print & Embroidery Partners",
+    };
+  }
+  if (taskKey === "STITCHING" || taskKey === "KAJE_BUTTON") {
+    return {
+      targetTypes: ["TAILOR_MANUFACTURER"],
+      categoryLabel: "Tailors & Stitching Partners",
+    };
+  }
+  if (taskKey === "FABRIC_PROCUREMENT") {
+    return {
+      targetTypes: ["RAW_MATERIAL_SUPPLIER", "FINISHED_GOODS_SUPPLIER"],
+      categoryLabel: "Procurement Vendors",
+    };
+  }
+
+  // Stage-based matches
+  if (stage === "RESOURCE_FABRIC") {
+    return {
+      targetTypes: ["RAW_MATERIAL_SUPPLIER", "FINISHED_GOODS_SUPPLIER"],
+      categoryLabel: "Procurement Vendors",
+    };
+  }
+  if (stage === "BRANDING_PRINTING") {
+    return {
+      targetTypes: ["PRINTING_EMBROIDERY_PARTNER"],
+      categoryLabel: "Print & Embroidery Partners",
+    };
+  }
+  if (stage === "CUTTING" || stage === "STITCHING") {
+    return {
+      targetTypes: ["TAILOR_MANUFACTURER"],
+      categoryLabel: "Tailors & Stitching Partners",
+    };
+  }
+
+  return { targetTypes: [], categoryLabel: "All Partners" };
+}
+
 export const VendorSelectDropdown: React.FC<VendorSelectDropdownProps> = ({
   value,
   onChange,
   allowedPartnerTypes,
   stage,
+  taskKey,
   label = "External Vendor / Partner",
   required = false,
-  placeholder = "Select or search vendor/partner...",
+  placeholder,
 }) => {
   const [vendors, setVendors] = useState<OpsVendorPartner[]>([]);
   const [loading, setLoading] = useState(false);
@@ -70,50 +138,95 @@ export const VendorSelectDropdown: React.FC<VendorSelectDropdownProps> = ({
     loadVendors();
   }, []);
 
-  // Map stage to preferred partner type
-  const preferredType: PartnerType | null = stage === "RESOURCE_FABRIC"
-    ? "RAW_MATERIAL_SUPPLIER"
-    : stage === "CUTTING" || stage === "STITCHING"
-    ? "TAILOR_MANUFACTURER"
-    : stage === "BRANDING_PRINTING"
-    ? "PRINTING_EMBROIDERY_PARTNER"
-    : null;
+  const { targetTypes, categoryLabel } = useMemo(
+    () => resolveAllowedPartnerTypes(allowedPartnerTypes, stage, taskKey),
+    [allowedPartnerTypes, stage, taskKey]
+  );
 
-  // Filter vendors based on stage preference & search term
-  const filteredVendors = vendors.filter((v) => {
-    // Filter by explicitly allowed partner types if specified
-    if (!showAllTypes && allowedPartnerTypes && allowedPartnerTypes.length > 0 && v.partnerTypes.length > 0) {
-      const match = v.partnerTypes.some((t) => allowedPartnerTypes.includes(t));
-      if (!match) return false;
-    } else if (!showAllTypes && preferredType && v.partnerTypes.length > 0) {
-      if (!v.partnerTypes.includes(preferredType)) {
-        return false;
+  // Default placeholder based on category
+  const effectivePlaceholder =
+    placeholder ||
+    (targetTypes.includes("PRINTING_EMBROIDERY_PARTNER") && targetTypes.length === 1
+      ? "Select print & embroidery partner..."
+      : targetTypes.includes("TAILOR_MANUFACTURER") && targetTypes.length === 1
+      ? "Select tailor / stitching manufacturer..."
+      : targetTypes.some((t) => t === "RAW_MATERIAL_SUPPLIER" || t === "FINISHED_GOODS_SUPPLIER")
+      ? "Select procurement vendor (fabric, yarn, blanks)..."
+      : "Select external partner...");
+
+  // Strictly filter vendors based on category & search term
+  const filteredVendors = useMemo(() => {
+    return vendors.filter((v) => {
+      // Strict category filter when active:
+      if (!showAllTypes && targetTypes.length > 0) {
+        if (!v.partnerTypes || v.partnerTypes.length === 0) {
+          return false;
+        }
+        const hasMatch = v.partnerTypes.some((t) => targetTypes.includes(t));
+        if (!hasMatch) {
+          return false;
+        }
       }
-    }
 
-    if (!search.trim()) return true;
-    const q = search.toLowerCase();
-    return (
-      v.name.toLowerCase().includes(q) ||
-      (v.code && v.code.toLowerCase().includes(q)) ||
-      (v.location && v.location.toLowerCase().includes(q)) ||
-      (v.category && v.category.toLowerCase().includes(q)) ||
-      (v.products && v.products.toLowerCase().includes(q)) ||
-      (v.phone && v.phone.includes(q))
-    );
-  });
+      if (!search.trim()) return true;
+      const q = search.toLowerCase();
+      return (
+        v.name.toLowerCase().includes(q) ||
+        (v.code && v.code.toLowerCase().includes(q)) ||
+        (v.location && v.location.toLowerCase().includes(q)) ||
+        (v.category && v.category.toLowerCase().includes(q)) ||
+        (v.products && v.products.toLowerCase().includes(q)) ||
+        (v.phone && v.phone.includes(q))
+      );
+    });
+  }, [vendors, showAllTypes, targetTypes, search]);
 
   const selectedVendor = vendors.find((v) => v.id === value);
+
+  const getPartnerBadge = (partnerTypes: PartnerType[]) => {
+    if (
+      partnerTypes.includes("RAW_MATERIAL_SUPPLIER") ||
+      partnerTypes.includes("FINISHED_GOODS_SUPPLIER")
+    ) {
+      return (
+        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
+          Procurement
+        </span>
+      );
+    }
+    if (partnerTypes.includes("PRINTING_EMBROIDERY_PARTNER")) {
+      return (
+        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200 shrink-0">
+          Print & Emb
+        </span>
+      );
+    }
+    if (partnerTypes.includes("TAILOR_MANUFACTURER")) {
+      return (
+        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 shrink-0">
+          Tailor / Stitching
+        </span>
+      );
+    }
+    return null;
+  };
 
   return (
     <div className="relative" ref={containerRef}>
       {label && (
-        <label className="block text-xs font-bold text-[#374151] mb-1">
-          {label} {required && <span className="text-red-500">*</span>}
-        </label>
+        <div className="flex items-center justify-between mb-1">
+          <label className="block text-xs font-bold text-[#374151]">
+            {label} {required && <span className="text-red-500">*</span>}
+          </label>
+          {targetTypes.length > 0 && (
+            <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
+              {categoryLabel}
+            </span>
+          )}
+        </div>
       )}
 
-      {/* Main Select Button */}
+      {/* Main Select Trigger */}
       <div
         onClick={() => setIsOpen(!isOpen)}
         className={`w-full px-3 py-2 text-xs border rounded-xl bg-white flex items-center justify-between cursor-pointer transition-all ${
@@ -137,6 +250,7 @@ export const VendorSelectDropdown: React.FC<VendorSelectDropdownProps> = ({
                 {selectedVendor.code}
               </span>
             )}
+            {getPartnerBadge(selectedVendor.partnerTypes)}
             {selectedVendor.location && (
               <span className="text-[11px] text-gray-500 truncate shrink-0">
                 • {selectedVendor.location}
@@ -144,7 +258,7 @@ export const VendorSelectDropdown: React.FC<VendorSelectDropdownProps> = ({
             )}
           </div>
         ) : (
-          <span className="text-gray-400 truncate">{placeholder}</span>
+          <span className="text-gray-400 truncate">{effectivePlaceholder}</span>
         )}
 
         <ChevronDown
@@ -156,30 +270,45 @@ export const VendorSelectDropdown: React.FC<VendorSelectDropdownProps> = ({
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute z-50 left-0 right-0 mt-1 bg-white border border-[#E5E7EB] rounded-xl shadow-xl overflow-hidden flex flex-col max-h-72 animate-fadeIn">
-          {/* Search bar inside dropdown */}
-          <div className="p-2 border-b border-[#ECEEF2] bg-[#F8F9FB] flex items-center gap-2">
-            <Search className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by name, code, city, product..."
-              className="w-full bg-transparent text-xs text-[#111827] focus:outline-none"
-              autoFocus
-            />
-            {preferredType && (
-              <button
-                type="button"
-                onClick={() => setShowAllTypes(!showAllTypes)}
-                className={`text-[10px] font-bold px-2 py-0.5 rounded shrink-0 transition-colors ${
-                  showAllTypes
-                    ? "bg-emerald-100 text-emerald-800"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
-              >
-                {showAllTypes ? "Filtered" : "All Directory"}
-              </button>
+        <div className="absolute z-50 left-0 right-0 mt-1 bg-white border border-[#E5E7EB] rounded-xl shadow-xl overflow-hidden flex flex-col max-h-80 animate-fadeIn">
+          {/* Header & Search */}
+          <div className="p-2 border-b border-[#ECEEF2] bg-[#F8F9FB] space-y-1.5">
+            <div className="flex items-center gap-2">
+              <Search className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder={`Search ${targetTypes.length > 0 && !showAllTypes ? categoryLabel.toLowerCase() : "partners"}...`}
+                className="w-full bg-transparent text-xs text-[#111827] focus:outline-none"
+                autoFocus
+              />
+            </div>
+
+            {/* Active Category Filter Header */}
+            {targetTypes.length > 0 && (
+              <div className="flex items-center justify-between pt-1 border-t border-[#ECEEF2] text-[10px]">
+                <span className="text-gray-500 font-medium">
+                  {showAllTypes ? (
+                    <span className="text-gray-700 font-semibold">Showing all partners ({vendors.length})</span>
+                  ) : (
+                    <span>
+                      Filtered to <strong className="text-emerald-700">{categoryLabel}</strong> ({filteredVendors.length})
+                    </span>
+                  )}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowAllTypes(!showAllTypes)}
+                  className={`px-2 py-0.5 rounded font-bold transition-colors ${
+                    showAllTypes
+                      ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                >
+                  {showAllTypes ? "Show Filtered" : "View All"}
+                </button>
+              </div>
             )}
           </div>
 
@@ -189,7 +318,20 @@ export const VendorSelectDropdown: React.FC<VendorSelectDropdownProps> = ({
               <div className="p-4 text-center text-xs text-gray-400">Loading partners...</div>
             ) : filteredVendors.length === 0 ? (
               <div className="p-4 text-center">
-                <p className="text-xs text-gray-500">No matching partner found.</p>
+                <p className="text-xs text-gray-500">
+                  {targetTypes.length > 0 && !showAllTypes
+                    ? `No matching partner in ${categoryLabel}.`
+                    : "No matching partner found."}
+                </p>
+                {targetTypes.length > 0 && !showAllTypes && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAllTypes(true)}
+                    className="mt-1.5 text-xs text-emerald-700 font-semibold hover:underline block mx-auto"
+                  >
+                    View all partners across all categories
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => {
@@ -226,6 +368,7 @@ export const VendorSelectDropdown: React.FC<VendorSelectDropdownProps> = ({
                             {vendor.code}
                           </span>
                         )}
+                        {getPartnerBadge(vendor.partnerTypes)}
                         {vendor.location && (
                           <span className="text-[10px] text-gray-500 flex items-center gap-0.5">
                             <MapPin className="w-2.5 h-2.5 text-gray-400" />

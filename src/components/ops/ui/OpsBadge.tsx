@@ -120,7 +120,7 @@ export const OpsBadge: React.FC<OpsBadgeProps> = ({
         break;
     }
   } else if (status) {
-    label = status === "FLAGGED_REWORK" ? "Rework" : status === "COMPLETED" ? "Success" : status === "PENDING" ? "Pending" : "In Progress";
+    label = status === "FLAGGED_REWORK" ? "Rework" : status === "COMPLETED" ? "Completed" : status === "PENDING" ? "Pending" : "In Progress";
     switch (status) {
       case "PENDING":
         bg = "#FFFBEB";

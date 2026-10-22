@@ -123,7 +123,14 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                 </button>
               </div>
               <OpsBadge stage={order.opsStage} size="sm" />
-              <OpsBadge status={order.currentExecution?.status || "PENDING"} size="sm" />
+              <OpsBadge
+                status={
+                  order.opsStage === "CLOSED" || order.status === "DELIVERED"
+                    ? "COMPLETED"
+                    : order.currentExecution?.status || "PENDING"
+                }
+                size="sm"
+              />
             </div>
             <p className="text-xs text-[#6B7280] truncate mt-0.5 font-medium">
               {order.customer.companyName || order.customer.name || "Customer Order"} • {order.totalQuantity} pcs • Total ₹{order.totalAmount.toLocaleString("en-IN")}

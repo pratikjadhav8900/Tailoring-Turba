@@ -413,9 +413,9 @@ export const TaskAssignmentModal: React.FC<TaskAssignmentModalProps> = ({
                       })
                     }
                     stage={task.stage}
+                    taskKey={task.taskKey}
                     label="External Vendor / Partner"
                     required={["RESOURCE_FABRIC", "CUTTING", "STITCHING", "BRANDING_PRINTING"].includes(task.stage)}
-                    placeholder="Select external party (supplier, tailor, print partner)..."
                   />
                 </div>
 

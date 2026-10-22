@@ -1,6 +1,9 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import { prisma } from "@/lib/prisma";
-import { EXTERNAL_WORK_STAGES } from "@/components/ops/vendors/VendorSelectDropdown";
+import {
+  EXTERNAL_WORK_STAGES,
+  resolveAllowedPartnerTypes,
+} from "@/components/ops/vendors/VendorSelectDropdown";
 
 describe("Phase 10: Vendor, Supplier, Manufacturer, Printing & Embroidery Verification Suite", () => {
   let testOrderId: string;
@@ -483,5 +486,69 @@ describe("Phase 10: Vendor, Supplier, Manufacturer, Printing & Embroidery Verifi
     // Calculate dynamically: 1400 / 8 = 175
     const calculatedKg = (ref?.sourceQuantity || 0) / (ref?.unitsPerKg || 1);
     expect(calculatedKg).toBe(175);
+  });
+
+  // TEST 11: Vendor categorization partition integrity
+  it("Test 11: Correctly partitions all database vendors into Procurement, Printing/Embroidery, and Tailors without uncategorized vendors", async () => {
+    const allVendors = await prisma.vendorPartner.findMany();
+    expect(allVendors.length).toBeGreaterThanOrEqual(66);
+
+    const procurementVendors = allVendors.filter(
+      (v) =>
+        v.partnerTypes.includes("RAW_MATERIAL_SUPPLIER") ||
+        v.partnerTypes.includes("FINISHED_GOODS_SUPPLIER")
+    );
+    const printEmbVendors = allVendors.filter((v) =>
+      v.partnerTypes.includes("PRINTING_EMBROIDERY_PARTNER")
+    );
+    const tailorVendors = allVendors.filter((v) =>
+      v.partnerTypes.includes("TAILOR_MANUFACTURER")
+    );
+    const uncategorized = allVendors.filter((v) => v.partnerTypes.length === 0);
+
+    // Verify each category has expected imported counts
+    expect(procurementVendors.length).toBeGreaterThanOrEqual(35);
+    expect(printEmbVendors.length).toBeGreaterThanOrEqual(20);
+    expect(tailorVendors.length).toBeGreaterThanOrEqual(11);
+    expect(uncategorized.length).toBe(0);
+
+    // Verify no print partner is mixed into tailors
+    for (const p of printEmbVendors) {
+      expect(p.partnerTypes).not.toContain("TAILOR_MANUFACTURER");
+    }
+    // Verify no tailor is mixed into raw material
+    for (const t of tailorVendors) {
+      expect(t.partnerTypes).not.toContain("RAW_MATERIAL_SUPPLIER");
+      expect(t.partnerTypes).not.toContain("PRINTING_EMBROIDERY_PARTNER");
+    }
+  });
+
+  // TEST 12: Stage and task dropdown filtering rules
+  it("Test 12: resolveAllowedPartnerTypes returns strictly Procurement for Procurement stage and Printing for Print stage", () => {
+    // Stage: Procurement (RESOURCE_FABRIC)
+    const procStage = resolveAllowedPartnerTypes(undefined, "RESOURCE_FABRIC");
+    expect(procStage.targetTypes).toEqual(["RAW_MATERIAL_SUPPLIER", "FINISHED_GOODS_SUPPLIER"]);
+    expect(procStage.categoryLabel).toBe("Procurement Vendors");
+
+    // Task: FABRIC_PROCUREMENT
+    const procTask = resolveAllowedPartnerTypes(undefined, undefined, "FABRIC_PROCUREMENT");
+    expect(procTask.targetTypes).toEqual(["RAW_MATERIAL_SUPPLIER", "FINISHED_GOODS_SUPPLIER"]);
+
+    // Stage: Print / Embroidery (BRANDING_PRINTING)
+    const printStage = resolveAllowedPartnerTypes(undefined, "BRANDING_PRINTING");
+    expect(printStage.targetTypes).toEqual(["PRINTING_EMBROIDERY_PARTNER"]);
+    expect(printStage.categoryLabel).toBe("Print & Embroidery Partners");
+
+    // Task: PRINT_EMBROIDERY
+    const printTask = resolveAllowedPartnerTypes(undefined, undefined, "PRINT_EMBROIDERY");
+    expect(printTask.targetTypes).toEqual(["PRINTING_EMBROIDERY_PARTNER"]);
+
+    // Stage: Stitching (STITCHING) or Cutting (CUTTING)
+    const stitchingStage = resolveAllowedPartnerTypes(undefined, "STITCHING");
+    expect(stitchingStage.targetTypes).toEqual(["TAILOR_MANUFACTURER"]);
+
+    // Task: STITCHING
+    const stitchingTask = resolveAllowedPartnerTypes(undefined, undefined, "STITCHING");
+    expect(stitchingTask.targetTypes).toEqual(["TAILOR_MANUFACTURER"]);
   });
 });

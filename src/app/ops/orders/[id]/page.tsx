@@ -343,7 +343,11 @@ export default function OpsOrderDetailPage() {
               </div>
               <OpsBadge stage={order.opsStage} size="sm" />
               <OpsBadge
-                status={order.currentExecution?.status || "PENDING"}
+                status={
+                  order.opsStage === "CLOSED" || order.status === "DELIVERED"
+                    ? "COMPLETED"
+                    : order.currentExecution?.status || "PENDING"
+                }
                 size="sm"
               />
               {order.orderSource && <OpsBadge source={order.orderSource} size="sm" />}

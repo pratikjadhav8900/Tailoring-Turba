@@ -393,7 +393,11 @@ function OpsOrdersContent() {
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <OpsBadge stage={order.opsStage} size="sm" />
                         <OpsBadge
-                          status={order.currentExecution?.status || "PENDING"}
+                          status={
+                            order.opsStage === "CLOSED" || order.status === "DELIVERED"
+                              ? "COMPLETED"
+                              : order.currentExecution?.status || "PENDING"
+                          }
                           size="sm"
                         />
                       </div>
@@ -513,7 +517,11 @@ function OpsOrdersContent() {
                         </td>
                         <td className="py-3 px-3">
                           <OpsBadge
-                            status={order.currentExecution?.status || "PENDING"}
+                            status={
+                              order.opsStage === "CLOSED" || order.status === "DELIVERED"
+                                ? "COMPLETED"
+                                : order.currentExecution?.status || "PENDING"
+                            }
                             size="sm"
                           />
                         </td>

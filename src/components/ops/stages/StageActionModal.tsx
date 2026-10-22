@@ -64,7 +64,7 @@ export const StageActionModal: React.FC<StageActionModalProps> = ({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           targetStage: isLastStage ? "CLOSED" : targetStage,
-          status: isLastStage ? "COMPLETED" : undefined,
+          status: isLastStage || targetStage === "CLOSED" ? "COMPLETED" : undefined,
           notes: notes.trim(),
         }),
       });

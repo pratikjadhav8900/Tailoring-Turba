@@ -216,7 +216,10 @@ export async function GET(req: NextRequest) {
               id: order.stageExecutions[0].id,
               orderId: order.stageExecutions[0].orderId,
               stage: order.stageExecutions[0].stage,
-              status: order.stageExecutions[0].status,
+              status:
+                order.opsStage === "CLOSED" || order.status === "DELIVERED"
+                  ? "COMPLETED"
+                  : order.stageExecutions[0].status,
               iteration: order.stageExecutions[0].iteration,
               employeeId: order.stageExecutions[0].employeeId,
               employeeName: order.stageExecutions[0].employeeName,

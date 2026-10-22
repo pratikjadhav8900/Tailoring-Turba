@@ -113,7 +113,8 @@ export const ResourceAllocationModal: React.FC<ResourceAllocationModalProps> = (
                     setFabricSupplier(vendor.name);
                   }
                 }}
-                allowedPartnerTypes={["RAW_MATERIAL_SUPPLIER"]}
+                allowedPartnerTypes={["RAW_MATERIAL_SUPPLIER", "FINISHED_GOODS_SUPPLIER"]}
+                stage="RESOURCE_FABRIC"
                 label="Raw Material & Fabric Supplier"
                 required={false}
               />

@@ -220,12 +220,13 @@ export async function POST(
     }
 
     const determinedStatus: OpsStageStatus =
-      (targetStatusInput as OpsStageStatus) || "IN_PROGRESS";
+      (targetStatusInput as OpsStageStatus) ||
+      (targetStage === "CLOSED" ? "COMPLETED" : "IN_PROGRESS");
 
     // Execute standard forward or override transition
     const transitionResult = await prisma.$transaction(async (tx) => {
       let executionRecord;
-      const isOrderCloseEvent = targetStage === "CLOSED" && determinedStatus === "COMPLETED";
+      const isOrderCloseEvent = targetStage === "CLOSED";
 
       // If completing current stage (e.g. Closing/Completing when already at CLOSED)
       if (currentStage === targetStage && latestExecution) {
