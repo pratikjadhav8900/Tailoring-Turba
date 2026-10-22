@@ -214,12 +214,12 @@ export const VendorSelectDropdown: React.FC<VendorSelectDropdownProps> = ({
   return (
     <div className="relative" ref={containerRef}>
       {label && (
-        <div className="flex items-center justify-between mb-1">
-          <label className="block text-xs font-bold text-[#374151]">
+        <div className="flex items-center justify-between mb-1 gap-1.5">
+          <label className="block text-xs font-bold text-[#374151] truncate">
             {label} {required && <span className="text-red-500">*</span>}
           </label>
           {targetTypes.length > 0 && (
-            <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
+            <span className="text-[9px] sm:text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 shrink-0">
               {categoryLabel}
             </span>
           )}
@@ -229,7 +229,7 @@ export const VendorSelectDropdown: React.FC<VendorSelectDropdownProps> = ({
       {/* Main Select Trigger */}
       <div
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full px-3 py-2 text-xs border rounded-xl bg-white flex items-center justify-between cursor-pointer transition-all ${
+        className={`w-full min-h-[38px] px-3 py-2 text-xs border rounded-xl bg-white flex items-center justify-between cursor-pointer transition-all ${
           isOpen
             ? "border-emerald-600 ring-1 ring-emerald-600"
             : selectedVendor
@@ -240,25 +240,25 @@ export const VendorSelectDropdown: React.FC<VendorSelectDropdownProps> = ({
         }`}
       >
         {selectedVendor ? (
-          <div className="flex items-center gap-2 min-w-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1 pr-1.5 overflow-hidden">
             <Building2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
             <span className="font-bold text-[#111827] truncate">
               {selectedVendor.name}
             </span>
             {selectedVendor.code && (
-              <span className="text-[10px] font-mono text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200 shrink-0">
+              <span className="text-[9px] sm:text-[10px] font-mono text-emerald-700 bg-emerald-50 px-1 py-0.2 rounded border border-emerald-200 shrink-0">
                 {selectedVendor.code}
               </span>
             )}
             {getPartnerBadge(selectedVendor.partnerTypes)}
             {selectedVendor.location && (
-              <span className="text-[11px] text-gray-500 truncate shrink-0">
+              <span className="hidden sm:inline text-[11px] text-gray-500 truncate shrink-0">
                 • {selectedVendor.location}
               </span>
             )}
           </div>
         ) : (
-          <span className="text-gray-400 truncate">{effectivePlaceholder}</span>
+          <span className="text-gray-400 truncate text-[11px] sm:text-xs">{effectivePlaceholder}</span>
         )}
 
         <ChevronDown
@@ -270,7 +270,7 @@ export const VendorSelectDropdown: React.FC<VendorSelectDropdownProps> = ({
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute z-50 left-0 right-0 mt-1 bg-white border border-[#E5E7EB] rounded-xl shadow-xl overflow-hidden flex flex-col max-h-80 animate-fadeIn">
+        <div className="absolute z-50 left-0 right-0 mt-1 bg-white border border-[#E5E7EB] rounded-xl shadow-xl overflow-hidden flex flex-col max-h-64 sm:max-h-80 animate-fadeIn">
           {/* Header & Search */}
           <div className="p-2 border-b border-[#ECEEF2] bg-[#F8F9FB] space-y-1.5">
             <div className="flex items-center gap-2">
@@ -287,10 +287,10 @@ export const VendorSelectDropdown: React.FC<VendorSelectDropdownProps> = ({
 
             {/* Active Category Filter Header */}
             {targetTypes.length > 0 && (
-              <div className="flex items-center justify-between pt-1 border-t border-[#ECEEF2] text-[10px]">
-                <span className="text-gray-500 font-medium">
+              <div className="flex items-center justify-between pt-1 border-t border-[#ECEEF2] text-[10px] gap-1">
+                <span className="text-gray-500 font-medium truncate">
                   {showAllTypes ? (
-                    <span className="text-gray-700 font-semibold">Showing all partners ({vendors.length})</span>
+                    <span className="text-gray-700 font-semibold">All partners ({vendors.length})</span>
                   ) : (
                     <span>
                       Filtered to <strong className="text-emerald-700">{categoryLabel}</strong> ({filteredVendors.length})
@@ -300,7 +300,7 @@ export const VendorSelectDropdown: React.FC<VendorSelectDropdownProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowAllTypes(!showAllTypes)}
-                  className={`px-2 py-0.5 rounded font-bold transition-colors ${
+                  className={`px-2 py-0.5 rounded font-bold shrink-0 transition-colors ${
                     showAllTypes
                       ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
