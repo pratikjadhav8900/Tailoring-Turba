@@ -63,6 +63,18 @@ export async function GET(
           orderBy: { createdAt: "desc" },
         },
         orderSheet: true,
+        externalAssignments: {
+          orderBy: { createdAt: "desc" },
+          include: {
+            vendor: true,
+            assignedWorker: {
+              select: { id: true, name: true, employeeCode: true, roleTitle: true },
+            },
+            goodsMovements: {
+              orderBy: { movementDate: "desc" },
+            },
+          },
+        },
       },
     });
 
@@ -196,6 +208,34 @@ export async function GET(
         providerPaymentId: tx.providerPaymentId,
         referenceNote: tx.referenceNote,
         createdAt: tx.createdAt,
+      })) || [],
+      externalAssignments: order.externalAssignments?.map((a) => ({
+        id: a.id,
+        orderId: a.orderId,
+        vendorId: a.vendorId,
+        vendorName: a.vendor.name,
+        vendorCode: a.vendor.code,
+        vendorPhone: a.vendor.phone,
+        vendorLocation: a.vendor.location,
+        stage: a.stage,
+        stageExecutionId: a.stageExecutionId,
+        assignedById: a.assignedById,
+        assignedByName: a.assignedByName,
+        assignedWorkerId: a.assignedWorkerId,
+        assignedWorkerName: a.assignedWorkerName || a.assignedWorker?.name || null,
+        workType: a.workType,
+        serviceOrProduct: a.serviceOrProduct,
+        quantityRequired: a.quantityRequired,
+        quantitySent: a.quantitySent,
+        quantityReceived: a.quantityReceived,
+        pendingQuantity: Math.max(0, a.quantitySent - a.quantityReceived),
+        expectedDeliveryDate: a.expectedDeliveryDate,
+        status: a.status,
+        notes: a.notes,
+        specifications: a.specifications as any,
+        createdAt: a.createdAt,
+        updatedAt: a.updatedAt,
+        goodsMovements: a.goodsMovements || [],
       })) || [],
     };
 

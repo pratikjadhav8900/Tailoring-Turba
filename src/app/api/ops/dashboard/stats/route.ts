@@ -203,6 +203,55 @@ export async function GET() {
       where: { role: "USER" },
     });
 
+    // 11. Vendor and External Work Metrics
+    const [
+      activeVendorsCount,
+      awaitingVendorAssignment,
+      rawMaterialPending,
+      goodsWithExternalPartners,
+      overdueDeliveries,
+      partiallyReceivedGoods,
+      completedAwaitingNextStage,
+    ] = await Promise.all([
+      prisma.vendorPartner.count({ where: { isActive: true } }),
+      prisma.order.count({
+        where: {
+          opsStage: { in: ["RESOURCE_FABRIC", "CUTTING", "STITCHING", "BRANDING_PRINTING"] },
+          externalAssignments: { none: {} },
+        },
+      }),
+      prisma.externalWorkAssignment.count({
+        where: {
+          stage: "RESOURCE_FABRIC",
+          status: { notIn: ["COMPLETED", "RECEIVED", "CANCELLED"] },
+        },
+      }),
+      prisma.externalWorkAssignment.count({
+        where: {
+          status: { in: ["SENT_TO_PARTNER", "IN_PROGRESS", "PARTIALLY_RECEIVED"] },
+        },
+      }),
+      prisma.externalWorkAssignment.count({
+        where: {
+          expectedDeliveryDate: { lt: now },
+          status: { notIn: ["COMPLETED", "RECEIVED", "CANCELLED"] },
+        },
+      }),
+      prisma.externalWorkAssignment.count({
+        where: {
+          status: "PARTIALLY_RECEIVED",
+        },
+      }),
+      prisma.externalWorkAssignment.count({
+        where: {
+          status: { in: ["COMPLETED", "RECEIVED"] },
+          order: {
+            opsStage: { in: ["RESOURCE_FABRIC", "CUTTING", "STITCHING", "BRANDING_PRINTING"] },
+          },
+        },
+      }),
+    ]);
+
     const stats: OpsDashboardStats = {
       totalActiveOrders,
       urgentOrdersCount,
@@ -225,6 +274,15 @@ export async function GET() {
       workers,
       monthlyActivity,
       selectedYearAverageMonthlyRevenue,
+      vendorMetrics: {
+        awaitingVendorAssignment,
+        rawMaterialPending,
+        goodsWithExternalPartners,
+        overdueDeliveries,
+        partiallyReceivedGoods,
+        completedAwaitingNextStage,
+        activeVendorsCount,
+      },
     };
 
     return NextResponse.json({ stats });

@@ -18,6 +18,7 @@ import { Step2PaymentCard } from "@/components/ops/payments/Step2PaymentCard";
 import { OrderTasksList } from "@/components/ops/tasks/OrderTasksList";
 import { TaskAssignmentModal } from "@/components/ops/tasks/TaskAssignmentModal";
 import { OrderDetailsModal } from "@/components/ops/orders/OrderDetailsModal";
+import { ExternalAssignmentsCard } from "@/components/ops/vendors/ExternalAssignmentsCard";
 import type { OpsOrder, OpsActivityEvent, OpsPriority } from "@/types/ops";
 import {
   ArrowLeft,
@@ -474,6 +475,18 @@ export default function OpsOrderDetailPage() {
           </OpsCard>
         </div>
 
+        {/* External Partner Assignments on Mobile */}
+        <div className="lg:hidden">
+          <OpsCard title="External Partner Assignments" padding="sm">
+            <ExternalAssignmentsCard
+              order={order}
+              onRefresh={fetchOrderDetail}
+              onOpenAssignModal={() => setIsTaskModalOpen(true)}
+              isManager={isManager}
+            />
+          </OpsCard>
+        </div>
+
         {/* Metadata Controls Bar */}
         <div className="p-4 rounded-[20px] bg-white border border-[#ECEEF2] flex flex-wrap items-center justify-between gap-4 text-xs shadow-xs">
           <div className="flex flex-wrap items-center gap-6">
@@ -532,6 +545,16 @@ export default function OpsOrderDetailPage() {
                 onTaskUpdated={fetchOrderDetail}
                 currentEmployee={currentEmployee}
                 currentUserRole={currentUserRole}
+                isManager={isManager}
+              />
+            </OpsCard>
+
+            {/* External Partner Assignments & Production Outsourcing */}
+            <OpsCard title="External Partner Assignments & Production Outsourcing">
+              <ExternalAssignmentsCard
+                order={order}
+                onRefresh={fetchOrderDetail}
+                onOpenAssignModal={() => setIsTaskModalOpen(true)}
                 isManager={isManager}
               />
             </OpsCard>

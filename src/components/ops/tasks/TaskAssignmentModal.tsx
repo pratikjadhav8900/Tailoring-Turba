@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { STAGE_SUBTASKS, STAGE_DISPLAY_NAMES } from "@/lib/ops/workflow";
 import type { OpsOrder, OpsProductionStage } from "@/types/ops";
+import { VendorSelectDropdown } from "@/components/ops/vendors/VendorSelectDropdown";
 
 interface TaskAssignmentModalProps {
   order: OpsOrder;
@@ -36,6 +37,8 @@ interface TaskDraft {
   title: string;
   assignedToId: string;
   instructions: string;
+  vendorId?: string;
+  vendorName?: string;
 }
 
 const STANDARD_WORKER_TASKS: Array<{
@@ -213,6 +216,18 @@ export const TaskAssignmentModal: React.FC<TaskAssignmentModalProps> = ({
       return;
     }
 
+    const missingVendorTask = selectedTasks.find(
+      (t) =>
+        ["RESOURCE_FABRIC", "CUTTING", "STITCHING", "BRANDING_PRINTING"].includes(t.stage) &&
+        !t.vendorId
+    );
+    if (missingVendorTask) {
+      setError(
+        `External vendor/partner selection is mandatory for "${missingVendorTask.title}" (${missingVendorTask.stage.replace(/_/g, " ")}). Please select a vendor.`
+      );
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
 
@@ -385,6 +400,23 @@ export const TaskAssignmentModal: React.FC<TaskAssignmentModalProps> = ({
                         ))}
                     </select>
                   </div>
+                </div>
+
+                {/* External Partner Selection */}
+                <div>
+                  <VendorSelectDropdown
+                    value={task.vendorId}
+                    onChange={(vId, vendor) =>
+                      handleUpdateTaskDraft(idx, {
+                        vendorId: vId,
+                        vendorName: vendor.name,
+                      })
+                    }
+                    stage={task.stage}
+                    label="External Vendor / Partner"
+                    required={["RESOURCE_FABRIC", "CUTTING", "STITCHING", "BRANDING_PRINTING"].includes(task.stage)}
+                    placeholder="Select external party (supplier, tailor, print partner)..."
+                  />
                 </div>
 
                 {/* Instructions */}

@@ -9,6 +9,13 @@ import type { OpsDashboardStats, OpsOrder } from "@/types/ops";
 import {
   ArrowUpRight,
   ChevronDown,
+  Building2,
+  Truck,
+  Package,
+  Clock,
+  AlertTriangle,
+  ArrowDownLeft,
+  CheckCircle2,
 } from "lucide-react";
 
 function OpsDashboardContent() {
@@ -124,6 +131,179 @@ function OpsDashboardContent() {
                 <div className="text-[11px] text-[#9CA3AF] font-medium">
                   {stats?.totalActiveOrders ?? 0} in active production
                 </div>
+              </div>
+            </div>
+
+            {/* Vendor & External Manufacturing Operations Summary */}
+            <div className="bg-white border border-[#ECEEF2] rounded-[22px] p-5 shadow-xs">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3.5">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-[#00A86B]/10 flex items-center justify-center text-[#00A86B]">
+                    <Building2 className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-xs sm:text-sm font-bold text-[#111827]">
+                      External Manufacturing & Partner Logistics
+                    </h3>
+                    <p className="text-[10px] sm:text-[11px] text-[#6B7280]">
+                      Real-time supplier procurement, outsourced tailoring, and printing progress
+                    </p>
+                  </div>
+                </div>
+
+                <Link
+                  href="/ops/vendors"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#00A86B] hover:underline"
+                >
+                  <span>Open Directory ({stats?.vendorMetrics?.activeVendorsCount ?? 0} active)</span>
+                  <ArrowUpRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                {/* 1. Awaiting Vendor Assignment */}
+                <Link
+                  href="/ops/orders"
+                  className="p-3 rounded-xl bg-[#F8F9FB] border border-[#ECEEF2] hover:border-amber-300 hover:bg-amber-50/30 transition-all flex flex-col justify-between group"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider">
+                      Awaiting Partner
+                    </span>
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+                  </div>
+                  <div className="my-1.5">
+                    <span className="text-xl font-extrabold text-[#111827]">
+                      {stats?.vendorMetrics?.awaitingVendorAssignment ?? 0}
+                    </span>
+                    <span className="text-[11px] text-[#6B7280] ml-1">orders</span>
+                  </div>
+                  <span className="text-[10px] text-[#9CA3AF] group-hover:text-amber-700 font-medium truncate">
+                    External stages unassigned
+                  </span>
+                </Link>
+
+                {/* 2. Raw Material Pending */}
+                <Link
+                  href="/ops/vendors?type=RAW_MATERIAL_SUPPLIER"
+                  className="p-3 rounded-xl bg-[#F8F9FB] border border-[#ECEEF2] hover:border-blue-300 hover:bg-blue-50/30 transition-all flex flex-col justify-between group"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider">
+                      RM Procurement
+                    </span>
+                    <Package className="w-3.5 h-3.5 text-blue-500" />
+                  </div>
+                  <div className="my-1.5">
+                    <span className="text-xl font-extrabold text-[#111827]">
+                      {stats?.vendorMetrics?.rawMaterialPending ?? 0}
+                    </span>
+                    <span className="text-[11px] text-[#6B7280] ml-1">pending</span>
+                  </div>
+                  <span className="text-[10px] text-[#9CA3AF] group-hover:text-blue-700 font-medium truncate">
+                    Fabric supplier orders
+                  </span>
+                </Link>
+
+                {/* 3. Goods With External Partners */}
+                <Link
+                  href="/ops/vendors"
+                  className="p-3 rounded-xl bg-[#F8F9FB] border border-[#ECEEF2] hover:border-purple-300 hover:bg-purple-50/30 transition-all flex flex-col justify-between group"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider">
+                      With Partners
+                    </span>
+                    <Truck className="w-3.5 h-3.5 text-purple-500" />
+                  </div>
+                  <div className="my-1.5">
+                    <span className="text-xl font-extrabold text-[#111827]">
+                      {stats?.vendorMetrics?.goodsWithExternalPartners ?? 0}
+                    </span>
+                    <span className="text-[11px] text-[#6B7280] ml-1">batches</span>
+                  </div>
+                  <span className="text-[10px] text-[#9CA3AF] group-hover:text-purple-700 font-medium truncate">
+                    Stitching & print challans
+                  </span>
+                </Link>
+
+                {/* 4. Overdue Partner Deliveries */}
+                <Link
+                  href="/ops/vendors"
+                  className="p-3 rounded-xl bg-[#F8F9FB] border border-[#ECEEF2] hover:border-red-300 hover:bg-red-50/30 transition-all flex flex-col justify-between group"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider">
+                      Overdue Work
+                    </span>
+                    <Clock
+                      className={`w-3.5 h-3.5 ${
+                        (stats?.vendorMetrics?.overdueDeliveries ?? 0) > 0
+                          ? "text-red-500 animate-pulse"
+                          : "text-[#9CA3AF]"
+                      }`}
+                    />
+                  </div>
+                  <div className="my-1.5">
+                    <span
+                      className={`text-xl font-extrabold ${
+                        (stats?.vendorMetrics?.overdueDeliveries ?? 0) > 0
+                          ? "text-red-600"
+                          : "text-[#111827]"
+                      }`}
+                    >
+                      {stats?.vendorMetrics?.overdueDeliveries ?? 0}
+                    </span>
+                    <span className="text-[11px] text-[#6B7280] ml-1">delayed</span>
+                  </div>
+                  <span className="text-[10px] text-[#9CA3AF] group-hover:text-red-700 font-medium truncate">
+                    Past expected return
+                  </span>
+                </Link>
+
+                {/* 5. Partially Received Goods */}
+                <Link
+                  href="/ops/vendors"
+                  className="p-3 rounded-xl bg-[#F8F9FB] border border-[#ECEEF2] hover:border-amber-300 hover:bg-amber-50/30 transition-all flex flex-col justify-between group"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider">
+                      Partial Receipts
+                    </span>
+                    <ArrowDownLeft className="w-3.5 h-3.5 text-amber-600" />
+                  </div>
+                  <div className="my-1.5">
+                    <span className="text-xl font-extrabold text-[#111827]">
+                      {stats?.vendorMetrics?.partiallyReceivedGoods ?? 0}
+                    </span>
+                    <span className="text-[11px] text-[#6B7280] ml-1">inward</span>
+                  </div>
+                  <span className="text-[10px] text-[#9CA3AF] group-hover:text-amber-700 font-medium truncate">
+                    Balance goods pending
+                  </span>
+                </Link>
+
+                {/* 6. Completed Awaiting Next Stage */}
+                <Link
+                  href="/ops/orders"
+                  className="p-3 rounded-xl bg-[#F8F9FB] border border-[#ECEEF2] hover:border-emerald-300 hover:bg-emerald-50/30 transition-all flex flex-col justify-between group"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold text-[#6B7280] uppercase tracking-wider">
+                      Ready Next Stage
+                    </span>
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#00A86B]" />
+                  </div>
+                  <div className="my-1.5">
+                    <span className="text-xl font-extrabold text-[#00A86B]">
+                      {stats?.vendorMetrics?.completedAwaitingNextStage ?? 0}
+                    </span>
+                    <span className="text-[11px] text-[#6B7280] ml-1">ready</span>
+                  </div>
+                  <span className="text-[10px] text-[#9CA3AF] group-hover:text-emerald-700 font-medium truncate">
+                    Outsourced work done
+                  </span>
+                </Link>
               </div>
             </div>
 

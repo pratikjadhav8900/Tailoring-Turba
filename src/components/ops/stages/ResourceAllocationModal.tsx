@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { X, Layers } from "lucide-react";
 import { OpsButton } from "../ui/OpsButton";
+import { VendorSelectDropdown } from "@/components/ops/vendors/VendorSelectDropdown";
 
 interface ResourceAllocationModalProps {
   orderId: string;
@@ -19,6 +20,7 @@ export const ResourceAllocationModal: React.FC<ResourceAllocationModalProps> = (
   onClose,
   onSuccess,
 }) => {
+  const [vendorId, setVendorId] = useState<string | null>(null);
   const [fabricSupplier, setFabricSupplier] = useState("");
   const [fabricBatchNumber, setFabricBatchNumber] = useState("");
   const [metersAllocated, setMetersAllocated] = useState("");
@@ -40,6 +42,7 @@ export const ResourceAllocationModal: React.FC<ResourceAllocationModalProps> = (
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          vendorId: vendorId || undefined,
           fabricSupplier: fabricSupplier.trim(),
           fabricBatchNumber: fabricBatchNumber.trim(),
           metersAllocated: metersAllocated ? parseFloat(metersAllocated) : null,
@@ -101,16 +104,18 @@ export const ResourceAllocationModal: React.FC<ResourceAllocationModalProps> = (
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            <div>
-              <label className="block text-xs font-bold text-[#111827] mb-1.5 font-sans">
-                Fabric Supplier
-              </label>
-              <input
-                type="text"
-                value={fabricSupplier}
-                onChange={(e) => setFabricSupplier(e.target.value)}
-                placeholder="e.g. Vardhman Mills"
-                className="w-full bg-[#F8F9FA] border border-[#ECEEF2] focus:border-[#00A86B] focus:bg-white rounded-xl p-2.5 text-xs text-[#111827] outline-none font-sans transition-all"
+            <div className="sm:col-span-2">
+              <VendorSelectDropdown
+                value={vendorId}
+                onChange={(id, vendor) => {
+                  setVendorId(id);
+                  if (vendor) {
+                    setFabricSupplier(vendor.name);
+                  }
+                }}
+                allowedPartnerTypes={["RAW_MATERIAL_SUPPLIER"]}
+                label="Raw Material & Fabric Supplier"
+                required={false}
               />
             </div>
             <div>

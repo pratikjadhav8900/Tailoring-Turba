@@ -17,6 +17,8 @@ import {
   ArrowUpRight,
   LogOut,
   CheckSquare,
+  Truck,
+  Calculator,
 } from "lucide-react";
 import type { OpsEmployee } from "@/types/ops";
 import { signOut } from "next-auth/react";
@@ -62,10 +64,16 @@ const OpsSidebarInner: React.FC<OpsSidebarProps> = ({
       isActive: isKanban,
     },
     {
-      label: "Customers",
-      href: "/ops/orders",
-      icon: <Users className="w-4 h-4" />,
-      isActive: false,
+      label: "Vendors & Partners",
+      href: "/ops/vendors",
+      icon: <Truck className="w-4 h-4" />,
+      isActive: pathname.startsWith("/ops/vendors"),
+    },
+    {
+      label: "RM Planning",
+      href: "/ops/planning",
+      icon: <Calculator className="w-4 h-4" />,
+      isActive: pathname.startsWith("/ops/planning"),
     },
     {
       label: "Chat",

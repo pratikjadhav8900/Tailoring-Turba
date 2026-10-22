@@ -32,6 +32,7 @@ export async function POST(
     const body = await req.json();
 
     const {
+      vendorId,
       fabricSupplier,
       fabricBatchNumber,
       metersAllocated,
@@ -55,8 +56,22 @@ export async function POST(
       return NextResponse.json({ error: "Order not found." }, { status: 404 });
     }
 
+    // Resolve vendor if specified
+    let targetVendor = null;
+    if (vendorId) {
+      targetVendor = await prisma.vendorPartner.findUnique({ where: { id: vendorId } });
+    } else if (fabricSupplier) {
+      targetVendor = await prisma.vendorPartner.findFirst({
+        where: { name: { equals: fabricSupplier.trim(), mode: "insensitive" } },
+      });
+    }
+
+    const resolvedSupplierName = targetVendor ? targetVendor.name : (fabricSupplier || null);
+
     const resourceMetadata = {
-      fabricSupplier: fabricSupplier || null,
+      fabricSupplier: resolvedSupplierName,
+      vendorId: targetVendor?.id || null,
+      vendorCode: targetVendor?.code || null,
       fabricBatchNumber: fabricBatchNumber || null,
       metersAllocated: metersAllocated ? parseFloat(metersAllocated) : null,
       threadColorCode: threadColorCode || null,
@@ -96,13 +111,40 @@ export async function POST(
         });
       }
 
+      // If vendor resolved, create or link external assignment
+      if (targetVendor) {
+        await tx.externalWorkAssignment.create({
+          data: {
+            orderId: order.id,
+            vendorId: targetVendor.id,
+            stage: "RESOURCE_FABRIC",
+            stageExecutionId: execution.id,
+            assignedById: auth.context.employee.id,
+            assignedByName: auth.context.employee.name,
+            assignedWorkerId: auth.context.employee.id,
+            assignedWorkerName: auth.context.employee.name,
+            workType: "RAW_MATERIAL_PROCUREMENT",
+            serviceOrProduct: fabricBatchNumber ? `Fabric Batch: ${fabricBatchNumber}` : "Raw Material Fabric",
+            quantityRequired: metersAllocated ? Math.round(parseFloat(metersAllocated)) : null,
+            status: "ASSIGNED",
+            notes: notes || `Procurement from ${targetVendor.name}: ${metersAllocated || "N/A"}m`,
+            specifications: {
+              fabricBatchNumber: fabricBatchNumber || null,
+              metersAllocated: metersAllocated ? parseFloat(metersAllocated) : null,
+              threadColorCode: threadColorCode || null,
+              trimsAllocated: trimsAllocated || null,
+            },
+          },
+        });
+      }
+
       // Log to timeline
       await tx.orderTimelineEvent.create({
         data: {
           orderId: order.id,
           eventType: "OPS_RESOURCE_ALLOCATED",
           title: "Fabric & Resources Allocated",
-          description: `Supplier: ${fabricSupplier || "N/A"} | Batch: ${fabricBatchNumber || "N/A"} | Meters: ${metersAllocated || "N/A"}`,
+          description: `Supplier: ${resolvedSupplierName || "N/A"} | Batch: ${fabricBatchNumber || "N/A"} | Meters: ${metersAllocated || "N/A"}`,
           actorId: auth.context.employee.id,
           actorName: auth.context.employee.name,
           actorRole: "EMPLOYEE",

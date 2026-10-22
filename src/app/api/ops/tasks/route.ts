@@ -245,9 +245,15 @@ export async function POST(req: NextRequest) {
     const createdExecutions = await prisma.$transaction(async (tx) => {
       const records = [];
 
-      for (const t of taskList) {
+      for (const t of taskList as any[]) {
         const worker = workerMap.get(t.assignedToId);
         const workerName = worker?.name || "Assigned Worker";
+
+        // Resolve vendor if specified
+        let vendor = null;
+        if (t.vendorId) {
+          vendor = await tx.vendorPartner.findUnique({ where: { id: t.vendorId } });
+        }
 
         const execution = await tx.productionStageExecution.create({
           data: {
@@ -264,18 +270,46 @@ export async function POST(req: NextRequest) {
               assignedById: auth.context.employee.id,
               assignedByName: auth.context.employee.name,
               instructions: t.instructions || "",
+              vendorId: vendor?.id || null,
+              vendorName: vendor?.name || null,
+              vendorCode: vendor?.code || null,
             },
             startedAt: new Date(),
           },
         });
 
+        // If vendor partner was assigned, record ExternalWorkAssignment
+        let externalAssignment = null;
+        if (vendor) {
+          externalAssignment = await tx.externalWorkAssignment.create({
+            data: {
+              orderId: order.id,
+              vendorId: vendor.id,
+              stage: t.stage,
+              stageExecutionId: execution.id,
+              assignedById: auth.context.employee.id,
+              assignedByName: auth.context.employee.name,
+              assignedWorkerId: t.assignedToId,
+              assignedWorkerName: workerName,
+              workType: t.workType || "OUTSOURCED_PRODUCTION",
+              serviceOrProduct: t.title,
+              quantityRequired: t.quantityRequired || null,
+              quantitySent: 0,
+              quantityReceived: 0,
+              status: "ASSIGNED",
+              notes: t.instructions || null,
+            },
+          });
+        }
+
         // Create timeline event
+        const titleSuffix = vendor ? ` [Partner: ${vendor.name}]` : "";
         await tx.orderTimelineEvent.create({
           data: {
             orderId: order.id,
-            eventType: "TASK_ASSIGNED",
-            title: `Task Assigned: ${t.title} → ${workerName}`,
-            description: t.instructions || `Assigned by ${auth.context.employee.name}`,
+            eventType: vendor ? "TASK_AND_VENDOR_ASSIGNED" : "TASK_ASSIGNED",
+            title: `Task Assigned: ${t.title} → ${workerName}${titleSuffix}`,
+            description: t.instructions || `Assigned by ${auth.context.employee.name}${vendor ? ` with external partner ${vendor.name}` : ""}`,
             actorId: auth.context.employee.id,
             actorName: auth.context.employee.name,
             actorRole: "EMPLOYEE",
@@ -284,6 +318,10 @@ export async function POST(req: NextRequest) {
               taskTitle: t.title,
               workerId: t.assignedToId,
               workerName,
+              vendorId: vendor?.id || null,
+              vendorName: vendor?.name || null,
+              vendorCode: vendor?.code || null,
+              assignmentId: externalAssignment?.id || null,
               instructions: t.instructions,
             },
           },

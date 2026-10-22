@@ -4,9 +4,23 @@ import type {
   OrderStatus,
   Role,
   EventActorRole,
+  PartnerType,
+  PartnerService,
+  AssignmentStatus,
+  GoodsMovementType,
 } from "@prisma/client";
 
-export type { OpsProductionStage, OpsStageStatus, OrderStatus, Role, EventActorRole };
+export type {
+  OpsProductionStage,
+  OpsStageStatus,
+  OrderStatus,
+  Role,
+  EventActorRole,
+  PartnerType,
+  PartnerService,
+  AssignmentStatus,
+  GoodsMovementType,
+};
 
 export type OpsPriority = "NORMAL" | "URGENT" | "RUSH";
 export type OpsOrderSource =
@@ -150,6 +164,10 @@ export interface OpsOrder {
 
   // Payments Ledger
   paymentTransactions?: OpsPaymentTransaction[];
+
+  // External Vendor & Partner Assignments
+  externalAssignments?: OpsExternalWorkAssignment[];
+  goodsMovements?: OpsGoodsMovement[];
 }
 
 export interface OpsPaymentTransaction {
@@ -231,6 +249,15 @@ export interface OpsDashboardStats {
   workers: OpsWorkerPerformance[];
   monthlyActivity: OpsMonthlyActivity[];
   selectedYearAverageMonthlyRevenue: number;
+  vendorMetrics?: {
+    awaitingVendorAssignment: number;
+    rawMaterialPending: number;
+    goodsWithExternalPartners: number;
+    overdueDeliveries: number;
+    partiallyReceivedGoods: number;
+    completedAwaitingNextStage?: number;
+    activeVendorsCount: number;
+  };
 }
 
 export interface OpsStageTransitionPayload {
@@ -277,3 +304,106 @@ export interface OpsTaskItem {
   orderStage?: OpsProductionStage | null;
   orderSource?: string | null;
 }
+
+export interface OpsVendorPartner {
+  id: string;
+  name: string;
+  code?: string | null;
+  partnerTypes: PartnerType[];
+  services: PartnerService[];
+  category?: string | null;
+  subcategory?: string | null;
+  products?: string | null;
+  location?: string | null;
+  normalizedLocation?: string | null;
+  contactPersons?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  panNumber?: string | null;
+  gstNumber?: string | null;
+  isActive: boolean;
+  sourceNotes?: string | null;
+  internalNotes?: string | null;
+  createdBy?: string | null;
+  updatedBy?: string | null;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+  _count?: {
+    assignments: number;
+    goodsMovements: number;
+  };
+}
+
+export interface OpsExternalWorkAssignment {
+  id: string;
+  orderId: string;
+  orderNumber?: number;
+  formattedOrderNumber?: string;
+  vendorId: string;
+  vendorName?: string;
+  vendorCode?: string | null;
+  vendorPhone?: string | null;
+  vendorLocation?: string | null;
+  stage: OpsProductionStage;
+  stageExecutionId?: string | null;
+  assignedById?: string | null;
+  assignedByName?: string | null;
+  assignedWorkerId?: string | null;
+  assignedWorkerName?: string | null;
+  workType: string;
+  assignmentType?: string;
+  serviceOrProduct?: string | null;
+  serviceRequested?: string | null;
+  materialSpecs?: string | null;
+  unit?: string | null;
+  quantityRequired?: number | null;
+  quantitySent: number;
+  quantityReceived: number;
+  pendingQuantity: number;
+  expectedDeliveryDate?: Date | string | null;
+  status: AssignmentStatus;
+  notes?: string | null;
+  specifications?: Record<string, unknown> | null;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+  goodsMovements?: OpsGoodsMovement[];
+}
+
+export interface OpsGoodsMovement {
+  id: string;
+  assignmentId: string;
+  orderId: string;
+  orderNumber?: number;
+  vendorId: string;
+  vendorName?: string;
+  movementType: GoodsMovementType;
+  quantity: number;
+  discrepancyQuantity: number;
+  challanNumber?: string | null;
+  movementDate: Date | string;
+  actorEmployeeId?: string | null;
+  actorEmployeeName: string;
+  employeeName?: string | null;
+  notes?: string | null;
+  conditionNotes?: string | null;
+  attachments: string[];
+  createdAt: Date | string;
+}
+
+export interface OpsMaterialConsumptionReference {
+  id: string;
+  productType: string;
+  sizeBand: string;
+  fabric: string;
+  gsm?: string | null;
+  unitKg?: number | null;
+  unitsPerKg?: number | null;
+  sourceQuantity?: number | null;
+  sourceFabricRequiredKg?: number | null;
+  supplierBrandNote?: string | null;
+  sourceDocument: string;
+  notes?: string | null;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+}
+

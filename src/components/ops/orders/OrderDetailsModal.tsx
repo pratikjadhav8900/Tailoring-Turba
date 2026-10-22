@@ -27,7 +27,9 @@ import {
   ShieldCheck,
   Copy,
   Check,
+  Building2,
 } from "lucide-react";
+import { ExternalAssignmentsCard } from "@/components/ops/vendors/ExternalAssignmentsCard";
 
 interface OrderDetailsModalProps {
   order: OpsOrder;
@@ -44,7 +46,7 @@ interface OrderDetailsModalProps {
   mockupFileInputRef?: React.RefObject<HTMLInputElement>;
 }
 
-type DetailTab = "SPECS" | "CUSTOMER" | "FINANCIALS" | "ARTWORK" | "NOTES";
+type DetailTab = "SPECS" | "CUSTOMER" | "FINANCIALS" | "ARTWORK" | "VENDORS" | "NOTES";
 
 export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
   order,
@@ -213,6 +215,28 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                 }`}
               >
                 {totalMockups + totalFiles}
+              </span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("VENDORS")}
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 cursor-pointer ${
+              activeTab === "VENDORS"
+                ? "bg-[#00A86B] text-white shadow-2xs"
+                : "bg-[#F4F6F9] text-[#4B5563] hover:bg-[#E5E7EB]"
+            }`}
+          >
+            <Building2 className="w-3.5 h-3.5" />
+            <span>Vendors & Partners</span>
+            {order.externalAssignments && order.externalAssignments.length > 0 && (
+              <span
+                className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                  activeTab === "VENDORS" ? "bg-white/20 text-white" : "bg-white text-[#6B7280]"
+                }`}
+              >
+                {order.externalAssignments.length}
               </span>
             )}
           </button>
@@ -824,6 +848,17 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                   );
                 })()}
               </div>
+            </div>
+          )}
+
+          {/* TAB: VENDORS & PARTNERS */}
+          {activeTab === "VENDORS" && (
+            <div className="space-y-4">
+              <ExternalAssignmentsCard
+                order={order}
+                onRefresh={onRefresh || (() => {})}
+                isManager={true}
+              />
             </div>
           )}
 

@@ -175,6 +175,8 @@ model Order {
   orderSource           String?
   stageExecutions       ProductionStageExecution[]
   internalNotes         InternalOrderNote[]
+  externalAssignments   ExternalWorkAssignment[]
+  goodsMovements        GoodsMovement[]
 }
 
 model OrderItem {
@@ -584,8 +586,9 @@ model Employee {
   createdAt       DateTime                    @default(now())
   updatedAt       DateTime                    @updatedAt
 
-  stageExecutions ProductionStageExecution[]
-  notes           InternalOrderNote[]
+  stageExecutions      ProductionStageExecution[]
+  notes                InternalOrderNote[]
+  assignedExternalWork ExternalWorkAssignment[]
 
   @@index([email])
   @@index([employeeCode])
@@ -640,4 +643,151 @@ model OpsNotification {
 
   @@index([createdAt])
 }
+
+enum PartnerType {
+  RAW_MATERIAL_SUPPLIER
+  FINISHED_GOODS_SUPPLIER
+  TAILOR_MANUFACTURER
+  PRINTING_EMBROIDERY_PARTNER
+}
+
+enum PartnerService {
+  SCREEN_PRINTING
+  DTF_PRINTING
+  SUBLIMATION
+  UV_PRINTING
+  EMBROIDERY
+  STITCHING
+  FABRIC_SUPPLY
+  FINISHED_GOODS_SUPPLY
+}
+
+enum AssignmentStatus {
+  DRAFT
+  ASSIGNED
+  SENT_TO_PARTNER
+  IN_PROGRESS
+  PARTIALLY_RECEIVED
+  RECEIVED
+  COMPLETED
+  CANCELLED
+  DELAYED
+}
+
+enum GoodsMovementType {
+  OUTWARD_CHALLAN
+  INWARD_RECEIPT
+}
+
+model VendorPartner {
+  id                 String           @id @default(cuid())
+  name               String
+  code               String?          @unique
+  partnerTypes       PartnerType[]    @default([])
+  services           PartnerService[] @default([])
+  category           String?
+  subcategory        String?
+  products           String?
+  location           String?
+  normalizedLocation String?
+  contactPersons     String?
+  phone              String?
+  email              String?
+  panNumber          String?
+  gstNumber          String?
+  isActive           Boolean          @default(true)
+  sourceNotes        String?
+  internalNotes      String?
+  createdBy          String?
+  updatedBy          String?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  assignments        ExternalWorkAssignment[]
+  goodsMovements     GoodsMovement[]
+
+  @@index([name])
+  @@index([code])
+  @@index([location])
+  @@index([isActive])
+}
+
+model ExternalWorkAssignment {
+  id                   String           @id @default(cuid())
+  orderId              String
+  order                Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  vendorId             String
+  vendor               VendorPartner    @relation(fields: [vendorId], references: [id])
+  stage                OpsProductionStage
+  stageExecutionId     String?
+  assignedById         String?
+  assignedByName       String?
+  assignedWorkerId     String?
+  assignedWorker       Employee?        @relation(fields: [assignedWorkerId], references: [id], onDelete: SetNull)
+  assignedWorkerName   String?
+  workType             String           // RAW_MATERIAL_PROCUREMENT, FINISHED_GOODS_PURCHASE, TAILORING_STITCHING, PRINTING_DECORATION, EMBROIDERY
+  serviceOrProduct     String?
+  quantityRequired     Int?
+  quantitySent         Int              @default(0)
+  quantityReceived     Int              @default(0)
+  expectedDeliveryDate DateTime?
+  status               AssignmentStatus @default(ASSIGNED)
+  notes                String?
+  specifications       Json?
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  goodsMovements       GoodsMovement[]
+
+  @@index([orderId])
+  @@index([vendorId])
+  @@index([stage])
+  @@index([status])
+}
+
+model GoodsMovement {
+  id                  String                 @id @default(cuid())
+  assignmentId        String
+  assignment          ExternalWorkAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  orderId             String
+  order               Order                  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  vendorId            String
+  vendor              VendorPartner          @relation(fields: [vendorId], references: [id])
+  movementType        GoodsMovementType
+  quantity            Int
+  discrepancyQuantity Int                    @default(0)
+  movementDate        DateTime               @default(now())
+  actorEmployeeId     String?
+  actorEmployeeName   String
+  notes               String?
+  conditionNotes      String?
+  attachments         String[]               @default([])
+  createdAt           DateTime               @default(now())
+
+  @@index([assignmentId])
+  @@index([orderId])
+  @@index([vendorId])
+  @@index([movementDate])
+}
+
+model MaterialConsumptionReference {
+  id                     String   @id @default(cuid())
+  productType            String   // Round Neck, Collar
+  sizeBand               String   // 18-24, 26-32, 34-42, 44-50
+  fabric                 String   // Cotton-sinker, Micro plain polyester, Dry Fit, Ad Dry Fit, Spun Matty, PCPQ
+  gsm                    String?
+  unitKg                 Float?   // 1
+  unitsPerKg             Float?
+  sourceQuantity         Int?
+  sourceFabricRequiredKg Float?
+  supplierBrandNote      String?
+  sourceDocument         String   @default("Manufacturing(RM).pdf")
+  notes                  String?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  @@index([productType, fabric])
+  @@index([sizeBand])
+}
+
 
