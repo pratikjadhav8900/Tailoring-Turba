@@ -26,6 +26,16 @@ const config: Config = {
         "muted-clay": "var(--color-muted-clay)",
         "soft-white": "var(--color-soft-white)",
         "natural-thread": "var(--color-natural-thread)",
+        muted: {
+          DEFAULT: "var(--muted)",
+          foreground: "var(--muted-foreground)",
+        },
+        card: {
+          DEFAULT: "var(--card)",
+          foreground: "var(--card-foreground)",
+        },
+        border: "var(--border)",
+        ring: "var(--ring)",
       },
     },
   },

@@ -1,0 +1,2335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Turba Ops Portal — Comprehensive Employee User Manual</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #00A86B;
+      --primary-dark: #008754;
+      --primary-light: #E6F7F0;
+      --secondary: #0F172A;
+      --secondary-light: #1E293B;
+      --accent: #2563EB;
+      --warning: #F59E0B;
+      --danger: #EF4444;
+      --surface: #FFFFFF;
+      --background: #F8FAFC;
+      --border: #E2E8F0;
+      --border-dark: #CBD5E1;
+      --text: #0F172A;
+      --text-muted: #64748B;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      --radius: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--background);
+      color: var(--text);
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Top Navigation Bar */
+    header.manual-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-logo-pill {
+      background: var(--primary);
+      color: #fff;
+      font-weight: 800;
+      font-size: 14px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .brand-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--secondary);
+      letter-spacing: -0.5px;
+    }
+
+    .brand-badge {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      background: #F1F5F9;
+      color: var(--text-muted);
+      padding: 3px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      margin-left: 6px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .search-input {
+      padding: 8px 14px 8px 34px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 13px;
+      background: #FFFFFF url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%2394A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>') no-repeat 10px center;
+      outline: none;
+      width: 240px;
+      transition: all 0.2s ease;
+    }
+    .search-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(0, 168, 107, 0.15);
+      width: 280px;
+    }
+
+    .btn-print {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #FFFFFF;
+      color: var(--secondary);
+      border: 1px solid var(--border);
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-print:hover {
+      background: #F8FAFC;
+      border-color: var(--border-dark);
+    }
+
+    .btn-ops-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .btn-ops-link:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn-download-pdf {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #0F172A;
+      color: #FFFFFF;
+      border: 1px solid #1E293B;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .btn-download-pdf:hover {
+      background: #1E293B;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Main Layout */
+    .layout-container {
+      max-width: 1480px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 290px 1fr;
+      gap: 36px;
+      padding: 32px 24px;
+    }
+
+    /* Sidebar Navigation (Sticky) */
+    aside.manual-sidebar {
+      position: sticky;
+      top: 90px;
+      height: calc(100vh - 120px);
+      overflow-y: auto;
+      padding-right: 12px;
+    }
+
+    .sidebar-section {
+      margin-bottom: 24px;
+    }
+
+    .sidebar-heading {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: #94A3B8;
+      letter-spacing: 0.8px;
+      margin-bottom: 10px;
+      padding-left: 10px;
+    }
+
+    .toc-list {
+      list-style: none;
+    }
+
+    .toc-item a {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      color: #475569;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+      border-radius: 8px;
+      margin-bottom: 2px;
+      transition: all 0.15s ease;
+    }
+    .toc-item a:hover {
+      background: #EDF2F7;
+      color: var(--secondary);
+    }
+    .toc-item.active a {
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      font-weight: 700;
+    }
+
+    .toc-pill {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: #E2E8F0;
+      color: #475569;
+    }
+    .toc-item.active .toc-pill {
+      background: rgba(0, 168, 107, 0.2);
+      color: var(--primary-dark);
+    }
+
+    /* Role Quick Selector */
+    .role-selector-card {
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow-sm);
+    }
+    .role-selector-card h4 {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--secondary);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .role-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .role-btn {
+      padding: 5px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      background: #F8FAFC;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .role-btn:hover {
+      background: #EDF2F7;
+      border-color: var(--border-dark);
+    }
+    .role-btn.active {
+      background: var(--secondary);
+      color: #fff;
+      border-color: var(--secondary);
+    }
+
+    /* Main Content Area */
+    main.manual-content {
+      background: transparent;
+      min-width: 0;
+    }
+
+    /* Hero Banner */
+    .hero-banner {
+      background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+      color: #fff;
+      border-radius: 18px;
+      padding: 44px 48px;
+      margin-bottom: 40px;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: var(--shadow-xl);
+    }
+    .hero-banner::after {
+      content: '';
+      position: absolute;
+      top: -60px;
+      right: -60px;
+      width: 280px;
+      height: 280px;
+      background: radial-gradient(circle, rgba(0, 168, 107, 0.45) 0%, rgba(0,0,0,0) 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .hero-subtitle {
+      color: #34D399;
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 10px;
+      display: block;
+    }
+    .hero-title {
+      font-size: 32px;
+      font-weight: 800;
+      line-height: 1.25;
+      letter-spacing: -0.5px;
+      margin-bottom: 14px;
+    }
+    .hero-desc {
+      font-size: 15px;
+      color: #CBD5E1;
+      max-width: 780px;
+      line-height: 1.7;
+      margin-bottom: 24px;
+    }
+    .hero-stats-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    .stat-unit strong {
+      display: block;
+      font-size: 20px;
+      font-weight: 800;
+      color: #FFFFFF;
+    }
+    .stat-unit span {
+      font-size: 12px;
+      color: #94A3B8;
+      font-weight: 500;
+    }
+
+    /* Content Cards & Sections */
+    section.manual-module {
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 36px 40px;
+      margin-bottom: 36px;
+      box-shadow: var(--shadow-sm);
+      scroll-margin-top: 100px;
+    }
+
+    .module-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 20px;
+      margin-bottom: 28px;
+    }
+    .module-num-badge {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 800;
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      padding: 4px 10px;
+      border-radius: 6px;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .module-title {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--secondary);
+      letter-spacing: -0.5px;
+      line-height: 1.3;
+    }
+    .module-desc {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-top: 6px;
+      max-width: 800px;
+    }
+    .target-roles {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .role-tag {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: #F1F5F9;
+      color: #475569;
+      border: 1px solid #E2E8F0;
+    }
+    .role-tag.founder { background: #EEF2FF; color: #4338CA; border-color: #C7D2FE; }
+    .role-tag.cutter { background: #ECFDF5; color: #047857; border-color: #A7F3D0; }
+    .role-tag.stitcher { background: #FFFBEB; color: #B45309; border-color: #FDE68A; }
+    .role-tag.branding { background: #FDF2F8; color: #BE185D; border-color: #FBCFE8; }
+    .role-tag.qc { background: #FEF2F2; color: #B91C1C; border-color: #FECACA; }
+    .role-tag.all { background: var(--primary-light); color: var(--primary-dark); border-color: #A7F3D0; }
+
+    /* Screenshot Container */
+    .screenshot-frame {
+      background: #F8FAFC;
+      border: 1px solid var(--border-dark);
+      border-radius: 12px;
+      overflow: hidden;
+      margin: 24px 0 28px 0;
+      box-shadow: var(--shadow-md);
+      position: relative;
+    }
+    .screenshot-titlebar {
+      background: #EDF2F7;
+      border-bottom: 1px solid var(--border);
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 600;
+      color: #64748B;
+    }
+    .titlebar-dots {
+      display: flex;
+      gap: 6px;
+    }
+    .titlebar-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+    .titlebar-dot.red { background: #EF4444; }
+    .titlebar-dot.yellow { background: #F59E0B; }
+    .titlebar-dot.green { background: #10B981; }
+
+    .screenshot-img {
+      width: 100%;
+      height: auto;
+      display: block;
+      cursor: zoom-in;
+      transition: transform 0.2s ease;
+    }
+    .screenshot-img:hover {
+      opacity: 0.98;
+    }
+
+    .screenshot-caption {
+      padding: 10px 18px;
+      font-size: 12px;
+      color: #475569;
+      background: #FFFFFF;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-style: italic;
+    }
+
+    /* Functionality Breakdown Grid */
+    .functionality-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin: 24px 0;
+    }
+
+    .function-card {
+      background: #F8FAFC;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      transition: all 0.2s ease;
+    }
+    .function-card:hover {
+      border-color: var(--primary);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+    .function-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 800;
+      font-size: 13px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+    .function-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--secondary);
+      margin-bottom: 8px;
+    }
+    .function-desc {
+      font-size: 13px;
+      color: #475569;
+      line-height: 1.6;
+    }
+    .function-tips {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px dashed var(--border);
+      font-size: 12px;
+      color: var(--primary-dark);
+      font-weight: 600;
+    }
+
+    /* Steps list */
+    .steps-container {
+      margin: 24px 0;
+    }
+    .step-row {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 16px;
+      align-items: flex-start;
+    }
+    .step-number {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--secondary);
+      color: #fff;
+      font-weight: 800;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      shrink-0: 0;
+    }
+    .step-content {
+      flex: 1;
+      background: #F8FAFC;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 18px;
+    }
+    .step-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--secondary);
+      margin-bottom: 4px;
+    }
+    .step-text {
+      font-size: 13px;
+      color: #475569;
+    }
+
+    /* Alerts and Callouts */
+    .callout {
+      padding: 18px 22px;
+      border-radius: 12px;
+      margin: 20px 0;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      font-size: 13px;
+      line-height: 1.65;
+    }
+    .callout.tip {
+      background: #ECFDF5;
+      border: 1px solid #A7F3D0;
+      color: #065F46;
+    }
+    .callout.warning {
+      background: #FFFBEB;
+      border: 1px solid #FDE68A;
+      color: #92400E;
+    }
+    .callout.important {
+      background: #EFF6FF;
+      border: 1px solid #BFDBFE;
+      color: #1E40AF;
+    }
+    .callout.danger {
+      background: #FEF2F2;
+      border: 1px solid #FECACA;
+      color: #991B1B;
+    }
+    .callout-icon {
+      font-size: 18px;
+      line-height: 1;
+      margin-top: 2px;
+    }
+    .callout-body strong {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 3px;
+    }
+
+    /* Tables */
+    .manual-table-wrap {
+      overflow-x: auto;
+      margin: 20px 0;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+    table.manual-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+    }
+    table.manual-table th {
+      background: #F1F5F9;
+      color: var(--secondary);
+      font-weight: 700;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    table.manual-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      color: #334155;
+    }
+    table.manual-table tr:last-child td {
+      border-bottom: none;
+    }
+    table.manual-table tr:hover td {
+      background: #F8FAFC;
+    }
+    .badge-code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 600;
+      background: #E2E8F0;
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: var(--secondary);
+    }
+
+    /* Lightbox Modal for zooming screenshots */
+    #lightbox {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(15, 23, 42, 0.9);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      cursor: zoom-out;
+      padding: 40px;
+    }
+    #lightbox.active {
+      display: flex;
+    }
+    #lightbox img {
+      max-width: 95%;
+      max-height: 95%;
+      border-radius: 12px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Print Styles */
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 10mm 10mm 12mm 10mm;
+      }
+
+      /* Global document print reset */
+      body {
+        background: #FFFFFF !important;
+        color: #0F172A !important;
+        font-size: 10pt !important;
+        line-height: 1.45 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      /* Absolutely suppress web-only elements */
+      .no-print,
+      header,
+      aside,
+      .manual-header,
+      .manual-sidebar,
+      .header-actions,
+      .role-selector-card,
+      #lightbox,
+      .screenshot-caption span:last-child {
+        display: none !important;
+        height: 0 !important;
+        max-height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        visibility: hidden !important;
+      }
+
+      .layout-container {
+        display: block !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+
+      main.manual-content {
+        width: 100% !important;
+      }
+
+      /* Hero Banner in print */
+      .hero-banner {
+        background: #0F172A !important;
+        color: #FFFFFF !important;
+        padding: 22px 24px !important;
+        margin-bottom: 16px !important;
+        border-radius: 8px !important;
+        box-shadow: none !important;
+        page-break-after: avoid !important;
+        break-after: avoid !important;
+      }
+      .hero-title {
+        font-size: 20pt !important;
+        margin-bottom: 6px !important;
+        line-height: 1.2 !important;
+      }
+      .hero-desc {
+        font-size: 10pt !important;
+        line-height: 1.5 !important;
+        margin-bottom: 14px !important;
+        color: #E2E8F0 !important;
+      }
+      .hero-stats-strip {
+        padding-top: 12px !important;
+        gap: 12px !important;
+        display: grid !important;
+        grid-template-columns: repeat(4, 1fr) !important;
+      }
+      .stat-unit strong {
+        font-size: 13pt !important;
+      }
+      .stat-unit span {
+        font-size: 8.5pt !important;
+      }
+
+      /* Clean editorial module sections - tight, elegant, no wasted whitespace */
+      section.manual-module {
+        background: transparent !important;
+        border: none !important;
+        border-radius: 0 !important;
+        padding: 0 !important;
+        margin: 0 0 16px 0 !important;
+        box-shadow: none !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+
+      /* Module Headers */
+      .module-header {
+        border-bottom: 2px solid var(--primary) !important;
+        padding-bottom: 8px !important;
+        margin-bottom: 12px !important;
+        page-break-after: avoid !important;
+        break-after: avoid !important;
+      }
+      .module-title {
+        font-size: 15pt !important;
+        font-weight: 800 !important;
+        line-height: 1.25 !important;
+        color: #0F172A !important;
+      }
+      .module-desc {
+        font-size: 9.5pt !important;
+        margin-top: 3px !important;
+        color: #475569 !important;
+      }
+
+      h1, h2, h3, h4, h5, .step-title, .function-title {
+        page-break-after: avoid !important;
+        break-after: avoid !important;
+      }
+
+      /* Atomic blocks must never split across pages */
+      .step-row,
+      .function-card,
+      .callout,
+      .screenshot-frame,
+      tr,
+      .manual-table-wrap {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+
+      /* FULL-WIDTH SCREENSHOT FRAMES - Fills width cleanly, no white margins on sides */
+      .screenshot-frame {
+        width: 100% !important;
+        max-width: 100% !important;
+        max-height: none !important;
+        height: auto !important;
+        margin: 8px 0 10px 0 !important;
+        border: 1px solid #CBD5E1 !important;
+        box-shadow: none !important;
+        background: #FFFFFF !important;
+        border-radius: 8px !important;
+        overflow: hidden !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+      .screenshot-titlebar {
+        padding: 4px 10px !important;
+        font-size: 8pt !important;
+        background: #F1F5F9 !important;
+        border-bottom: 1px solid #E2E8F0 !important;
+      }
+      .screenshot-img {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: auto !important;
+        max-height: 240px !important;
+        object-fit: contain !important;
+        display: block !important;
+        margin: 0 !important;
+      }
+      .screenshot-caption {
+        padding: 4px 10px !important;
+        font-size: 8pt !important;
+        background: #FFFFFF !important;
+        border-top: 1px solid #E2E8F0 !important;
+      }
+
+      /* Compact, High-Legibility Functionality Grid */
+      .functionality-grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+        margin: 10px 0 !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+      .function-card {
+        padding: 8px 10px !important;
+        border: 1px solid #E2E8F0 !important;
+        border-radius: 6px !important;
+        box-shadow: none !important;
+        background: #F8FAFC !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+      .function-title {
+        font-size: 9.5pt !important;
+        font-weight: 700 !important;
+        margin-bottom: 2px !important;
+      }
+      .function-desc {
+        font-size: 8.5pt !important;
+        line-height: 1.35 !important;
+        color: #334155 !important;
+      }
+      .function-tips {
+        display: none !important;
+      }
+
+      /* Well-Spaced, 2-Column Readable Steps in Print */
+      .steps-container {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px 12px !important;
+        margin: 10px 0 !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+      .step-row {
+        display: flex !important;
+        gap: 10px !important;
+        margin-bottom: 0 !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+      .step-number {
+        width: 24px !important;
+        height: 24px !important;
+        min-width: 24px !important;
+        font-size: 9.5pt !important;
+        font-weight: 800 !important;
+      }
+      .step-content {
+        flex: 1 !important;
+        padding: 8px 12px !important;
+        background: #F8FAFC !important;
+        border: 1px solid #E2E8F0 !important;
+        border-radius: 6px !important;
+      }
+      .step-title {
+        font-size: 9.5pt !important;
+        font-weight: 700 !important;
+        margin-bottom: 2px !important;
+      }
+      .step-text {
+        font-size: 8.5pt !important;
+        line-height: 1.4 !important;
+        color: #334155 !important;
+      }
+
+      /* Tables in Print */
+      .manual-table-wrap {
+        margin: 8px 0 !important;
+        border: 1px solid #CBD5E1 !important;
+        border-radius: 6px !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+      table.manual-table {
+        font-size: 7.5pt !important;
+        line-height: 1.25 !important;
+        width: 100% !important;
+      }
+      table.manual-table thead {
+        display: table-header-group !important;
+      }
+      table.manual-table th {
+        padding: 4px 8px !important;
+        background: #F1F5F9 !important;
+        color: #0F172A !important;
+        font-size: 7.5pt !important;
+        font-weight: 700 !important;
+      }
+      table.manual-table td {
+        padding: 3px 8px !important;
+      }
+
+      /* Callouts */
+      .callout {
+        padding: 8px 12px !important;
+        margin: 8px 0 !important;
+        font-size: 8.5pt !important;
+        line-height: 1.35 !important;
+        border-radius: 6px !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+
+      /* Suppress all cookie banners and dialogs */
+      [role="dialog"],
+      [class*="CookieConsent"],
+      [class*="cookie"] {
+        display: none !important;
+      }
+    }
+
+    /* Responsive Styles for Tablet & Mobile */
+    @media (max-width: 1024px) {
+      .layout-container {
+        grid-template-columns: 1fr;
+        padding: 20px 16px;
+        gap: 20px;
+      }
+      aside.manual-sidebar {
+        display: none;
+      }
+    }
+
+    @media (max-width: 768px) {
+      header.manual-header {
+        padding: 10px 12px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+      }
+      .brand-group {
+        justify-content: space-between;
+      }
+      .brand-title {
+        font-size: 15px;
+        font-weight: 800;
+      }
+      .brand-badge {
+        display: none;
+      }
+      .header-actions {
+        width: 100%;
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 6px;
+        overflow-x: auto;
+        padding-bottom: 2px;
+      }
+      .search-input {
+        display: none;
+      }
+      .btn-download-pdf,
+      .btn-download-mobile,
+      .btn-print,
+      .btn-ops-link {
+        font-size: 11px;
+        padding: 6px 10px;
+        border-radius: 6px;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+      .layout-container {
+        padding: 10px 8px;
+      }
+      section.manual-module {
+        padding: 16px 12px;
+        margin-bottom: 16px;
+        border-radius: 12px;
+      }
+      .module-header {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
+        padding-bottom: 12px;
+        margin-bottom: 16px;
+      }
+      .module-title {
+        font-size: 18px;
+        line-height: 1.3;
+      }
+      .module-desc {
+        font-size: 13px;
+      }
+      .target-roles {
+        width: 100%;
+      }
+      .hero-banner {
+        padding: 22px 16px;
+        border-radius: 14px;
+        margin-bottom: 20px;
+      }
+      .hero-title {
+        font-size: 20px;
+        line-height: 1.25;
+      }
+      .hero-desc {
+        font-size: 13px;
+        line-height: 1.55;
+        margin-bottom: 16px;
+      }
+      .hero-stats-strip {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        padding-top: 16px;
+      }
+      .stat-unit strong {
+        font-size: 16px;
+      }
+      .stat-unit span {
+        font-size: 11px;
+      }
+      .screenshot-frame {
+        margin: 12px 0 16px 0;
+        border-radius: 8px;
+      }
+      .screenshot-caption {
+        padding: 8px 12px;
+        font-size: 11px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+      }
+      .functionality-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        margin: 16px 0;
+      }
+      .step-row {
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+      .step-number {
+        width: 26px;
+        height: 26px;
+        min-width: 26px;
+        font-size: 11px;
+      }
+      .step-content {
+        padding: 10px 12px;
+      }
+      .step-title {
+        font-size: 13px;
+      }
+      .step-text {
+        font-size: 12px;
+        line-height: 1.5;
+      }
+      .callout {
+        padding: 12px 14px;
+        font-size: 12px;
+        margin: 14px 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Sticky Header -->
+  <header class="manual-header no-print">
+    <div class="brand-group">
+      <div class="brand-logo-pill">
+        <span>TT</span>
+        <span>OPS</span>
+      </div>
+      <div>
+        <span class="brand-title">Tailoring Turba — Operations Portal Manual</span>
+        <span class="brand-badge">Official Standard Operating Procedure (SOP)</span>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <input type="text" id="manualSearch" class="search-input" placeholder="Search functions or keywords...">
+      <a href="/Turba_Ops_Mobile_Manual.pdf" download="Turba_Ops_Mobile_Manual.pdf" class="btn-download-pdf btn-download-mobile" style="background: #00A86B; border-color: #008754;" title="Optimized for WhatsApp & Mobile Phone screens">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+        Mobile PDF (WhatsApp)
+      </a>
+      <a href="/Turba_Ops_Employee_Manual.pdf" download="Turba_Ops_Employee_Manual.pdf" class="btn-download-pdf" title="High-Resolution A4 Printable Booklet">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        A4 Print PDF
+      </a>
+      <button class="btn-print" onclick="window.print()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+        Print
+      </button>
+      <a href="/ops" target="_blank" class="btn-ops-link">
+        Open Ops
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>
+      </a>
+    </div>
+  </header>
+
+  <!-- Layout Container -->
+  <div class="layout-container">
+
+    <!-- Sticky Table of Contents & Role Filter -->
+    <aside class="manual-sidebar no-print">
+      <div class="role-selector-card">
+        <h4>Filter By Employee Role</h4>
+        <div class="role-buttons">
+          <button class="role-btn active" onclick="filterByRole('all')">All Staff</button>
+          <button class="role-btn" onclick="filterByRole('founder')">Founder / Lead</button>
+          <button class="role-btn" onclick="filterByRole('cutter')">Master Cutter</button>
+          <button class="role-btn" onclick="filterByRole('stitcher')">Tailor / Stitcher</button>
+          <button class="role-btn" onclick="filterByRole('branding')">Printer / Embroidery</button>
+          <button class="role-btn" onclick="filterByRole('qc')">QC & Dispatch</button>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-heading">Navigation Sitemap</div>
+        <ul class="toc-list">
+          <li class="toc-item active"><a href="#intro"><span>Introduction & Mission</span> <span class="toc-pill">00</span></a></li>
+          <li class="toc-item"><a href="#team-directory"><span>Core Team Credentials</span> <span class="toc-pill">01</span></a></li>
+          <li class="toc-item"><a href="#login-station"><span>Login Station & Auth</span> <span class="toc-pill">02</span></a></li>
+          <li class="toc-item"><a href="#dashboard"><span>Ops Command Dashboard</span> <span class="toc-pill">03</span></a></li>
+          <li class="toc-item"><a href="#orders-directory"><span>Orders List & Kanban</span> <span class="toc-pill">04</span></a></li>
+          <li class="toc-item"><a href="#order-detail"><span>Single Source of Truth</span> <span class="toc-pill">05</span></a></li>
+          <li class="toc-item"><a href="#stage-pipeline"><span>11-Stage Workflow Engine</span> <span class="toc-pill">06</span></a></li>
+          <li class="toc-item"><a href="#qc-rework"><span>Quality Check & Rework Loop</span> <span class="toc-pill">07</span></a></li>
+          <li class="toc-item"><a href="#material-planning"><span>Fabric & Material Planning</span> <span class="toc-pill">08</span></a></li>
+          <li class="toc-item"><a href="#vendors"><span>External Jobwork & Vendors</span> <span class="toc-pill">09</span></a></li>
+          <li class="toc-item"><a href="#tasks"><span>Daily Floor Tasks</span> <span class="toc-pill">10</span></a></li>
+          <li class="toc-item"><a href="#chat-notifications"><span>Team Chat & Broadcasts</span> <span class="toc-pill">11</span></a></li>
+          <li class="toc-item"><a href="#account-settings"><span>Account & Preferences</span> <span class="toc-pill">12</span></a></li>
+          <li class="toc-item"><a href="#role-cheatsheets"><span>Role Quick Cheatsheets</span> <span class="toc-pill">13</span></a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- Main Content Document -->
+    <main class="manual-content">
+
+      <!-- Hero Header -->
+      <div class="hero-banner" id="intro">
+        <span class="hero-subtitle">Factory Operations & Manufacturing ERP</span>
+        <h1 class="hero-title">Tailoring Turba Ops Portal<br>Complete Employee Standard Operating Procedure</h1>
+        <p class="hero-desc">
+          Welcome to the official user manual for <strong>Turba Ops</strong>. This system is designed specifically for the Tailoring Turba manufacturing team to achieve zero lost orders, 100% stage transparency, instant fabric sizing sync, and real-time accountability from fabric roll cutting to doorstep delivery.
+        </p>
+
+        <div class="hero-stats-strip">
+          <div class="stat-unit">
+            <strong>11 Strict Stages</strong>
+            <span>Intake to Doorstep</span>
+          </div>
+          <div class="stat-unit">
+            <strong>5 Core Team Roles</strong>
+            <span>Equal Authority Model</span>
+          </div>
+          <div class="stat-unit">
+            <strong>Controlled Rework</strong>
+            <span>Zero Defect Escape</span>
+          </div>
+          <div class="stat-unit">
+            <strong>Live Sync</strong>
+            <span>Tablets & Web Stations</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 1: TEAM DIRECTORY -->
+      <section class="manual-module" id="team-directory" data-roles="all founder cutter stitcher branding qc">
+        <div class="module-header">
+          <div>
+            <span class="module-num-badge">Module 01</span>
+            <h2 class="module-title">Factory Team Directory & Station Credentials</h2>
+            <p class="module-desc">Every employee has an assigned Employee Code, personalized login credentials, and operational responsibilities.</p>
+          </div>
+          <div class="target-roles">
+            <span class="role-tag all">All Team Members</span>
+          </div>
+        </div>
+
+        <div class="manual-table-wrap">
+          <table class="manual-table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Employee Name</th>
+                <th>Official Role & Station Title</th>
+                <th>Login Email</th>
+                <th>Default Password</th>
+                <th>Primary Responsibilities</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="badge-code">TT001</span></td>
+                <td><strong>Neeraj Shingavi</strong></td>
+                <td>Founder / Operations Lead</td>
+                <td><code>neeraj@tailoringturba.com</code></td>
+                <td><code>turba@neeraj123</code></td>
+                <td>Overall production health, bottlenecks, customer escalations, revenue tracking, order intake approvals.</td>
+              </tr>
+              <tr>
+                <td><span class="badge-code">TT002</span></td>
+                <td><strong>Sanjay Shingavi</strong></td>
+                <td>Co-Founder / Master Cutter & Fabric</td>
+                <td><code>sanjay@tailoringturba.com</code></td>
+                <td><code>turba@sanjay123</code></td>
+                <td>Fabric inventory rolls, GSM verification, pattern plotting, cutting accuracy, fabric waste minimization.</td>
+              </tr>
+              <tr>
+                <td><span class="badge-code">TT003</span></td>
+                <td><strong>Pratik Jadhav</strong></td>
+                <td>Sales, Marketing & Software Developer</td>
+                <td><code>pratik@tailoringturba.com</code></td>
+                <td><code>turba@pratik123</code></td>
+                <td>Order intake verification, customizer mockup rendering, website sync, system stability, jobwork coordination.</td>
+              </tr>
+              <tr>
+                <td><span class="badge-code">TT004</span></td>
+                <td><strong>Mahesh Ghavale</strong></td>
+                <td>Branding & Printing Specialist</td>
+                <td><code>mahesh@tailoringturba.com</code></td>
+                <td><code>worker@mahesh123</code></td>
+                <td>DTF printing, screen printing setups, embroidery alignment, print file inspection, cure & heat press times.</td>
+              </tr>
+              <tr>
+                <td><span class="badge-code">TT005</span></td>
+                <td><strong>Ajay</strong></td>
+                <td>Quality Check & Dispatch Specialist</td>
+                <td><code>ajay@tailoringturba.com</code></td>
+                <td><code>worker@ajay123</code></td>
+                <td>End-of-line measurement inspection, loose thread trimming, defect tagging & rework returns, packing, courier handover.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout tip">
+          <div class="callout-icon">💡</div>
+          <div class="callout-body">
+            <strong>Equal Operational Authority (V1 Policy)</strong>
+            Every one of the 5 team members can advance stages, record notes, and view specifications. However, every single button click is permanently logged with your name, employee code, and timestamp to ensure complete traceability.
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 2: LOGIN STATION -->
+      <section class="manual-module" id="login-station" data-roles="all founder cutter stitcher branding qc">
+        <div class="module-header">
+          <div>
+            <span class="module-num-badge">Module 02</span>
+            <h2 class="module-title">Operator Login & Station Access (`/ops/login`)</h2>
+            <p class="module-desc">How to access the Ops Station from factory tablets, floor touchscreens, and laptop browsers.</p>
+          </div>
+          <div class="target-roles">
+            <span class="role-tag all">All Team Members</span>
+          </div>
+        </div>
+
+        <div class="screenshot-frame">
+          <div class="screenshot-titlebar">
+            <div class="titlebar-dots">
+              <span class="titlebar-dot red"></span>
+              <span class="titlebar-dot yellow"></span>
+              <span class="titlebar-dot green"></span>
+            </div>
+            <span>Turba Ops Station Login — http://localhost:3000/ops/login</span>
+          </div>
+          <img src="manual-assets/01-ops-login.png" alt="Turba Ops Login Screen" class="screenshot-img" onclick="openLightbox(this.src)">
+          <div class="screenshot-caption">
+            <span>Figure 2.1: The dedicated Ops Station Login portal featuring biometric-clean input fields, "Remember Me", and factory live-sync indicators.</span>
+            <span>Click image to zoom</span>
+          </div>
+        </div>
+
+        <div class="steps-container">
+          <div class="step-row">
+            <div class="step-number">1</div>
+            <div class="step-content">
+              <div class="step-title">Navigate to the Ops Portal</div>
+              <div class="step-text">Open Chrome on your station device and go to <code>http://localhost:3000/ops</code> (or <code>https://ops.tailoringturba.com</code> on live domain). The system will automatically direct you to <code>/ops/login</code>.</div>
+            </div>
+          </div>
+          <div class="step-row">
+            <div class="step-number">2</div>
+            <div class="step-content">
+              <div class="step-title">Enter User ID / Employee Code</div>
+              <div class="step-text">You can type either your 5-character employee code (e.g., <strong>TT001</strong>, <strong>TT004</strong>) OR your official work email address. The system is case-insensitive.</div>
+            </div>
+          </div>
+          <div class="step-row">
+            <div class="step-number">3</div>
+            <div class="step-content">
+              <div class="step-title">Enter Account Password</div>
+              <div class="step-text">Enter your secure station password. You can click the eye icon on the right to verify you have typed it correctly before clicking Login.</div>
+            </div>
+          </div>
+          <div class="step-row">
+            <div class="step-number">4</div>
+            <div class="step-content">
+              <div class="step-title">Check "Remember Me on this device" (Factory Floor Tablets)</div>
+              <div class="step-text">If you are working on a dedicated cutting table or stitching station tablet, check <strong>Remember me</strong> so you won't need to retype your ID every shift.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 3: DASHBOARD -->
+      <section class="manual-module" id="dashboard" data-roles="all founder cutter stitcher branding qc">
+        <div class="module-header">
+          <div>
+            <span class="module-num-badge">Module 03</span>
+            <h2 class="module-title">Operations Command Center & Real-Time Dashboard (`/ops`)</h2>
+            <p class="module-desc">The primary overview screen displaying stage counts, urgent bottleneck alerts, and monthly output velocity.</p>
+          </div>
+          <div class="target-roles">
+            <span class="role-tag founder">Founder / Management</span>
+            <span class="role-tag all">Factory Floor</span>
+          </div>
+        </div>
+
+        <div class="screenshot-frame">
+          <div class="screenshot-titlebar">
+            <div class="titlebar-dots">
+              <span class="titlebar-dot red"></span>
+              <span class="titlebar-dot yellow"></span>
+              <span class="titlebar-dot green"></span>
+            </div>
+            <span>Operations Command Center — http://localhost:3000/ops</span>
+          </div>
+          <img src="manual-assets/02-ops-dashboard.png" alt="Ops Dashboard" class="screenshot-img" onclick="openLightbox(this.src)">
+          <div class="screenshot-caption">
+            <span>Figure 3.1: Live factory KPI cards, production bottleneck alerts, stage distribution counters, and monthly completion trends.</span>
+            <span>Click image to zoom</span>
+          </div>
+        </div>
+
+        <div class="functionality-grid">
+          <div class="function-card">
+            <div class="function-badge">1</div>
+            <h3 class="function-title">Live Pipeline Counters</h3>
+            <p class="function-desc">Clicking on any stage pill (e.g., "Cutting: 4", "Branding: 2") instantly filters the orders directory to only display garments currently at that exact factory stage.</p>
+            <div class="function-tips">⚡ Tip: Start every morning by clearing older orders in the earlier stages.</div>
+          </div>
+
+          <div class="function-card">
+            <div class="function-badge">2</div>
+            <h3 class="function-title">Urgent / Rush Order Banner</h3>
+            <p class="function-desc">Highlighting orders with delivery deadlines approaching within 48 hours or marked with <strong>RUSH</strong> priority by management.</p>
+            <div class="function-tips">⚡ Tip: Rush orders take instant priority at the cutting table and DTF printer.</div>
+          </div>
+
+          <div class="function-card">
+            <div class="function-badge">3</div>
+            <h3 class="function-title">Worker Performance & Velocity</h3>
+            <p class="function-desc">Real-time statistics displaying garments cut, stitched, printed, and dispatched across the month, tracking factory throughput.</p>
+            <div class="function-tips">⚡ Tip: Helps identify where production is getting backed up.</div>
+          </div>
+        </div>
+
+        <!-- Notification Drawer Sub-screenshot (Web Interactive Only) -->
+        <div class="screenshot-frame no-print">
+          <div class="screenshot-titlebar">
+            <div class="titlebar-dots">
+              <span class="titlebar-dot red"></span>
+              <span class="titlebar-dot yellow"></span>
+              <span class="titlebar-dot green"></span>
+            </div>
+            <span>Slide-Out Broadcast Notification Center</span>
+          </div>
+          <img src="manual-assets/02b-ops-notifications.png" alt="Notification Center" class="screenshot-img" onclick="openLightbox(this.src)">
+          <div class="screenshot-caption">
+            <span>Figure 3.2: The global notification drawer alerting operators to new orders, rework flags, and urgent priority modifications.</span>
+            <span>Click image to zoom</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 4: ORDERS DIRECTORY & KANBAN -->
+      <section class="manual-module" id="orders-directory" data-roles="all founder cutter stitcher branding qc">
+        <div class="module-header">
+          <div>
+            <span class="module-num-badge">Module 04</span>
+            <h2 class="module-title">Orders Directory: Dual-View List & Kanban Board (`/ops/orders`)</h2>
+            <p class="module-desc">Comprehensive order search, multi-stage filtering, and visual drag-and-drop production tracking.</p>
+          </div>
+          <div class="target-roles">
+            <span class="role-tag all">All Operators</span>
+          </div>
+        </div>
+
+        <h3 style="font-size: 17px; font-weight: 700; margin: 18px 0 10px 0;">1. High-Density List View (`?view=list`)</h3>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">Ideal for managers and inventory coordinators who need to search orders, filter by customer name or phone, and inspect payment balances.</p>
+
+        <div class="screenshot-frame">
+          <div class="screenshot-titlebar">
+            <div class="titlebar-dots">
+              <span class="titlebar-dot red"></span>
+              <span class="titlebar-dot yellow"></span>
+              <span class="titlebar-dot green"></span>
+            </div>
+            <span>Orders Directory List View — http://localhost:3000/ops/orders?view=list</span>
+          </div>
+          <img src="manual-assets/03-ops-orders-list.png" alt="Orders List View" class="screenshot-img" onclick="openLightbox(this.src)">
+          <div class="screenshot-caption">
+            <span>Figure 4.1: Orders table with client badges, order source tags (Website vs Ops Manual), stage badges, and due-date counters.</span>
+            <span>Click image to zoom</span>
+          </div>
+        </div>
+
+        <h3 style="font-size: 17px; font-weight: 700; margin: 28px 0 10px 0;">2. Factory Floor Kanban Board (`?view=kanban`)</h3>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">Touch-friendly column layout built for factory wall monitors and iPads mounted on production tables.</p>
+
+        <div class="screenshot-frame">
+          <div class="screenshot-titlebar">
+            <div class="titlebar-dots">
+              <span class="titlebar-dot red"></span>
+              <span class="titlebar-dot yellow"></span>
+              <span class="titlebar-dot green"></span>
+            </div>
+            <span>Production Kanban Board — http://localhost:3000/ops/orders?view=kanban</span>
+          </div>
+          <img src="manual-assets/04-ops-orders-kanban.png" alt="Orders Kanban Board" class="screenshot-img" onclick="openLightbox(this.src)">
+          <div class="screenshot-caption">
+            <span>Figure 4.2: Visual columns for each stage: New Order, Confirmed, Fabric, Cutting, Stitching, Branding, QC, Packing, and Dispatch.</span>
+            <span>Click image to zoom</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 5: SINGLE SOURCE OF TRUTH ORDER DETAIL -->
+      <section class="manual-module" id="order-detail" data-roles="all founder cutter stitcher branding qc">
+        <div class="module-header">
+          <div>
+            <span class="module-num-badge">Module 05</span>
+            <h2 class="module-title">Single Source of Truth Order Detail Page (`/ops/orders/[id]`)</h2>
+            <p class="module-desc">The master manufacturing sheet containing client details, visual mockups, exact size counts, internal notes, and stage progress.</p>
+          </div>
+          <div class="target-roles">
+            <span class="role-tag all">Every Station Worker</span>
+          </div>
+        </div>
+
+        <div class="screenshot-frame">
+          <div class="screenshot-titlebar">
+            <div class="titlebar-dots">
+              <span class="titlebar-dot red"></span>
+              <span class="titlebar-dot yellow"></span>
+              <span class="titlebar-dot green"></span>
+            </div>
+            <span>Master Order Detail Sheet — Order #8 [BRANDING_PRINTING]</span>
+          </div>
+          <img src="manual-assets/05-ops-order-detail.png" alt="Order Detail Workspace" class="screenshot-img" onclick="openLightbox(this.src)">
+          <div class="screenshot-caption">
+            <span>Figure 5.1: Master Order Sheet view with visual mockups, 11-stage progress stepper, advance actions, and sizing summary.</span>
+            <span>Click image to zoom</span>
+          </div>
+        </div>
+
+        <div class="functionality-grid">
+          <div class="function-card">
+            <div class="function-badge">A</div>
+            <h3 class="function-title">Interactive Stage Progress Stepper</h3>
+            <p class="function-desc">Visual 11-step breadcrumb showing completed steps (solid green with checkmark), current active stage (emerald glow with pulse indicator), and future steps (gray).</p>
+          </div>
+
+          <div class="function-card">
+            <div class="function-badge">B</div>
+            <h3 class="function-title">4-Angle Visual Customizer Mockups</h3>
+            <p class="function-desc">High-resolution renders of the garment: Front, Back, Left Sleeve, and Right Sleeve with accurate print and embroidery placements.</p>
+          </div>
+
+          <div class="function-card">
+            <div class="function-badge">C</div>
+            <h3 class="function-title">Size Breakdown Matrix</h3>
+            <p class="function-desc">Displays the exact quantity breakdown across standard sizes (S, M, L, XL, XXL, 3XL). Master cutters cut strictly to this table.</p>
+          </div>
+
+          <div class="function-card">
+            <div class="function-badge">D</div>
+            <h3 class="function-title">Internal Team Notes & Pinning</h3>
+            <p class="function-desc">Staff can leave timestamped notes (e.g. <em>"Customer requested 2 extra inches on sleeves"</em>) and pin critical instructions to the top.</p>
+          </div>
+
+          <div class="function-card">
+            <div class="function-badge">E</div>
+            <h3 class="function-title">Activity Timeline & Audit Trail</h3>
+            <p class="function-desc">Every action (stage advancement, fabric note, rework flag) is logged permanently with the operator's name and exact time.</p>
+          </div>
+
+          <div class="function-card">
+            <div class="function-badge">F</div>
+            <h3 class="function-title">Logistics & Bigship Integration</h3>
+            <p class="function-desc">Direct generation of courier AWB labels, shipping manifests, package dimensions, and real-time transit tracking.</p>
+          </div>
+        </div>
+
+        <!-- Full page screenshot link (Web Interactive Only) -->
+        <div class="screenshot-frame no-print">
+          <div class="screenshot-titlebar">
+            <div class="titlebar-dots">
+              <span class="titlebar-dot red"></span>
+              <span class="titlebar-dot yellow"></span>
+              <span class="titlebar-dot green"></span>
+            </div>
+            <span>Master Order Detail Page — Full Scroll Workspace</span>
+          </div>
+          <img src="manual-assets/05b-ops-order-detail-full.png" alt="Full Order Detail Sheet" class="screenshot-img" onclick="openLightbox(this.src)">
+          <div class="screenshot-caption">
+            <span>Figure 5.2: Complete vertical scroll sheet showing line items, payment splits, customer contact, and full timeline history.</span>
+            <span>Click image to zoom</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 6: 11-STAGE WORKFLOW ENGINE -->
+      <section class="manual-module" id="stage-pipeline" data-roles="all cutter stitcher branding qc">
+        <div class="module-header">
+          <div>
+            <span class="module-num-badge">Module 06</span>
+            <h2 class="module-title">The Standard 11-Stage Production Workflow Engine</h2>
+            <p class="module-desc">The backbone of factory operations. Every garment order advances through this strict sequence.</p>
+          </div>
+          <div class="target-roles">
+            <span class="role-tag cutter">Cutter</span>
+            <span class="role-tag stitcher">Stitcher</span>
+            <span class="role-tag branding">Branding</span>
+            <span class="role-tag qc">QC & Dispatch</span>
+          </div>
+        </div>
+
+        <div class="manual-table-wrap">
+          <table class="manual-table">
+            <thead>
+              <tr>
+                <th>Step #</th>
+                <th>Stage Identifier</th>
+                <th>Display Name</th>
+                <th>Station Owner</th>
+                <th>Standard Operations Performed</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>01</strong></td>
+                <td><code>NEW_ORDER</code></td>
+                <td>New Order Intake</td>
+                <td>Neeraj / Pratik</td>
+                <td>Order received from website customizer or manual entry. Verify customer specs and 50% split advance payment.</td>
+              </tr>
+              <tr>
+                <td><strong>02</strong></td>
+                <td><code>ORDER_CONFIRMED</code></td>
+                <td>Order Confirmed</td>
+                <td>Neeraj / Sanjay</td>
+                <td>Sizing confirmed, delivery deadline locked, print files verified for minimum 300 DPI resolution.</td>
+              </tr>
+              <tr>
+                <td><strong>03</strong></td>
+                <td><code>RESOURCE_FABRIC</code></td>
+                <td>Resource & Fabric</td>
+                <td>Sanjay (Master Cutter)</td>
+                <td>Allocate fabric roll (Cotton, Matty, Poly, French Terry), match GSM, check color lot consistency.</td>
+              </tr>
+              <tr>
+                <td><strong>04</strong></td>
+                <td><code>CUTTING</code></td>
+                <td>Pattern Cutting</td>
+                <td>Sanjay & Cutting Team</td>
+                <td>Fabric layered, master patterns laid out according to size matrix (S, M, L, XL), precision fabric cutting.</td>
+              </tr>
+              <tr>
+                <td><strong>05</strong></td>
+                <td><code>STITCHING</code></td>
+                <td>Garment Stitching</td>
+                <td>Stitching Floor / Tailors</td>
+                <td>Assembly of panels, neck rib attachment, shoulder tape, overlocking, and bottom hemming.</td>
+              </tr>
+              <tr>
+                <td><strong>06</strong></td>
+                <td><code>BRANDING_PRINTING</code></td>
+                <td>Branding & Printing</td>
+                <td>Mahesh (Printing Lead)</td>
+                <td>DTF heat press, screen printing, or computerized embroidery applied at chest, back, or sleeve coordinates.</td>
+              </tr>
+              <tr>
+                <td><strong>07</strong></td>
+                <td><code>QUALITY_CHECK</code></td>
+                <td>Quality Inspection</td>
+                <td>Ajay (QC Specialist)</td>
+                <td>100% inspection against measurement chart, seam strength test, print scratch test, defect evaluation.</td>
+              </tr>
+              <tr>
+                <td><strong>08</strong></td>
+                <td><code>PACKING</code></td>
+                <td>Ironing & Packaging</td>
+                <td>Ajay & Floor Staff</td>
+                <td>Steam ironing, brand tags, fold into individual branded polybags, bulk box packaging.</td>
+              </tr>
+              <tr>
+                <td><strong>09</strong></td>
+                <td><code>READY_FOR_DISPATCH</code></td>
+                <td>Ready for Dispatch</td>
+                <td>Ajay / Neeraj</td>
+                <td>Box weighed, dimensions entered into Bigship API, shipping label printed and pasted on package.</td>
+              </tr>
+              <tr>
+                <td><strong>10</strong></td>
+                <td><code>DISPATCHED</code></td>
+                <td>Handed to Courier</td>
+                <td>Ajay</td>
+                <td>Courier rider signs manifest, AWB tracking active, automated WhatsApp/SMS dispatch alert to customer.</td>
+              </tr>
+              <tr>
+                <td><strong>11</strong></td>
+                <td><code>CLOSED</code></td>
+                <td>Delivered & Closed</td>
+                <td>System / Neeraj</td>
+                <td>Delivery confirmed by courier API, remaining balance collected, customer review logged.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 style="font-size: 16px; font-weight: 700; margin: 24px 0 10px 0;">Advancing An Order To The Next Stage</h3>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">When your station finishes its work, click the green <strong>Advance Stage</strong> button. The modal below will open:</p>
+
+        <div class="screenshot-frame">
+          <div class="screenshot-titlebar">
+            <div class="titlebar-dots">
+              <span class="titlebar-dot red"></span>
+              <span class="titlebar-dot yellow"></span>
+              <span class="titlebar-dot green"></span>
+            </div>
+            <span>Advance Stage Confirmation Modal</span>
+          </div>
+          <img src="manual-assets/06-ops-stage-progression.png" alt="Stage Progression Modal" class="screenshot-img" onclick="openLightbox(this.src)">
+          <div class="screenshot-caption">
+            <span>Figure 6.1: Operator confirmation dialog displaying current stage, target stage, quality checklist, and remarks entry.</span>
+            <span>Click image to zoom</span>
+          </div>
+        </div>
+
+        <div class="callout warning">
+          <div class="callout-icon">⚠️</div>
+          <div class="callout-body">
+            <strong>No Stage Skipping Permitted</strong>
+            You cannot skip directly from <em>Cutting</em> to <em>Dispatch</em>. The state machine strictly enforces each step to ensure factory standards are never compromised.
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 7: QUALITY CONTROL & CONTROLLED REWORK LOOP -->
+      <section class="manual-module" id="qc-rework" data-roles="all branding stitcher cutter qc">
+        <div class="module-header">
+          <div>
+            <span class="module-num-badge">Module 07</span>
+            <h2 class="module-title">Quality Control & Controlled Rework Loop</h2>
+            <p class="module-desc">Our zero-compromise defect containment loop: returning defective garments directly to the responsible station.</p>
+          </div>
+          <div class="target-roles">
+            <span class="role-tag qc">QC Inspector</span>
+            <span class="role-tag branding">Branding Lead</span>
+            <span class="role-tag cutter">Cutter</span>
+          </div>
+        </div>
+
+        <p style="font-size: 14px; color: #475569; margin-bottom: 16px;">
+          When an order reaches <strong>Quality Check (Step 07)</strong>, the QC inspector (Ajay) examines every garment. If any defect is found (such as misaligned DTF print, crooked stitching, wrong size measurements, or fabric stain), the order is <strong>NOT</strong> cancelled. Instead, the <strong>Controlled Rework Loop</strong> is initiated.
+        </p>
+
+        <div class="screenshot-frame">
+          <div class="screenshot-titlebar">
+            <div class="titlebar-dots">
+              <span class="titlebar-dot red"></span>
+              <span class="titlebar-dot yellow"></span>
+              <span class="titlebar-dot green"></span>
+            </div>
+            <span>Quality Check Defect & Rework Action Modal</span>
+          </div>
+          <img src="manual-assets/07-ops-rework-modal.png" alt="Rework Modal" class="screenshot-img" onclick="openLightbox(this.src)">
+          <div class="screenshot-caption">
+            <span>Figure 7.1: Defect flagging modal allowing QC to select the defective stage (Branding, Stitching, Cutting, or Fabric) and log exact defect notes.</span>
+            <span>Click image to zoom</span>
+          </div>
+        </div>
+
+        <div class="steps-container">
+          <div class="step-row">
+            <div class="step-number">1</div>
+            <div class="step-content">
+              <div class="step-title">Click "Flag Defect / Rework"</div>
+              <div class="step-text">At the Quality Check stage, the red <strong>Flag Defect</strong> button becomes active on the top action bar.</div>
+            </div>
+          </div>
+          <div class="step-row">
+            <div class="step-number">2</div>
+            <div class="step-content">
+              <div class="step-title">Select Defective Department</div>
+              <div class="step-text">Choose the department responsible for rectifying the error:
+                <ul style="margin: 6px 0 0 20px; font-size: 12px; color: #475569;">
+                  <li><strong>BRANDING_PRINTING:</strong> Misaligned logo, peeled transfer, incorrect ink color.</li>
+                  <li><strong>STITCHING:</strong> Broken seam, puckering, loose thread, wrong collar attachment.</li>
+                  <li><strong>CUTTING:</strong> Dimension out of tolerance by more than 0.5 inches.</li>
+                  <li><strong>RESOURCE_FABRIC:</strong> Fabric discoloration, oil stain, GSM thinness defect.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="step-row">
+            <div class="step-number">3</div>
+            <div class="step-content">
+              <div class="step-title">Enter Rework Instructions</div>
+              <div class="step-text">Type clear, actionable instructions for the worker (e.g., <em>"Chest print is 1.5 inches too low. Reprint front panel on 2 XL t-shirts."</em>).</div>
+            </div>
+          </div>
+          <div class="step-row">
+            <div class="step-number">4</div>
+            <div class="step-content">
+              <div class="step-title">Automated Notification & Fast Return</div>
+              <div class="step-text">The system marks the order with a red <strong>REWORK ITERATION</strong> tag, increments the iteration counter, and notifies the responsible station. Once fixed, the order returns <em>directly</em> to Quality Check.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 8: RAW MATERIAL PLANNING -->
+      <section class="manual-module" id="material-planning" data-roles="all founder cutter">
+        <div class="module-header">
+          <div>
+            <span class="module-num-badge">Module 08</span>
+            <h2 class="module-title">Raw Material & Fabric Roll Planning (`/ops/planning`)</h2>
+            <p class="module-desc">Automatic fabric consumption estimates based on size matrix, GSM, and roll allocations.</p>
+          </div>
+          <div class="target-roles">
+            <span class="role-tag cutter">Master Cutter</span>
+            <span class="role-tag founder">Founder</span>
+          </div>
+        </div>
+
+        <div class="screenshot-frame">
+          <div class="screenshot-titlebar">
+            <div class="titlebar-dots">
+              <span class="titlebar-dot red"></span>
+              <span class="titlebar-dot yellow"></span>
+              <span class="titlebar-dot green"></span>
+            </div>
+            <span>Raw Material Planning Sheet — http://localhost:3000/ops/planning</span>
+          </div>
+          <img src="manual-assets/08-ops-material-planning.png" alt="Raw Material Planning" class="screenshot-img" onclick="openLightbox(this.src)">
+          <div class="screenshot-caption">
+            <span>Figure 8.1: Fabric roll forecasting, consumption per piece calculation, and trim inventory tracking.</span>
+            <span>Click image to zoom</span>
+          </div>
+        </div>
+
+        <div class="steps-container">
+          <div class="step-row">
+            <div class="step-number">1</div>
+            <div class="step-content">
+              <div class="step-title">Fabric Roll Allocation & Lot Matching</div>
+              <div class="step-text">Master Cutter opens <code>/ops/planning</code>, selects the target production order, and verifies fabric roll barcodes, GSM rating (180/220/320), and dye lot consistency before unrolling.</div>
+            </div>
+          </div>
+          <div class="step-row">
+            <div class="step-number">2</div>
+            <div class="step-content">
+              <div class="step-title">Automated Consumption Calculation</div>
+              <div class="step-text">The system multiplies order size quantities (S, M, L, XL, 2XL) by garment pattern coefficients to calculate required total meters, preventing roll shortages midway through a cutting spread.</div>
+            </div>
+          </div>
+          <div class="step-row">
+            <div class="step-number">3</div>
+            <div class="step-content">
+              <div class="step-title">Marker Layout & Wastage Minimization</div>
+              <div class="step-text">Target marker efficiency must meet or exceed <strong>85%</strong>. Usable fabric end-pieces (>1.5m) are logged back into inventory for pocket bags and neck facings.</div>
+            </div>
+          </div>
+          <div class="step-row">
+            <div class="step-number">4</div>
+            <div class="step-content">
+              <div class="step-title">Trims & Accessories Kitting</div>
+              <div class="step-text">Matching rib collar sets, drawstrings, buttons, and brand wash-care labels are staged alongside fabric rolls before cutting begins.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="manual-table-wrap">
+          <table class="manual-table">
+            <thead>
+              <tr>
+                <th>Garment Silhouette</th>
+                <th>Fabric Type & GSM</th>
+                <th>Avg Meter / Piece</th>
+                <th>Trim Requirements</th>
+                <th>Target Marker Eff.</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Round Neck T-Shirt</strong></td>
+                <td>180 GSM Single Jersey Combed Cotton</td>
+                <td>0.45m (S–L) / 0.52m (XL–3XL)</td>
+                <td>1x1 Cotton Spandex Neck Rib (35g)</td>
+                <td><span class="badge-code">86% - 88%</span></td>
+              </tr>
+              <tr>
+                <td><strong>Polo Collar T-Shirt</strong></td>
+                <td>220 GSM Honeycomb Matty Cotton/Poly</td>
+                <td>0.60m per piece</td>
+                <td>1 Jacquard Collar + 2 Sleeve Cuffs</td>
+                <td><span class="badge-code">84% - 87%</span></td>
+              </tr>
+              <tr>
+                <td><strong>Pullover Hoodie</strong></td>
+                <td>320 GSM 3-Thread Cotton Fleece</td>
+                <td>1.10m body + 0.35m hood</td>
+                <td>2x2 Heavy Rib Hem + Drawcord</td>
+                <td><span class="badge-code">85% - 89%</span></td>
+              </tr>
+              <tr>
+                <td><strong>Oversized Drop-Tee</strong></td>
+                <td>240 GSM Heavy French Terry</td>
+                <td>0.65m per piece</td>
+                <td>Thick Rib Collar (1.25 inch)</td>
+                <td><span class="badge-code">87% - 90%</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SECTION 9: EXTERNAL JOBWORK & VENDORS -->
+      <section class="manual-module" id="vendors" data-roles="all founder cutter stitcher">
+        <div class="module-header">
+          <div>
+            <span class="module-num-badge">Module 09</span>
+            <h2 class="module-title">External Vendor & Jobwork Management (`/ops/vendors`)</h2>
+            <p class="module-desc">Manage external tailoring units, computerized embroidery facilities, and screen printing jobwork.</p>
+          </div>
+          <div class="target-roles">
+            <span class="role-tag founder">Management</span>
+            <span class="role-tag stitcher">Stitching Lead</span>
+          </div>
+        </div>
+
+        <div class="screenshot-frame">
+          <div class="screenshot-titlebar">
+            <div class="titlebar-dots">
+              <span class="titlebar-dot red"></span>
+              <span class="titlebar-dot yellow"></span>
+              <span class="titlebar-dot green"></span>
+            </div>
+            <span>External Vendor Directory — http://localhost:3000/ops/vendors</span>
+          </div>
+          <img src="manual-assets/09-ops-vendor-management.png" alt="Vendor Management" class="screenshot-img" onclick="openLightbox(this.src)">
+          <div class="screenshot-caption">
+            <span>Figure 9.1: Partner directory categorized by capability: Cut-to-Pack, Embroidery, DTF, Screen Printing, and Trims.</span>
+            <span>Click image to zoom</span>
+          </div>
+        </div>
+
+        <div class="steps-container">
+          <div class="step-row">
+            <div class="step-number">1</div>
+            <div class="step-content">
+              <div class="step-title">Selecting Qualified Jobwork Partner</div>
+              <div class="step-text">When in-house capacity is booked or specialized multi-head computerized embroidery is needed, operators navigate to <code>/ops/vendors</code> and filter partners by capability tag (e.g. <em>Screen Print, DTF, Tailor/Stitching</em>).</div>
+            </div>
+          </div>
+          <div class="step-row">
+            <div class="step-number">2</div>
+            <div class="step-content">
+              <div class="step-title">Generating Delivery Challan & Gate Pass</div>
+              <div class="step-text">The system records exact dispatched piece count, fabric lot code, agreed piece-rate, and expected return date. An official <strong>Turba Jobwork Delivery Challan</strong> is printed and signed by the transporter.</div>
+            </div>
+          </div>
+          <div class="step-row">
+            <div class="step-number">3</div>
+            <div class="step-content">
+              <div class="step-title">Inward Physical Count & Transit Inspection</div>
+              <div class="step-text">Upon return from the vendor, inward receiving staff counts every bundle against the original challan. Any transit stains, missing pieces, or embroidery registration errors are logged immediately.</div>
+            </div>
+          </div>
+          <div class="step-row">
+            <div class="step-number">4</div>
+            <div class="step-content">
+              <div class="step-title">Cost Ledger Reconciliation & Partner Rating</div>
+              <div class="step-text">Verified good pieces are approved for vendor payment settlement in the accounts module. The partner quality score is updated automatically based on on-time delivery and defect rate.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="manual-table-wrap">
+          <table class="manual-table">
+            <thead>
+              <tr>
+                <th>Partner Capability</th>
+                <th>Key Production Services</th>
+                <th>Standard Turnaround</th>
+                <th>Acceptable Loss Tolerance</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Tailor / Stitching Units</strong></td>
+                <td>Cut-to-Pack garment assembly, overlocking, flatlock hems</td>
+                <td>3 – 5 Days</td>
+                <td><span class="badge-code">&le; 0.5% (Max 1 pc)</span></td>
+              </tr>
+              <tr>
+                <td><strong>Print & Embroidery Units</strong></td>
+                <td>Multi-color DTF heat transfers, plastisol screen print, embroidery</td>
+                <td>24 – 48 Hours</td>
+                <td><span class="badge-code">&le; 1.0%</span></td>
+              </tr>
+              <tr>
+                <td><strong>Raw Material Mills</strong></td>
+                <td>Knitted combed single jersey, fleece rolls, Matty collar sets</td>
+                <td>2 – 3 Days</td>
+                <td><span class="badge-code">Zero Tolerance (Roll Return)</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout warning">
+          <div class="callout-icon">⚠️</div>
+          <div class="callout-body">
+            <strong>Strict Challan Reconciliation Rule</strong>
+            Never dispatch garments without an official gate-pass challan number. Inward pieces cannot be moved to QC until the physical inward quantity matches the challan record.
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 10: DAILY FLOOR TASKS -->
+      <section class="manual-module" id="tasks" data-roles="all cutter stitcher branding qc">
+        <div class="module-header">
+          <div>
+            <span class="module-num-badge">Module 10</span>
+            <h2 class="module-title">Daily Floor Tasks & Worker Assignments (`/ops/tasks`)</h2>
+            <p class="module-desc">Personalized touch interface for floor workers to view their assigned jobs and track shift completion.</p>
+          </div>
+          <div class="target-roles">
+            <span class="role-tag cutter">Cutter</span>
+            <span class="role-tag stitcher">Tailor</span>
+            <span class="role-tag branding">Printer</span>
+            <span class="role-tag qc">QC</span>
+          </div>
+        </div>
+
+        <div class="screenshot-frame">
+          <div class="screenshot-titlebar">
+            <div class="titlebar-dots">
+              <span class="titlebar-dot red"></span>
+              <span class="titlebar-dot yellow"></span>
+              <span class="titlebar-dot green"></span>
+            </div>
+            <span>Daily Floor Task Queue — http://localhost:3000/ops/tasks</span>
+          </div>
+          <img src="manual-assets/10-ops-floor-tasks.png" alt="Floor Tasks Queue" class="screenshot-img" onclick="openLightbox(this.src)">
+          <div class="screenshot-caption">
+            <span>Figure 10.1: Individual task board showing assigned jobs, due dates, priority tags, and single-click completion buttons.</span>
+            <span>Click image to zoom</span>
+          </div>
+        </div>
+
+        <div class="steps-container">
+          <div class="step-row">
+            <div class="step-number">1</div>
+            <div class="step-content">
+              <div class="step-title">Touch Tablet Station Login</div>
+              <div class="step-text">Each factory station (Cutting Table, Stitching Row, Heat-Press, QC Table) is equipped with a tablet. Workers tap their profile to view prioritized jobs.</div>
+            </div>
+          </div>
+          <div class="step-row">
+            <div class="step-number">2</div>
+            <div class="step-content">
+              <div class="step-title">Reviewing Priority & Rush Flags</div>
+              <div class="step-text">Orders flagged with red <strong>RUSH</strong> tags must be worked on first. The card displays order number, garment type, total pieces, and target station handoff time.</div>
+            </div>
+          </div>
+          <div class="step-row">
+            <div class="step-number">3</div>
+            <div class="step-content">
+              <div class="step-title">One-Tap "Start Task" Timestamp</div>
+              <div class="step-text">When opening a bundle of cut pieces, the operator taps <strong>Start Task</strong>. This locks the batch to that operator and logs the production cycle time.</div>
+            </div>
+          </div>
+          <div class="step-row">
+            <div class="step-number">4</div>
+            <div class="step-content">
+              <div class="step-title">Job Completion & Next Trolley Handoff</div>
+              <div class="step-text">After completing the batch, tap <strong>Mark Complete</strong>, verify piece count, and roll the bundle trolley to the next station's staging bay.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout tip">
+          <div class="callout-icon">📱</div>
+          <div class="callout-body">
+            <strong>Worker Tablet Operation & Zero Paper Slips</strong>
+            Floor tablets have extra-large touch buttons for quick operation even while wearing work gloves. No paper slips to misplace or soil with machine oil.
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 11: TEAM CHAT & NOTIFICATIONS -->
+      <section class="manual-module" id="chat-notifications" data-roles="all founder cutter stitcher branding qc">
+        <div class="module-header">
+          <div>
+            <span class="module-num-badge">Module 11</span>
+            <h2 class="module-title">Factory Team Chat & Broadcast Communication (`/ops/chat`)</h2>
+            <p class="module-desc">Internal communication hub eliminating misplaced paper slips and WhatsApp fragmentation.</p>
+          </div>
+          <div class="target-roles">
+            <span class="role-tag all">All Team Members</span>
+          </div>
+        </div>
+
+        <div class="screenshot-frame">
+          <div class="screenshot-titlebar">
+            <div class="titlebar-dots">
+              <span class="titlebar-dot red"></span>
+              <span class="titlebar-dot yellow"></span>
+              <span class="titlebar-dot green"></span>
+            </div>
+            <span>Internal Factory Team Chat — http://localhost:3000/ops/chat</span>
+          </div>
+          <img src="manual-assets/11-ops-team-chat.png" alt="Team Chat Interface" class="screenshot-img" onclick="openLightbox(this.src)">
+          <div class="screenshot-caption">
+            <span>Figure 11.1: Live communication channel between cutters, tailors, printers, and managers with order references and shift logs.</span>
+            <span>Click image to zoom</span>
+          </div>
+        </div>
+
+        <div class="steps-container">
+          <div class="step-row">
+            <div class="step-number">1</div>
+            <div class="step-content">
+              <div class="step-title">Order-Linked Messaging Channels</div>
+              <div class="step-text">Direct messaging linked to active production batches. Typing an order number (e.g. <code>#ORD-2026-001</code>) automatically generates an interactive card showing current stage, quantity, and design previews.</div>
+            </div>
+          </div>
+          <div class="step-row">
+            <div class="step-number">2</div>
+            <div class="step-content">
+              <div class="step-title">Emergency Factory Broadcasts</div>
+              <div class="step-text">Management can broadcast critical production alerts (such as machine maintenance or client size alterations) instantly across all station tablets simultaneously.</div>
+            </div>
+          </div>
+          <div class="step-row">
+            <div class="step-number">3</div>
+            <div class="step-content">
+              <div class="step-title">Instant Photo Verification for Defect Approval</div>
+              <div class="step-text">If a printer or stitcher notices minor fabric shading or pattern ambiguity, they take a photo with the tablet camera and post it in chat for immediate approval from Founder Neeraj or Stitching Lead Anand.</div>
+            </div>
+          </div>
+          <div class="step-row">
+            <div class="step-number">4</div>
+            <div class="step-content">
+              <div class="step-title">Shift Handover Standup Logs</div>
+              <div class="step-text">At the end of each shift (2:00 PM and 10:00 PM), station leads post a brief tally of finished bundles and items in progress, ensuring zero miscommunication between shifts.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 12: ACCOUNT & SETTINGS -->
+      <section class="manual-module" id="account-settings" data-roles="all founder cutter stitcher branding qc">
+        <div class="module-header">
+          <div>
+            <span class="module-num-badge">Module 12</span>
+            <h2 class="module-title">Employee Account Profile & Station Settings (`/ops/account`, `/ops/settings`)</h2>
+            <p class="module-desc">Personal statistics, performance metrics, and station display preferences.</p>
+          </div>
+          <div class="target-roles">
+            <span class="role-tag all">All Team Members</span>
+          </div>
+        </div>
+
+        <h3 style="font-size: 16px; font-weight: 700; margin: 18px 0 10px 0;">1. Employee Profile & Operations Metrics (`/ops/account`)</h3>
+
+        <div class="screenshot-frame">
+          <div class="screenshot-titlebar">
+            <div class="titlebar-dots">
+              <span class="titlebar-dot red"></span>
+              <span class="titlebar-dot yellow"></span>
+              <span class="titlebar-dot green"></span>
+            </div>
+            <span>Employee Profile Sheet — http://localhost:3000/ops/account</span>
+          </div>
+          <img src="manual-assets/12-ops-account.png" alt="Employee Account" class="screenshot-img" onclick="openLightbox(this.src)">
+          <div class="screenshot-caption">
+            <span>Figure 12.1: Individual performance cards, total stages transitioned, orders handled, and security information.</span>
+            <span>Click image to zoom</span>
+          </div>
+        </div>
+
+        <h3 style="font-size: 16px; font-weight: 700; margin: 28px 0 10px 0;">2. Station Preferences & Display Settings (`/ops/settings`)</h3>
+
+        <div class="screenshot-frame">
+          <div class="screenshot-titlebar">
+            <div class="titlebar-dots">
+              <span class="titlebar-dot red"></span>
+              <span class="titlebar-dot yellow"></span>
+              <span class="titlebar-dot green"></span>
+            </div>
+            <span>Station Settings — http://localhost:3000/ops/settings</span>
+          </div>
+          <img src="manual-assets/13-ops-settings.png" alt="Ops Settings" class="screenshot-img" onclick="openLightbox(this.src)">
+          <div class="screenshot-caption">
+            <span>Figure 12.2: Configure sound alerts for new rush orders, dense table vs relaxed card view, and auto-refresh intervals.</span>
+            <span>Click image to zoom</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 13: ROLE QUICK CHEATSHEETS -->
+      <section class="manual-module" id="role-cheatsheets" data-roles="all founder cutter stitcher branding qc">
+        <div class="module-header">
+          <div>
+            <span class="module-num-badge">Module 13</span>
+            <h2 class="module-title">Role-By-Role Operational Cheatsheets</h2>
+            <p class="module-desc">Quick daily checklist tailored for each specific team member.</p>
+          </div>
+          <div class="target-roles">
+            <span class="role-tag all">Station Quick Reference</span>
+          </div>
+        </div>
+
+        <div class="functionality-grid">
+          <!-- Founder -->
+          <div class="function-card" style="border-top: 4px solid #4338CA;">
+            <h3 class="function-title" style="color: #4338CA;">👑 Neeraj (Founder / Ops Lead)</h3>
+            <ul style="font-size: 12px; color: #475569; padding-left: 18px; line-height: 1.8;">
+              <li>Review the <strong>Ops Dashboard</strong> at 9:00 AM every morning.</li>
+              <li>Check the <strong>Urgent Alerts</strong> banner for any delivery deadlines within 48h.</li>
+              <li>Verify customer balance payments before approving final courier dispatch.</li>
+              <li>Inspect rework trends to address repeated stitching or print flaws.</li>
+            </ul>
+          </div>
+
+          <!-- Master Cutter -->
+          <div class="function-card" style="border-top: 4px solid #047857;">
+            <h3 class="function-title" style="color: #047857;">✂️ Sanjay (Master Cutter & Fabric)</h3>
+            <ul style="font-size: 12px; color: #475569; padding-left: 18px; line-height: 1.8;">
+              <li>Open <strong>/ops/planning</strong> and review pending fabric roll allocations.</li>
+              <li>Double-check GSM and fabric color lot before laying patterns.</li>
+              <li>Cut strictly to the <strong>Size Breakdown Matrix</strong> on the master order sheet.</li>
+              <li>Click <strong>Advance Stage</strong> to move orders to <code>STITCHING</code> once cut.</li>
+            </ul>
+          </div>
+
+          <!-- Stitching Lead -->
+          <div class="function-card" style="border-top: 4px solid #B45309;">
+            <h3 class="function-title" style="color: #B45309;">🧵 Pratik (Sales, Tech & Stitching)</h3>
+            <ul style="font-size: 12px; color: #475569; padding-left: 18px; line-height: 1.8;">
+              <li>Ensure website customizer mockups render cleanly in all 4 views.</li>
+              <li>Assign bundles to internal tailors or external jobwork vendors.</li>
+              <li>Monitor thread color matching and collar rib attachments.</li>
+              <li>Move orders to <code>BRANDING_PRINTING</code> when stitching completes.</li>
+            </ul>
+          </div>
+
+          <!-- Branding Lead -->
+          <div class="function-card" style="border-top: 4px solid #BE185D;">
+            <h3 class="function-title" style="color: #BE185D;">🎨 Mahesh (Branding & Printing Lead)</h3>
+            <ul style="font-size: 12px; color: #475569; padding-left: 18px; line-height: 1.8;">
+              <li>Open the master order sheet and download high-res vector/PNG files.</li>
+              <li>Verify print placements against the 4-angle customizer preview.</li>
+              <li>Set heat press temperature to 160°C for 15s with 5s post-press cure.</li>
+              <li>Perform scratch and wash rub tests before passing to <code>QUALITY_CHECK</code>.</li>
+            </ul>
+          </div>
+
+          <!-- QC & Dispatch -->
+          <div class="function-card" style="border-top: 4px solid #B91C1C;">
+            <h3 class="function-title" style="color: #B91C1C;">🔍 Ajay (Quality Check & Dispatch)</h3>
+            <ul style="font-size: 12px; color: #475569; padding-left: 18px; line-height: 1.8;">
+              <li>Perform 100% garment inspection (measurements, seams, branding alignment).</li>
+              <li>If defective: click <strong>Flag Defect</strong> and return to responsible stage.</li>
+              <li>If passed: advance to <code>PACKING</code>, steam iron, and fold into polybags.</li>
+              <li>Print Bigship AWB shipping label, weigh package, and hand to courier.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="callout tip" style="margin-top: 28px;">
+          <div class="callout-icon">📞</div>
+          <div class="callout-body">
+            <strong>Factory Floor Assistance & Technical Support</strong>
+            For system questions, password resets, or printer connectivity troubleshooting, contact Pratik Jadhav or Neeraj Shingavi directly at the management station.
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Lightbox Modal for Zooming Screenshots -->
+  <div id="lightbox" onclick="closeLightbox()">
+    <img id="lightboxImg" src="" alt="Enlarged screenshot">
+  </div>
+
+  <!-- Interactive Search & Filtering Scripts -->
+  <script>
+    // Search functionality
+    const searchInput = document.getElementById('manualSearch');
+    searchInput.addEventListener('input', function() {
+      const query = this.value.toLowerCase().trim();
+      const modules = document.querySelectorAll('.manual-module');
+
+      modules.forEach(mod => {
+        const text = mod.innerText.toLowerCase();
+        if (text.includes(query)) {
+          mod.style.display = 'block';
+        } else {
+          mod.style.display = 'none';
+        }
+      });
+    });
+
+    // Role filtering functionality
+    function filterByRole(role) {
+      document.querySelectorAll('.role-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+
+      const modules = document.querySelectorAll('.manual-module');
+      modules.forEach(mod => {
+        const roles = mod.getAttribute('data-roles') || '';
+        if (role === 'all' || roles.includes(role) || roles.includes('all')) {
+          mod.style.display = 'block';
+        } else {
+          mod.style.display = 'none';
+        }
+      });
+    }
+
+    // Lightbox zoom functionality
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightboxImg');
+
+    function openLightbox(src) {
+      lightboxImg.src = src;
+      lightbox.classList.add('active');
+    }
+
+    function closeLightbox() {
+      lightbox.classList.remove('active');
+    }
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeLightbox();
+    });
+
+    // Active TOC link highlighting on scroll
+    window.addEventListener('scroll', () => {
+      const modules = document.querySelectorAll('section.manual-module, div.hero-banner');
+      let currentId = '';
+      modules.forEach(sec => {
+        const top = sec.offsetTop - 120;
+        if (window.pageYOffset >= top) {
+          currentId = sec.getAttribute('id');
+        }
+      });
+
+      document.querySelectorAll('.toc-item').forEach(item => {
+        item.classList.remove('active');
+        const link = item.querySelector('a');
+        if (link && link.getAttribute('href') === '#' + currentId) {
+          item.classList.add('active');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

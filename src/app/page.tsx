@@ -1,7 +1,7 @@
 import HeroSlider from "@/components/landing/HeroSlider";
 import StatsStrip from "@/components/landing/StatsStrip";
 import ClientLogos from "@/components/landing/ClientLogos";
-import EditorialWelcome from "@/components/landing/EditorialWelcome";
+import ProductRailShowcase from "@/components/landing/ProductRailShowcase";
 import CategoryCarousel from "@/components/landing/CategoryCarousel";
 import FeaturesGrid from "@/components/landing/FeaturesGrid";
 import TargetAudienceGrid from "@/components/landing/TargetAudienceGrid";
@@ -22,8 +22,8 @@ export default function Home() {
       {/* 3. Brand wall — trusted partners */}
       <ClientLogos />
 
-      {/* 4. Editorial welcome / brand story */}
-      <EditorialWelcome />
+      {/* 4. Editorial welcome / brand story — now an interactive product rail */}
+      <ProductRailShowcase />
 
       {/* 5. Category carousel */}
       <CategoryCarousel />

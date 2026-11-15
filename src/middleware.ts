@@ -135,7 +135,7 @@ export default auth((req) => {
   }
 
   // Ops Routes accessed directly on Public Domain (e.g. /ops, /ops/orders)
-  if (pathname.startsWith("/ops") && !pathname.startsWith("/ops/login")) {
+  if ((pathname === "/ops" || pathname.startsWith("/ops/")) && !pathname.startsWith("/ops/login")) {
     if (!session) {
       const fullPath = req.nextUrl.pathname + req.nextUrl.search;
       const callbackUrl = encodeURIComponent(fullPath);

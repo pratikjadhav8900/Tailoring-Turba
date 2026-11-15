@@ -74,6 +74,24 @@
   --color-gold:          #c49d32;
   --color-gold-dark:     #b8941f;
 
+  /* ── shadcn/ui compatibility bridge ──────────────────────────
+     Lets drop-in shadcn-style components (bg-background, text-foreground,
+     bg-muted, bg-card, border-border, ring-ring, etc.) use our brand tokens
+     without redefining a second palette.
+     ──────────────────────────────────────────────────────── */
+  --background:       var(--color-background);
+  --foreground:       var(--color-text-primary);
+  --muted:            var(--color-surface-alt);
+  --muted-foreground: var(--color-text-muted);
+  --card:             var(--color-surface);
+  --card-foreground:  var(--color-text-primary);
+  --border:           var(--color-border);
+  --ring:             var(--color-accent);
+  /* some drop-in components reference the "--color-" prefixed names directly
+     in raw inline styles (not via Tailwind class) — alias them too */
+  --color-foreground:        var(--foreground);
+  --color-muted-foreground:  var(--muted-foreground);
+
   /* ── Legacy bridge vars — point to new tokens ──────────────
      Existing components using --tth-* continue to work.
      These are aliases only; do not add new uses.
