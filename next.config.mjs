@@ -39,12 +39,22 @@ const nextConfig = {
         'node_modules/playwright/**',
         'node_modules/vitest/**',
         'node_modules/@testing-library/**',
+        // sharp/resvg ship one prebuilt native binary per OS+arch; only the
+        // linux-x64-gnu one Vercel's runtime actually uses should ever be bundled.
+        'node_modules/@img/sharp-darwin-*/**',
+        'node_modules/@img/sharp-win32-*/**',
+        'node_modules/@img/sharp-linuxmusl-*/**',
+        'node_modules/@img/sharp-linux-arm*/**',
+        'node_modules/@resvg/resvg-js-darwin-*/**',
+        'node_modules/@resvg/resvg-js-win32-*/**',
+        'node_modules/@resvg/resvg-js-linux-*-musl/**',
+        'node_modules/@resvg/resvg-js-linux-arm*/**',
       ],
     },
     serverActions: {
       bodySizeLimit: "2mb",
     },
-    serverComponentsExternalPackages: ['@resvg/resvg-js', 'pdfkit'],
+    serverComponentsExternalPackages: ['@resvg/resvg-js', 'pdfkit', 'sharp', 'satori'],
   },
 };
 
