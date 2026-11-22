@@ -1,11 +1,11 @@
 # Tailoring Turba — Project Context
 
 ## Last Updated
-- Date: 2026-10-08
-- Time: 20:35
+- Date: 2026-11-18
+- Time: 23:10
 - Timezone: IST
 - Current Branch: main
-- Latest Commit: 090bac6 (feat(ops): complete Turba Ops integration and QA)
+- Latest Commit: (pending — Turba CRM added, not yet committed)
 
 ---
 
@@ -14,6 +14,8 @@
 Tailoring Turba is an end-to-end custom apparel manufacturing and B2B/B2C direct-to-consumer e-commerce platform. It provides high-quality garment tailoring, custom printing (DTF, screen printing, embroidery), interactive 3D/2D visual customizers, and automated production fulfillment. 
 
 The application is expanding to include **Turba Ops** (`ops.tailoringturba.com`), an internal production and order operations management system for the 5-person Tailoring Turba manufacturing team to manage custom orders from intake through cutting, stitching, branding, QC, packing, and dispatch.
+
+It also now includes **Turba CRM** (`/crm`), an internal LeadSquared/Zoho-style sales lead management system for the Tailoring Turba sales team: leads sourced from Meta Ads, Google Ads, and the owner's old customer list are worked through a pipeline (New → Contacted → Qualified → Hot/Negotiation → Won/Lost) and a won lead converts directly into a real `User` customer record.
 
 ---
 
@@ -47,7 +49,20 @@ The application is expanding to include **Turba Ops** (`ops.tailoringturba.com`)
 - **Customer Account & Tracking**: User dashboard (`/dashboard`), order tracking (`/track-order`, `/api/orders/track-public`), order feedback (`/feedback`), appointment booking (`/booking`)
 - **Admin Portal**: Backoffice portal (`/admin`) for product catalog management, job postings, customer inquiries, and legacy order tracking
 
-### 2. `ops.tailoringturba.com` (Internal Team — Under Implementation)
+### 2. `/crm` (Internal Sales Team — Phase 1 Implemented)
+LeadSquared-style sales CRM, built in-repo (not a separate app) so leads convert directly into real `User`/`Order` records. Implementation follows an explicit phase plan (full spec: a 28-section "Manage Leads" brief modeled on LeadSquared, delivered 2026-11-18):
+- **Phase 1 (Core Lead Management) — Done**: lead quality (Hot/Warm/Cold) derived from score rather than conflated with stage, advanced multi-condition filters, duplicate detection on create, Tasks module (distinct from Activities), Tags, audit trail (reuses the activity log, filtered — no separate audit table), dashboard sales funnel.
+- **Pipeline (`LeadStage`) — simplified 2026-11-18 per explicit user request**: a 6-stage telecalling pipeline `NEW_LEAD → DNP (Did Not Pick) → INTERESTED → NOT_INTERESTED → CONVERTED → CLOSED` (migrations `20261118140000_simplify_lead_stage_pipeline` + `20261118150000_add_closed_lead_stage`), replacing an initial 12-stage B2B pipeline that was built first and then deliberately cut down. `CONVERTED` is what unlocks "Convert to Customer" (previously `WON`); `CLOSED` is a terminal stage after conversion (order fully wrapped up) and is grouped with `CONVERTED` under `WON_STAGES` (`src/types/crm.ts`) for all "won"/"qualified" reporting. Moving to `NOT_INTERESTED` does **not** require a reason (`Lead.lostReason` stays as an optional, non-blocking column).
+- **Phase 2+ (Opportunities/Quotations, automation engine, notifications center, deep reporting, admin-configurable stages, Smart Views persistence, lead merge, import column-mapping wizard, granular RBAC) — Not started.** These are substantial enough to need their own sessions; nothing in the UI fakes them.
+- **App Shell & Theme**: Coral/orange design system (`src/styles/crm.theme.css`) mirroring the Ops station's structure but visually distinct
+- **CRM Authentication**: Reuses NextAuth + `Employee` records from Turba Ops (`/crm/login`); requires `Employee.department === "SALES"` unless `ADMIN`/`SUPER_ADMIN`
+- **Dashboard** (`/crm`): new/qualified/hot lead counts, 7-day new-lead sparkline, overdue follow-ups, won/lost last 30 days + conversion rate, pipeline value, won value, avg response time, full stage funnel, overdue/due-today task counts
+- **Leads Pipeline** (`/crm/leads`): tabbed table (All/Favourite/New/Assigned to me/Overdue/Hot) + Advanced Filters drawer (stage/source/quality/owner/date range/min quantity/min expected value/no-activity-in-N-days), search, CSV import (old customer list), CSV export, multi-select bulk actions (assign/status/favourite/delete)
+- **Lead Detail** (`/crm/leads/[id]`): contact card, inline stage/assignment/score/follow-up editing, tag editor, tabs for Overview / Activity / Tasks / Notes / Audit History, one-click "Convert to Customer" (shown once a lead is Converted)
+- **Tasks & Follow-ups** (`/crm/tasks`): cross-lead task list (Today/Overdue/Upcoming/Completed), filterable by sales rep
+- **Ad Platform Intake**: `/api/crm/webhooks/meta` and `/api/crm/webhooks/google` — functional but need production credentials (`META_WEBHOOK_VERIFY_TOKEN`, `META_PAGE_ACCESS_TOKEN`, `GOOGLE_LEAD_FORM_KEY`) configured in Meta/Google Ads before real leads will land
+
+### 3. `ops.tailoringturba.com` (Internal Team — Under Implementation)
 - **App Shell & Theme**: Clean, low-latency, density-focused UI inspired by Go GST Bill's information hierarchy with modern components
 - **Ops Authentication**: Unified NextAuth login using employee credentials (`/ops/login`), resolving the authenticated `Employee` record
 - **Operations Dashboard**: Active order counts by stage, urgent alerts, due-date warnings (`/ops/dashboard`)
@@ -90,6 +105,17 @@ The application is expanding to include **Turba Ops** (`ops.tailoringturba.com`)
   - `EventActorRole`: Appended `EMPLOYEE`
   - `OpsProductionStage`: `NEW_ORDER`, `ORDER_CONFIRMED`, `RESOURCE_FABRIC`, `CUTTING`, `STITCHING`, `BRANDING_PRINTING`, `QUALITY_CHECK`, `PACKING`, `READY_FOR_DISPATCH`, `DISPATCHED`, `CLOSED`
   - `OpsStageStatus`: `PENDING`, `IN_PROGRESS`, `COMPLETED`, `FLAGGED_REWORK`
+
+### Turba CRM Schema Additions (Migrations `20261118120000_add_turba_crm` + `20261118130000_crm_phase1_pipeline_tasks_tags` + `20261118140000_simplify_lead_stage_pipeline` + `20261118150000_add_closed_lead_stage`. All four applied and smoke-tested on the Neon `vercel-dev` branch; **not yet applied to the `production` branch** — run `npx prisma migrate deploy` against the real `DATABASE_URL` before go-live)
+- **`Employee` Extension (Purely Additive & Nullable)**:
+  - `department`: `String?` — set to `"SALES"` to grant a non-admin employee `/crm` access
+- **`Lead`**:
+  - Contact fields (`name`, `email`, `phone`, `companyName`, `city`), `source` (`LeadSource`), `sourceDetail`, `externalLeadId` (ad-platform id, unique per source for webhook idempotency), `status` (`LeadStatus`), `score` (0–10), `isFavourite`, `requirements`, `quantity`, `notes`, `assignedToId`/`createdById` (→ `Employee`), `convertedUserId` (→ `User`, unique, set when a lead becomes a real customer), `nextFollowUpAt`, `lastContactedAt`
+- **`LeadActivity`**:
+  - Timeline entries (`type`: `NOTE`/`CALL`/`EMAIL`/`WHATSAPP`/`MEETING`/`STATUS_CHANGE`/`ASSIGNED`/`FOLLOW_UP`/`IMPORTED`/`CONVERTED`), `note`, `employeeId`/`employeeName`, `metadata`
+- **`LeadTask`**: distinct from `LeadActivity` — actionable follow-ups (`type`: `FOLLOW_UP_CALL`/`SEND_QUOTATION`/`SEND_WHATSAPP`/`SEND_EMAIL`/`SCHEDULE_MEETING`/`REQUIREMENT_COLLECTION`/`PRICE_NEGOTIATION`/`SAMPLE_FOLLOW_UP`/`PAYMENT_FOLLOW_UP`/`ORDER_CONFIRMATION`/`CUSTOM`), `priority`, `status`, `dueAt`, `assignedToId`/`createdById` (→ `Employee`), `completionNotes`/`completedAt`
+- **`LeadTag` / `LeadTagAssignment`**: free-form tagging, many-to-many via join table
+- **Enums**: `LeadSource` (`META_ADS`, `GOOGLE_ADS`, `WEBSITE`, `REFERRAL`, `OLD_CUSTOMER_DATA`, `WALK_IN`, `PHONE_INQUIRY`, `WHATSAPP`, `INSTAGRAM`, `OTHER`), `LeadStage` (`NEW_LEAD`, `DNP`, `INTERESTED`, `NOT_INTERESTED`, `CONVERTED`, `CLOSED` — see Pipeline note above), `LeadActivityType`, `LeadTaskType`, `LeadTaskPriority`, `LeadTaskStatus`
 
 ---
 
@@ -174,6 +200,15 @@ The application is expanding to include **Turba Ops** (`ops.tailoringturba.com`)
 - ✅ Turba Ops Team Notification Center & Drawer (`NotificationDrawer.tsx`) — Phase 2 (Agent 4)
 - ✅ Customer Storefront Isolation via `LayoutWrapper.tsx` & `middleware.ts` (Public `tailoringturba.com` remains 100% unaffected)
 - ⏳ Subdomain routing configuration & Production Deployment — Phase 3 (Agent 5)
+- ✅ Turba CRM Database Schema (`Lead`, `LeadActivity`, `Employee.department`) — migration written, not yet applied to a database
+- ✅ Turba CRM Sales Auth (`src/lib/crm/auth.ts`, reuses Ops `Employee`/NextAuth, gated by `department === "SALES"`)
+- ✅ Turba CRM API Routes (`/api/crm/leads`, `/api/crm/leads/[id]`, `/api/crm/leads/[id]/activity`, `/api/crm/leads/[id]/convert`, `/api/crm/leads/bulk`, `/api/crm/leads/import`, `/api/crm/employees`, `/api/crm/dashboard/stats`)
+- ✅ Turba CRM Ad Platform Webhook Intake (`/api/crm/webhooks/meta`, `/api/crm/webhooks/google`) — functional, needs production credentials
+- ✅ Turba CRM UI: Login, Dashboard, Leads Pipeline (tabs/search/import/export/bulk actions), Lead Detail with activity timeline and convert-to-customer
+- ✅ Turba CRM Phase 1: score-derived lead quality (Hot/Warm/Cold), Tasks module, Tags, duplicate detection, Advanced Filters, tabbed Lead Detail (Overview/Activity/Tasks/Notes/Audit History), dashboard sales funnel — applied + smoke-tested on Neon `vercel-dev` branch
+- ✅ Turba CRM pipeline simplified to 5 stages (`NEW_LEAD`/`DNP`/`INTERESTED`/`NOT_INTERESTED`/`CONVERTED`) per explicit user request, replacing the initial 12-stage design; no mandatory reason on `NOT_INTERESTED`
+- ⏳ Turba CRM: apply migrations to production DB, assign `department = "SALES"` to real sales reps, configure Meta/Google webhook credentials
+- ⏳ Turba CRM Phase 2+ (not started): Opportunities/Quotations, automation engine, notifications center, deep reporting suite, admin-configurable stages, persisted Smart Views, lead merge, import column-mapping wizard, granular RBAC
 
 ---
 
@@ -216,6 +251,8 @@ The application is expanding to include **Turba Ops** (`ops.tailoringturba.com`)
   - `GEMINI_API_KEY`
   - `RESEND_API_KEY`
   - `FIREBASE_*` (Client & Admin SDK configs)
+  - `META_WEBHOOK_VERIFY_TOKEN`, `META_PAGE_ACCESS_TOKEN` (Turba CRM — Meta Lead Ads webhook, not yet configured)
+  - `GOOGLE_LEAD_FORM_KEY` (Turba CRM — Google Ads Lead Form webhook security key, not yet configured)
 
 ---
 

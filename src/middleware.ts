@@ -147,6 +147,20 @@ export default auth((req) => {
     }
   }
 
+  // Sales CRM Routes (e.g. /crm, /crm/leads). Only a session + staff role gate here;
+  // the finer-grained department === "SALES" check happens in requireCrmAuth() (needs Prisma, Edge middleware can't).
+  if ((pathname === "/crm" || pathname.startsWith("/crm/")) && !pathname.startsWith("/crm/login")) {
+    if (!session) {
+      const fullPath = req.nextUrl.pathname + req.nextUrl.search;
+      const callbackUrl = encodeURIComponent(fullPath);
+      return NextResponse.redirect(new URL(`/crm/login?callbackUrl=${callbackUrl}`, origin));
+    }
+    const role = (session.user as { role?: string })?.role;
+    if (role !== "EMPLOYEE" && role !== "ADMIN" && role !== "SUPER_ADMIN") {
+      return NextResponse.redirect(new URL("/crm/login?error=UnauthorizedRole", origin));
+    }
+  }
+
   return applySecurityHeaders(NextResponse.next());
 });
 

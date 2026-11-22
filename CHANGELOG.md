@@ -4,6 +4,94 @@ All meaningful architectural and functional changes to this repository are docum
 
 ---
 
+## 2026-11-18 — 23:45 IST
+
+### Turba CRM — Added "Closed" Pipeline Stage
+
+Added a 6th stage, `CLOSED`, after `CONVERTED` (migration `20261118150000_add_closed_lead_stage`, purely additive — `ALTER TYPE ... ADD VALUE`, no data remap needed). Represents a deal fully wrapped up after conversion. Doesn't change the "Convert to Customer" trigger (still `CONVERTED`). Dashboard "won"/"qualified" metrics, the overdue-follow-up exclusion, and the per-rep stats on the Settings page now treat `CONVERTED` and `CLOSED` together as `WON_STAGES` (new shared constant in `src/types/crm.ts`) so a lead doesn't drop out of "won" reporting just because it was marked fully closed.
+
+Verified: `tsc`/`eslint` clean, migration applied to the Neon `vercel-dev` branch, live-tested (stage set to Closed, dashboard funnel shows it as its own bucket, still counted in won/qualified totals), all CRM pages return 200.
+
+---
+
+## 2026-11-18 — 23:10 IST
+
+### Turba CRM — Pipeline Simplified to 5 Stages (user-requested)
+
+### What Changed
+
+- Replaced the 12-stage `LeadStage` enum with a lean 5-stage telecalling pipeline, at the user's explicit request: `NEW_LEAD → DNP (Did Not Pick) → INTERESTED → NOT_INTERESTED → CONVERTED`. Migration `20261118140000_simplify_lead_stage_pipeline` remaps existing data (`WON`→`CONVERTED`, `LOST`/`DISQUALIFIED`→`NOT_INTERESTED`, everything else→`INTERESTED`/`DNP`/`NEW_LEAD` as appropriate).
+- **Removed the mandatory reason requirement**: moving a lead to `NOT_INTERESTED` no longer blocks on a reason (the Lost Reason modal and its `LOST_REASONS` list were removed from the UI; `Lead.lostReason` stays as an optional column — historical data from before this change is preserved and still displayed).
+- "Convert to Customer" now triggers off `status === "CONVERTED"` (previously `WON`).
+- Dashboard's "qualified leads" / funnel / conversion-rate metrics recomputed against the new 5 stages (`INTERESTED`+`CONVERTED` counts as "qualified+").
+- `/crm/help` content rewritten for the new 5-stage pipeline.
+- Lead quality (Hot/Warm/Cold, derived from score) is unchanged — it was already independent of stage.
+
+### Verification
+
+`tsc --noEmit` and `eslint` both clean (0 errors). Migration applied to the Neon `vercel-dev` branch and verified live: data remap confirmed by query (all 7 seeded leads landed on the expected new stage), stage change to `NOT_INTERESTED` with no reason now returns `200` (previously would have been blocked), all CRM pages (`/crm`, `/crm/leads`, `/crm/leads/[id]`, `/crm/tasks`, `/crm/help`, `/crm/settings`) return `200`.
+
+---
+
+## 2026-11-18 — 20:35 IST
+
+### Turba CRM Phase 1 — 12-Stage Pipeline, Tasks, Tags, Advanced Filters
+
+### What Changed
+
+- **Database (Migration `20261118130000_crm_phase1_pipeline_tasks_tags`)**:
+  - `Lead.status` migrated from the old flat 8-value `LeadStatus` enum to a new 12-stage `LeadStage` enum matching a standard B2B pipeline: `NEW → ATTEMPTING_CONTACT → CONTACTED → QUALIFIED → REQUIREMENT_CAPTURED → QUOTATION_IN_PROGRESS → QUOTATION_SENT → NEGOTIATION → WON/LOST/NURTURE/DISQUALIFIED`. Existing data remapped (`HOT`→`QUALIFIED`, `JUNK`→`DISQUALIFIED`); "Hot" is no longer a pipeline stage — lead quality (Hot ≥8 / Warm 4–7 / Cold <4) is now derived from `score` everywhere (table, badges, filters, "Hot" tab).
+  - `Lead` additions: `productCategory`, `expectedValue`, `lostReason` (now required by the API whenever a lead moves to `LOST`).
+  - New `LeadTask` model (+ `LeadTaskType`/`Priority`/`Status` enums) — a distinct entity from `LeadActivity`, matching the activity-vs-task distinction in the spec.
+  - New `LeadTag` + `LeadTagAssignment` models for tagging.
+- **API**: duplicate detection on lead creation (phone/email match → `409` with the existing lead, `force: true` to proceed anyway); advanced multi-condition filtering on `GET /api/crm/leads` (stage[], source[], quality, owner, date range, min quantity, min expected value, "no activity in N days"); `/api/crm/leads/[id]/tasks`, `/api/crm/leads/[id]/tasks/[taskId]`, `/api/crm/tasks` (cross-lead today/overdue/upcoming/completed views); `/api/crm/tags`, `/api/crm/leads/[id]/tags`; dashboard stats now include a full stage funnel, pipeline/won value, 30-day conversion rate, and task counts.
+- **UI**: Manage Leads table gained Stage + Quality (separate badges now), Interested In, Expected Value, Next Follow-up columns and an "Open tasks" indicator; new Advanced Filters slide-over; Lead Detail page restructured into tabs (Overview / Activity / Tasks / Notes / Audit History — Notes and Audit History are filtered views over the same activity log rather than new tables, reusing existing infrastructure); inline tag editor; a Lost Reason modal gates any move to `LOST`; new `/crm/tasks` "Tasks & Follow-ups" page and sidebar entry.
+
+### Explicitly Deferred (see PROJECT_CONTEXT.md for the full phase breakdown)
+
+Opportunities/Quotations, the automation/notification engine, the reporting suite beyond the dashboard funnel, admin-configurable stages (still enum-based, not DB rows), a saved "Smart Views" model (filters are session-only, not persisted), lead merge, CSV import column-mapping wizard, and granular per-field RBAC. Not stubbed — left out of the API/UI entirely so nothing fakes functionality that isn't there.
+
+### Verification
+
+- `npx tsc --noEmit`: 0 errors. `npx eslint` on all CRM files: 0 errors (pre-existing-style `no-explicit-any` warnings only).
+- Migration applied to the Neon `vercel-dev` branch (not production) and smoke-tested live: stage data remap verified by query, duplicate detection (`409`), lost-reason enforcement (`400` without reason, `200` with), tag create/assign, task create/list/complete, dashboard funnel — all exercised via curl against the running dev server and all behaved as expected.
+
+---
+
+## 2026-11-18 — 18:00 IST
+
+### Turba CRM — Sales Lead Management (`/crm`)
+
+### What Changed
+
+- **Database Schema (Migration `20261118120000_add_turba_crm`)**:
+  - New `Lead` model: contact info, `LeadSource` (`META_ADS`, `GOOGLE_ADS`, `WEBSITE`, `REFERRAL`, `OLD_CUSTOMER_DATA`, `WALK_IN`, `PHONE_INQUIRY`, `WHATSAPP`, `INSTAGRAM`, `OTHER`), `LeadStatus` (`NEW` → `CONTACTED` → `QUALIFIED` → `HOT`/`NEGOTIATION` → `WON`/`LOST`/`JUNK`), 0–10 lead score, favourite flag, assignment, next-follow-up date, and `convertedUserId` linking a won lead to a real `User`.
+  - New `LeadActivity` model: timestamped, employee-attributed timeline (calls, notes, WhatsApp, email, meetings, status changes, assignment changes, imports, conversions).
+  - `Employee.department` (nullable, additive): set to `SALES` to grant non-admin staff access to `/crm`; `ADMIN`/`SUPER_ADMIN` always have full access, same equal-authority pattern as Turba Ops.
+  - `Lead.externalLeadId` + `@@unique([source, externalLeadId])` for idempotent ad-platform webhook intake.
+- **Sales Auth (`src/lib/crm/auth.ts`)**: reuses the existing NextAuth + `Employee` record from Turba Ops; `requireCrmAuth()` additionally requires `department === "SALES"` unless the account is `ADMIN`/`SUPER_ADMIN`.
+- **API Routes (`src/app/api/crm/*`)**:
+  - `leads` (list with tab/status/source/search filters + pagination, create), `leads/[id]` (get/patch/delete), `leads/[id]/activity` (timeline logging), `leads/[id]/convert` (creates/links a real `User` customer record from a won lead), `leads/bulk` (assign/status/favourite/delete for selected rows), `leads/import` (CSV import for the owner's old customer list, no new dependency — hand-rolled RFC4180 parser in `src/lib/crm/csv.ts`), `employees` (sales rep directory for assignment dropdowns), `dashboard/stats`.
+  - `webhooks/meta` and `webhooks/google`: functional intake endpoints for Meta Lead Ads (`hub.challenge` verification + Graph API lead fetch) and Google Ads Lead Form webhook delivery (security-key verification). Both need production credentials (`META_WEBHOOK_VERIFY_TOKEN`, `META_PAGE_ACCESS_TOKEN`, `GOOGLE_LEAD_FORM_KEY`) configured in the ad platforms before they'll receive real traffic.
+- **UI (`/crm`, coral/orange theme — `src/styles/crm.theme.css` — to stay visually distinct from the emerald Ops station)**:
+  - `/crm/login` — sales rep login (same credentials as Ops).
+  - `/crm` — dashboard: new/qualified/hot lead counts, 7-day sparkline, overdue follow-ups, won-last-30-days, avg response time, recent leads.
+  - `/crm/leads` — LeadSquared/Zoho-style leads table: tabs (All/Favourite/New/Assigned to me/Overdue/Hot), search, Import/Export/Add Lead actions, floating bulk-action bar (assign/status/favourite/delete) on multi-select.
+  - `/crm/leads/[id]` — lead detail: contact card, inline status/assignment/score editing, activity timeline with logged calls/notes/WhatsApp/email/meetings, "Convert to Customer" action.
+- **Middleware (`src/middleware.ts`)**: added `/crm` path-based auth guard (session + staff role), mirroring the existing `/ops` gate.
+
+### Why
+
+Sales reps need a single place to work leads coming from Meta/Google ad campaigns alongside the owner's old customer list, with leads that convert cleanly into real `User`/`Order` records rather than living in a disconnected system.
+
+### Verification
+
+- `npx tsc --noEmit`: 0 errors.
+- `npx eslint` on all new CRM files: 0 errors (pre-existing-style `no-explicit-any` warnings only, consistent with the rest of the codebase).
+- Migration SQL written by hand (matches Prisma's generated format) since no local `DATABASE_URL` was available in this environment; **not yet applied to any database** — run `npx prisma migrate deploy` against a real `DATABASE_URL` before going live, and set an `Employee.department = "SALES"` for each sales rep.
+
+---
+
 ## 2026-10-19 — 19:50 IST
 
 ### Turba Ops Feature Expansion — Account, Settings, Help Center & Team Chat

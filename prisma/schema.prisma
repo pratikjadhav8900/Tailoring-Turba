@@ -30,6 +30,7 @@ model User {
   orders        Order[]
   assets        UserAsset[]
   employee      Employee?
+  convertedFromLead Lead?
 }
 
 model Account {
@@ -586,9 +587,18 @@ model Employee {
   createdAt       DateTime                    @default(now())
   updatedAt       DateTime                    @updatedAt
 
+  // CRM: nullable, zero historical impact. "SALES" grants /crm access for non-admin employees.
+  department      String?
+
   stageExecutions      ProductionStageExecution[]
   notes                InternalOrderNote[]
   assignedExternalWork ExternalWorkAssignment[]
+
+  assignedLeads    Lead[]         @relation("AssignedLeads")
+  createdLeads     Lead[]         @relation("CreatedLeads")
+  leadActivities   LeadActivity[]
+  assignedLeadTasks LeadTask[]    @relation("AssignedLeadTasks")
+  createdLeadTasks  LeadTask[]    @relation("CreatedLeadTasks")
 
   @@index([email])
   @@index([employeeCode])
@@ -788,6 +798,185 @@ model MaterialConsumptionReference {
 
   @@index([productType, fabric])
   @@index([sizeBand])
+}
+
+// ============================================================
+// Turba CRM — Sales lead management (/crm)
+// ============================================================
+
+enum LeadSource {
+  META_ADS
+  GOOGLE_ADS
+  WEBSITE
+  REFERRAL
+  OLD_CUSTOMER_DATA
+  WALK_IN
+  PHONE_INQUIRY
+  WHATSAPP
+  INSTAGRAM
+  OTHER
+}
+
+// Lean telecalling-style pipeline. Lead quality (Hot/Warm/Cold) stays a derived
+// property of `score`, independent of stage.
+enum LeadStage {
+  NEW_LEAD
+  DNP
+  INTERESTED
+  NOT_INTERESTED
+  CONVERTED
+  CLOSED
+}
+
+enum LeadActivityType {
+  NOTE
+  CALL
+  EMAIL
+  WHATSAPP
+  MEETING
+  STATUS_CHANGE
+  ASSIGNED
+  FOLLOW_UP
+  IMPORTED
+  CONVERTED
+}
+
+enum LeadTaskType {
+  FOLLOW_UP_CALL
+  SEND_QUOTATION
+  SEND_WHATSAPP
+  SEND_EMAIL
+  SCHEDULE_MEETING
+  REQUIREMENT_COLLECTION
+  PRICE_NEGOTIATION
+  SAMPLE_FOLLOW_UP
+  PAYMENT_FOLLOW_UP
+  ORDER_CONFIRMATION
+  CUSTOM
+}
+
+enum LeadTaskPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum LeadTaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model Lead {
+  id               String      @id @default(cuid())
+  name             String
+  email            String?
+  phone            String?
+  companyName      String?
+  source           LeadSource  @default(OTHER)
+  sourceDetail     String?     // campaign / ad set / sheet name, etc.
+  externalLeadId   String?     // Meta/Google lead id, for webhook idempotency
+  status           LeadStage   @default(NEW_LEAD)
+  score            Int         @default(0) // 0-10 lead quality score (drives Hot/Warm/Cold)
+  isFavourite      Boolean     @default(false)
+  requirements     String?     @db.Text
+  quantity         Int?
+  city             String?
+  notes            String?     @db.Text
+
+  productCategory  String?
+  expectedValue    Float?      // potential order value in INR
+  lostReason       String?     // optional note, typically used when status becomes NOT_INTERESTED
+
+  assignedToId     String?
+  assignedTo       Employee?   @relation("AssignedLeads", fields: [assignedToId], references: [id], onDelete: SetNull)
+  createdById      String?
+  createdBy        Employee?   @relation("CreatedLeads", fields: [createdById], references: [id], onDelete: SetNull)
+
+  convertedUserId  String?     @unique
+  convertedUser    User?       @relation(fields: [convertedUserId], references: [id], onDelete: SetNull)
+  convertedAt      DateTime?
+
+  lastContactedAt  DateTime?
+  nextFollowUpAt   DateTime?
+  metadata         Json?
+
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  activities       LeadActivity[]
+  tasks            LeadTask[]
+  tags             LeadTagAssignment[]
+
+  @@index([status])
+  @@index([assignedToId])
+  @@index([source])
+  @@index([createdAt])
+  @@index([nextFollowUpAt])
+  @@unique([source, externalLeadId])
+}
+
+model LeadActivity {
+  id           String            @id @default(cuid())
+  leadId       String
+  lead         Lead              @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  type         LeadActivityType
+  note         String?           @db.Text
+  employeeId   String?
+  employee     Employee?         @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+  employeeName String?
+  metadata     Json?
+  createdAt    DateTime          @default(now())
+
+  @@index([leadId])
+  @@index([createdAt])
+}
+
+model LeadTask {
+  id              String           @id @default(cuid())
+  leadId          String
+  lead            Lead             @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  type            LeadTaskType     @default(CUSTOM)
+  title           String
+  description     String?          @db.Text
+  dueAt           DateTime
+  priority        LeadTaskPriority @default(NORMAL)
+  status          LeadTaskStatus   @default(PENDING)
+  assignedToId    String?
+  assignedTo      Employee?        @relation("AssignedLeadTasks", fields: [assignedToId], references: [id], onDelete: SetNull)
+  createdById     String?
+  createdBy       Employee?        @relation("CreatedLeadTasks", fields: [createdById], references: [id], onDelete: SetNull)
+  completionNotes String?
+  completedAt     DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@index([leadId])
+  @@index([assignedToId])
+  @@index([status])
+  @@index([dueAt])
+}
+
+model LeadTag {
+  id          String              @id @default(cuid())
+  name        String              @unique
+  color       String?
+  createdAt   DateTime            @default(now())
+  assignments LeadTagAssignment[]
+}
+
+model LeadTagAssignment {
+  id        String   @id @default(cuid())
+  leadId    String
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  tagId     String
+  tag       LeadTag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([leadId, tagId])
+  @@index([tagId])
 }
 
 

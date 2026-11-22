@@ -49,10 +49,11 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
   const isDashboardPage = pathname?.startsWith("/dashboard");
   const isCustomizer = pathname?.startsWith("/customizer");
   const isOpsPage = pathname?.startsWith("/ops") || isOpsHost;
+  const isCrmPage = pathname?.startsWith("/crm");
 
-  const hideNavigation = isAuthPage || isAdminPage || isDashboardPage || isCustomizer || isOpsPage;
-  const hideMobileNav = isAuthPage || isAdminPage || isCustomizer || isOpsPage;
-  const hideAi = isAuthPage || isAdminPage || isOpsPage;
+  const hideNavigation = isAuthPage || isAdminPage || isDashboardPage || isCustomizer || isOpsPage || isCrmPage;
+  const hideMobileNav = isAuthPage || isAdminPage || isCustomizer || isOpsPage || isCrmPage;
+  const hideAi = isAuthPage || isAdminPage || isOpsPage || isCrmPage;
 
   return (
     <div className={mounted && !hideMobileNav ? "has-mobile-nav" : ""}>
