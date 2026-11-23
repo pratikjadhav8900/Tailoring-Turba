@@ -35,6 +35,7 @@ export default auth((req) => {
   const host = rawHostHeader.split(",")[0].trim();
   const hostname = host.split(":")[0].toLowerCase();
   const isOpsDomain = hostname.startsWith("ops.") || hostname.startsWith("ops-");
+  const isCrmDomain = hostname.startsWith("crm.") || hostname.startsWith("crm-");
   const proto = req.headers.get("x-forwarded-proto") || (hostname.includes("localhost") ? "http" : "https");
   const origin = `${proto}://${host}`;
 
@@ -105,6 +106,64 @@ export default auth((req) => {
     const internalPath = pathname === "/" ? "/ops" : `/ops${pathname}`;
     const rewriteUrl = new URL(`${internalPath}${req.nextUrl.search}`, origin);
     return applySecurityHeaders(NextResponse.rewrite(rewriteUrl));
+  }
+
+  // ==========================================
+  // SALES CRM SUBDOMAIN ROUTING (crm.tailoringturba.com)
+  // ==========================================
+  if (isCrmDomain) {
+    // 1. Pass API routes directly through to /api/*
+    if (pathname.startsWith("/api")) {
+      return applySecurityHeaders(NextResponse.next());
+    }
+
+    const isCrmLogin = pathname === "/login" || pathname === "/crm/login";
+    const userRole = (session?.user as { role?: string })?.role;
+    const isAuthorizedCrmUser = userRole === "EMPLOYEE" || userRole === "ADMIN" || userRole === "SUPER_ADMIN";
+
+    // 2. Unauthenticated check for CRM Domain
+    if (!session) {
+      if (pathname === "/crm/login") {
+        return applySecurityHeaders(NextResponse.next());
+      }
+      if (pathname === "/login") {
+        const rewriteUrl = new URL(`/crm/login${req.nextUrl.search}`, origin);
+        return applySecurityHeaders(NextResponse.rewrite(rewriteUrl));
+      }
+      // Redirect to dedicated CRM login on this same subdomain
+      const redirectUrl = new URL("/crm/login", origin);
+      if (pathname !== "/" && pathname !== "/crm") {
+        redirectUrl.searchParams.set("callbackUrl", pathname + req.nextUrl.search);
+      }
+      return NextResponse.redirect(redirectUrl);
+    }
+
+    // 3. User is authenticated with a non-staff role (department check happens in requireCrmAuth)
+    if (!isAuthorizedCrmUser) {
+      if (isCrmLogin) {
+        return applySecurityHeaders(NextResponse.next());
+      }
+      return NextResponse.redirect(new URL("/crm/login?error=UnauthorizedRole", origin));
+    }
+
+    // 4. Authenticated staff accessing login page -> redirect to CRM Dashboard
+    if (isCrmLogin) {
+      return NextResponse.redirect(new URL("/crm", origin));
+    }
+
+    // 5. If path already starts with /crm, let it proceed directly
+    if (pathname.startsWith("/crm")) {
+      return applySecurityHeaders(NextResponse.next());
+    }
+
+    // 6. Rewrite public crm paths into internal /crm directory
+    // Examples:
+    //   / -> /crm
+    //   /leads -> /crm/leads
+    //   /tasks -> /crm/tasks
+    const internalCrmPath = pathname === "/" ? "/crm" : `/crm${pathname}`;
+    const rewriteCrmUrl = new URL(`${internalCrmPath}${req.nextUrl.search}`, origin);
+    return applySecurityHeaders(NextResponse.rewrite(rewriteCrmUrl));
   }
 
   // ==========================================
