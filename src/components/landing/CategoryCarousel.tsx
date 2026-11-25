@@ -10,19 +10,19 @@ const categories = [
     id: "men",
     label: "For Men",
     items: [
-      { name: "Crewnecks", image: "https://res.cloudinary.com/dkn3usjpn/image/upload/v1784897586/turba_products/prod_3_MB01-Black_biowash.jpg", href: "/products?category=Essential Polo & T-Shirts" },
-      { name: "Hoodies", image: "https://res.cloudinary.com/dkn3usjpn/image/upload/v1784898117/turba_products/prod_17_BLACK_1.jpg", href: "/products?category=Winter Wear Collection" },
-      { name: "Jackets", image: "https://res.cloudinary.com/dkn3usjpn/image/upload/v1784898152/turba_products/prod_20_Black-Blue_HighNeck_Front.jpg", href: "/products?category=Winter Wear Collection" },
-      { name: "Polos", image: "https://res.cloudinary.com/dkn3usjpn/image/upload/v1784897815/turba_products/prod_8_BLACK-1.jpg", href: "/products?category=Essential Polo & T-Shirts" },
+      { name: "Crewnecks", image: "/images/categories/men_crewneck_tee.png", href: "/products?category=Essential Polo & T-Shirts" },
+      { name: "Hoodies", image: "/images/categories/men_hoodie.png", href: "/products?category=Winter Wear Collection" },
+      { name: "Jackets", image: "/images/categories/men_jacket.png", href: "/products?category=Winter Wear Collection" },
+      { name: "Polos", image: "/images/categories/men_polo.png", href: "/products?category=Essential Polo & T-Shirts" },
     ]
   },
   {
     id: "women",
     label: "For Women",
     items: [
-      { name: "Crop Tops", image: "https://res.cloudinary.com/dkn3usjpn/image/upload/v1784897699/turba_products/prod_4_MBF01-Black_biowash.jpg", href: "/products?category=Essential Polo & T-Shirts" },
-      { name: "Oversized", image: "https://res.cloudinary.com/dkn3usjpn/image/upload/v1784897589/turba_products/prod_3_MB02-White_biowash.jpg", href: "/products?category=Essential Polo & T-Shirts" },
-      { name: "Hoodies", image: "https://res.cloudinary.com/dkn3usjpn/image/upload/v1784898130/turba_products/prod_17_GREY_1.jpg", href: "/products?category=Winter Wear Collection" },
+      { name: "T-Shirts", image: "/images/categories/women_tshirt.png", href: "/products?category=Essential Polo & T-Shirts" },
+      { name: "Oversized", image: "/images/categories/women_oversized.png", href: "/products?category=Essential Polo & T-Shirts" },
+      { name: "Hoodies", image: "/images/categories/women_hoodie.png", href: "/products?category=Winter Wear Collection" },
     ]
   },
   {
