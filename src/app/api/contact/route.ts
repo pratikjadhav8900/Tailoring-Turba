@@ -30,6 +30,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Please enter a valid 10-digit phone number." }, { status: 400 });
     }
 
+    // The customer confirmation is sent to this address, so it must be a single, well-formed email (no list/header tricks)
+    if (typeof email !== "string" || email.length > 254 || !/^[^\s@<>"',;:]+@[^\s@<>"',;:]+\.[^\s@<>"',;:]{2,}$/.test(email.trim())) {
+      return NextResponse.json({ error: "Please enter a valid email address." }, { status: 400 });
+    }
+    email = email.trim();
+
+    // `quantity` is interpolated into HTML emails and the subject line: reduce it to a plain bounded integer
+    quantity = Math.min(1000000, Math.max(0, parseInt(String(quantity ?? ""), 10) || 0)) || "";
+
     // Sanitize all inputs
     name = sanitize(name);
     email = sanitize(email);

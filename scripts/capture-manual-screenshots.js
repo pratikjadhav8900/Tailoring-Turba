@@ -1,4 +1,5 @@
 const { chromium } = require('@playwright/test');
+if (!process.env.OPS_SCREENSHOT_PASSWORD) { console.error("Set OPS_SCREENSHOT_PASSWORD (the Ops login password for the screenshot account) before running this script."); process.exit(1); }
 const fs = require('fs');
 const path = require('path');
 
@@ -39,7 +40,7 @@ async function capture() {
     // Authenticate
     console.log('🔑 Authenticating as TT001 (Founder Neeraj Shingavi)...');
     await page.locator('input[placeholder*="User ID"]').fill('TT001');
-    await page.locator('input[type="password"]').fill('turba@neeraj123');
+    await page.locator('input[type="password"]').fill(process.env.OPS_SCREENSHOT_PASSWORD);
     await page.locator('button[type="submit"]').click();
     await page.waitForURL('**/ops');
     await page.waitForLoadState('networkidle');

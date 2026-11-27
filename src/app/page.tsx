@@ -2,6 +2,7 @@ import HeroSlider from "@/components/landing/HeroSlider";
 import StatsStrip from "@/components/landing/StatsStrip";
 import ClientLogos from "@/components/landing/ClientLogos";
 import ProductRailShowcase from "@/components/landing/ProductRailShowcase";
+import ProductCoverflow from "@/components/landing/ProductCoverflow";
 import CategoryCarousel from "@/components/landing/CategoryCarousel";
 import FeaturesGrid from "@/components/landing/FeaturesGrid";
 import TargetAudienceGrid from "@/components/landing/TargetAudienceGrid";
@@ -24,6 +25,9 @@ export default function Home() {
 
       {/* 4. Editorial welcome / brand story — now an interactive product rail */}
       <ProductRailShowcase />
+
+      {/* 4.5 Product coverflow — studio photography of the range (draggable 3D gallery) */}
+      <ProductCoverflow />
 
       {/* 5. Category carousel */}
       <CategoryCarousel />

@@ -4,8 +4,16 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import styles from "./page.module.css";
 import { CreditCard, Download } from "lucide-react";
+import { ExportCsvButton, InvoiceButton } from "./TransactionActions";
 
 import Image from "next/image";
+
+function displayStatus(tx: { status: string; amountPaid: number; remainingAmount: number }) {
+  if (tx.status === "CANCELLED") return { label: "Cancelled", css: "status-cancelled" };
+  if (tx.status === "PENDING" || tx.amountPaid <= 0) return { label: "Unpaid", css: "status-pending" };
+  if (tx.remainingAmount > 0) return { label: "Partially Paid", css: "status-partial" };
+  return { label: "Paid", css: "status-paid" };
+}
 
 export default async function TransactionsPage() {
   const session = await auth();
@@ -35,9 +43,20 @@ export default async function TransactionsPage() {
             <h1 className={styles.title}>Transactions</h1>
             <p className={styles.sub}>Your financial ledger and billing history.</p>
           </div>
-          <button className={styles.primaryBtn}>
+          <ExportCsvButton
+            rows={transactions.map((tx) => ({
+              id: tx.id,
+              orderNumber: tx.orderNumber,
+              createdAt: tx.createdAt.toISOString(),
+              status: tx.status,
+              totalAmount: tx.totalAmount,
+              amountPaid: tx.amountPaid ?? 0,
+              remainingAmount: tx.remainingAmount ?? 0,
+            }))}
+            className={styles.primaryBtn}
+          >
             <Download size={18} /> Export CSV
-          </button>
+          </ExportCsvButton>
         </div>
       </div>
 
@@ -71,13 +90,13 @@ export default async function TransactionsPage() {
                   </Link>
                 </div>
                 <div className={styles.col}>
-                  <span className={`${styles.status} ${styles[`status-${tx.status.toLowerCase()}`]}`}>
-                    {tx.status === 'PENDING' ? 'Unpaid' : 'Paid'}
+                  <span className={`${styles.status} ${styles[displayStatus(tx).css]}`}>
+                    {displayStatus(tx).label}
                   </span>
                 </div>
                 <div className={styles.colRight}>
                   <span className={styles.amount}>₹{tx.totalAmount.toLocaleString()}</span>
-                  <button className={styles.invoiceBtn}>Invoice</button>
+                  <InvoiceButton orderId={tx.id} orderNumber={tx.orderNumber} className={styles.invoiceBtn} />
                 </div>
               </div>
             ))}

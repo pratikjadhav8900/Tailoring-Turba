@@ -73,7 +73,10 @@ export async function seedEmployees() {
     });
 
     if (existing) {
-      // Update User
+      // Update User — deliberately NOT touching `password` here. Re-running this seed
+      // (e.g. an unrelated deploy step) used to silently reset an already-rotated
+      // production password back to the hardcoded default on every run. Password is
+      // only ever set below, on first creation of the account.
       if (existing.userId) {
         await prisma.user.update({
           where: { id: existing.userId },
@@ -82,7 +85,6 @@ export async function seedEmployees() {
             email: emp.email,
             role: emp.role,
             phone: emp.phone,
-            password: hashedPassword,
           },
         });
       } else {

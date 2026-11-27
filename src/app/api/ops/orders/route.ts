@@ -25,7 +25,11 @@ export async function GET(req: NextRequest) {
     // Filter by stage
     if (stage && stage !== "ALL") {
       if (stage === "ACTIVE") {
+        // A customer-cancelled order must never show up as an active production job —
+        // without this, Ops staff could keep cutting/stitching/dispatching an order the
+        // customer already cancelled, because cancellation never touched opsStage.
         where.opsStage = { not: null, notIn: ["CLOSED"] };
+        where.status = { not: "CANCELLED" };
       } else {
         where.opsStage = stage;
       }
@@ -48,7 +52,8 @@ export async function GET(req: NextRequest) {
       const searchWords = trimmedSearch.split(/\s+/).filter(Boolean);
 
       const conditions: any[] = [
-        ...(isNaN(numericOrderNumber) ? [] : [{ orderNumber: numericOrderNumber }]),
+        // orderNumber is a 32-bit Int column: a long digit string (e.g. a 10-digit phone number) would overflow it and 500 the whole search
+        ...(isNaN(numericOrderNumber) || numericOrderNumber > 2147483647 ? [] : [{ orderNumber: numericOrderNumber }]),
         { id: { contains: trimmedSearch, mode: "insensitive" } },
         { user: { name: { contains: trimmedSearch, mode: "insensitive" } } },
         { user: { companyName: { contains: trimmedSearch, mode: "insensitive" } } },

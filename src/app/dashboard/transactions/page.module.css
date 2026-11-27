@@ -236,6 +236,14 @@
   color: var(--color-accent-600);
 }
 
+.status-cancelled {
+  color: var(--color-error);
+}
+
+.status-partial {
+  color: var(--color-warning);
+}
+
 .amount {
   font-family: var(--font-mono, monospace);
   font-size: 1.25rem;

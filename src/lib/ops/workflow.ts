@@ -25,20 +25,6 @@ export const STAGE_DISPLAY_NAMES: Record<OpsProductionStage, string> = {
   READY_FOR_DISPATCH: "Ready For Dispatch",
 };
 
-export const STAGE_SHORT_NAMES: Record<OpsProductionStage, string> = {
-  NEW_ORDER: "New Order",
-  ORDER_CONFIRMED: "Order Accepted",
-  RESOURCE_FABRIC: "Procurement",
-  BRANDING_PRINTING: "Print / Emb",
-  PACKING: "Press / Pack",
-  DISPATCHED: "Dispatch",
-  CLOSED: "Delivery",
-  CUTTING: "Cutting",
-  STITCHING: "Stitching",
-  QUALITY_CHECK: "QC",
-  READY_FOR_DISPATCH: "Ready",
-};
-
 export const REWORKABLE_STAGES: OpsProductionStage[] = [
   "RESOURCE_FABRIC",
   "BRANDING_PRINTING",
@@ -227,6 +213,7 @@ export function validateStageTransition(
   // 1. ADVANCE PAYMENT ENFORCEMENT (60% Rule):
   // Moving from Step 2 (ORDER_CONFIRMED) to Step 3 (RESOURCE_FABRIC) or any later stage
   // strictly requires at least 60% payment, unless management provides an explicit override.
+  let paymentGateBypassed = false;
   if (
     currentStage === "ORDER_CONFIRMED" &&
     targetIndex > currentIndex &&
@@ -249,11 +236,17 @@ export function validateStageTransition(
         )} (₹${payment.remainingAdvance.toLocaleString("en-IN")} pending).`,
       };
     }
+    // Only true when the 60% gate had NOT actually been cleared and the override flag is
+    // the only reason this transition is allowed to proceed below.
+    paymentGateBypassed = !payment.isAdvanceCleared && isOverride;
   }
 
-  // 2. Standard forward progression (exact next step)
+  // 2. Standard forward progression (exact next step). This used to unconditionally
+  // return {allowed:true} with no isOverrideRequired flag even when the ONLY reason it
+  // got this far was the payment-gate bypass above — silently erasing the one signal the
+  // caller needs to record a real audit-trail entry for that bypass.
   if (targetIndex === currentIndex + 1) {
-    return { allowed: true };
+    return paymentGateBypassed ? { allowed: true, isOverrideRequired: true } : { allowed: true };
   }
 
   // 3. Controlled Override (Workflow sequencing override — requires audit reason)

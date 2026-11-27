@@ -321,14 +321,52 @@ export default function AdminProductsClient({ initialProducts, categories }: { i
     setProducts(prev => prev.map(p => p.id === product.id ? { ...p, isActive: updatedStatus } : p));
     
     try {
+      // PUT treats every field the body omits as "reset to default," not "leave
+      // unchanged" (it's also the full-edit-form save handler, which always sends every
+      // field). Sending just {name, category, price, isActive} here used to silently wipe
+      // images, description, sizes, colors, SEO fields and the custom slug on every
+      // status toggle. Send the complete current row back instead, with only isActive
+      // flipped, so nothing else changes.
       const res = await fetch(`/api/admin/products/${product.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: product.name,
           category: product.category?.name || "Tops",
+          type: product.type,
           price: String(product.basePrice),
+          description: product.description,
+          shortDescription: product.shortDescription,
+          features: product.features,
+          colors: product.colors,
+          colorsJson: product.colorsJson,
+          badge: product.badge,
+          brand: product.brand,
+          minOrderQuantity: product.minOrderQuantity,
+          imageUrls: product.images,
+          mediaMetadata: product.mediaMetadata,
           isActive: updatedStatus,
+          sku: product.sku,
+          department: product.department,
+          productType: product.productType,
+          style: product.style,
+          gender: product.gender,
+          qualityTier: product.qualityTier,
+          collection: product.collection,
+          fabric: product.fabric,
+          fabricComposition: product.fabricComposition,
+          gsm: product.gsm,
+          fit: product.fit,
+          neckType: product.neckType,
+          sleeveType: product.sleeveType,
+          pattern: product.pattern,
+          careInstructions: product.careInstructions,
+          countryOfOrigin: product.countryOfOrigin,
+          sizes: product.sizes,
+          seoTitle: product.seoTitle,
+          seoDescription: product.seoDescription,
+          seoKeywords: product.seoKeywords,
+          slug: product.slug,
         }),
       });
 

@@ -124,26 +124,39 @@ export async function calculateAuthoritativePricing(
     let hasEmbroidery = false;
 
     if (raw.customStateJson) {
+      // Any failure here MUST reject the order rather than silently charge ₹0 for the
+      // custom print: that would let a malformed/tampered customStateJson get a free
+      // custom garment. The customer-facing callers (e.g. /api/razorpay/order) already
+      // catch thrown errors here and turn them into a 400 with the message below.
+      let parsedState: any;
       try {
-        const parsedState = typeof raw.customStateJson === "string" 
-          ? JSON.parse(raw.customStateJson) 
+        parsedState = typeof raw.customStateJson === "string"
+          ? JSON.parse(raw.customStateJson)
           : raw.customStateJson;
-
-        const garmentType = parsedState?.garmentType || "round-neck";
-        const frontElements: DesignElement[] = Array.isArray(parsedState?.frontElements) ? parsedState.frontElements : [];
-        const backElements: DesignElement[] = Array.isArray(parsedState?.backElements) ? parsedState.backElements : [];
-
-        const frontDetails = frontElements.map((el) => getElementDetails(el, garmentType, "front"));
-        const backDetails = backElements.map((el) => getElementDetails(el, garmentType, "back"));
-
-        const allDetails = [...frontDetails, ...backDetails];
-        unitCustomCharge = allDetails.reduce((sum, el) => sum + (Number(el.cost) || 0), 0);
-
-        hasEmbroidery = frontElements.some((e) => e.printType === "embroidery") ||
-                        backElements.some((e) => e.printType === "embroidery");
       } catch (e) {
-        console.warn(`[PRICING] Failed to parse customStateJson for item ${idx + 1}, charging 0 custom fees:`, e);
+        throw new Error(`Item at position ${idx + 1} has invalid design data (could not parse customStateJson).`);
       }
+
+      const garmentType = parsedState?.garmentType || "round-neck";
+      const frontElements: DesignElement[] = Array.isArray(parsedState?.frontElements) ? parsedState.frontElements : [];
+      const backElements: DesignElement[] = Array.isArray(parsedState?.backElements) ? parsedState.backElements : [];
+      const leftElements: DesignElement[] = Array.isArray(parsedState?.leftElements) ? parsedState.leftElements : [];
+      const rightElements: DesignElement[] = Array.isArray(parsedState?.rightElements) ? parsedState.rightElements : [];
+
+      const frontDetails = frontElements.map((el) => getElementDetails(el, garmentType, "front"));
+      const backDetails = backElements.map((el) => getElementDetails(el, garmentType, "back"));
+      // Left/right sleeve prints were previously never priced here even though the
+      // customizer lets customers place them, the mockups show them, and Ops produces
+      // them — every sleeve print shipped for free.
+      const leftDetails = leftElements.map((el) => getElementDetails(el, garmentType, "left"));
+      const rightDetails = rightElements.map((el) => getElementDetails(el, garmentType, "right"));
+
+      const allDetails = [...frontDetails, ...backDetails, ...leftDetails, ...rightDetails];
+      unitCustomCharge = allDetails.reduce((sum, el) => sum + (Number(el.cost) || 0), 0);
+
+      hasEmbroidery = [...frontElements, ...backElements, ...leftElements, ...rightElements].some(
+        (e) => e.printType === "embroidery"
+      );
     }
 
     if (hasEmbroidery) {

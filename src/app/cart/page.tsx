@@ -38,7 +38,9 @@ export default function CartPage() {
     const garmentType = item.customDesign.garmentType || "round-neck";
     const frontDetails = (item.customDesign.frontElements || []).map(el => getElementDetails(el, garmentType, "front"));
     const backDetails = (item.customDesign.backElements || []).map(el => getElementDetails(el, garmentType, "back"));
-    const itemPrintingCost = [...frontDetails, ...backDetails].reduce((sum, el) => sum + el.cost, 0);
+    const leftDetails = (item.customDesign.leftElements || []).map(el => getElementDetails(el, garmentType, "left"));
+    const rightDetails = (item.customDesign.rightElements || []).map(el => getElementDetails(el, garmentType, "right"));
+    const itemPrintingCost = [...frontDetails, ...backDetails, ...leftDetails, ...rightDetails].reduce((sum, el) => sum + el.cost, 0);
     return total + (itemPrintingCost * (item.quantity || 0));
   }, 0);
 
@@ -46,7 +48,9 @@ export default function CartPage() {
     if (!item.customDesign) return false;
     const elements = [
       ...(item.customDesign.frontElements || []),
-      ...(item.customDesign.backElements || [])
+      ...(item.customDesign.backElements || []),
+      ...(item.customDesign.leftElements || []),
+      ...(item.customDesign.rightElements || [])
     ];
     return elements.some(el => el.printType === "embroidery");
   }).length;
@@ -100,7 +104,9 @@ export default function CartPage() {
                 const garmentType = item.customDesign?.garmentType || "round-neck";
                 const frontEls = (item.customDesign?.frontElements || []).map(el => getElementDetails(el, garmentType, "front"));
                 const backEls = (item.customDesign?.backElements || []).map(el => getElementDetails(el, garmentType, "back"));
-                const allEls = [...frontEls, ...backEls];
+                const leftEls = (item.customDesign?.leftElements || []).map(el => getElementDetails(el, garmentType, "left"));
+                const rightEls = (item.customDesign?.rightElements || []).map(el => getElementDetails(el, garmentType, "right"));
+                const allEls = [...frontEls, ...backEls, ...leftEls, ...rightEls];
                 const itemPrintCost = allEls.reduce((s, el) => s + el.cost, 0);
 
                 return (

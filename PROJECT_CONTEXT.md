@@ -1,11 +1,10 @@
 # Tailoring Turba — Project Context
 
 ## Last Updated
-- Date: 2026-11-18
-- Time: 23:10
+- Date: 2026-11-27
 - Timezone: IST
-- Current Branch: main
-- Latest Commit: (pending — Turba CRM added, not yet committed)
+- Current Branch: feature/sales-crm
+- Latest Commit: (pending — pre-redesign audit/cleanup, not yet committed)
 
 ---
 
@@ -23,10 +22,10 @@ It also now includes **Turba CRM** (`/crm`), an internal LeadSquared/Zoho-style 
 
 - **Frontend Framework**: Next.js 14.2.35 (App Router, React 18, TypeScript)
 - **Styling**: Tailwind CSS + CSS Modules + Lucide React icons
-- **State Management**: Zustand, React Hooks
+- **State Management**: React Context + Hooks (`src/contexts/*`) — `zustand` is a declared dependency but is not imported anywhere in the codebase
 - **Backend / API**: Next.js App Router Route Handlers (`src/app/api/*`)
 - **Database**: PostgreSQL hosted on Neon Database (`ep-winter-base-awcv21vu-pooler.c-12.us-east-1.aws.neon.tech`)
-- **ORM**: Prisma 5.22.0 (`@prisma/client`, `@prisma/adapter-neon`)
+- **ORM**: Prisma 5.22.0 (`@prisma/client`, plain `PrismaClient` — `@prisma/adapter-neon`/`@neondatabase/serverless` are declared dependencies but not wired up anywhere; `src/lib/prisma.ts` connects directly via `DATABASE_URL`)
 - **Authentication**: NextAuth.js v5 beta (`@auth/prisma-adapter`, JWT session strategy) supporting Email/Password (bcryptjs), Phone OTP, Google OAuth, and Apple Sign-In
 - **File & Media Storage**: Cloudinary (mockups, print assets, logos)
 - **Payments**: Razorpay (standard orders, split 50/50 payments, balance payments, webhooks)
@@ -214,7 +213,41 @@ LeadSquared-style sales CRM, built in-repo (not a separate app) so leads convert
 
 ## Known Issues
 
-- None. `npx tsc --noEmit` compiles with 0 errors. All 81 vitest test cases pass across 6 suites. `npm run build` generates 55/55 static and server-rendered pages with 0 errors.
+Build health (2026-11-27, after the third fix pass): `npx tsc --noEmit` 0 errors, `next lint` 0 errors, 81 vitest cases pass across 6 suites (the 7th, `vendor-assignment.test.ts`, needs a live DB), `next build` succeeds (68 pages). `public/sitemap.xml`/`robots.txt` live-verified by serving the build.
+
+**Full-repo audit now complete (24 of 24 code slices reviewed across three passes, 2026-11-27).** See CHANGELOG.md for what was fixed in each pass, including a privilege-escalation bug independently found in 4 different route files by 4 separate reviewers (all fixed) and a critical product-status-toggle data-loss bug (fixed). Findings were reported by independent reviewers and spot-checked by the implementer, not all independently re-verified by a second reviewer — treat "certain/likely" confidence markers below as the reviewer's own assessment.
+
+**Remaining open items, by area** (not fixed in this pass; each needs a product/design decision or more work than a local patch):
+
+*Security / data:*
+- Staff default passwords were published in `public/ops-user-manual.html` + the two manual PDFs (now scrubbed in the working tree) and remain in git history. **Rotate all 5 passwords** — the seed no longer resets them on re-run, but the leaked values are still valid until changed.
+- `/verify` vs the Razorpay webhook race can still drop the order-confirmation email/notification (needs an idempotency/locking change).
+- Several vendor-CRUD routes (`/api/ops/vendors*`) have no management-only gating, unlike their sibling assignment/task routes — confirm intent before restricting.
+- CRM lead CSV import has no duplicate detection (unlike manual lead creation) and processes rows sequentially (risk of Vercel timeout on large files).
+- Ops quotation-upload file persistence (`/api/ops/quotation/parse`) silently no-ops on Vercel's read-only filesystem — uploaded supplier quotation PDFs are never actually retained in production.
+- CRM avatar upload has the same local-filesystem-fallback issue as the (already-known) admin product upload fallback.
+
+*Money / order state:*
+- Catalogue "Add to Cart" and the home product rail (`/products/<numeric id>`) use ids that do not exist in the `Product` table, so checkout cannot price them.
+- CreateOrderModal (manual Ops order creation) accepts client-supplied `amountPaid` with no server-side clamp to the order total, and records it with no corresponding `PaymentTransaction` audit row (unlike the dedicated payment-recording endpoint).
+- Admin orders list "dispatch-gating" override dialog: the client expects a `dispatchGated` field the API never sends, so the dialog never opens.
+- A full outbox retry worker/cron does not exist; the fix applied is "attempt immediately when queued", so a row that fails that immediate attempt still needs a manual resend.
+
+*Ops UI/UX:*
+- **Cancelled orders are visually indistinguishable from active ones everywhere in the Ops UI** (order detail badge, orders list, dashboard, activity timeline all still show the generic "in progress" state) — the backend now excludes them from the "active" filter and logs the cancellation, but staff reading the screen can't tell.
+- The Ops stage-advance route only allows ADMIN/SUPER_ADMIN to advance production stages, contradicting this document's own "Equal Operational Authority in V1" policy (rule below); the client-side "isManager" gate used to decide whether to even show the Advance/Complete buttons was itself based on the same insecure name/code check (now fixed to be consistent with the backend, but the underlying policy question — should all 5 have this authority? — is still open). The override mechanism also has no real UI-driven "enter a reason" input.
+- The Ops Settings page (`/ops/settings`) persists preferences to `localStorage` that nothing in the app reads — a fully non-functional placeholder presented as working ("applied immediately").
+- The Ops "Equal Operational Authority" claim was corrected in Help/Account copy to reflect the actual role split (see Security above for the unresolved policy question itself).
+- Material-requirement planning calculator (`/ops/planning`) silently picks an arbitrary GSM variant when the reference data has multiple rows for the same product/fabric/size — no GSM selector, no indication which was used, can be off by 20%+.
+- Hardcoded staff directories in Ops chat/help pages go stale against the live, editable employee data; the chat page's "5 online" presence indicator is always-on fake data.
+
+*CRM timezone bugs:* lead follow-up/task due dates and "Today"/"Overdue" boundaries are computed in the server's UTC time, not IST — tasks and follow-ups land in the wrong day bucket by up to ~5.5 hours. Affects `/crm/tasks`, lead detail follow-up dates, Advanced Filters date range, and the dashboard's 7-day sparkline.
+
+*Customer-facing:* phone-registered customers cannot log in again (login field is `type=email`; no phone recovery).
+
+*Tests:* `e2e/auth.spec.ts` is entirely broken against the current `AuthForm` (targets ids/headings that no longer exist); `e2e/whatsapp-sample.spec.ts`'s catalog-page half targets a removed hover-action-bar/SAMPLE button. No test covers the new order-cancellation flow (`cancellationOutcome`, timeline event, notification). `vendor-assignment.test.ts` has no guard against being run without a live DB.
+
+*Documentation:* `README.md` describes a stack that doesn't match the app (Stripe/GitHub OAuth vs. the real Razorpay/Google+Apple) and should be rewritten from this document. This document's own header timestamp and its Zustand/adapter-neon claims (both declared-but-unused dependencies) were stale as of the second pass — now corrected above.
 
 ---
 

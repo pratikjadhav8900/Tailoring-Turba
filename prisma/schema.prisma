@@ -178,6 +178,14 @@ model Order {
   internalNotes         InternalOrderNote[]
   externalAssignments   ExternalWorkAssignment[]
   goodsMovements        GoodsMovement[]
+
+  // Order is the highest-traffic model in the app (every customer dashboard page load,
+  // the Ops order list/search/dashboard stats, and admin pages all filter on these
+  // columns) but had no non-unique indexes at all until now.
+  @@index([userId])
+  @@index([status])
+  @@index([opsStage])
+  @@index([priority])
 }
 
 model OrderItem {
@@ -196,6 +204,11 @@ model OrderItem {
   design          Design?  @relation(fields: [designId], references: [id])
   order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product         Product  @relation(fields: [productId], references: [id])
+
+  // Postgres does not auto-index FK columns; items is included on nearly every
+  // order-detail/list query across the app.
+  @@index([orderId])
+  @@index([productId])
 }
 
 model OrderSheet {
@@ -386,6 +399,10 @@ model OtpRequestLog {
   phone     String
   ip        String
   createdAt DateTime @default(now())
+
+  // Hit on every OTP send (2 findFirst + 1 count by phone/ip + createdAt); had no index.
+  @@index([phone, createdAt])
+  @@index([ip, createdAt])
 }
 
 enum ProductionStage {

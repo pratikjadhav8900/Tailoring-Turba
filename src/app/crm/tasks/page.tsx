@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { CrmLayout } from "@/components/crm/layout/CrmLayout";
 import { LEAD_TASK_TYPE_LABELS } from "@/types/crm";
 import type { CrmLeadTask, CrmEmployee } from "@/types/crm";
@@ -16,8 +17,16 @@ const VIEWS = [
   { key: "completed", label: "Completed" },
 ];
 
-export default function CrmTasksPage() {
-  const [view, setView] = useState("today");
+const VIEW_KEYS = VIEWS.map((v) => v.key);
+
+function CrmTasksContent() {
+  const searchParams = useSearchParams();
+  // The CRM dashboard links to /crm/tasks?view=overdue and ?view=today; this page used to
+  // always render "Today" regardless, ignoring its own query param entirely.
+  const requestedView = searchParams.get("view");
+  const [view, setView] = useState(
+    requestedView && VIEW_KEYS.includes(requestedView) ? requestedView : "today"
+  );
   const [assignedToId, setAssignedToId] = useState("");
   const [tasks, setTasks] = useState<CrmLeadTask[]>([]);
   const [salesReps, setSalesReps] = useState<CrmEmployee[]>([]);
@@ -133,5 +142,13 @@ export default function CrmTasksPage() {
         </div>
       </div>
     </CrmLayout>
+  );
+}
+
+export default function CrmTasksPage() {
+  return (
+    <Suspense fallback={null}>
+      <CrmTasksContent />
+    </Suspense>
   );
 }

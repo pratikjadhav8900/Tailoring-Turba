@@ -4,6 +4,102 @@ All meaningful architectural and functional changes to this repository are docum
 
 ---
 
+## 2026-11-27 — IST (third pass — remaining 13 of 24 slices reviewed)
+
+### Full-repo audit completed; cross-cutting privilege-escalation bug found and fixed across 4 files; high-value fixes applied
+
+13 reviewers each audited one remaining area (ops pages/components, CRM, admin, Turba AI, data layer, tests, scripts/docs), completing the audit started in the first pass. ~80 findings in total; the highest-priority ones are fixed below. Full findings, including items NOT fixed, are summarized in `PROJECT_CONTEXT.md`'s Known Issues.
+
+**Critical security — privilege escalation (found independently by 4 reviewers in 4 different files):**
+The "management" check fixed in `src/app/api/ops/orders/[id]/stage/route.ts` in the second pass (`employee.name.includes("Pratik"/"Neeraj"/"Sanjay")`, exploitable because any employee can edit their own name via `PATCH /api/ops/account`) was copy-pasted, unfixed, into 4 sibling route files: `src/app/api/ops/assignments/route.ts`, `src/app/api/ops/orders/[id]/resource/route.ts`, `src/app/api/ops/orders/[id]/route.ts`, `src/app/api/ops/tasks/route.ts`. All 4 replaced with the same session-role-only check.
+
+**Critical — data loss:**
+- `src/app/admin/products/AdminProductsClient.tsx`: the Active/Offline status-toggle button sent a 4-field payload into a PUT handler that treats every omitted field as "reset to default" — toggling a product's status silently wiped its images, description, sizes, colors, SEO fields and slug. The toggle now sends the complete current row back with only `isActive` changed.
+
+**Critical — security:**
+- `src/app/api/crm/webhooks/meta/route.ts`: the POST handler that ingests Meta Lead Ads data had **no payload signature verification at all** (the GET handshake was fine). Added HMAC-SHA256 verification against `X-Hub-Signature-256` using a new `META_APP_SECRET` env var, fails closed if unconfigured.
+- `prisma/seeds/employees.ts`: re-running the seed reset all 5 staff passwords back to the hardcoded defaults on every run, undoing any rotation done after the known leak. Password is now only set on first account creation, never on update. Deleted `scripts/seed-ops-employees.ts`, a second, redundant seed script with its own different hardcoded password for the same 5 accounts.
+
+**Fixed (money/business-logic):**
+- `src/app/admin/leads/LeadsClient.tsx`: "Mark Paid" sent `status:"PROCESSING"`, a state unreachable from `PENDING` — always 422'd. Now sends `CONFIRMED`.
+- `src/app/admin/page.tsx` + `AdminKpiGrid.tsx`: "Total Revenue" summed `totalAmount` across every order including unpaid (`PENDING`) and `CANCELLED` ones, and its footnote reused the same unfiltered count while calling them "confirmed". Now filtered to non-pending/non-cancelled orders, with a separate realized-order count for the footnote.
+- `src/app/admin/transactions/page.tsx`: the "Financial Ledger" listed unpaid orders and rendered every row as "Completed" with the full order total. Now only lists orders with `amountPaid > 0`, labels partial payments distinctly, and shows the amount actually paid.
+- Goods-movement quantity accounting (`src/app/api/ops/assignments/[id]/movement/route.ts`) had a lost-update race: totals were read outside the transaction and written back as absolute values, so two concurrent movement submissions could silently clobber each other. Now re-reads inside the transaction and writes atomic increments.
+- Stage-override audit trail (`src/lib/ops/workflow.ts`, `src/app/api/ops/orders/[id]/stage/route.ts`): a sequential stage advance that only succeeded because the 60%-payment gate was bypassed was recorded identically to a routine advance — the audit log couldn't tell overrides from normal moves. `validateStageTransition` now flags this case; the route uses that flag (and the real applied reason) instead of the always-empty raw request fields.
+- CRM lead-to-customer conversion (`.../leads/[id]/convert/route.ts`, `crm/leads/[id]/page.tsx`): added a transaction-level re-check (the outer guard was a stale pre-transaction read) and a client-side disabled-while-converting guard, closing a double-click path that could create two customer accounts for one lead.
+- `src/components/ops/vendors/VendorModal.tsx`: GST and PAN were merged into a single input that only wrote to `gstNumber` — editing a vendor's PAN silently corrupted it into a bogus GST number and made the real PAN permanently uneditable from the UI. Split into two real inputs.
+
+**Fixed (smaller correctness/security):**
+- Open redirect: `callbackUrl` on `/ops/login` and `/crm/login` is now required to be a same-origin relative path.
+- `src/app/crm/tasks/page.tsx`: the dashboard's "Overdue"/"Due Today" deep links (`?view=...`) were silently ignored — the page always showed "Today" regardless (now wrapped in a `Suspense` boundary, required for `useSearchParams()` to prerender).
+- `src/app/api/crm/webhooks/google/route.ts`: shared-secret comparison switched to `crypto.timingSafeEqual`; the idempotency fallback key no longer uses `Date.now()` (which broke dedup on retries lacking `lead_id`/`gcl_id`).
+- `src/app/api/admin/products/[id]/route.ts`: deleting a product with order history now returns a clear 400 instead of an opaque 500.
+- Two CRM `DELETE` handlers (lead, lead task) now return 404 instead of 500 for an already-deleted record.
+- CSV export of CRM leads (`crm/leads/page.tsx`) now neutralizes spreadsheet-formula-injection characters (`=`, `+`, `-`, `@`) in exported cells.
+- `prisma/seeds/vendors.ts`: re-running the seed no longer forces `isActive: true` on update, which was silently reactivating vendors an Ops user had deliberately deactivated.
+- Copy fix: the Ops Help Center and Account page claimed "all 5 team members have equal authority to override stages" — false, and contradicted by the route's own role gate (a prior, separate, open policy question — see Known Issues). Copy now describes the actual role split.
+- Added `@@index` on `Order` (userId/status/opsStage/priority), `OrderItem` (orderId/productId) and `OtpRequestLog` (phone+createdAt, ip+createdAt) — all previously unindexed despite being the most-queried columns in the app. Shipped as a reviewed, additive migration (`prisma/migrations/20261127180000_add_order_orderitem_otp_indexes`), not applied to any database by this pass.
+- `.env.example`: added `OPS_SCREENSHOT_PASSWORD`, `RAZORPAY_KEY_ID`, `META_APP_SECRET`. `docs/ARCHITECTURE.md`: setup instructions no longer tell a new developer to run `prisma db push`. `tsconfig.json`: removed a stale exclude entry for a file that no longer exists.
+
+**Verified:** `tsc --noEmit` 0 errors, `next lint` 0 errors, vitest 6/6 suites · 81/81 tests pass, `next build` succeeds (same page count, confirmed via a full production build + route table check after every batch of changes).
+
+**Not fixed in this pass** — see `PROJECT_CONTEXT.md` Known Issues for the full list carried over from all 13 reports (e.g. cancelled orders are still visually indistinguishable from active ones throughout the Ops UI; the Ops stage-advance role gate vs. the documented "equal authority" policy is unresolved; `e2e/auth.spec.ts` and half of `e2e/whatsapp-sample.spec.ts` are broken against the current UI; timezone (UTC vs IST) bugs in CRM task/follow-up due dates; several vendor-CRUD routes have no management-only gating unlike their sibling routes; the Ops Settings page persists to `localStorage` that nothing reads; CSV lead import has no duplicate detection; quotation-upload file persistence silently no-ops on Vercel's read-only filesystem).
+
+---
+
+## 2026-11-27 — IST (second pass)
+
+### Payment/refund fixes, CSP/SEO fixes, following up on the partial audit below
+
+**Security:**
+- `src/app/api/ops/orders/[id]/stage/route.ts`: the check granting "management" override powers (bypassing the 60% advance-payment gate and stage-sequencing rules) matched on `Employee.name` containing "Pratik"/"Neeraj"/"Sanjay" or a hard-coded employee code list. Since `PATCH /api/ops/account` lets any employee edit their own display name, any worker could rename themselves to gain those powers. Replaced with a check on the session-resolved role (`ADMIN`/`SUPER_ADMIN`) only — no change to which real accounts have access.
+
+**Fixed (payments/orders):**
+- `src/lib/server-pricing.ts` (the authoritative, server-side price the customer is actually charged), plus the matching customer-facing estimates in `checkout/page.tsx`, `cart/page.tsx`, `contact/page.tsx` and `OrderSummary.tsx`: left/right sleeve print elements were never priced at all — every sleeve print shipped for free. Fixed in all five places.
+- `src/lib/server-pricing.ts`: a design (`customStateJson`) that failed to parse was silently charged ₹0 for the custom print instead of rejecting the order. Now throws (converted to a 400 by the only caller, `/api/razorpay/order`).
+- `src/app/api/webhooks/bigship/route.ts`: the carrier status mapping checked for `"DELIVERED"` before checking for `"RTO"`/`"UNDELIVERED"` — since carrier strings like "RTO DELIVERED" and "UNDELIVERED" both contain the substring "DELIVERED", returned/failed parcels were being marked as successfully delivered. Reordered the checks.
+- `src/app/api/orders/[id]/route.ts` (customer order cancellation): a failed automatic Razorpay refund was silently swallowed while the customer was still told "a refund is being processed" (`CancelOrderButton.tsx` toast, and the cancellation email). The route now tracks the real outcome, the email (`sendOrderCancellationEmail` in `src/lib/mail.ts`) only promises a refund that actually succeeded, and the toast reflects the real outcome. Cancellation also now creates an `OrderTimelineEvent` and an `OpsNotification` (previously nothing told Ops a customer had cancelled — production work could continue on a dead order), and `/api/ops/orders?stage=ACTIVE` now excludes `CANCELLED` orders as a second line of defense.
+- `src/app/api/shipping/book/route.ts` and `src/app/api/webhooks/bigship/route.ts`: `src/lib/outbox.ts` (`processOutboxNotification`) had producers queuing rows but nothing ever consumed them, so "Out for Delivery" emails and failed tax-invoice retries were queued and never sent. Both producers now call the processor immediately after queuing (fire-and-forget). This is not a full retry worker/cron — a row that fails on this immediate attempt still needs manual resending.
+- `src/app/dashboard/transactions/page.tsx`: every order that wasn't `PENDING` showed as "Paid", including `CANCELLED` orders and split-payment orders still owing a balance. Now shows Cancelled / Unpaid / Partially Paid / Paid correctly. The "Export CSV" and "Invoice" buttons had no handlers at all; CSV export is now a real client-side download, and "Invoice" downloads a real PDF from a new customer-facing `GET /api/orders/[id]/invoice` (ownership-checked; previously the only invoice path was an admin-only "resend by email" action).
+- `src/app/admin/orders/BigShipShipmentModal.tsx`: always reported "Booking failed" even on a successful booking (it read `data.status`; the API returns `success`/`awbNumber`). (Already fixed in the first pass below; re-verified here.)
+
+**Fixed (SEO / CSP — the owner explicitly approved these after reviewing the tradeoffs):**
+- `public/sitemap.xml` and `public/robots.txt` (static files) were shadowing the dynamic `src/app/sitemap.ts`/`robots.ts` — removed the static files so the dynamic ones (which list real, current product pages) are what's actually served. Verified by serving the production build: the sitemap now lists live product URLs with real `lastmod` dates.
+- `src/app/robots.ts`: added `/ops/`, `/crm/`, `/cart/`, `/checkout/` to the disallow list (internal staff tools reachable on the main domain, and transient per-user pages, were never excluded from crawling).
+- `src/middleware.ts` CSP: added `https://www.google.com` / `https://www.recaptcha.net` to `script-src`/`frame-src` (Firebase phone-OTP reCAPTCHA and the `/booking` Google Maps embed were being blocked), `https://api.fontshare.com` to `style-src` and `https://cdn.fontshare.com` to `font-src` (the brand fonts General Sans/Boska were silently falling back to system fonts), and `https://api.qrserver.com` to `img-src` (the customizer's "upload from phone" QR code image was blocked).
+
+**Verified:** `tsc --noEmit` 0 errors, `next lint` 0 errors, vitest 6/6 suites · 81/81 tests pass, `next build` succeeds (same page count), robots.txt/sitemap.xml content verified by serving the built app.
+
+**Not done in this pass** (flagged, not fixed — each needs a product decision or a bigger change than a bug fix): the "equal operational authority, no RBAC" policy below is itself contradicted by the ops stage route only allowing ADMIN/SUPER_ADMIN to advance stages, and that route's override mechanism has no real UI path for a human-entered override reason (it's auto-granted to admins) — changing either is a workflow-design decision, not just a security fix, so only the security hole was closed. Dispatch-gating override dialog on the Admin orders list. A full outbox retry worker/cron (vs. the immediate-attempt fix above). Left/right sleeve pricing rates were assumed equal to front/back via the existing `getElementDetails` sleeve logic — not a new pricing model.
+
+---
+
+## 2026-11-27 — IST (first pass)
+
+### Pre-redesign audit & cleanup (partial audit: 11 of 24 code slices reviewed)
+
+**Removed (each verified unreferenced by three independent reviewers; recoverable from git history):**
+- Orphaned landing sections: `CuratedProducts`, `EditorialWelcome`, `FinalResolution`, `GarmentJourney`, `HeroSection`, `LuxeShowcase`, `MaterialSection` (+ their CSS modules). None were imported by any page.
+- `ui/ProductCard` (+ CSS), `customizer/FormattingToolbar`, `dashboard/SignOutButton` — never imported.
+- `POST /api/generate-mockup` — no caller anywhere (its SSRF helper `src/lib/ssrf.ts` and tests are kept).
+- Unused exports: `TAG_COLORS` (fabric-data), `STAGE_SHORT_NAMES` (ops/workflow), `CATEGORIZED_PRESETS` (presets/index).
+- Stale one-off scripts: `scripts/{categorize-vendors,check-all-vendors-detail,check-uncat,check-vendors}.ts`, `scripts/{preview-test,verify-final,verify-page-images}.js`; `tests/customizer-logic.spec.ts` (never executed by vitest or playwright).
+
+**Fixed:**
+- Admin BigShip booking modal always reported "Booking failed" even when the shipment was booked (it read `data.status`; the API returns `success`/`awbNumber`).
+- Customer dashboard "Track Order Details" linked to a non-existent `/dashboard/orders/<id>` page (404) — now links to `/dashboard/orders`.
+- Ops orders search returned HTTP 500 when the search text contained a long digit string (e.g. a phone number): the value overflowed the 32-bit `orderNumber` filter.
+- `POST /api/contact`: `email` is now format-validated and `quantity` reduced to a bounded integer before being interpolated into HTML emails / subject line.
+
+**Security:**
+- Staff default passwords had been published in `public/ops-user-manual.html`, `public/Turba_Ops_Employee_Manual.pdf` and `public/Turba_Ops_Mobile_Manual.pdf`. The HTML was scrubbed and both PDFs regenerated from it (`scripts/generate-manual-pdf.js`). The screenshot scripts now read the login password from `OPS_SCREENSHOT_PASSWORD`. Credential values were also redacted from `SECURITY_AUDIT_PHASE1.md`. **These credentials remain in git history and in `prisma/seeds/employees.ts` — every affected account password must be rotated.**
+
+**Verified:** `tsc --noEmit` 0 errors, `next lint` 0 errors, vitest 6 suites / 81 tests pass (the 7th suite needs a live DB), `next build` succeeds.
+
+**Open findings from the partial audit are NOT fixed here** (payments, auth, CSP, order cancellation/refund, outbox worker, sitemap/robots shadowing, Fontshare fonts blocked by CSP, etc.) — see the audit report delivered with this change.
+
+---
+
 ## 2026-11-18 — 23:45 IST
 
 ### Turba CRM — Added "Closed" Pipeline Stage

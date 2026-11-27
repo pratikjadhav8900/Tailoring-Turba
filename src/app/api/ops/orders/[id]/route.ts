@@ -297,13 +297,12 @@ export async function PATCH(
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
+    // SECURITY: session-resolved role only. See src/app/api/ops/orders/[id]/stage/route.ts
+    // for why the employeeCode/name-based checks this used to also accept were a privilege-
+    // escalation hole (Employee.name is self-editable via PATCH /api/ops/account).
     const isManagement =
       auth.context.userRole === "ADMIN" ||
-      auth.context.userRole === "SUPER_ADMIN" ||
-      ["TT001", "TT002", "TT003"].includes(auth.context.employee.employeeCode) ||
-      auth.context.employee.name.includes("Pratik") ||
-      auth.context.employee.name.includes("Neeraj") ||
-      auth.context.employee.name.includes("Sanjay");
+      auth.context.userRole === "SUPER_ADMIN";
 
     if ((dueDate !== undefined || priority !== undefined) && !isManagement) {
       return NextResponse.json(

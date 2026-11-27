@@ -74,6 +74,7 @@ export default function LeadDetailPage() {
   const [noteText, setNoteText] = useState("");
   const [activityType, setActivityType] = useState("NOTE");
   const [submittingNote, setSubmittingNote] = useState(false);
+  const [converting, setConverting] = useState(false);
 
   const fetchLead = useCallback(async () => {
     const res = await fetch(`/api/crm/leads/${params.id}`);
@@ -136,14 +137,22 @@ export default function LeadDetailPage() {
 
   const handleConvert = async () => {
     if (!confirm("Convert this lead into a customer account?")) return;
-    const res = await fetch(`/api/crm/leads/${params.id}/convert`, { method: "POST" });
-    const data = await res.json();
-    if (!res.ok) {
-      toast.error(data.error || "Conversion failed");
-      return;
+    // Without this guard, a double-click (or a slow connection) could fire two convert
+    // requests before the lead's convertedUserId was set, each creating its own User.
+    if (converting) return;
+    setConverting(true);
+    try {
+      const res = await fetch(`/api/crm/leads/${params.id}/convert`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || "Conversion failed");
+        return;
+      }
+      toast.success("Lead converted to customer");
+      fetchLead();
+    } finally {
+      setConverting(false);
     }
-    toast.success("Lead converted to customer");
-    fetchLead();
   };
 
   const handleDelete = async () => {
@@ -185,10 +194,11 @@ export default function LeadDetailPage() {
           {!lead.convertedUserId && lead.status === "CONVERTED" && (
             <button
               onClick={handleConvert}
-              className="h-9 px-4 rounded-full bg-[#10B981] hover:bg-[#059669] text-white text-xs font-semibold flex items-center gap-1.5"
+              disabled={converting}
+              className="h-9 px-4 rounded-full bg-[#10B981] hover:bg-[#059669] disabled:opacity-60 disabled:cursor-not-allowed text-white text-xs font-semibold flex items-center gap-1.5"
             >
               <CheckCircle2 className="w-3.5 h-3.5" />
-              Convert to Customer
+              {converting ? "Converting…" : "Convert to Customer"}
             </button>
           )}
           <button onClick={handleDelete} className="w-9 h-9 rounded-full bg-white border border-[#ECEEF2] text-red-500 hover:bg-red-50 flex items-center justify-center">

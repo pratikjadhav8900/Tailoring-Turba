@@ -89,8 +89,9 @@ export default function BigShipShipmentModal({ order, onClose, onSuccess }: Prop
         }),
       });
       const data = await res.json();
-      if (data.status) {
-        onSuccess(data.data.awb_assigned);
+      // /api/shipping/book answers { success: true, awbNumber, ... } (it has no `status` field)
+      if (data.success) {
+        onSuccess(data.awbNumber ?? data.data?.awb_assigned ?? "");
       } else {
         toast.error(data.error || "Booking failed");
       }

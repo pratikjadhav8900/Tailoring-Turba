@@ -163,9 +163,9 @@ export default function OpsHelpCenterPage() {
                 <ShieldCheck className="w-5 h-5" />
               </div>
               <div className="space-y-1">
-                <h3 className="text-xs font-bold text-[#111827]">Equal Operational Authority</h3>
+                <h3 className="text-xs font-bold text-[#111827]">Stage Transitions &amp; Overrides</h3>
                 <p className="text-[11px] text-[#6B7280] leading-relaxed">
-                  All 5 team members have full authorization to transition stages or perform sequencing overrides with a mandatory audit note.
+                  Management (Neeraj, Sanjay, Pratik) can transition stages and perform sequencing overrides. Every action is recorded with your employee code and timestamp for complete audit integrity.
                 </p>
               </div>
             </div>

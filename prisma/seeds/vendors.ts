@@ -661,7 +661,9 @@ export async function seedVendors() {
           normalizedLocation: normalizedLocation || existing.normalizedLocation,
           phone: item.phone || existing.phone,
           sourceNotes: item.sourceNotes || existing.sourceNotes,
-          isActive: true,
+          // Deliberately NOT forcing isActive:true here — this used to silently
+          // reactivate a vendor an Ops user had deliberately deactivated through the app
+          // every time this seed was re-run to pick up a new vendor from the source list.
         },
       });
       updatedCount++;

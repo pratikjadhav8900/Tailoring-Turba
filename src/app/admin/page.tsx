@@ -19,6 +19,7 @@ export default async function AdminDashboard() {
     products,
     totalProductsCount,
     revenue,
+    realizedOrderCount,
     pendingOrdersCount,
     processingOrdersCount,
     shippedOrdersCount,
@@ -41,7 +42,13 @@ export default async function AdminDashboard() {
         include: { category: true },
       }),
       prisma.product.count(),
-      prisma.order.aggregate({ _sum: { totalAmount: true } }),
+      // "Total Revenue" must reflect orders that were actually confirmed/paid, not every
+      // abandoned-checkout (PENDING) or CANCELLED order's full value.
+      prisma.order.aggregate({
+        _sum: { totalAmount: true },
+        where: { status: { notIn: ["PENDING", "CANCELLED"] } },
+      }),
+      prisma.order.count({ where: { status: { notIn: ["PENDING", "CANCELLED"] } } }),
       prisma.order.count({ where: { status: "PENDING" } }),
       prisma.order.count({ where: { status: "PROCESSING" } }),
       prisma.order.count({ where: { status: "SHIPPED" } }),
@@ -119,6 +126,7 @@ export default async function AdminDashboard() {
       {/* Primary and Operational KPI Matrix */}
       <AdminKpiGrid
         revenue={totalRevenue}
+        realizedOrderCount={realizedOrderCount}
         userCount={userCount}
         orderCount={orderCount}
         pendingOrders={pendingOrdersCount}

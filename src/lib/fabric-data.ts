@@ -124,16 +124,6 @@ export const FABRIC_CATEGORIES: { key: FabricCategory | "all"; label: string; em
   { key: "premium",    label: "Premium",      emoji: "⭐" },
 ];
 
-export const TAG_COLORS: Record<string, string> = {
-  Bestseller:    "#F59E0B",
-  Lightweight:   "#06B6D4",
-  Sports:        "#8B5CF6",
-  "Print-Ready": "#10B981",
-  Eco:           "#16A34A",
-  Premium:       "#DC2626",
-  "Best of Both":"#0EA5E9",
-};
-
 export const COLOR_PRESETS = [
   { name: "White",         hex: "#FFFFFF" },
   { name: "Black",         hex: "#0A0A0A" },

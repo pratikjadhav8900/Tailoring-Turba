@@ -299,9 +299,12 @@ export default function LeadsClient({ initialLeads }: { initialLeads: Lead[] }) 
                           Details
                         </Link>
                         
-                        {/* Mark manually as paid/recovered */}
+                        {/* Mark manually as paid/recovered. PENDING's only valid next
+                            states are CONFIRMED/CANCELLED (src/lib/order-state.ts) — this
+                            used to send PROCESSING, which is unreachable from PENDING and
+                            always 422'd with no explanation. */}
                         <button
-                          onClick={() => updateStatus(lead.id, "PROCESSING")}
+                          onClick={() => updateStatus(lead.id, "CONFIRMED")}
                           disabled={isUpdating === lead.id}
                           title="Mark order as paid manually (e.g. cash or direct bank transfer)"
                           style={{ 

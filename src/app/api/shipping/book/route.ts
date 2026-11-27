@@ -5,6 +5,7 @@ import { auth } from '@/lib/auth';
 import { calculateLedgerFromTransactions } from '@/lib/currency';
 import { generateInvoicePdf } from '@/lib/pdf';
 import { sendTaxInvoiceEmail } from '@/lib/mail';
+import { processOutboxNotification } from '@/lib/outbox';
 
 export async function POST(req: NextRequest) {
   try {
@@ -195,8 +196,10 @@ export async function POST(req: NextRequest) {
         })
         .catch(async (emailErr) => {
           console.error('[INVOICE_EMAIL_ERROR] Failed to send Tax Invoice email:', emailErr);
-          // Record failed outbox entry for retry
-          await prisma.outboxNotification.create({
+          // Record the failed attempt, then immediately retry once — there is no separate
+          // worker/cron draining this table, so without this the row just sits as FAILED
+          // forever and the customer never gets the tax invoice.
+          const outboxEntry = await prisma.outboxNotification.create({
             data: {
               orderId: order.id,
               channel: 'EMAIL',
@@ -208,6 +211,9 @@ export async function POST(req: NextRequest) {
               attemptCount: 1,
             },
           });
+          processOutboxNotification(outboxEntry.id).catch((err) =>
+            console.error('[OUTBOX_IMMEDIATE_SEND_ERROR]', err)
+          );
         });
     }
 

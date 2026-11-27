@@ -30,8 +30,16 @@ export default function OrderSummary({
   const backDetails = (customizerState.backElements || []).map(el => ({
     ...el, side: "Back", ...getElementDetails(el, garmentType, "back")
   }));
+  // Sleeve prints were previously left out of this estimate entirely (undercharging the
+  // customer-visible total, and out of step with the authoritative server price).
+  const leftDetails = (customizerState.leftElements || []).map(el => ({
+    ...el, side: "Left Sleeve", ...getElementDetails(el, garmentType, "left")
+  }));
+  const rightDetails = (customizerState.rightElements || []).map(el => ({
+    ...el, side: "Right Sleeve", ...getElementDetails(el, garmentType, "right")
+  }));
 
-  const allCustomElements = [...frontDetails, ...backDetails];
+  const allCustomElements = [...frontDetails, ...backDetails, ...leftDetails, ...rightDetails];
   const unitPrintingCharge = allCustomElements.reduce((sum, item) => sum + item.cost, 0);
   const printingCharge = unitPrintingCharge * totalQuantity;
   const hasCustomization = allCustomElements.length > 0;

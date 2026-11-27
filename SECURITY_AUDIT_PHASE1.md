@@ -30,11 +30,11 @@ While modern architectural safeguards exist (Prisma ORM parameterized queries, N
   * Removed in commit `bab661e05bd47caf07762cef2403266672d5a549` (May 6, 2026)
 * **Description:** A live `.env` file was committed directly into the Git repository. While later removed from the working tree and added to `.gitignore`, Git preserves complete commit snapshots permanently.
 * **Exposed Credentials in History:**
-  1. **Neon PostgreSQL Database URL:** `postgresql://neondb_owner:[REDACTED]@ep-long-haze-ammpfljz-pooler.c-5.us-east-1.aws.neon.tech/neondb`
-  2. **Google OAuth Client Secret:** `GOCSPX-Lyp2bn_LVXIPXLW4P4We-[REDACTED]`
-  3. **Cloudinary API Secret:** `xbe-JEY5GMt8xoPo4toBtxXtscw` (Key: `462127229595489`)
-  4. **Gmail SMTP App Password:** `vslfqbufznwcxepo` (Account: `tailoringturba@gmail.com`)
-  5. **NextAuth Secret:** `supersecret_tailoring_turba_key_12345_change_in_production`
+  1. **Neon PostgreSQL Database URL:** `[REDACTED]`
+  2. **Google OAuth Client Secret:** `[REDACTED]`
+  3. **Cloudinary API Secret:** `[REDACTED]` (Key: `[REDACTED]`)
+  4. **Gmail SMTP App Password:** `[REDACTED]` (Account: `[REDACTED]`)
+  5. **NextAuth Secret:** `[REDACTED]`
 * **Current Status:**
   * Cloudinary API Key and Secret in the current `.env` **remain identical to the committed ones**.
   * Anyone who has cloned or has access to the repository (or if pushed to a public/shared GitHub remote) has access to these credentials.
@@ -296,17 +296,17 @@ Next.js automatically inlines any environment variable starting with `NEXT_PUBLI
    * *Status:* The database user `neondb_owner` password was exposed in commit `280959c2`.
    * *Action:* Reset the password for `neondb_owner` in the Neon Cloud Console and update `DATABASE_URL` in `.env` and Vercel.
 3. **Google OAuth Client Secret:**
-   * *Status:* Google OAuth Secret `GOCSPX-Lyp2bn_...` was committed. (A different key `GOCSPX-57z7O...` is currently in `.env`).
-   * *Action:* Verify in the Google Cloud Console that the old secret (`GOCSPX-Lyp2bn_...`) is deleted.
+   * *Status:* Google OAuth Secret `[REDACTED]` was committed. (A different key `[REDACTED]` is currently in `.env`).
+   * *Action:* Verify in the Google Cloud Console that the old secret (`[REDACTED]`) is deleted.
 4. **Gmail SMTP Application Password:**
-   * *Status:* The password `vslfqbufznwcxepo` was committed. (A different app password is in the current `.env`).
+   * *Status:* The password `[REDACTED]` was committed. (A different app password is in the current `.env`).
    * *Action:* Delete the old app password in Google Account Security settings.
 
 ---
 
 ### N. Items That Are Already Secure
 
-1. **SQL Injection Protection:** Prisma ORM is utilized for all database queries with no raw SQL queries or string concatenations (`$queryRawUnsafe` is not used).
+1. **SQL Injection Protection:** Prisma ORM is utilized for all database queries with no raw SQL queries or string concatenations (`[REDACTED]` is not used).
 2. **Password Hashing:** User passwords are encrypted using `bcryptjs` with salt work factor 12 during registration and 10 during reset.
 3. **Razorpay Signature Verification:** Timing-safe HMAC-SHA256 signature verification (`crypto.timingSafeEqual`) is enforced on payment verification and webhooks.
 4. **Idempotent Webhook Processing:** Webhooks for Razorpay and BigShip use the `ProcessedWebhookEvent` table to prevent duplicate replay attacks.

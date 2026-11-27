@@ -165,11 +165,14 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   // Handle Cancellation (Refund Calculation and API call)
   let refundedAmount = null;
   let refundId = null;
+  let cancellationOutcome: { within24h: boolean; refundAmount: number; feeDeducted: number; refundSucceeded: boolean } | null = null;
 
   if (status === "CANCELLED" && order.status !== "CANCELLED") {
     let refundAmount = 0;
     let feeDeducted = 0;
     let within24h = false;
+    let refundAttempted = false;
+    let refundSucceeded = false;
 
     if (order.amountPaid > 0 && order.paymentId) {
       const now = new Date();
@@ -179,6 +182,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       if (within24h) {
         refundAmount = order.amountPaid * 0.75;
         feeDeducted = order.amountPaid * 0.25;
+        refundAttempted = true;
 
         try {
           const razorpay = getRazorpay();
@@ -191,8 +195,13 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
           });
           refundId = refund.id;
           refundedAmount = refundAmount;
+          refundSucceeded = true;
           console.log(`[RAZORPAY] Auto-refund successful. Refund ID: ${refundId}, Amount: ${refundAmount}`);
         } catch (refundErr: any) {
+          // IMPORTANT: refundedAmount/refundId stay null on failure (so the order record
+          // never claims a refund that didn't happen) and refundSucceeded stays false so
+          // the customer email and the Ops alert below both reflect the real outcome
+          // instead of silently telling everyone a refund is on its way.
           console.error(`[RAZORPAY_REFUND_ERROR] Failed to auto-refund order ${order.id}:`, refundErr);
         }
       } else {
@@ -200,6 +209,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         refundAmount = 0;
       }
     }
+
+    cancellationOutcome = { within24h, refundAmount, feeDeducted, refundSucceeded: refundAttempted ? refundSucceeded : true };
 
     // Send Cancellation Email
     if (order.user.email) {
@@ -211,9 +222,46 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         refundAmount,
         feeDeducted,
         within24h,
-        order.orderNumber
+        order.orderNumber,
+        refundAttempted ? refundSucceeded : true
       ).catch(err => console.error("[MAIL_ERROR] Failed to send cancellation email:", err));
     }
+
+    // Make the cancellation visible to Ops: cancellation previously never touched
+    // opsStage, created no timeline entry and sent no notification, so a cancelled
+    // order's production work could silently continue (the /api/ops/orders ACTIVE
+    // filter above now also excludes CANCELLED orders as a second line of defense).
+    await prisma.orderTimelineEvent.create({
+      data: {
+        orderId: order.id,
+        eventType: "ORDER_CANCELLED",
+        title: "Order Cancelled by Customer",
+        description: refundAttempted
+          ? (refundSucceeded
+              ? `Customer cancelled the order. 75% refund of ₹${refundAmount.toFixed(2)} processed automatically via Razorpay (25% cancellation fee retained).`
+              : `Customer cancelled the order. Automatic 75% refund of ₹${refundAmount.toFixed(2)} FAILED — requires manual refund via Razorpay.`)
+          : `Customer cancelled the order.${feeDeducted > 0 ? ` No refund issued (cancelled after the 24-hour window; ₹${feeDeducted.toFixed(2)} forfeited).` : ""}`,
+        actorId: session.user.id,
+        actorName: session.user.name || session.user.email || "Customer",
+        actorRole: isAdmin ? "ADMIN" : "CUSTOMER",
+        isCustomerVisible: true,
+        metadata: { within24h, refundAttempted, refundSucceeded, refundAmount, feeDeducted },
+      },
+    });
+
+    await prisma.opsNotification.create({
+      data: {
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        type: refundAttempted && !refundSucceeded ? "ORDER_CANCELLED_REFUND_FAILED" : "ORDER_CANCELLED",
+        title: refundAttempted && !refundSucceeded ? "Order Cancelled — Refund Needs Manual Action" : "Order Cancelled",
+        message: refundAttempted && !refundSucceeded
+          ? `Order #${order.orderNumber} was cancelled by the customer. The automatic refund of ₹${refundAmount.toFixed(2)} failed — process it manually in Razorpay.`
+          : `Order #${order.orderNumber} was cancelled by the customer. Stop any in-progress production work on this order.`,
+        actorName: session.user.name || session.user.email || "Customer",
+        metadata: { within24h, refundAttempted, refundSucceeded, refundAmount, feeDeducted },
+      },
+    });
   }
 
   // Handle Dispatch / Shipped (Split Payment Balance Request Email + Tax Invoice)
@@ -312,5 +360,5 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     },
   });
 
-  return NextResponse.json(updated);
+  return NextResponse.json(cancellationOutcome ? { ...updated, cancellationOutcome } : updated);
 }

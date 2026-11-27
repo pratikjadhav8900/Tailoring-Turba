@@ -50,37 +50,43 @@ export async function POST(
       return NextResponse.json({ error: "Assignment not found." }, { status: 404 });
     }
 
-    let newQuantitySent = assignment.quantitySent;
-    let newQuantityReceived = assignment.quantityReceived;
-    let newStatus: AssignmentStatus = assignment.status;
-
-    if (movementType === "OUTWARD_CHALLAN") {
-      newQuantitySent += parsedQty;
-      newStatus = newQuantityReceived > 0 ? "PARTIALLY_RECEIVED" : "SENT_TO_PARTNER";
-    } else if (movementType === "INWARD_RECEIPT") {
-      // Validate that receiving doesn't exceed sent
-      const pendingBefore = newQuantitySent - newQuantityReceived;
-      if (parsedQty > pendingBefore) {
-        return NextResponse.json(
-          {
-            error: `Cannot receive ${parsedQty} units. Only ${pendingBefore} units are currently pending with ${assignment.vendor.name} (Sent: ${newQuantitySent}, Already Received: ${newQuantityReceived}).`,
-          },
-          { status: 400 }
-        );
-      }
-
-      newQuantityReceived += parsedQty;
-
-      if (newQuantityReceived >= newQuantitySent) {
-        newStatus = "RECEIVED";
-      } else {
-        newStatus = "PARTIALLY_RECEIVED";
-      }
-    }
-
-    const pendingAfter = Math.max(0, newQuantitySent - newQuantityReceived);
-
     const result = await prisma.$transaction(async (tx) => {
+      // Re-read the running totals HERE, inside the transaction, immediately before
+      // computing deltas — the earlier findUnique (above, outside the transaction) is
+      // only used for the 404 check and vendor/order display data. Reading the counters
+      // outside the transaction and then writing back computed absolute values is what
+      // let two concurrent goods-movement submissions silently clobber each other: both
+      // would read the same stale totals, and whichever update committed last would
+      // overwrite the other's increment even though both GoodsMovement audit rows exist.
+      const fresh = await tx.externalWorkAssignment.findUnique({ where: { id } });
+      if (!fresh) {
+        throw Object.assign(new Error("Assignment not found."), { code: "NOT_FOUND" });
+      }
+
+      let newStatus: AssignmentStatus = fresh.status;
+      let pendingAfter: number;
+
+      if (movementType === "OUTWARD_CHALLAN") {
+        const newQuantitySent = fresh.quantitySent + parsedQty;
+        newStatus = fresh.quantityReceived > 0 ? "PARTIALLY_RECEIVED" : "SENT_TO_PARTNER";
+        pendingAfter = Math.max(0, newQuantitySent - fresh.quantityReceived);
+      } else {
+        // INWARD_RECEIPT: validate against the freshly-read pending quantity, not a
+        // value read earlier in the request.
+        const pendingBefore = fresh.quantitySent - fresh.quantityReceived;
+        if (parsedQty > pendingBefore) {
+          throw Object.assign(
+            new Error(
+              `Cannot receive ${parsedQty} units. Only ${pendingBefore} units are currently pending with ${assignment.vendor.name} (Sent: ${fresh.quantitySent}, Already Received: ${fresh.quantityReceived}).`
+            ),
+            { code: "OVER_RECEIPT" }
+          );
+        }
+        const newQuantityReceived = fresh.quantityReceived + parsedQty;
+        newStatus = newQuantityReceived >= fresh.quantitySent ? "RECEIVED" : "PARTIALLY_RECEIVED";
+        pendingAfter = Math.max(0, fresh.quantitySent - newQuantityReceived);
+      }
+
       // 1. Record GoodsMovement
       const movement = await tx.goodsMovement.create({
         data: {
@@ -99,12 +105,14 @@ export async function POST(
         },
       });
 
-      // 2. Update assignment totals and status
+      // 2. Update assignment totals and status — atomic increment, not a computed
+      // absolute value, so a concurrent transaction's increment can never be lost even
+      // if both transactions' fresh reads above happened to overlap.
       const updatedAssignment = await tx.externalWorkAssignment.update({
         where: { id },
         data: {
-          quantitySent: newQuantitySent,
-          quantityReceived: newQuantityReceived,
+          quantitySent: movementType === "OUTWARD_CHALLAN" ? { increment: parsedQty } : undefined,
+          quantityReceived: movementType === "INWARD_RECEIPT" ? { increment: parsedQty } : undefined,
           status: newStatus,
         },
       });
@@ -164,6 +172,12 @@ export async function POST(
       message: `Recorded ${parsedQty} pcs ${movementType === "OUTWARD_CHALLAN" ? "dispatched to" : "received from"} ${assignment.vendor.name}.`,
     });
   } catch (error: any) {
+    if (error?.code === "NOT_FOUND") {
+      return NextResponse.json({ error: error.message }, { status: 404 });
+    }
+    if (error?.code === "OVER_RECEIPT") {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
     console.error("[OPS_RECORD_MOVEMENT_ERROR]", error);
     return NextResponse.json({ error: "Failed to record goods movement." }, { status: 500 });
   }

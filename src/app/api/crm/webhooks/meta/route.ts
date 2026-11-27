@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -42,7 +43,31 @@ async function fetchLeadFromGraph(leadgenId: string) {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    // SECURITY: verify Meta's HMAC-SHA256 payload signature before trusting anything in
+    // the body. Unlike the GET handshake above, the POST that actually ingests lead data
+    // previously had no authenticity check at all (unlike the BigShip/Razorpay webhooks,
+    // which both verify a shared secret/signature) — anyone who found this URL could POST
+    // arbitrary fake leads into the sales pipeline.
+    const rawBody = await req.text();
+    const configuredSecret = process.env.META_APP_SECRET;
+    if (!configuredSecret) {
+      console.error("[CRM_META_WEBHOOK] META_APP_SECRET is not configured.");
+      return NextResponse.json({ success: false }, { status: 200 }); // 200 so Meta doesn't disable the subscription
+    }
+    const signatureHeader = req.headers.get("x-hub-signature-256") || "";
+    const expectedSignature =
+      "sha256=" + crypto.createHmac("sha256", configuredSecret).update(rawBody).digest("hex");
+    const incomingBuffer = Buffer.from(signatureHeader);
+    const expectedBuffer = Buffer.from(expectedSignature);
+    if (
+      incomingBuffer.length !== expectedBuffer.length ||
+      !crypto.timingSafeEqual(incomingBuffer, expectedBuffer)
+    ) {
+      console.warn("[CRM_META_WEBHOOK] Invalid or missing X-Hub-Signature-256.");
+      return NextResponse.json({ success: false }, { status: 200 }); // 200 so Meta doesn't disable the subscription
+    }
+
+    const body = JSON.parse(rawBody);
 
     // Meta sends a batch of entry[].changes[] for page leadgen events.
     const entries = Array.isArray(body.entry) ? body.entry : [];

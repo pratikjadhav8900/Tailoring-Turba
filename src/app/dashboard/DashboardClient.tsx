@@ -381,7 +381,7 @@ export default function DashboardClient({
               </div>
               <div className={styles.spotlightBtns}>
                 <Link 
-                  href={`/dashboard/orders/${spotlightOrder.id}`} 
+                  href="/dashboard/orders"
                   className={styles.trackOrderBtn}
                 >
                   Track Order Details

@@ -366,13 +366,25 @@ export const VendorModal: React.FC<VendorModalProps> = ({
             </div>
             <div>
               <label className="block text-xs font-bold text-[#374151] mb-1">
-                GST / PAN Details
+                GSTIN
               </label>
               <input
                 type="text"
-                value={gstNumber || panNumber}
+                value={gstNumber}
                 onChange={(e) => setGstNumber(e.target.value)}
-                placeholder="GSTIN or PAN"
+                placeholder="GSTIN"
+                className="w-full px-3 py-2 text-sm border border-[#D1D5DB] rounded-xl focus:outline-none focus:border-emerald-600 font-mono uppercase"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-[#374151] mb-1">
+                PAN
+              </label>
+              <input
+                type="text"
+                value={panNumber}
+                onChange={(e) => setPanNumber(e.target.value)}
+                placeholder="PAN"
                 className="w-full px-3 py-2 text-sm border border-[#D1D5DB] rounded-xl focus:outline-none focus:border-emerald-600 font-mono uppercase"
               />
             </div>

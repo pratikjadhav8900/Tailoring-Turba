@@ -206,11 +206,11 @@ export default function OpsAccountPage() {
             </div>
           </div>
 
-          {/* Equal Operational Authority Notice */}
+          {/* Accountability Notice */}
           <div className="mt-6 pt-5 border-t border-[#ECEEF2] flex items-start gap-3 bg-[#F8FDF9] p-3.5 rounded-xl border-[#D1F2E5]">
             <ShieldCheck className="w-5 h-5 text-[#00A86B] shrink-0 mt-0.5" />
             <div className="text-xs text-[#374151]">
-              <span className="font-bold text-[#065F46]">Equal Operational Authority:</span> All 5 Tailoring Turba team members (Neeraj, Sanjay, Pratik, Mahesh, Ajay) possess full execution authorization across all 11 production stages. Every stage transition is recorded with your employee code ({profile?.employeeCode}) and timestamp for complete audit integrity.
+              <span className="font-bold text-[#065F46]">Accountability:</span> Management (Neeraj, Sanjay, Pratik) can transition production stages and authorize overrides; every action by any team member is recorded with your employee code ({profile?.employeeCode}) and timestamp for complete audit integrity.
             </div>
           </div>
         </div>

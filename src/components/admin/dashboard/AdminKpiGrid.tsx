@@ -17,6 +17,7 @@ import {
 
 interface KpiProps {
   revenue: number;
+  realizedOrderCount: number;
   userCount: number;
   orderCount: number;
   pendingOrders: number;
@@ -27,6 +28,7 @@ interface KpiProps {
 
 export default function AdminKpiGrid({
   revenue,
+  realizedOrderCount,
   userCount,
   orderCount,
   pendingOrders,
@@ -56,7 +58,7 @@ export default function AdminKpiGrid({
             />
           </div>
           <div className={styles.metricFootnote}>
-            From {orderCount} confirmed order{orderCount === 1 ? "" : "s"}
+            From {realizedOrderCount} confirmed order{realizedOrderCount === 1 ? "" : "s"}
           </div>
         </div>
 

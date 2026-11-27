@@ -339,10 +339,15 @@ export const sendOrderCancellationEmail = async (
   refundedAmount: number,
   feeDeducted: number,
   within24h: boolean,
-  orderNumber?: number
+  orderNumber?: number,
+  // true only when Razorpay actually confirmed the refund; must stay false if the
+  // automatic refund attempt threw (see src/app/api/orders/[id]/route.ts) so we never
+  // tell a customer a refund is on its way when it never left the ground.
+  refundSucceeded: boolean = true
 ) => {
   const displayNo = orderNumber ? String(orderNumber) : orderId.slice(-8).toUpperCase();
   const subject = `Order Cancelled — Tailoring Turba #${displayNo}`;
+  const refundIsPending = within24h && !refundSucceeded;
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
       <div style="background: #dc2626; padding: 24px; border-radius: 6px 6px 0 0; text-align: center;">
@@ -352,7 +357,7 @@ export const sendOrderCancellationEmail = async (
         <h2 style="color: #dc2626; margin-top: 0;">Order Cancellation Confirmation</h2>
         <p>Dear <strong>${name}</strong>,</p>
         <p>Your order <strong>#${orderId.slice(-8).toUpperCase()}</strong> has been successfully cancelled.</p>
-        
+
         <div style="background-color: #fef2f2; padding: 20px; border-radius: 8px; margin: 24px 0; border-left: 4px solid #dc2626;">
           <p style="margin: 0 0 10px 0; font-size: 14px; color: #991b1b; text-transform: uppercase; letter-spacing: 1px;">Refund Details</p>
           <p style="margin: 6px 0;"><strong>💰 Amount Paid:</strong> ₹${amountPaid.toLocaleString('en-IN')}</p>
@@ -361,11 +366,13 @@ export const sendOrderCancellationEmail = async (
           <p style="margin: 6px 0; font-weight: bold; color: #16a34a;"><strong>💵 Refund Amount (75%):</strong> ₹${refundedAmount.toLocaleString('en-IN')}</p>
         </div>
 
-        ${within24h 
-          ? `<p>The refund amount of <strong>₹${refundedAmount.toLocaleString('en-IN')}</strong> will be processed back to your original payment method via Razorpay within 5-7 business days.</p>` 
+        ${refundIsPending
+          ? `<p>Your order qualifies for a <strong>₹${refundedAmount.toLocaleString('en-IN')}</strong> refund, but we were not able to process it automatically. Our team has been notified and will initiate your refund manually — please allow a little longer than our usual 5-7 business days, and reach out if you don't hear from us within 2 business days.</p>`
+          : within24h
+          ? `<p>The refund amount of <strong>₹${refundedAmount.toLocaleString('en-IN')}</strong> will be processed back to your original payment method via Razorpay within 5-7 business days.</p>`
           : `<p>As the order was cancelled after 24 hours of placement, fabric customization and cutting had already begun. Therefore, no refund can be issued, and the cancellation fee equals the amount paid.</p>`
         }
-        
+
         <p>If you have any questions, please feel free to reach out to our customer support team.</p>
         <p>Best regards,<br/>The Tailoring Turba Team</p>
       </div>

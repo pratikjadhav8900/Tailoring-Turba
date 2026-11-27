@@ -24,7 +24,12 @@ import {
 function OpsLoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/ops";
+  // SECURITY: only accept a same-origin relative path. An absolute/protocol-relative
+  // value here would let an attacker link straight to the real Ops login page with a
+  // phishing/malware callbackUrl — the employee logs in for real, then gets redirected
+  // off-site right after.
+  const rawCallbackUrl = searchParams.get("callbackUrl") || "/ops";
+  const callbackUrl = rawCallbackUrl.startsWith("/") && !rawCallbackUrl.startsWith("//") ? rawCallbackUrl : "/ops";
 
   // Form states
   const [userId, setUserId] = useState("");

@@ -95,13 +95,18 @@ export default function CheckoutPage() {
     return total + (itemPrice * (item.quantity || 0));
   }, 0);
 
-  // Calculate dynamic printing/customization fees from design elements
+  // Calculate dynamic printing/customization fees from design elements.
+  // Must mirror calculateAuthoritativePricing() in src/lib/server-pricing.ts (the server
+  // never trusts this number, but it IS what the customer sees before paying — it used to
+  // omit left/right sleeve prints entirely, undercharging the displayed estimate).
   const printingCharge = cart.reduce((total, item) => {
     if (!item.customDesign) return total;
     const garmentType = item.customDesign.garmentType || "round-neck";
     const frontDetails = (item.customDesign.frontElements || []).map(el => getElementDetails(el, garmentType, "front"));
     const backDetails = (item.customDesign.backElements || []).map(el => getElementDetails(el, garmentType, "back"));
-    const itemPrintingCost = [...frontDetails, ...backDetails].reduce((sum, el) => sum + el.cost, 0);
+    const leftDetails = (item.customDesign.leftElements || []).map(el => getElementDetails(el, garmentType, "left"));
+    const rightDetails = (item.customDesign.rightElements || []).map(el => getElementDetails(el, garmentType, "right"));
+    const itemPrintingCost = [...frontDetails, ...backDetails, ...leftDetails, ...rightDetails].reduce((sum, el) => sum + el.cost, 0);
     return total + (itemPrintingCost * (item.quantity || 0));
   }, 0);
 
@@ -109,7 +114,9 @@ export default function CheckoutPage() {
     if (!item.customDesign) return false;
     const elements = [
       ...(item.customDesign.frontElements || []),
-      ...(item.customDesign.backElements || [])
+      ...(item.customDesign.backElements || []),
+      ...(item.customDesign.leftElements || []),
+      ...(item.customDesign.rightElements || [])
     ];
     return elements.some(el => el.printType === "embroidery");
   }).length * 300;

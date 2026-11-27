@@ -10,7 +10,10 @@ import { Eye, EyeOff, AlertCircle, ArrowLeft, ShieldCheck, TrendingUp, Users, Ta
 function CrmLoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/crm";
+  // SECURITY: only accept a same-origin relative path (see src/app/ops/login/page.tsx for
+  // why — an absolute/protocol-relative value here is an open redirect).
+  const rawCallbackUrl = searchParams.get("callbackUrl") || "/crm";
+  const callbackUrl = rawCallbackUrl.startsWith("/") && !rawCallbackUrl.startsWith("//") ? rawCallbackUrl : "/crm";
 
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");

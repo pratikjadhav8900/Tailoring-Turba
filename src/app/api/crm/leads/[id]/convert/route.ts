@@ -18,6 +18,17 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     }
 
     const result = await prisma.$transaction(async (tx) => {
+      // Re-check inside the transaction: the plain findUnique above is a stale read by
+      // the time this transaction starts, so two near-simultaneous requests could both
+      // pass the outer guard and each try to create a customer for the same lead.
+      const freshLead = await tx.lead.findUnique({ where: { id: lead.id } });
+      if (freshLead?.convertedUserId) {
+        throw Object.assign(new Error("Lead already converted"), {
+          code: "ALREADY_CONVERTED",
+          userId: freshLead.convertedUserId,
+        });
+      }
+
       let user = lead.email
         ? await tx.user.findFirst({ where: { email: { equals: lead.email, mode: "insensitive" } } })
         : null;
@@ -58,6 +69,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
     return NextResponse.json({ success: true, userId: result.user.id, lead: result.lead });
   } catch (error: any) {
+    if (error?.code === "ALREADY_CONVERTED") {
+      return NextResponse.json({ error: "Lead already converted", userId: error.userId }, { status: 400 });
+    }
     console.error("[CRM_CONVERT_LEAD_ERROR]", error);
     return NextResponse.json({ error: error.message || "Failed to convert lead" }, { status: 500 });
   }

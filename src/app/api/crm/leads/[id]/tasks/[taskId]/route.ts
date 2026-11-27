@@ -71,6 +71,9 @@ export async function DELETE(
     await prisma.leadTask.delete({ where: { id: params.taskId } });
     return NextResponse.json({ success: true });
   } catch (error: any) {
+    if (error?.code === "P2025") {
+      return NextResponse.json({ error: "Task not found." }, { status: 404 });
+    }
     console.error("[CRM_DELETE_LEAD_TASK_ERROR]", error);
     return NextResponse.json({ error: "Failed to delete task" }, { status: 500 });
   }

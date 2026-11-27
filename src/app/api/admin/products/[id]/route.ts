@@ -21,6 +21,14 @@ export async function DELETE(
       return NextResponse.json({ error: "Product ID is required" }, { status: 400 });
     }
 
+    const orderItemCount = await prisma.orderItem.count({ where: { productId: id } });
+    if (orderItemCount > 0) {
+      return NextResponse.json(
+        { error: `Cannot delete: this product is referenced by ${orderItemCount} order item(s). Mark it Offline instead.` },
+        { status: 400 }
+      );
+    }
+
     await prisma.product.delete({
       where: { id }
     });

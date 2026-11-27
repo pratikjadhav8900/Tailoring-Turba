@@ -33,12 +33,26 @@ export default function CancelOrderButton({
         body: JSON.stringify({ status: "CANCELLED" }),
       });
 
+      const data = await res.json();
       if (!res.ok) {
-        const data = await res.json();
         throw new Error(data.error || "Failed to cancel order.");
       }
 
-      toast.success("Your order has been cancelled, and the refund is being processed.");
+      const outcome = data.cancellationOutcome as
+        | { within24h: boolean; refundAmount: number; feeDeducted: number; refundSucceeded: boolean }
+        | undefined;
+      if (outcome && outcome.within24h && outcome.refundAmount > 0 && !outcome.refundSucceeded) {
+        // The automatic Razorpay refund attempt failed — never tell the customer a
+        // refund is on its way when it isn't; the email + Ops alert explain the same.
+        toast.success(
+          "Your order has been cancelled. We couldn't process your refund automatically — our team will refund you manually; check your email for details.",
+          { duration: 7000 }
+        );
+      } else if (outcome && outcome.within24h && outcome.refundAmount > 0) {
+        toast.success(`Your order has been cancelled. A ₹${Math.round(outcome.refundAmount).toLocaleString("en-IN")} refund is being processed.`);
+      } else {
+        toast.success("Your order has been cancelled.");
+      }
       router.refresh();
     } catch (err: any) {
       toast.error(err.message || "Failed to cancel order.");

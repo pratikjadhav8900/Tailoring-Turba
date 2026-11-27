@@ -137,6 +137,9 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     await prisma.lead.delete({ where: { id: params.id } });
     return NextResponse.json({ success: true });
   } catch (error: any) {
+    if (error?.code === "P2025") {
+      return NextResponse.json({ error: "Lead not found." }, { status: 404 });
+    }
     console.error("[CRM_DELETE_LEAD_ERROR]", error);
     return NextResponse.json({ error: "Failed to delete lead" }, { status: 500 });
   }

@@ -65,14 +65,16 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
 
   const handleMarkRead = async (id: string) => {
     try {
-      await fetch("/api/ops/notifications", {
+      const res = await fetch("/api/ops/notifications", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ notificationId: id }),
       });
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, isReadByMe: true } : n))
-      );
+      if (res.ok) {
+        setNotifications((prev) =>
+          prev.map((n) => (n.id === id ? { ...n, isReadByMe: true } : n))
+        );
+      }
     } catch (e) {
       console.error("Failed to mark notification read", e);
     }

@@ -13,12 +13,17 @@ function applySecurityHeaders(response: NextResponse) {
 
   const cspDirectives = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com https://challenges.cloudflare.com https://apis.google.com https://www.gstatic.com",
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "img-src 'self' data: blob: https://res.cloudinary.com https://images.unsplash.com https://plus.unsplash.com",
-    "font-src 'self' data: https://fonts.gstatic.com",
-    "frame-src 'self' https://api.razorpay.com https://challenges.cloudflare.com https://accounts.google.com",
-    "connect-src 'self' https://api.razorpay.com https://lumberjack.razorpay.com https://challenges.cloudflare.com https://res.cloudinary.com https://api.cloudinary.com https://api.bigship.direct https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://api.hubapi.com",
+    // https://www.google.com: Firebase phone-OTP reCAPTCHA (recaptcha/api.js) and the /booking Google Maps embed
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com https://challenges.cloudflare.com https://apis.google.com https://www.gstatic.com https://www.google.com https://www.recaptcha.net",
+    // https://api.fontshare.com: the General Sans / Boska stylesheet @import in globals.css
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://api.fontshare.com",
+    // https://api.qrserver.com: the "upload from phone" QR code image in the customizer
+    "img-src 'self' data: blob: https://res.cloudinary.com https://images.unsplash.com https://plus.unsplash.com https://api.qrserver.com",
+    // https://cdn.fontshare.com: the actual font files the Fontshare stylesheet points at
+    "font-src 'self' data: https://fonts.gstatic.com https://cdn.fontshare.com",
+    // https://www.google.com: reCAPTCHA iframe and the /booking Google Maps embed iframe
+    "frame-src 'self' https://api.razorpay.com https://challenges.cloudflare.com https://accounts.google.com https://www.google.com https://www.recaptcha.net",
+    "connect-src 'self' https://api.razorpay.com https://lumberjack.razorpay.com https://challenges.cloudflare.com https://res.cloudinary.com https://api.cloudinary.com https://api.bigship.direct https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://api.hubapi.com https://www.google.com",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",

@@ -90,15 +90,19 @@ function ContactForm() {
           const gType = item.customDesign.garmentType || "round-neck";
           const fEls = (item.customDesign.frontElements || []).map(el => getElementDetails(el, gType, "front"));
           const bEls = (item.customDesign.backElements || []).map(el => getElementDetails(el, gType, "back"));
-          const printCost = [...fEls, ...bEls].reduce((s, el) => s + el.cost, 0);
+          const lEls = (item.customDesign.leftElements || []).map(el => getElementDetails(el, gType, "left"));
+          const rEls = (item.customDesign.rightElements || []).map(el => getElementDetails(el, gType, "right"));
+          const printCost = [...fEls, ...bEls, ...lEls, ...rEls].reduce((s, el) => s + el.cost, 0);
           return t + (printCost * (item.quantity || 0));
         }, 0);
-        
+
         const customItemsWithEmbroideryCount = cart.filter(i => {
           if (!i.customDesign) return false;
           const elements = [
             ...(i.customDesign.frontElements || []),
-            ...(i.customDesign.backElements || [])
+            ...(i.customDesign.backElements || []),
+            ...(i.customDesign.leftElements || []),
+            ...(i.customDesign.rightElements || [])
           ];
           return elements.some(el => el.printType === "embroidery");
         }).length;

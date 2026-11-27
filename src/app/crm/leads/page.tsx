@@ -49,8 +49,15 @@ function exportLeadsToCsv(leads: CrmLead[]) {
     l.assignedTo?.name || "",
     new Date(l.createdAt).toLocaleDateString(),
   ]);
+  // Prefix cells that would otherwise be interpreted as a formula by Excel/Sheets
+  // (CSV formula injection) — lead names/companies can originate from CSV import or ad
+  // webhooks as uncontrolled free text.
+  const escapeCsvCell = (cell: string) => {
+    const safe = /^[=+\-@]/.test(cell) ? `'${cell}` : cell;
+    return `"${safe.replace(/"/g, '""')}"`;
+  };
   const csv = [headers, ...rows]
-    .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+    .map((row) => row.map((cell) => escapeCsvCell(String(cell))).join(","))
     .join("\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);

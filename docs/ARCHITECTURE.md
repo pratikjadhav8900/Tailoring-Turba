@@ -39,7 +39,7 @@ Tailoring Turba/
 │   ├── lib/                # Third-party integrations & core business logic
 │   ├── types/              # Static TypeScript type definitions
 │   └── middleware.ts       # Security headers and route-guard middleware
-├── tests/                  # Playwright e2e/integration test files
+├── e2e/                    # Playwright e2e/integration test files
 ├── vitest.config.ts        # Vitest configuration file
 └── tailwind.config.ts      # Tailwind CSS style configuration
 ```
@@ -113,9 +113,12 @@ Key reusable components that you can import directly:
 
 4. **Initialize Database Schema**:
    ```bash
-   npx prisma db push
+   npx prisma migrate dev
    npx prisma generate
    ```
+   ⚠️ **Never run `npx prisma db push` against this project's database, local or production.**
+   Every schema change must go through a reviewed migration file under `prisma/migrations/`
+   (see `PROJECT_CONTEXT.md`'s "Important Development Rules").
 
 5. **Seed the database**:
    ```bash

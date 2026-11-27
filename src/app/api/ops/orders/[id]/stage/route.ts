@@ -17,13 +17,14 @@ export async function POST(
   const auth = await requireOpsAuth();
   if (auth.errorResponse) return auth.errorResponse;
 
+  // SECURITY: this must be the session-resolved role only. The employeeCode/name based
+  // checks this used to also accept were based on Employee.name, which any employee can
+  // edit on themselves via PATCH /api/ops/account — that let a worker grant themselves
+  // management override powers (bypassing the 60% advance-payment gate and stage
+  // sequencing below) just by renaming themselves to include "Pratik"/"Neeraj"/"Sanjay".
   const isManagement =
     auth.context.userRole === "ADMIN" ||
-    auth.context.userRole === "SUPER_ADMIN" ||
-    ["TT001", "TT002", "TT003"].includes(auth.context.employee.employeeCode) ||
-    auth.context.employee.name.includes("Pratik") ||
-    auth.context.employee.name.includes("Neeraj") ||
-    auth.context.employee.name.includes("Sanjay");
+    auth.context.userRole === "SUPER_ADMIN";
 
   if (!isManagement) {
     return NextResponse.json(
@@ -285,9 +286,16 @@ export async function POST(
         },
       });
 
-      // Audit Timeline
+      // Audit Timeline. isExplicitOverride reflects whether this transition actually
+      // required an override (per validateStageTransition) — NOT just whether the raw
+      // request body happened to set isOverride/overrideReason. Since StageActionModal
+      // never sends those fields and effectiveOverride is forced true for every
+      // management call above, using the raw body fields here meant isExplicitOverride
+      // was always false, so a stage-skip or a 60%-payment-gate bypass was recorded
+      // identically to a routine single-step advance — defeating the whole point of the
+      // audit trail.
       const stageName = STAGE_DISPLAY_NAMES[targetStage as OpsProductionStage] || targetStage;
-      const isExplicitOverride = Boolean(isOverride && overrideReason);
+      const isExplicitOverride = Boolean(validation.isOverrideRequired);
       const eventTitle = isOrderCloseEvent
         ? `Order Completed & Closed`
         : isExplicitOverride
@@ -317,7 +325,7 @@ export async function POST(
             toStage: targetStage,
             status: determinedStatus,
             isOverride: isExplicitOverride,
-            overrideReason: isExplicitOverride ? overrideReason : undefined,
+            overrideReason: isExplicitOverride ? effectiveOverrideReason : undefined,
             notes: notes || undefined,
           },
         },

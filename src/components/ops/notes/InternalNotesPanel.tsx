@@ -33,7 +33,15 @@ export const InternalNotesPanel: React.FC<InternalNotesPanelProps> = ({
 
       if (res.ok) {
         const data = await res.json();
-        setNotes((prev) => [data.note, ...prev]);
+        // Prepending unconditionally used to jump an unpinned note above existing pinned
+        // ones until the next reload — GET /api/ops/orders/[id]/notes orders by
+        // [isPinned desc, createdAt desc], so keep that contract here too.
+        setNotes((prev) =>
+          [data.note, ...prev].sort((a, b) => {
+            if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1;
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          })
+        );
         setNewNote("");
         setIsPinned(false);
       }
