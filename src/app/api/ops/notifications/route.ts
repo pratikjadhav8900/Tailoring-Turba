@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireOpsAuth } from "@/lib/ops/auth";
 import { prisma } from "@/lib/prisma";
 import type { OpsNotificationItem } from "@/types/ops";
+import { isCrmTaskNotificationType, isCrmTaskNotificationRelevant } from "@/lib/crm/tasks";
 
 export const dynamic = "force-dynamic";
 
@@ -86,10 +87,15 @@ export async function GET(req: NextRequest) {
       take: 100,
     });
 
-    // Filter strictly based on employee role
-    const filteredNotifications = isWorker
-      ? allNotifications.filter((n) => isAllowedForWorker(n, employeeId))
-      : allNotifications;
+    // Filter strictly based on employee role. CRM cross-department task
+    // notifications bypass the worker/management split entirely — they're
+    // already targeted at exactly one employee (see isCrmTaskNotificationRelevant).
+    const filteredNotifications = allNotifications.filter((n) => {
+      if (isCrmTaskNotificationType(n.type)) {
+        return isCrmTaskNotificationRelevant(n, employeeId);
+      }
+      return isWorker ? isAllowedForWorker(n, employeeId) : true;
+    });
 
     // Unread count strictly for this user's visible notifications
     const unreadCount = filteredNotifications.filter(
@@ -124,6 +130,7 @@ export async function GET(req: NextRequest) {
         id: n.id,
         orderId: n.orderId,
         orderNumber: n.orderNumber,
+        leadId: isCrmTaskNotificationType(n.type) ? (meta.leadId as string | undefined) ?? null : null,
         type: n.type,
         title: n.title,
         message,
@@ -162,9 +169,12 @@ export async function POST(req: NextRequest) {
       });
 
       // If worker, only mark read notifications that belong to them
-      const relevantNotifs = isWorker
-        ? unreadNotifs.filter((n) => isAllowedForWorker(n, employeeId))
-        : unreadNotifs;
+      const relevantNotifs = unreadNotifs.filter((n) => {
+        if (isCrmTaskNotificationType(n.type)) {
+          return isCrmTaskNotificationRelevant(n, employeeId);
+        }
+        return isWorker ? isAllowedForWorker(n, employeeId) : true;
+      });
 
       await Promise.all(
         relevantNotifs.map((n) =>
@@ -193,8 +203,11 @@ export async function POST(req: NextRequest) {
     });
 
     if (target && !target.readBy.includes(employeeId)) {
-      // Ensure worker cannot read or manipulate notifications they shouldn't see
-      if (isWorker && !isAllowedForWorker(target, employeeId)) {
+      // Ensure an employee cannot read or manipulate notifications they shouldn't see
+      const isVisible = isCrmTaskNotificationType(target.type)
+        ? isCrmTaskNotificationRelevant(target, employeeId)
+        : !isWorker || isAllowedForWorker(target, employeeId);
+      if (!isVisible) {
         return NextResponse.json({ success: true });
       }
 

@@ -69,6 +69,7 @@ export default function LeadDetailPage() {
   const router = useRouter();
   const [lead, setLead] = useState<CrmLead | null>(null);
   const [salesReps, setSalesReps] = useState<CrmEmployee[]>([]);
+  const [assignableEmployees, setAssignableEmployees] = useState<CrmEmployee[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>("Overview");
   const [noteText, setNoteText] = useState("");
@@ -96,6 +97,9 @@ export default function LeadDetailPage() {
     fetch("/api/crm/employees")
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => d && setSalesReps(d.employees || []));
+    fetch("/api/crm/employees?scope=all")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => d && setAssignableEmployees(d.employees || []));
   }, []);
 
   const patchLead = async (data: Record<string, unknown>) => {
@@ -230,9 +234,19 @@ export default function LeadDetailPage() {
 
             <div className="mt-4 space-y-2.5 text-sm">
               {lead.phone && (
-                <div className="flex items-center gap-2 text-[#4B5563]">
-                  <Phone className="w-3.5 h-3.5 text-[#9CA3AF]" />
-                  <a href={`tel:${lead.phone}`} className="hover:text-[#FF6A39]">{lead.phone}</a>
+                <div className="flex items-center justify-between gap-2 text-[#4B5563]">
+                  <div className="flex items-center gap-2">
+                    <Phone className="w-3.5 h-3.5 text-[#9CA3AF]" />
+                    <a href={`tel:${lead.phone}`} className="hover:text-[#FF6A39]">{lead.phone}</a>
+                  </div>
+                  <label className="flex items-center gap-1 text-[10px] text-[#9CA3AF] cursor-pointer" title="Excludes this lead from all WhatsApp broadcasts">
+                    <input
+                      type="checkbox"
+                      checked={lead.whatsappOptOut}
+                      onChange={(e) => patchLead({ whatsappOptOut: e.target.checked })}
+                    />
+                    WhatsApp opt-out
+                  </label>
                 </div>
               )}
               {lead.email && (
@@ -446,7 +460,7 @@ export default function LeadDetailPage() {
           )}
 
           {activeTab === "Tasks" && (
-            <LeadTasksPanel leadId={lead.id} tasks={lead.tasks || []} salesReps={salesReps} onChange={fetchLead} />
+            <LeadTasksPanel leadId={lead.id} tasks={lead.tasks || []} assignableEmployees={assignableEmployees} onChange={fetchLead} />
           )}
 
           {activeTab === "Notes" && <ActivityFeed items={notes} />}

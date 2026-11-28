@@ -49,8 +49,92 @@ export interface CrmLeadTask {
   createdById?: string | null;
   completionNotes?: string | null;
   completedAt?: Date | string | null;
+  attachments: string[];
   createdAt: Date | string;
   updatedAt: Date | string;
+}
+
+export type EmailCampaignStatus = "DRAFT" | "SENDING" | "SENT" | "FAILED";
+
+export interface CampaignAudienceFilter {
+  includeLeads: boolean;
+  leadStages?: LeadStage[];
+  leadSources?: LeadSource[];
+  includeCustomers: boolean;
+}
+
+export interface CrmEmailCampaign {
+  id: string;
+  name: string;
+  subject: string;
+  bodyHtml: string;
+  audienceFilter: CampaignAudienceFilter;
+  recipientCount: number;
+  resendSegmentId?: string | null;
+  resendBroadcastId?: string | null;
+  status: EmailCampaignStatus;
+  errorMessage?: string | null;
+  createdById?: string | null;
+  createdBy?: { id: string; name: string } | null;
+  sentAt?: Date | string | null;
+  createdAt: Date | string;
+}
+
+export type WhatsAppBroadcastStatus = "SENDING" | "SENT" | "PARTIAL" | "FAILED";
+export type WhatsAppRecipientStatus = "PENDING" | "SENT" | "DELIVERED" | "READ" | "FAILED";
+
+export interface WhatsAppAudienceFilter {
+  leadStages?: LeadStage[];
+  leadSources?: LeadSource[];
+}
+
+export interface WhatsAppTemplateOption {
+  name: string;
+  status: string;
+  category: string;
+  language: string;
+  bodyVariableCount: number;
+}
+
+export interface CrmWhatsAppBroadcastRecipient {
+  id: string;
+  leadId?: string | null;
+  name: string;
+  phone: string;
+  status: WhatsAppRecipientStatus;
+  errorMessage?: string | null;
+  sentAt?: Date | string | null;
+  deliveredAt?: Date | string | null;
+  readAt?: Date | string | null;
+  failedAt?: Date | string | null;
+}
+
+export interface CrmWhatsAppBroadcast {
+  id: string;
+  name: string;
+  templateName: string;
+  templateLanguage: string;
+  variables?: string[] | null;
+  audienceFilter: WhatsAppAudienceFilter;
+  recipientCount: number;
+  status: WhatsAppBroadcastStatus;
+  errorMessage?: string | null;
+  createdBy?: { id: string; name: string } | null;
+  sentAt?: Date | string | null;
+  createdAt: Date | string;
+  recipients?: CrmWhatsAppBroadcastRecipient[];
+  _count?: { recipients: number };
+}
+
+export interface CrmNotificationItem {
+  id: string;
+  leadId?: string | null;
+  type: string;
+  title: string;
+  message: string;
+  actorName: string;
+  isReadByMe: boolean;
+  createdAt: Date | string;
 }
 
 export interface CrmLeadTag {
@@ -86,6 +170,7 @@ export interface CrmLead {
   productCategory?: string | null;
   expectedValue?: number | null;
   lostReason?: string | null;
+  whatsappOptOut: boolean;
   assignedToId?: string | null;
   assignedTo?: { id: string; name: string; employeeCode: string } | null;
   createdById?: string | null;

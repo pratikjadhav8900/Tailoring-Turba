@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { CrmSidebar } from "./CrmSidebar";
 import { CrmHeader } from "./CrmHeader";
+import { CrmNotificationDrawer } from "../notifications/CrmNotificationDrawer";
 import type { CrmEmployee } from "@/types/crm";
 import { Toaster } from "react-hot-toast";
 
@@ -21,6 +22,8 @@ export const CrmLayout: React.FC<CrmLayoutProps> = ({
 }) => {
   const [employee, setEmployee] = useState<CrmEmployee | null>(null);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     fetch("/api/crm/auth/session")
@@ -29,6 +32,24 @@ export const CrmLayout: React.FC<CrmLayoutProps> = ({
         if (data?.authenticated) setEmployee(data.employee);
       })
       .catch(() => {});
+  }, []);
+
+  const fetchUnreadCount = async () => {
+    try {
+      const res = await fetch("/api/crm/notifications?unreadOnly=true");
+      if (res.ok) {
+        const data = await res.json();
+        setUnreadCount(data.unreadCount || 0);
+      }
+    } catch (e) {
+      console.error("Failed to fetch CRM notification count", e);
+    }
+  };
+
+  useEffect(() => {
+    fetchUnreadCount();
+    const interval = setInterval(fetchUnreadCount, 15000);
+    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -55,12 +76,22 @@ export const CrmLayout: React.FC<CrmLayoutProps> = ({
           subtitle={pageSubtitle}
           headerAction={headerAction}
           onOpenMobileSidebar={() => setIsMobileSidebarOpen(true)}
+          unreadNotificationsCount={unreadCount}
+          onOpenNotifications={() => setIsNotificationsOpen(true)}
         />
 
         <main className="flex-1 p-3.5 sm:p-7 lg:p-8 bg-[#FDFDFE] overflow-y-auto">
           {children}
         </main>
       </div>
+
+      <CrmNotificationDrawer
+        isOpen={isNotificationsOpen}
+        onClose={() => {
+          setIsNotificationsOpen(false);
+          fetchUnreadCount();
+        }}
+      />
 
       <Toaster
         position="top-right"

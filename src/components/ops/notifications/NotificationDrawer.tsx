@@ -294,6 +294,16 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = ({
                           <ArrowRight className="w-3 h-3" />
                         </Link>
                       )}
+                      {!item.orderId && item.leadId && (
+                        <Link
+                          href="/ops/sales-tasks"
+                          onClick={onClose}
+                          className="text-[#00A86B] hover:underline font-semibold flex items-center gap-1 text-[11px]"
+                        >
+                          <span>View Task</span>
+                          <ArrowRight className="w-3 h-3" />
+                        </Link>
+                      )}
                     </div>
                   </div>
                 );

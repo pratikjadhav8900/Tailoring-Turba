@@ -8,6 +8,8 @@ import {
   LayoutGrid,
   Users,
   ListChecks,
+  Mail,
+  MessageCircle,
   Settings,
   HelpCircle,
   Rocket,
@@ -42,6 +44,18 @@ export const CrmSidebar: React.FC<CrmSidebarProps> = ({ employee, onCloseMobile 
       href: "/crm/tasks",
       icon: <ListChecks className="w-4 h-4" />,
       isActive: pathname.startsWith("/crm/tasks"),
+    },
+    {
+      label: "Campaigns",
+      href: "/crm/campaigns",
+      icon: <Mail className="w-4 h-4" />,
+      isActive: pathname.startsWith("/crm/campaigns"),
+    },
+    {
+      label: "WhatsApp",
+      href: "/crm/whatsapp",
+      icon: <MessageCircle className="w-4 h-4" />,
+      isActive: pathname.startsWith("/crm/whatsapp"),
     },
   ];
 

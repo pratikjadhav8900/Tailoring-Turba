@@ -200,6 +200,7 @@ export interface OpsNotificationItem {
   id: string;
   orderId?: string | null;
   orderNumber?: number | null;
+  leadId?: string | null;
   type: string;
   title: string;
   message: string;
@@ -303,6 +304,40 @@ export interface OpsTaskItem {
   orderTotalPieces?: number;
   orderStage?: OpsProductionStage | null;
   orderSource?: string | null;
+}
+
+/**
+ * A LeadTask (Turba CRM) as seen from Ops — used by employees who don't have
+ * /crm access but have been handed a cross-department task (e.g. Accounts
+ * preparing a quotation a Sales rep requested).
+ */
+export interface SalesTaskItem {
+  id: string;
+  leadId: string;
+  lead: {
+    id: string;
+    name: string;
+    companyName?: string | null;
+    phone?: string | null;
+    email?: string | null;
+    requirements?: string | null;
+    quantity?: number | null;
+    expectedValue?: number | null;
+  };
+  type: string;
+  title: string;
+  description?: string | null;
+  dueAt: Date | string;
+  priority: string;
+  status: string;
+  assignedToId?: string | null;
+  assignedTo?: { id: string; name: string } | null;
+  createdById?: string | null;
+  createdBy?: { id: string; name: string } | null;
+  completionNotes?: string | null;
+  completedAt?: Date | string | null;
+  attachments: string[];
+  createdAt: Date | string;
 }
 
 export interface OpsVendorPartner {

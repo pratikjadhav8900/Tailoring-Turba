@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireCrmAuth } from "@/lib/crm/auth";
 import { prisma } from "@/lib/prisma";
+import { notifyCrmTaskAssigned } from "@/lib/crm/tasks";
 
 export const dynamic = "force-dynamic";
 
@@ -66,6 +67,18 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
           metadata: { taskId: created.id },
         },
       });
+
+      if (created.assignedToId) {
+        await notifyCrmTaskAssigned(tx, {
+          targetEmployeeId: created.assignedToId,
+          actorEmployeeId: auth.context.employee.id,
+          actorName: auth.context.employee.name,
+          leadId: params.id,
+          leadName: lead.name,
+          leadTaskId: created.id,
+          taskTitle: created.title,
+        });
+      }
 
       return created;
     });

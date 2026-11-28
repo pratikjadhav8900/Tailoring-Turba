@@ -2,15 +2,25 @@
 
 import React, { useState } from "react";
 import toast from "react-hot-toast";
-import { Plus, CheckCircle2, Circle, Clock, AlertCircle } from "lucide-react";
+import { Plus, CheckCircle2, Circle, Clock, AlertCircle, FileText, ExternalLink } from "lucide-react";
 import { LEAD_TASK_TYPE_LABELS } from "@/types/crm";
 import type { CrmLeadTask, CrmEmployee, LeadTaskType, LeadTaskPriority } from "@/types/crm";
+import { CompleteLeadTaskModal } from "@/components/shared/CompleteLeadTaskModal";
 
 interface Props {
   leadId: string;
   tasks: CrmLeadTask[];
-  salesReps: CrmEmployee[];
+  /** Every active employee, not just Sales reps — a task (e.g. "Send Quotation") can be handed to another department. */
+  assignableEmployees: CrmEmployee[];
   onChange: () => void;
+}
+
+function attachmentFileName(url: string): string {
+  try {
+    return new URL(url).pathname.split("/").pop() || "attachment";
+  } catch {
+    return "attachment";
+  }
 }
 
 const PRIORITY_STYLES: Record<LeadTaskPriority, string> = {
@@ -23,7 +33,7 @@ const PRIORITY_STYLES: Record<LeadTaskPriority, string> = {
 const inputCls =
   "w-full bg-white border border-[#D1D5DB] rounded-lg px-3 py-2 text-xs text-[#111827] focus:border-[#FF6A39] focus:ring-2 focus:ring-[#FF6A39]/20 outline-none";
 
-export const LeadTasksPanel: React.FC<Props> = ({ leadId, tasks, salesReps, onChange }) => {
+export const LeadTasksPanel: React.FC<Props> = ({ leadId, tasks, assignableEmployees, onChange }) => {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({
     type: "FOLLOW_UP_CALL" as LeadTaskType,
@@ -33,6 +43,7 @@ export const LeadTasksPanel: React.FC<Props> = ({ leadId, tasks, salesReps, onCh
     assignedToId: "",
   });
   const [submitting, setSubmitting] = useState(false);
+  const [completingTask, setCompletingTask] = useState<CrmLeadTask | null>(null);
 
   const createTask = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,21 +68,6 @@ export const LeadTasksPanel: React.FC<Props> = ({ leadId, tasks, salesReps, onCh
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const completeTask = async (taskId: string) => {
-    const notes = prompt("Completion notes (optional):") || undefined;
-    const res = await fetch(`/api/crm/leads/${leadId}/tasks/${taskId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "COMPLETED", completionNotes: notes }),
-    });
-    if (!res.ok) {
-      toast.error("Failed to complete task");
-      return;
-    }
-    toast.success("Task marked complete");
-    onChange();
   };
 
   const pending = tasks.filter((t) => t.status !== "COMPLETED" && t.status !== "CANCELLED");
@@ -109,8 +105,10 @@ export const LeadTasksPanel: React.FC<Props> = ({ leadId, tasks, salesReps, onCh
             <input type="datetime-local" className={inputCls} value={form.dueAt} onChange={(e) => setForm((f) => ({ ...f, dueAt: e.target.value }))} />
             <select className={inputCls} value={form.assignedToId} onChange={(e) => setForm((f) => ({ ...f, assignedToId: e.target.value }))}>
               <option value="">Assign to me</option>
-              {salesReps.map((rep) => (
-                <option key={rep.id} value={rep.id}>{rep.name}</option>
+              {assignableEmployees.map((emp) => (
+                <option key={emp.id} value={emp.id}>
+                  {emp.name}{emp.department && emp.department.toUpperCase() !== "SALES" ? ` (${emp.department})` : ""}
+                </option>
               ))}
             </select>
           </div>
@@ -133,13 +131,18 @@ export const LeadTasksPanel: React.FC<Props> = ({ leadId, tasks, salesReps, onCh
           const isOverdue = new Date(task.dueAt) < new Date();
           return (
             <div key={task.id} className="flex items-start gap-3 p-3 rounded-xl border border-[#ECEEF2]">
-              <button onClick={() => completeTask(task.id)} className="mt-0.5 text-[#D1D5DB] hover:text-[#10B981]">
+              <button onClick={() => setCompletingTask(task)} className="mt-0.5 text-[#D1D5DB] hover:text-[#10B981]" title="Mark complete">
                 <Circle className="w-4 h-4" />
               </button>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-sm font-semibold text-[#111827]">{task.title}</span>
                   <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${PRIORITY_STYLES[task.priority]}`}>{task.priority}</span>
+                  {task.type === "SEND_QUOTATION" && (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#FFF1EB] text-[#FF6A39] border border-[#FFE1D1]">
+                      {LEAD_TASK_TYPE_LABELS[task.type]}
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-2 mt-1 text-[11px] text-[#9CA3AF]">
                   {isOverdue ? <AlertCircle className="w-3 h-3 text-[#DC2626]" /> : <Clock className="w-3 h-3" />}
@@ -156,17 +159,51 @@ export const LeadTasksPanel: React.FC<Props> = ({ leadId, tasks, salesReps, onCh
           <div className="pt-2">
             <div className="text-[11px] font-semibold text-[#9CA3AF] uppercase mb-1.5">Completed</div>
             {completed.map((task) => (
-              <div key={task.id} className="flex items-start gap-3 p-3 opacity-60">
-                <CheckCircle2 className="w-4 h-4 text-[#10B981] mt-0.5" />
+              <div key={task.id} className="flex items-start gap-3 p-3 opacity-80">
+                <CheckCircle2 className="w-4 h-4 text-[#10B981] mt-0.5 shrink-0" />
                 <div className="flex-1 min-w-0">
                   <span className="text-sm font-medium text-[#111827] line-through">{task.title}</span>
                   {task.completionNotes && <p className="text-xs text-[#9CA3AF] mt-0.5">{task.completionNotes}</p>}
+                  {task.attachments.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-1.5">
+                      {task.attachments.map((url) => (
+                        <a
+                          key={url}
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 px-2 py-1 rounded-lg bg-[#F8F9FB] border border-[#ECEEF2] text-[10px] font-semibold text-[#374151] hover:text-[#FF6A39] hover:border-[#FFD9C7] no-underline"
+                        >
+                          <FileText className="w-3 h-3" />
+                          {attachmentFileName(url)}
+                          <ExternalLink className="w-2.5 h-2.5" />
+                        </a>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {completingTask && (
+        <CompleteLeadTaskModal
+          isOpen
+          onClose={() => setCompletingTask(null)}
+          onSuccess={() => {
+            toast.success("Task marked complete");
+            onChange();
+          }}
+          taskId={completingTask.id}
+          taskTitle={completingTask.title}
+          taskType={completingTask.type}
+          existingAttachments={completingTask.attachments}
+          uploadEndpoint={`/api/crm/leads/${leadId}/tasks/${completingTask.id}/attachments`}
+          patchEndpoint={`/api/crm/leads/${leadId}/tasks/${completingTask.id}`}
+        />
+      )}
     </div>
   );
 };

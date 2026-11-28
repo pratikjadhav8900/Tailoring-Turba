@@ -58,6 +58,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if (body.notes !== undefined) data.notes = body.notes?.trim() || null;
     if (body.score !== undefined) data.score = Math.max(0, Math.min(10, Number(body.score) || 0));
     if (body.isFavourite !== undefined) data.isFavourite = !!body.isFavourite;
+    if (body.whatsappOptOut !== undefined) data.whatsappOptOut = !!body.whatsappOptOut;
     if (body.nextFollowUpAt !== undefined) {
       data.nextFollowUpAt = body.nextFollowUpAt ? new Date(body.nextFollowUpAt) : null;
     }

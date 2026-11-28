@@ -616,6 +616,8 @@ model Employee {
   leadActivities   LeadActivity[]
   assignedLeadTasks LeadTask[]    @relation("AssignedLeadTasks")
   createdLeadTasks  LeadTask[]    @relation("CreatedLeadTasks")
+  emailCampaigns    EmailCampaign[]
+  whatsappBroadcasts WhatsAppBroadcast[]
 
   @@index([email])
   @@index([employeeCode])
@@ -920,12 +922,18 @@ model Lead {
   nextFollowUpAt   DateTime?
   metadata         Json?
 
+  // WhatsApp has no platform-level unsubscribe list (unlike Resend's email
+  // Contacts) — this is the CRM's own consent flag, set manually by a rep,
+  // and excluded from every WhatsApp broadcast audience.
+  whatsappOptOut   Boolean     @default(false)
+
   createdAt        DateTime    @default(now())
   updatedAt        DateTime    @updatedAt
 
   activities       LeadActivity[]
   tasks            LeadTask[]
   tags             LeadTagAssignment[]
+  whatsappBroadcastRecipients WhatsAppBroadcastRecipient[]
 
   @@index([status])
   @@index([assignedToId])
@@ -967,6 +975,7 @@ model LeadTask {
   createdBy       Employee?        @relation("CreatedLeadTasks", fields: [createdById], references: [id], onDelete: SetNull)
   completionNotes String?
   completedAt     DateTime?
+  attachments     String[]         @default([])
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
 
@@ -994,6 +1003,106 @@ model LeadTagAssignment {
 
   @@unique([leadId, tagId])
   @@index([tagId])
+}
+
+enum EmailCampaignStatus {
+  DRAFT
+  SENDING
+  SENT
+  FAILED
+}
+
+// Bulk/promotional email campaigns. The actual send fan-out and unsubscribe
+// handling happen on Resend's side (a Broadcast targeting a one-off Segment
+// built from `audienceFilter`); this table is the CRM's own audit trail —
+// who sent what, to how many, built from which filter — since Resend's own
+// broadcast record doesn't carry our Employee identity or filter criteria.
+model EmailCampaign {
+  id                String              @id @default(cuid())
+  name              String
+  subject           String
+  bodyHtml          String              @db.Text
+  audienceFilter    Json
+  recipientCount    Int                 @default(0)
+  resendSegmentId   String?
+  resendBroadcastId String?
+  status            EmailCampaignStatus @default(DRAFT)
+  errorMessage      String?
+  createdById       String?
+  createdBy         Employee?           @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  sentAt            DateTime?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  @@index([createdAt])
+  @@index([status])
+}
+
+enum WhatsAppBroadcastStatus {
+  SENDING
+  SENT
+  PARTIAL
+  FAILED
+}
+
+enum WhatsAppRecipientStatus {
+  PENDING
+  SENT
+  DELIVERED
+  READ
+  FAILED
+}
+
+// WhatsApp broadcasting (Meta WhatsApp Cloud API, direct — no BSP). A
+// business-initiated/marketing message MUST use a pre-approved template;
+// there is no free-text bulk send. Sending happens in batches (no bulk-send
+// endpoint exists on Meta's side either): an initial batch runs synchronously
+// on creation, a "Send more" action lets a rep continue a large list on
+// demand, and a daily cron (`/api/cron/whatsapp-sender`) is the safety net —
+// sized for Vercel's Hobby-plan cron limit of once/day, not a real-time queue.
+model WhatsAppBroadcast {
+  id               String                  @id @default(cuid())
+  name             String
+  templateName     String
+  templateLanguage String
+  templateCategory String?
+  variables        Json? // ordered string[] for {{1}},{{2}}... — a literal value, or "{{lead_name}}" for per-recipient substitution
+  audienceFilter   Json
+  recipientCount   Int                     @default(0)
+  status           WhatsAppBroadcastStatus @default(SENDING)
+  errorMessage     String?
+  createdById      String?
+  createdBy        Employee?               @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  sentAt           DateTime?
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+
+  recipients       WhatsAppBroadcastRecipient[]
+
+  @@index([createdAt])
+  @@index([status])
+}
+
+model WhatsAppBroadcastRecipient {
+  id           String                  @id @default(cuid())
+  broadcastId  String
+  broadcast    WhatsAppBroadcast       @relation(fields: [broadcastId], references: [id], onDelete: Cascade)
+  leadId       String?
+  lead         Lead?                   @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  name         String
+  phone        String // E.164, e.g. +919822000004
+  status       WhatsAppRecipientStatus @default(PENDING)
+  waMessageId  String? // Meta's wamid, used to correlate delivery-status webhooks
+  errorMessage String?
+  sentAt       DateTime?
+  deliveredAt  DateTime?
+  readAt       DateTime?
+  failedAt     DateTime?
+  createdAt    DateTime                @default(now())
+
+  @@index([broadcastId])
+  @@index([status])
+  @@index([waMessageId])
 }
 
 

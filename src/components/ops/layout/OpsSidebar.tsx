@@ -19,6 +19,7 @@ import {
   CheckSquare,
   Truck,
   Calculator,
+  FileText,
 } from "lucide-react";
 import type { OpsEmployee } from "@/types/ops";
 import { signOut } from "next-auth/react";
@@ -50,6 +51,12 @@ const OpsSidebarInner: React.FC<OpsSidebarProps> = ({
       href: "/ops/tasks",
       icon: <CheckSquare className="w-4 h-4" />,
       isActive: pathname === "/ops/tasks",
+    },
+    {
+      label: "Sales Tasks",
+      href: "/ops/sales-tasks",
+      icon: <FileText className="w-4 h-4" />,
+      isActive: pathname === "/ops/sales-tasks",
     },
     {
       label: "Orders",

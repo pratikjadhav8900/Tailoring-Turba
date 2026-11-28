@@ -4,10 +4,19 @@ import React, { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { CrmLayout } from "@/components/crm/layout/CrmLayout";
+import { CompleteLeadTaskModal } from "@/components/shared/CompleteLeadTaskModal";
 import { LEAD_TASK_TYPE_LABELS } from "@/types/crm";
 import type { CrmLeadTask, CrmEmployee } from "@/types/crm";
 import toast from "react-hot-toast";
-import { Clock, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Clock, AlertCircle, CheckCircle2, FileText, ExternalLink } from "lucide-react";
+
+function attachmentFileName(url: string): string {
+  try {
+    return new URL(url).pathname.split("/").pop() || "attachment";
+  } catch {
+    return "attachment";
+  }
+}
 
 const VIEWS = [
   { key: "today", label: "Today" },
@@ -31,6 +40,7 @@ function CrmTasksContent() {
   const [tasks, setTasks] = useState<CrmLeadTask[]>([]);
   const [salesReps, setSalesReps] = useState<CrmEmployee[]>([]);
   const [loading, setLoading] = useState(true);
+  const [completingTask, setCompletingTask] = useState<CrmLeadTask | null>(null);
 
   const fetchTasks = useCallback(async () => {
     setLoading(true);
@@ -57,21 +67,6 @@ function CrmTasksContent() {
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => d && setSalesReps(d.employees || []));
   }, []);
-
-  const completeTask = async (task: CrmLeadTask) => {
-    const notes = prompt("Completion notes (optional):") || undefined;
-    const res = await fetch(`/api/crm/leads/${task.leadId}/tasks/${task.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "COMPLETED", completionNotes: notes }),
-    });
-    if (!res.ok) {
-      toast.error("Failed to complete task");
-      return;
-    }
-    toast.success("Task completed");
-    fetchTasks();
-  };
 
   return (
     <CrmLayout pageTitle="Tasks & Follow-ups" pageSubtitle="Everything you need to action today">
@@ -113,7 +108,7 @@ function CrmTasksContent() {
                   {task.status === "COMPLETED" ? (
                     <CheckCircle2 className="w-4 h-4 text-[#10B981] shrink-0" />
                   ) : (
-                    <button onClick={() => completeTask(task)} className="w-4 h-4 rounded-full border-2 border-[#D1D5DB] hover:border-[#10B981] shrink-0" />
+                    <button onClick={() => setCompletingTask(task)} className="w-4 h-4 rounded-full border-2 border-[#D1D5DB] hover:border-[#10B981] shrink-0" />
                   )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -135,12 +130,46 @@ function CrmTasksContent() {
                       )}
                       {task.assignedTo && <span>· {task.assignedTo.name}</span>}
                     </div>
+                    {task.attachments.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mt-1.5">
+                        {task.attachments.map((url) => (
+                          <a
+                            key={url}
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 px-2 py-1 rounded-lg bg-[#F8F9FB] border border-[#ECEEF2] text-[10px] font-semibold text-[#374151] hover:text-[#FF6A39] hover:border-[#FFD9C7] no-underline"
+                          >
+                            <FileText className="w-3 h-3" />
+                            {attachmentFileName(url)}
+                            <ExternalLink className="w-2.5 h-2.5" />
+                          </a>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               );
             })}
         </div>
       </div>
+
+      {completingTask && (
+        <CompleteLeadTaskModal
+          isOpen
+          onClose={() => setCompletingTask(null)}
+          onSuccess={() => {
+            toast.success("Task completed");
+            fetchTasks();
+          }}
+          taskId={completingTask.id}
+          taskTitle={completingTask.title}
+          taskType={completingTask.type}
+          existingAttachments={completingTask.attachments}
+          uploadEndpoint={`/api/crm/leads/${completingTask.leadId}/tasks/${completingTask.id}/attachments`}
+          patchEndpoint={`/api/crm/leads/${completingTask.leadId}/tasks/${completingTask.id}`}
+        />
+      )}
     </CrmLayout>
   );
 }
